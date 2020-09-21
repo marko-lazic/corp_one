@@ -810,10 +810,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "corp-console"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
+name = "corp-metrics"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "corp_one_bevy_game"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "corp-console",
+ "corp-metrics",
 ]
 
 [[package]]

@@ -1,2 +1,22 @@
-/target
-.idea
+# Rust
+target
+
+# Vim
+
+**/*.vi
+**/*.swp
+
+# IntelliJ
+
+**/.idea/
+**/*.iml
+
+# VSCode
+.vscode/
+/.vscode/*
+!/.vscode/launch.json
+*.code-workspace
+
+# Eclipse
+
+.project
