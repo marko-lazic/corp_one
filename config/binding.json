@@ -1,0 +1,25 @@
+{
+  "KeyboardKeys": {
+    "Escape" :  "QUIT_APP",
+    "W" : "MOVE_FORWARD",
+    "D" : "MOVE_RIGHT",
+    "A" : "MOVE_LEFT",
+    "S" : "MOVE_BACKWARD",
+    "E" : "USE",
+    "Return" : "ENTER"
+  },
+  "MouseButtons": {
+    "Right": "MOUSE_CONTEXT",
+    "Left": "MOUSE_SHOOT"
+  },
+  "MouseMove": {
+    "YNegative": "AIM_UP",
+    "XNegative": "AIM_LEFT",
+    "XPositive": "AIM_RIGHT",
+    "YPositive": "AIM_DOWN"
+  },
+  "EventPhase": {
+    "MOUSE_SHOOT": "OnBegin",
+    "QUIT_APP": "OnEnded"
+  }
+}
