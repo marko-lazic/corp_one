@@ -29,7 +29,7 @@ pub mod console {
     fn greet_people(
         time: Res<Time>,
         mut timer: ResMut<GreetTimer>,
-        mut query: Query<(&Person, &Name)>,
+        query: Query<(&Person, &Name)>,
     ) {
         timer.0.tick(time.delta_seconds);
         if timer.0.finished {
