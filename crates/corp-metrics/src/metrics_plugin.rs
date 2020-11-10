@@ -21,7 +21,7 @@ pub mod metrics {
     }
 
     fn text_update_system(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>) {
-        for mut text in &mut query.iter() {
+        for mut text in query.iter_mut() {
             if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
                 if let Some(average) = fps.average() {
                     text.value = format!("FPS: {:.0}", average);
@@ -41,9 +41,7 @@ pub mod metrics {
     }
 
     fn fps_text(asset_server: Res<AssetServer>) -> Text {
-        let font_handle = asset_server
-            .load("assets/fonts/Kenney Future Narrow.ttf")
-            .unwrap();
+        let font_handle = asset_server.load("assets/fonts/Kenney Future Narrow.ttf");
         Text {
             value: "FPS".to_string(),
             font: font_handle,
