@@ -41,7 +41,7 @@ pub mod metrics {
     }
 
     fn fps_text(asset_server: Res<AssetServer>) -> Text {
-        let font_handle = asset_server.load("assets/fonts/Kenney Future Narrow.ttf");
+        let font_handle = asset_server.load("fonts/Kenney Future Narrow.ttf");
         Text {
             value: "FPS".to_string(),
             font: font_handle,
