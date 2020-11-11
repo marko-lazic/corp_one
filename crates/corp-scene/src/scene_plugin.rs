@@ -30,8 +30,8 @@ pub mod scene {
         // node mesh
         let node_mesh = asset_server.load("models/node/node_template.gltf#Mesh0/Primitive0");
         let cloned_node_mesh = node_mesh.clone();
-        let node_material = materials.add(Color::rgb(0.1, 0.2, 0.1).into());
-        let node_material_2 = materials.add(Color::rgb(0.1, 0.4, 0.8).into());
+        let green_material = materials.add(Color::rgb(0.1, 0.2, 0.1).into());
+        let blue_material = materials.add(Color::rgb(0.1, 0.4, 0.8).into());
         let material_handle = materials.add(StandardMaterial {
             albedo: Color::rgb(0.8, 0.7, 0.6),
             ..Default::default()
@@ -39,14 +39,14 @@ pub mod scene {
         commands
             .spawn(PbrComponents {
                 mesh: node_mesh,
-                material: node_material.clone(),
+                material: green_material.clone(),
                 transform: Transform::from_translation(Vec3::new(-1.5, 0.0, 0.0)),
                 ..Default::default()
             }) // mesh
             // node mesh
             .spawn(PbrComponents {
                 mesh: cloned_node_mesh,
-                material: node_material_2.clone(),
+                material: blue_material.clone(),
                 transform: Transform::from_translation(Vec3::new(1.5, 0.0, 0.0)),
                 ..Default::default()
             })
