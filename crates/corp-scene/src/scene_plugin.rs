@@ -4,9 +4,39 @@ pub mod scene {
 
     pub struct ScenePlugin;
 
+    struct Cube;
+    struct Materials {
+        cube_mesh: Handle<Mesh>,
+        cube_material: Handle<StandardMaterial>,
+    }
+
     impl Plugin for ScenePlugin {
         fn build(&self, app: &mut AppBuilder) {
             app.add_startup_system(setup.system());
+            app.add_startup_stage("game_setup");
+            app.add_startup_system_to_stage("game_setup", spawn_cube.system());
+            app.add_system(cube_movement.system());
+        }
+    }
+
+    fn cube_movement(
+        keyboard_input: Res<Input<KeyCode>>,
+        mut cube_positions: Query<(&Cube, &mut Transform)>,
+    ) {
+        for (_cube, mut transform) in cube_positions.iter_mut() {
+            *transform.translation.y_mut() += 0.01;
+            if keyboard_input.pressed(KeyCode::Left) {
+                *transform.translation.x_mut() -= 0.1;
+            }
+            if keyboard_input.pressed(KeyCode::Right) {
+                *transform.translation.x_mut() += 0.1;
+            }
+            if keyboard_input.pressed(KeyCode::Down) {
+                *transform.translation.y_mut() -= 0.1;
+            }
+            if keyboard_input.pressed(KeyCode::Up) {
+                *transform.translation.y_mut() += 0.1;
+            }
         }
     }
 
@@ -90,11 +120,20 @@ pub mod scene {
             .push_children(player_entity.unwrap(), &[camera_entity.unwrap()]);
 
         let cube_handle = asset_server.load("models/cube/cube.gltf#Mesh0/Primitive0");
-        commands.spawn(PbrComponents {
-            mesh: cube_handle,
-            material: material_handle.clone(),
-            transform: Transform::from_translation(Vec3::new(10.0, 1.0, -10.0)),
-            ..Default::default()
+        commands.insert_resource(Materials {
+            cube_mesh: cube_handle,
+            cube_material: material_handle.clone(),
         });
+    }
+
+    fn spawn_cube(mut commands: Commands, materials: Res<Materials>) {
+        commands
+            .spawn(PbrComponents {
+                mesh: materials.cube_mesh.clone(),
+                material: materials.cube_material.clone(),
+                transform: Transform::from_translation(Vec3::new(10.0, 1.0, -10.0)),
+                ..Default::default()
+            })
+            .with(Cube);
     }
 }

@@ -484,6 +484,7 @@ dependencies = [
  "bevy_ecs",
  "bevy_math",
  "bevy_utils",
+ "serde",
 ]
 
 [[package]]
@@ -540,6 +541,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "bevy_prototype_input_map"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "909b1dbdf256c77c5d34a7fbe1db6f7f94007c1ed85776f7261332cb1dbdda11"
+dependencies = [
+ "bevy",
+ "ron",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1111,6 +1124,7 @@ name = "corp-input"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_prototype_input_map",
  "corp-scene",
 ]
 

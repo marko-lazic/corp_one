@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 bevy = "0.3.0"
+bevy_prototype_input_map = "0.1.5"
 
 # Local
 corp-scene = { path = "../corp-scene", version ="0.1.0" }
