@@ -4,6 +4,7 @@ use bevy::DefaultPlugins;
 use corp_console::ConsolePlugin;
 use corp_input::InputPlugin;
 use corp_metrics::MetricsPlugin;
+use corp_scene::player::PlayerPlugin;
 use corp_scene::ScenePlugin;
 
 fn main() {
@@ -14,5 +15,6 @@ fn main() {
         .add_plugin(MetricsPlugin)
         .add_plugin(ScenePlugin)
         .add_plugin(InputPlugin)
+        .add_plugin(PlayerPlugin)
         .run();
 }

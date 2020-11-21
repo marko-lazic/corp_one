@@ -1,5 +1,4 @@
 pub mod scene {
-    use crate::player::Player;
     use bevy::prelude::*;
 
     pub struct ScenePlugin;
@@ -89,7 +88,7 @@ pub mod scene {
         // camera
         let camera_entity = commands
             .spawn(Camera3dComponents {
-                transform: Transform::from_translation(Vec3::new(-5.0, 5.0, 10.0))
+                transform: Transform::from_translation(Vec3::new(0.0, 5.0, 10.0))
                     .looking_at(Vec3::default(), Vec3::unit_y()),
                 ..Default::default()
             })
@@ -107,10 +106,6 @@ pub mod scene {
                     ..Default::default()
                 }),
                 transform: Transform::from_matrix(Mat4::identity()),
-                ..Default::default()
-            })
-            .with(Player {
-                camera_entity,
                 ..Default::default()
             })
             .current_entity();

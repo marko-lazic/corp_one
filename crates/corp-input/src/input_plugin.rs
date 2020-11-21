@@ -5,6 +5,7 @@ pub(crate) mod input {
     use bevy::ecs::ResMut;
     use bevy::prelude::*;
     use bevy_prototype_input_map::{InputMap, InputMapPlugin, OnActionActive, OnActionEnd};
+    use corp_scene::player::Player;
 
     #[derive(Default)]
     pub struct ActionState {
@@ -52,8 +53,27 @@ pub(crate) mod input {
     fn action_active_events_system(
         mut state: Local<ActionState>,
         action_active_event: Res<Events<OnActionActive>>,
+        mut player_position: Query<(&Player, &mut Transform)>,
     ) {
         if let Some(value) = state.active_reader.latest(&action_active_event) {
+            for (_player, mut transform) in player_position.iter_mut() {
+                if value.action == "MOVE_FORWARD" {
+                    *transform.translation.z_mut() -= 0.1;
+                }
+
+                if value.action == "MOVE_BACKWARD" {
+                    *transform.translation.z_mut() += 0.1;
+                }
+
+                if value.action == "MOVE_LEFT" {
+                    *transform.translation.x_mut() -= 0.1;
+                }
+
+                if value.action == "MOVE_RIGHT" {
+                    *transform.translation.x_mut() += 0.1;
+                }
+            }
+
             if value.action == "MOUSE_SHOOT" {
                 println!("Bang");
             }
