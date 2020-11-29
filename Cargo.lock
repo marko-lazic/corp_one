@@ -544,18 +544,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_prototype_input_map"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "909b1dbdf256c77c5d34a7fbe1db6f7f94007c1ed85776f7261332cb1dbdda11"
-dependencies = [
- "bevy",
- "ron",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "bevy_render"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1124,8 +1112,8 @@ name = "corp-input"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_prototype_input_map",
  "corp-scene",
+ "kurinji",
 ]
 
 [[package]]
@@ -2034,6 +2022,18 @@ checksum = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 dependencies = [
  "winapi 0.2.8",
  "winapi-build",
+]
+
+[[package]]
+name = "kurinji"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4f2481e20c91fef138b14b81aa3cbf8ac1bc2e985d773f9e79711f3afdd9ec9"
+dependencies = [
+ "bevy",
+ "ron",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

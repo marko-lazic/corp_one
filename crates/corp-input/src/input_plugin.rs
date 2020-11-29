@@ -4,8 +4,9 @@ pub(crate) mod input {
     use bevy::app::{AppExit, Events};
     use bevy::ecs::ResMut;
     use bevy::prelude::*;
-    use bevy_prototype_input_map::{InputMap, InputMapPlugin, OnActionActive, OnActionEnd};
     use corp_scene::player::Player;
+    use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
+    use std::ops::AddAssign;
 
     #[derive(Default)]
     pub struct ActionState {
@@ -17,25 +18,17 @@ pub(crate) mod input {
 
     impl Plugin for InputPlugin {
         fn build(&self, app: &mut AppBuilder) {
-            app.add_plugin(InputMapPlugin::default())
+            app.add_plugin(KurinjiPlugin::default())
                 .add_startup_system(setup.system())
                 .add_system(action_active_events_system.system())
-                .add_system(action_end_events_system.system())
-                .add_system(action_quit_system.system());
+                .add_system(action_end_events_system.system());
         }
     }
 
-    fn setup(mut input_map: ResMut<InputMap>) {
+    fn setup(mut kurinji: ResMut<Kurinji>) {
         let binding_json =
             fs::read_to_string("config/binding.json").expect("Error! could not open config file");
-        input_map.set_bindings_with_json(&binding_json);
-    }
-
-    fn action_quit_system(input_map: Res<InputMap>, mut app_exit_events: ResMut<Events<AppExit>>) {
-        if input_map.is_action_active("QUIT_APP") {
-            println!("Quiting...");
-            app_exit_events.send(AppExit);
-        }
+        kurinji.set_bindings_with_json(&binding_json);
     }
 
     fn action_end_events_system(
@@ -55,44 +48,51 @@ pub(crate) mod input {
         action_active_event: Res<Events<OnActionActive>>,
         mut player_position: Query<(&Player, &mut Transform)>,
     ) {
-        if let Some(value) = state.active_reader.latest(&action_active_event) {
-            for (_player, mut transform) in player_position.iter_mut() {
-                if value.action == "MOVE_FORWARD" {
-                    *transform.translation.z_mut() -= 0.1;
-                }
-
-                if value.action == "MOVE_BACKWARD" {
-                    *transform.translation.z_mut() += 0.1;
-                }
-
-                if value.action == "MOVE_LEFT" {
-                    *transform.translation.x_mut() -= 0.1;
-                }
-
-                if value.action == "MOVE_RIGHT" {
-                    *transform.translation.x_mut() += 0.1;
-                }
+        let mut delta_vec: Vec3 = Default::default();
+        let event_iter = state.active_reader.iter(&action_active_event);
+        for event in event_iter {
+            println!("{}", event.action);
+            // move_actions
+            if event.action == "MOVE_FORWARD" {
+                delta_vec.add_assign(Vec3::new(0.0, 0.0, -0.1));
             }
 
-            if value.action == "MOUSE_SHOOT" {
+            if event.action == "MOVE_BACKWARD" {
+                delta_vec.add_assign(Vec3::new(0.0, 0.0, 0.1));
+                delta_vec.z().add_assign(0.1);
+            }
+
+            if event.action == "MOVE_LEFT" {
+                delta_vec.add_assign(Vec3::new(-0.1, 0.0, 0.0));
+            }
+
+            if event.action == "MOVE_RIGHT" {
+                delta_vec.add_assign(Vec3::new(0.1, 0.0, 0.0));
+            }
+
+            // aim_actions
+            if event.action == "MOUSE_SHOOT" {
                 println!("Bang");
             }
 
-            if value.action == "AIM_UP" {
-                println!("AIM_UP... [ strength: {}] ", value.strength);
+            if event.action == "AIM_UP" {
+                println!("AIM_UP... [ strength: {}] ", event.strength);
             }
 
-            if value.action == "AIM_DOWN" {
-                println!("AIM_DOWN... [ strength: {}] ", value.strength);
+            if event.action == "AIM_DOWN" {
+                println!("AIM_DOWN... [ strength: {}] ", event.strength);
             }
 
-            if value.action == "AIM_LEFT" {
-                println!("AIM_LEFT... [ strength: {}] ", value.strength);
+            if event.action == "AIM_LEFT" {
+                println!("AIM_LEFT... [ strength: {}] ", event.strength);
             }
 
-            if value.action == "AIM_RIGHT" {
-                println!("AIM_RIGHT... [ strength: {}] ", value.strength);
+            if event.action == "AIM_RIGHT" {
+                println!("AIM_RIGHT... [ strength: {}] ", event.strength);
             }
+        }
+        for (_player, mut transform) in player_position.iter_mut() {
+            transform.translation.add_assign(delta_vec);
         }
     }
 }
