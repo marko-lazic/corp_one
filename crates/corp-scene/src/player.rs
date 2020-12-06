@@ -56,7 +56,8 @@ fn setup(
 }
 
 pub fn spawn_player(mut commands: Commands, player_res: Res<PlayerRes>) {
-    commands
+    // player
+    let player = commands
         .spawn(PbrComponents {
             mesh: player_res.mesh.clone(),
             material: player_res.material.clone(),
@@ -64,5 +65,18 @@ pub fn spawn_player(mut commands: Commands, player_res: Res<PlayerRes>) {
             ..Default::default()
         })
         .with(Player)
-        .with(MovementSpeed::default());
+        .with(MovementSpeed::default())
+        .current_entity();
+
+    // camera
+    let camera = commands
+        .spawn(Camera3dComponents {
+            transform: Transform::from_translation(Vec3::new(0.0, 5.0, 10.0))
+                .looking_at(Vec3::default(), Vec3::unit_y()),
+            ..Default::default()
+        })
+        .current_entity();
+
+    // Append camera to player as child.
+    commands.push_children(player.unwrap(), &[camera.unwrap()]);
 }

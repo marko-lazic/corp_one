@@ -84,35 +84,6 @@ pub mod scene {
                 ..Default::default()
             });
 
-        // camera
-        let camera_entity = commands
-            .spawn(Camera3dComponents {
-                transform: Transform::from_translation(Vec3::new(0.0, 5.0, 10.0))
-                    .looking_at(Vec3::default(), Vec3::unit_y()),
-                ..Default::default()
-            })
-            .current_entity();
-
-        // Player ball
-        let player_entity = commands
-            .spawn(PbrComponents {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 1.0,
-                    subdivisions: 3,
-                })),
-                material: materials.add(StandardMaterial {
-                    albedo: Color::GREEN,
-                    ..Default::default()
-                }),
-                transform: Transform::from_matrix(Mat4::identity()),
-                ..Default::default()
-            })
-            .current_entity();
-
-        commands
-            // Append camera to player as child.
-            .push_children(player_entity.unwrap(), &[camera_entity.unwrap()]);
-
         let cube_handle = asset_server.load("models/cube/cube.gltf#Mesh0/Primitive0");
         commands.insert_resource(Materials {
             cube_mesh: cube_handle,
