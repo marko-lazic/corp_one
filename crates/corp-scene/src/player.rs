@@ -47,7 +47,8 @@ fn setup(
         ..Default::default()
     });
 
-    let player_handle = asset_server.load("models/cube/cube.gltf#Mesh0/Primitive0");
+    let player_handle =
+        asset_server.load("models/mannequiny/mannequiny-0.3.0.glb#Mesh0/Primitive0");
     commands.insert_resource(PlayerRes {
         mesh: player_handle,
         material: material_handle.clone(),
