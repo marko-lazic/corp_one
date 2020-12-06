@@ -10,6 +10,7 @@ use corp_scene::ScenePlugin;
 fn main() {
     App::build()
         .add_resource(Msaa { samples: 4 })
+        .add_startup_stage("game_setup")
         .add_plugins(DefaultPlugins)
         .add_plugin(ConsolePlugin)
         .add_plugin(MetricsPlugin)

@@ -12,7 +12,6 @@ pub mod scene {
     impl Plugin for ScenePlugin {
         fn build(&self, app: &mut AppBuilder) {
             app.add_startup_system(setup.system());
-            app.add_startup_stage("game_setup");
             app.add_startup_system_to_stage("game_setup", spawn_cube.system());
             app.add_system(cube_movement.system());
         }
