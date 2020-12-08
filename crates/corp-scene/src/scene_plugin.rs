@@ -48,7 +48,7 @@ pub mod scene {
         // Plane
         commands.spawn(PbrComponents {
             mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-            transform: Transform::from_translation(Vec3::new(0.0, -1.0, 0.0)),
+            transform: Transform::from_translation(Vec3::new(4., 0., 4.)),
             material: materials.add(StandardMaterial {
                 albedo: Color::WHITE,
                 ..Default::default()
@@ -68,19 +68,19 @@ pub mod scene {
             .spawn(PbrComponents {
                 mesh: node_mesh,
                 material: green_material.clone(),
-                transform: Transform::from_translation(Vec3::new(-1.5, 0.0, 0.0)),
+                transform: Transform::from_translation(Vec3::new(-1.5, 1.0, 0.0)),
                 ..Default::default()
             }) // mesh
             // node mesh
             .spawn(PbrComponents {
                 mesh: cloned_node_mesh,
                 material: blue_material.clone(),
-                transform: Transform::from_translation(Vec3::new(1.5, 0.0, 0.0)),
+                transform: Transform::from_translation(Vec3::new(1.5, 1.0, 0.0)),
                 ..Default::default()
             })
             // light
             .spawn(LightComponents {
-                transform: Transform::from_translation(Vec3::new(4.0, 5.0, 4.0)),
+                transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
                 ..Default::default()
             });
 

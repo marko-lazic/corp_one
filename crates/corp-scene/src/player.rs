@@ -61,7 +61,7 @@ pub fn spawn_player(mut commands: Commands, player_res: Res<PlayerRes>) {
         .spawn(PbrComponents {
             mesh: player_res.mesh.clone(),
             material: player_res.material.clone(),
-            transform: Transform::from_translation(Vec3::new(10.0, 1.0, -10.0)),
+            transform: Transform::from_translation(Vec3::new(10.0, 0., -10.0)),
             ..Default::default()
         })
         .with(Player)
@@ -71,8 +71,10 @@ pub fn spawn_player(mut commands: Commands, player_res: Res<PlayerRes>) {
     // camera
     let camera = commands
         .spawn(Camera3dComponents {
-            transform: Transform::from_translation(Vec3::new(0.0, 5.0, 10.0))
-                .looking_at(Vec3::default(), Vec3::unit_y()),
+            transform: Transform::from_matrix(Mat4::from_rotation_translation(
+                Quat::from_xyzw(-0.3, -0.5, -0.3, 0.5).normalize(),
+                Vec3::new(-7.0, 20.0, 4.0),
+            )),
             ..Default::default()
         })
         .current_entity();

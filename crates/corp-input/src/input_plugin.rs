@@ -51,23 +51,19 @@ pub(crate) mod input {
         let mut delta_vec: Vec3 = Default::default();
         let event_iter = state.active_reader.iter(&action_active_event);
         for event in event_iter {
-            println!("{}", event.action);
             // move_actions
             if event.action == "MOVE_FORWARD" {
-                delta_vec.add_assign(Vec3::new(0.0, 0.0, -0.1));
+                delta_vec.add_assign(Vec3::new(0.1, 0.0, 0.0));
             }
-
             if event.action == "MOVE_BACKWARD" {
-                delta_vec.add_assign(Vec3::new(0.0, 0.0, 0.1));
-                delta_vec.z().add_assign(0.1);
-            }
-
-            if event.action == "MOVE_LEFT" {
                 delta_vec.add_assign(Vec3::new(-0.1, 0.0, 0.0));
             }
-
+            if event.action == "MOVE_LEFT" {
+                delta_vec.add_assign(Vec3::new(0.0, 0.0, -0.1));
+            }
             if event.action == "MOVE_RIGHT" {
-                delta_vec.add_assign(Vec3::new(0.1, 0.0, 0.0));
+                delta_vec.add_assign(Vec3::new(0.0, 0.0, 0.1));
+                delta_vec.z().add_assign(0.1);
             }
 
             // aim_actions
@@ -76,19 +72,19 @@ pub(crate) mod input {
             }
 
             if event.action == "AIM_UP" {
-                println!("AIM_UP... [ strength: {}] ", event.strength);
+                // println!("AIM_UP... [ strength: {}] ", event.strength);
             }
 
             if event.action == "AIM_DOWN" {
-                println!("AIM_DOWN... [ strength: {}] ", event.strength);
+                // println!("AIM_DOWN... [ strength: {}] ", event.strength);
             }
 
             if event.action == "AIM_LEFT" {
-                println!("AIM_LEFT... [ strength: {}] ", event.strength);
+                // println!("AIM_LEFT... [ strength: {}] ", event.strength);
             }
 
             if event.action == "AIM_RIGHT" {
-                println!("AIM_RIGHT... [ strength: {}] ", event.strength);
+                // println!("AIM_RIGHT... [ strength: {}] ", event.strength);
             }
         }
         for (_player, mut transform) in player_position.iter_mut() {

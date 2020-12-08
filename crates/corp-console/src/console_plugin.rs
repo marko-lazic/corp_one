@@ -13,7 +13,7 @@ pub mod console {
 
     impl Plugin for ConsolePlugin {
         fn build(&self, app: &mut AppBuilder) {
-            app.add_resource(GreetTimer(Timer::from_seconds(2.0, true)))
+            app.add_resource(GreetTimer(Timer::from_seconds(60.0, true)))
                 .add_startup_system(add_people.system())
                 .add_system(greet_people.system());
         }
