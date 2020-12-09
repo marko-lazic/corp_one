@@ -1,3 +1,4 @@
+mod camera;
 pub mod player;
 mod scene_plugin;
 

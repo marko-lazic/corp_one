@@ -2,23 +2,27 @@ use bevy::app::App;
 use bevy::prelude::Msaa;
 use bevy::window::WindowDescriptor;
 use bevy::DefaultPlugins;
+use core::fmt;
 use corp_console::ConsolePlugin;
 use corp_input::InputPlugin;
 use corp_metrics::MetricsPlugin;
 use corp_scene::player::PlayerPlugin;
 use corp_scene::ScenePlugin;
 
+static GAME_SETUP_STARTUP_STAGE: &str = "game_setup";
+static CORP_ONE_GAME_TITLE: &str = "Corp One";
+
 fn main() {
     App::build()
         .add_resource(Msaa { samples: 4 })
         // Set WindowDescriptor Resource to change title and size
         .add_resource(WindowDescriptor {
-            title: "Corp One".to_string(),
+            title: CORP_ONE_GAME_TITLE.to_string(),
             width: 1600,
             height: 1600,
             ..Default::default()
         })
-        .add_startup_stage("game_setup")
+        .add_startup_stage(GAME_SETUP_STARTUP_STAGE)
         .add_plugins(DefaultPlugins)
         .add_plugin(ConsolePlugin)
         .add_plugin(MetricsPlugin)

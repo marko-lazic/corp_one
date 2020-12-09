@@ -1,3 +1,4 @@
+use crate::camera;
 use bevy::app::{AppBuilder, Plugin};
 use bevy::asset::{AssetServer, Assets, Handle};
 use bevy::ecs::{Commands, Res, ResMut};
@@ -68,16 +69,7 @@ pub fn spawn_player(mut commands: Commands, player_res: Res<PlayerRes>) {
         .with(MovementSpeed::default())
         .current_entity();
 
-    // camera
-    let camera = commands
-        .spawn(Camera3dComponents {
-            transform: Transform::from_matrix(Mat4::from_rotation_translation(
-                Quat::from_xyzw(-0.3, -0.5, -0.3, 0.5).normalize(),
-                Vec3::new(-7.0, 20.0, 4.0),
-            )),
-            ..Default::default()
-        })
-        .current_entity();
+    let camera = camera::spawn_camera(&mut commands);
 
     // Append camera to player as child.
     commands.push_children(player.unwrap(), &[camera.unwrap()]);
