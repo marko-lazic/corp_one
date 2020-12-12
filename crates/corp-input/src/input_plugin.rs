@@ -1,6 +1,7 @@
 pub(crate) mod input {
     use std::fs;
 
+    use crate::control;
     use bevy::app::{AppExit, Events};
     use bevy::ecs::ResMut;
     use bevy::prelude::*;
@@ -50,47 +51,14 @@ pub(crate) mod input {
         action_active_event: Res<Events<OnActionActive>>,
         mut player_position: Query<(&Player, &mut Transform)>,
     ) {
-        let mut delta_vec: Vec3 = Default::default();
+        let mut delta_move: Vec3 = Default::default();
         let event_iter = state.active_reader.iter(&action_active_event);
         for event in event_iter {
-            // move_actions
-            if event.action == "MOVE_FORWARD" {
-                delta_vec.add_assign(Vec3::new(0.1, 0.0, 0.0));
-            }
-            if event.action == "MOVE_BACKWARD" {
-                delta_vec.add_assign(Vec3::new(-0.1, 0.0, 0.0));
-            }
-            if event.action == "MOVE_LEFT" {
-                delta_vec.add_assign(Vec3::new(0.0, 0.0, -0.1));
-            }
-            if event.action == "MOVE_RIGHT" {
-                delta_vec.add_assign(Vec3::new(0.0, 0.0, 0.1));
-                delta_vec.z().add_assign(0.1);
-            }
-
-            // aim_actions
-            if event.action == "MOUSE_SHOOT" {
-                println!("Bang");
-            }
-
-            if event.action == "AIM_UP" {
-                // println!("AIM_UP... [ strength: {}] ", event.strength);
-            }
-
-            if event.action == "AIM_DOWN" {
-                // println!("AIM_DOWN... [ strength: {}] ", event.strength);
-            }
-
-            if event.action == "AIM_LEFT" {
-                // println!("AIM_LEFT... [ strength: {}] ", event.strength);
-            }
-
-            if event.action == "AIM_RIGHT" {
-                // println!("AIM_RIGHT... [ strength: {}] ", event.strength);
-            }
+            control::move_player(&mut delta_move, &event.action);
+            control::aim_mouse(&event.action);
         }
         for (_player, mut transform) in player_position.iter_mut() {
-            transform.translation.add_assign(delta_vec);
+            transform.translation.add_assign(delta_move);
         }
     }
 
@@ -99,22 +67,10 @@ pub(crate) mod input {
         action_active_event: Res<Events<OnActionActive>>,
         mut cameras: Query<(&mut Transform, &Camera)>,
     ) {
+        let mut translation: Vec3 = Vec3::default();
         let event_iter = state.active_reader.iter(&action_active_event);
-
-        let mut translation: Vec3 = Vec3::unit_x() * 0.0;
-
         for event in event_iter {
-            let speed = 0.1;
-
-            translation = Vec3::unit_x()
-                * speed
-                * if event.action == "ARROW_LEFT" {
-                    -1.0
-                } else if event.action == "ARROW_RIGHT" {
-                    1.0
-                } else {
-                    0.0
-                };
+            control::rotate_camera(&mut translation, &event.action);
         }
 
         for (mut camera_transform, _) in cameras.iter_mut() {

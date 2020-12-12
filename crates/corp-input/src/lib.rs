@@ -1,3 +1,4 @@
+mod control;
 mod input_plugin;
 
 pub use input_plugin::input::InputPlugin;
