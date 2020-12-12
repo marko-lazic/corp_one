@@ -2,7 +2,6 @@ use bevy::app::App;
 use bevy::prelude::Msaa;
 use bevy::window::WindowDescriptor;
 use bevy::DefaultPlugins;
-use core::fmt;
 use corp_console::ConsolePlugin;
 use corp_input::InputPlugin;
 use corp_metrics::MetricsPlugin;
