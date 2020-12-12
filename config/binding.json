@@ -6,6 +6,10 @@
     "A" : "MOVE_LEFT",
     "S" : "MOVE_BACKWARD",
     "E" : "USE",
+    "Left" :  "ARROW_LEFT",
+    "Up" : "ARROW_UP",
+    "Right" : "ARROW_RIGHT",
+    "Down": "ARROW_DOWN",
     "Return" : "ENTER"
   },
   "MouseButtons": {

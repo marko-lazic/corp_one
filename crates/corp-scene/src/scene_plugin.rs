@@ -23,18 +23,6 @@ pub mod scene {
     ) {
         for (_cube, mut transform) in cube_positions.iter_mut() {
             *transform.translation.y_mut() += 0.01;
-            if keyboard_input.pressed(KeyCode::Left) {
-                *transform.translation.x_mut() -= 0.1;
-            }
-            if keyboard_input.pressed(KeyCode::Right) {
-                *transform.translation.x_mut() += 0.1;
-            }
-            if keyboard_input.pressed(KeyCode::Down) {
-                *transform.translation.y_mut() -= 0.1;
-            }
-            if keyboard_input.pressed(KeyCode::Up) {
-                *transform.translation.y_mut() += 0.1;
-            }
         }
     }
 

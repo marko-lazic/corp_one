@@ -4,6 +4,7 @@ pub(crate) mod input {
     use bevy::app::{AppExit, Events};
     use bevy::ecs::ResMut;
     use bevy::prelude::*;
+    use bevy::render::camera::Camera;
     use corp_scene::player::Player;
     use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
     use std::ops::AddAssign;
@@ -21,6 +22,7 @@ pub(crate) mod input {
             app.add_plugin(KurinjiPlugin::default())
                 .add_startup_system(setup.system())
                 .add_system(action_active_events_system.system())
+                .add_system(rotate_camera_system.system())
                 .add_system(action_end_events_system.system());
         }
     }
@@ -89,6 +91,36 @@ pub(crate) mod input {
         }
         for (_player, mut transform) in player_position.iter_mut() {
             transform.translation.add_assign(delta_vec);
+        }
+    }
+
+    fn rotate_camera_system(
+        mut state: Local<ActionState>,
+        action_active_event: Res<Events<OnActionActive>>,
+        mut cameras: Query<(&mut Transform, &Camera)>,
+    ) {
+        let event_iter = state.active_reader.iter(&action_active_event);
+
+        let mut translation: Vec3 = Vec3::unit_x() * 0.0;
+
+        for event in event_iter {
+            let speed = 0.1;
+
+            translation = Vec3::unit_x()
+                * speed
+                * if event.action == "ARROW_LEFT" {
+                    -1.0
+                } else if event.action == "ARROW_RIGHT" {
+                    1.0
+                } else {
+                    0.0
+                };
+        }
+
+        for (mut camera_transform, _) in cameras.iter_mut() {
+            let rotation = camera_transform.rotation;
+            camera_transform.translation += rotation * translation;
+            camera_transform.look_at(Vec3::zero(), Vec3::unit_y());
         }
     }
 }
