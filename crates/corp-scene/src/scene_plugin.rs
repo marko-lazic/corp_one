@@ -17,10 +17,7 @@ pub mod scene {
         }
     }
 
-    fn cube_movement(
-        keyboard_input: Res<Input<KeyCode>>,
-        mut cube_positions: Query<(&Cube, &mut Transform)>,
-    ) {
+    fn cube_movement(mut cube_positions: Query<(&Cube, &mut Transform)>) {
         for (_cube, mut transform) in cube_positions.iter_mut() {
             *transform.translation.y_mut() += 0.01;
         }

@@ -15,6 +15,8 @@ pub struct Player;
 pub struct MovementSpeed {
     pub acceleration: f32,
     pub max: f32,
+    pub is_moving: bool,
+    pub moving_happen: bool,
 }
 
 impl Default for MovementSpeed {
@@ -22,6 +24,8 @@ impl Default for MovementSpeed {
         Self {
             acceleration: 12.0,
             max: 400.0,
+            is_moving: false,
+            moving_happen: false,
         }
     }
 }

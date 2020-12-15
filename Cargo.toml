@@ -17,3 +17,4 @@ corp-metrics = { path = "crates/corp-metrics", version = "0.1.0" }
 corp-console = { path = "crates/corp-console", version = "0.1.0" }
 corp-scene = { path = "crates/corp-scene", version = "0.1.0" }
 corp-input = { path = "crates/corp-input", version = "0.1.0" }
+corp-live = { path = "crates/corp-live", version = "0.1.0" }

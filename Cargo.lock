@@ -1122,6 +1122,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "corp-live"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "corp-scene",
+]
+
+[[package]]
 name = "corp-metrics"
 version = "0.1.0"
 dependencies = [
@@ -1142,6 +1150,7 @@ dependencies = [
  "bevy",
  "corp-console",
  "corp-input",
+ "corp-live",
  "corp-metrics",
  "corp-scene",
 ]

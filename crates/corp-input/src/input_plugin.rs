@@ -6,7 +6,7 @@ pub(crate) mod input {
     use bevy::ecs::ResMut;
     use bevy::prelude::*;
     use bevy::render::camera::Camera;
-    use corp_scene::player::Player;
+    use corp_scene::player::{MovementSpeed, Player};
     use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
     use std::ops::AddAssign;
 
@@ -49,7 +49,7 @@ pub(crate) mod input {
     fn action_active_events_system(
         mut state: Local<ActionState>,
         action_active_event: Res<Events<OnActionActive>>,
-        mut player_position: Query<(&Player, &mut Transform)>,
+        mut player_position: Query<(&Player, &mut Transform, &mut MovementSpeed)>,
     ) {
         let mut delta_move: Vec3 = Default::default();
         let event_iter = state.active_reader.iter(&action_active_event);
@@ -57,9 +57,15 @@ pub(crate) mod input {
             control::move_player(&mut delta_move, &event.action);
             control::aim_mouse(&event.action);
         }
-        for (_player, mut transform) in player_position.iter_mut() {
+        for (_player, mut transform, mut movement) in player_position.iter_mut() {
             transform.translation.add_assign(delta_move);
+            movement.is_moving = is_moving(&delta_move);
         }
+    }
+
+    fn is_moving(delta_move: &Vec3) -> bool {
+        let zero_vec: Vec3 = Default::default();
+        delta_move.ne(&zero_vec)
     }
 
     fn rotate_camera_system(
