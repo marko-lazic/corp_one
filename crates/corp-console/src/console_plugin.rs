@@ -1,25 +1,27 @@
 pub mod console {
-    use bevy::app::{AppBuilder, Plugin};
-    use bevy::core::{Time, Timer};
-    use bevy::ecs::{Commands, IntoQuerySystem, Query, Res, ResMut};
+    use bevy::prelude::*;
 
     struct Person;
 
-    struct Name(String);
+    struct GreetTimer {
+        timer: Timer,
+    }
 
-    struct GreetTimer(Timer);
+    struct Name(String);
 
     pub struct ConsolePlugin;
 
     impl Plugin for ConsolePlugin {
         fn build(&self, app: &mut AppBuilder) {
-            app.add_resource(GreetTimer(Timer::from_seconds(60.0, true)))
-                .add_startup_system(add_people.system())
-                .add_system(greet_people.system());
+            app.add_resource(GreetTimer {
+                timer: Timer::from_seconds(60.0, true),
+            })
+            .add_startup_system(add_people.system())
+            .add_system(greet_people.system());
         }
     }
 
-    fn add_people(mut commands: Commands) {
+    fn add_people(commands: &mut Commands) {
         commands
             .spawn((Person, Name("Marko Lazic".to_string())))
             .spawn((Person, Name("Ilija Nikolic".to_string())))
@@ -28,13 +30,12 @@ pub mod console {
 
     fn greet_people(
         time: Res<Time>,
-        mut timer: ResMut<GreetTimer>,
+        mut my_timer: ResMut<GreetTimer>,
         query: Query<(&Person, &Name)>,
     ) {
-        timer.0.tick(time.delta_seconds);
-        if timer.0.finished {
+        if my_timer.timer.tick(time.delta_seconds()).just_finished() {
             for (_person, name) in &mut query.iter() {
-                println!("hello {}!", name.0);
+                info!("hello {}!", name.0);
             }
         }
     }

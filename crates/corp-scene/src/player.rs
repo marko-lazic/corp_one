@@ -1,17 +1,8 @@
 use crate::camera;
-use bevy::app::{AppBuilder, Plugin};
-use bevy::asset::{AssetServer, Assets, Handle};
-use bevy::ecs::{Commands, Res, ResMut};
-use bevy::math::Vec3;
-use bevy::pbr::prelude::StandardMaterial;
-use bevy::pbr::PbrComponents;
 use bevy::prelude::*;
-use bevy::render::color::Color;
-use bevy::render::mesh::Mesh;
-use bevy::transform::components::Transform;
 
 pub struct Player;
-#[derive(Debug, Properties)]
+#[derive(Debug)]
 pub struct MovementSpeed {
     pub acceleration: f32,
     pub max: f32,
@@ -38,12 +29,12 @@ pub struct PlayerRes {
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(setup.system());
-        app.add_startup_system_to_stage("game_setup", spawn_player.system());
+        app.add_startup_stage("game_setup", SystemStage::single(spawn_player.system()));
     }
 }
 
 fn setup(
-    mut commands: Commands,
+    commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
@@ -60,10 +51,10 @@ fn setup(
     });
 }
 
-pub fn spawn_player(mut commands: Commands, player_res: Res<PlayerRes>) {
+pub fn spawn_player(commands: &mut Commands, player_res: Res<PlayerRes>) {
     // player
     let player = commands
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             mesh: player_res.mesh.clone(),
             material: player_res.material.clone(),
             transform: Transform::from_translation(Vec3::new(10.0, 0., -10.0)),
@@ -73,7 +64,7 @@ pub fn spawn_player(mut commands: Commands, player_res: Res<PlayerRes>) {
         .with(MovementSpeed::default())
         .current_entity();
 
-    let camera = camera::spawn_camera(&mut commands);
+    let camera = camera::spawn_camera(commands);
 
     // Append camera to player as child.
     commands.push_children(player.unwrap(), &[camera.unwrap()]);

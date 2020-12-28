@@ -9,7 +9,7 @@ use corp_metrics::MetricsPlugin;
 use corp_scene::player::PlayerPlugin;
 use corp_scene::ScenePlugin;
 
-static GAME_SETUP_STARTUP_STAGE: &str = "game_setup";
+pub static GAME_SETUP_STARTUP_STAGE: &str = "game_setup";
 static CORP_ONE_GAME_TITLE: &str = "Corp One";
 
 fn main() {
@@ -18,11 +18,11 @@ fn main() {
         // Set WindowDescriptor Resource to change title and size
         .add_resource(WindowDescriptor {
             title: CORP_ONE_GAME_TITLE.to_string(),
-            width: 1600,
-            height: 1600,
+            width: 1600.0,
+            height: 1600.0,
             ..Default::default()
         })
-        .add_startup_stage(GAME_SETUP_STARTUP_STAGE)
+        // .add_startup_stage(GAME_SETUP_STARTUP_STAGE)
         .add_plugins(DefaultPlugins)
         .add_plugin(ConsolePlugin)
         .add_plugin(LivePlugin)

@@ -7,8 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.3.0"
-kurinji = "1.0.3"
+bevy = "0.4.0"
+kurinji = "1.0.5"
 
 # Local
 corp-scene = { path = "../corp-scene", version ="0.1.0" }

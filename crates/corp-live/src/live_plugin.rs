@@ -2,7 +2,7 @@ pub(crate) mod live {
     use bevy::app::{AppBuilder, Plugin};
     use bevy::asset::{AssetServer, Handle};
     use bevy::audio::{Audio, AudioSource};
-    use bevy::ecs::{Commands, IntoQuerySystem, Query, Res};
+    use bevy::ecs::{Commands, IntoSystem, Query, Res, SystemStage};
     use corp_scene::player::{MovementSpeed, Player};
 
     pub struct LivePlugin;
@@ -18,12 +18,15 @@ pub(crate) mod live {
     impl Plugin for LivePlugin {
         fn build(&self, app: &mut AppBuilder) {
             app.add_startup_system(setup.system());
-            app.add_startup_system_to_stage("game_setup", play_startup_music.system());
+            app.add_startup_stage(
+                "game_setup",
+                SystemStage::single(play_startup_music.system()),
+            );
             app.add_system(player_sound.system());
         }
     }
 
-    fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    fn setup(commands: &mut Commands, asset_server: Res<AssetServer>) {
         let music = asset_server.load("sounds/music.mp3");
         commands.insert_resource(MusicRes { music });
         let footsteps_concrete = asset_server.load("sounds/footsteps_concrete.mp3");

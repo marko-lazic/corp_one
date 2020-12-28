@@ -10,7 +10,7 @@ members = [
 ]
 
 [dependencies]
-bevy = "0.3.0"
+bevy = "0.4.0"
 
 # Local
 corp-metrics = { path = "crates/corp-metrics", version = "0.1.0" }

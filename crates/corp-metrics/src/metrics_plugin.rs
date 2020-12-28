@@ -1,16 +1,10 @@
 pub mod metrics {
-    use bevy::app::{AppBuilder, Plugin};
-    use bevy::asset::AssetServer;
     use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
-    use bevy::ecs::{Commands, IntoQuerySystem, Query, Res};
-    use bevy::math::Rect;
-    use bevy::render::color::Color;
-    use bevy::text::TextStyle;
-    use bevy::ui::entity::{TextComponents, UiCameraComponents};
-    use bevy::ui::widget::Text;
-    use bevy::ui::{AlignSelf, PositionType, Style, Val};
+    use bevy::prelude::*;
 
     pub struct MetricsPlugin;
+
+    struct FpsText;
 
     impl Plugin for MetricsPlugin {
         fn build(&self, app: &mut AppBuilder) {
@@ -20,24 +14,28 @@ pub mod metrics {
         }
     }
 
-    fn text_update_system(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>) {
+    fn text_update_system(
+        diagnostics: Res<Diagnostics>,
+        mut query: Query<&mut Text, With<FpsText>>,
+    ) {
         for mut text in query.iter_mut() {
             if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
                 if let Some(average) = fps.average() {
-                    text.value = format!("FPS: {:.0}", average);
+                    text.value = format!("FPS: {:.2}", average);
                 }
             }
         }
     }
 
-    fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    fn setup(commands: &mut Commands, asset_server: Res<AssetServer>) {
         commands
-            .spawn(UiCameraComponents::default())
-            .spawn(TextComponents {
+            .spawn(CameraUiBundle::default())
+            .spawn(TextBundle {
                 style: fps_style(),
                 text: fps_text(asset_server),
                 ..Default::default()
-            });
+            })
+            .with(FpsText);
     }
 
     fn fps_text(asset_server: Res<AssetServer>) -> Text {
@@ -48,6 +46,7 @@ pub mod metrics {
             style: TextStyle {
                 font_size: 60.0,
                 color: Color::WHITE,
+                alignment: Default::default(),
             },
         }
     }
