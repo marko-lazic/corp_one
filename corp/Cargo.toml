@@ -1,0 +1,9 @@
+[package]
+name = "corp_one"
+version = "0.1.0"
+authors = ["marko.lazic <markolazic@protonmail.com>"]
+edition = "2018"
+
+[dependencies]
+bevy = "0.4.0"
+kurinji = "1.0.5"

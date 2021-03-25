@@ -31,7 +31,7 @@ impl Plugin for InputPlugin {
 
 fn setup(mut kurinji: ResMut<Kurinji>) {
     let binding_json =
-        fs::read_to_string("config/binding.json").expect("Error! could not open config file");
+        fs::read_to_string("corp/config/binding.json").expect("Error! could not open config file");
     kurinji.set_bindings_with_json(&binding_json);
 }
 
