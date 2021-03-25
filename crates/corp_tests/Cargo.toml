@@ -1,0 +1,18 @@
+[package]
+name = "corp_tests"
+version = "0.1.0"
+authors = ["Marko Lazić <marko.lazic@comyno.com>"]
+edition = "2018"
+autotests = false
+autobenches = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+corp_one_bevy_game = { path = "../../"}
+unicode-segmentation = "1.7.1"
+
+[[test]]
+name = "integration"
+path = "tests/lib.rs"
+harness = true

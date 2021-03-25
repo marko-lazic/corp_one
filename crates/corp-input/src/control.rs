@@ -1,4 +1,4 @@
-use bevy::math::Vec3;
+use bevy::{math::Vec3, prelude::info};
 use std::ops::{AddAssign, SubAssign};
 
 pub(crate) fn move_player(delta_move: &mut Vec3, action: &str) {
@@ -18,7 +18,7 @@ pub(crate) fn move_player(delta_move: &mut Vec3, action: &str) {
 
 pub(crate) fn aim_mouse(action: &str) {
     if action == "MOUSE_SHOOT" {
-        println!("Bang");
+        info!("Bang");
     }
     if action == "AIM_UP" {}
     if action == "AIM_DOWN" {}
