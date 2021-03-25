@@ -1128,60 +1128,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "corp-console"
+name = "corp_one"
 version = "0.1.0"
 dependencies = [
  "bevy",
-]
-
-[[package]]
-name = "corp-input"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "corp-scene",
  "kurinji",
-]
-
-[[package]]
-name = "corp-live"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "corp-scene",
-]
-
-[[package]]
-name = "corp-metrics"
-version = "0.1.0"
-dependencies = [
- "bevy",
-]
-
-[[package]]
-name = "corp-scene"
-version = "0.1.0"
-dependencies = [
- "bevy",
-]
-
-[[package]]
-name = "corp_one_bevy_game"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "corp-console",
- "corp-input",
- "corp-live",
- "corp-metrics",
- "corp-scene",
 ]
 
 [[package]]
 name = "corp_tests"
 version = "0.1.0"
 dependencies = [
- "corp_one_bevy_game",
  "unicode-segmentation",
 ]
 

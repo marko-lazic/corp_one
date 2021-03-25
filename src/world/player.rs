@@ -1,5 +1,6 @@
-use crate::camera;
 use bevy::prelude::*;
+
+use super::camera;
 
 pub struct Player;
 #[derive(Debug)]

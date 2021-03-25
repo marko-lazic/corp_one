@@ -1,12 +1,14 @@
+mod gui;
+mod world;
+mod audio;
+
+//use audio::live::LivePlugin;
 use bevy::app::App;
 use bevy::prelude::Msaa;
 use bevy::window::WindowDescriptor;
 use bevy::DefaultPlugins;
-use corp_console::ConsolePlugin;
-use corp_input::InputPlugin;
-use corp_metrics::MetricsPlugin;
-use corp_scene::player::PlayerPlugin;
-use corp_scene::ScenePlugin;
+use gui::{console::ConsolePlugin, metrics::MetricsPlugin};
+use world::{agency::input::InputPlugin, player::PlayerPlugin, scene::ScenePlugin};
 
 pub static GAME_SETUP_STARTUP_STAGE: &str = "game_setup";
 static CORP_ONE_GAME_TITLE: &str = "Corp One";

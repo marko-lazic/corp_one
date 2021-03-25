@@ -1,20 +1,14 @@
 [package]
-name = "corp_one_bevy_game"
+name = "corp_one"
 version = "0.1.0"
 authors = ["marko.lazic <markolazic@protonmail.com>"]
 edition = "2018"
 
 [workspace]
 members = [
-    "crates/*"
+    "corp_tests",
 ]
 
 [dependencies]
 bevy = "0.4.0"
-
-# Local
-corp-metrics = { path = "crates/corp-metrics", version = "0.1.0" }
-corp-console = { path = "crates/corp-console", version = "0.1.0" }
-corp-scene = { path = "crates/corp-scene", version = "0.1.0" }
-corp-input = { path = "crates/corp-input", version = "0.1.0" }
-corp-live = { path = "crates/corp-live", version = "0.1.0" }
+kurinji = "1.0.5"
