@@ -84,4 +84,3 @@ fn open_file() -> Result<(), Error> {
         Err(e) => Err(e),
     }
 }
-

@@ -1,8 +1,8 @@
+use crate::world::player::{MovementSpeed, Player};
 use bevy::app::{AppBuilder, Plugin};
 use bevy::asset::{AssetServer, Handle};
 use bevy::audio::{Audio, AudioSource};
 use bevy::ecs::{Commands, IntoSystem, Query, Res, SystemStage};
-use crate::world::player::{MovementSpeed, Player};
 
 pub struct LivePlugin;
 

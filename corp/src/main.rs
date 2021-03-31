@@ -1,6 +1,6 @@
+mod audio;
 mod gui;
 mod world;
-mod audio;
 
 //use audio::live::LivePlugin;
 use bevy::app::App;
