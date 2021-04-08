@@ -1,4 +1,4 @@
-use crate::guess_utils::number;
+use crate::learn_rust::guess_utils::number;
 
 #[test]
 #[should_panic]
