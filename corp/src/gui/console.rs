@@ -11,7 +11,7 @@ pub struct ConsolePlugin;
 
 impl Plugin for ConsolePlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_resource(GreetTimer {
+        app.insert_resource(GreetTimer {
             timer: Timer::from_seconds(60.0, true),
         })
         .add_startup_system(add_people.system())
@@ -19,15 +19,14 @@ impl Plugin for ConsolePlugin {
     }
 }
 
-fn add_people(commands: &mut Commands) {
-    commands
-        .spawn((Person, Name("Marko Lazic".to_string())))
-        .spawn((Person, Name("Ilija Nikolic".to_string())))
-        .spawn((Person, Name("Borka Lazic".to_string())));
+fn add_people(mut commands: Commands) {
+    commands.spawn().insert((Person, Name("Marko Lazic".to_string())));
+    commands.spawn().insert((Person, Name("Ilija Nikolic".to_string())));
+    commands.spawn().insert((Person, Name("Borka Lazic".to_string())));
 }
 
 fn greet_people(time: Res<Time>, mut my_timer: ResMut<GreetTimer>, query: Query<(&Person, &Name)>) {
-    if my_timer.timer.tick(time.delta_seconds()).just_finished() {
+    if my_timer.timer.tick(time.delta()).just_finished() {
         for (_person, name) in &mut query.iter() {
             info!("hello {}!", name.0);
         }

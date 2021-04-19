@@ -30,9 +30,9 @@ pub(crate) fn rotate_camera(translation: &mut Vec3, action: &str) {
     let speed: f32 = 0.5;
 
     if action == "ARROW_LEFT" {
-        translation.add_assign(Vec3::unit_x() * speed * 1.0);
+        translation.add_assign(Vec3::X * speed * 1.0);
     }
     if action == "ARROW_RIGHT" {
-        translation.sub_assign(Vec3::unit_x() * speed * 1.0);
+        translation.sub_assign(Vec3::X * speed * 1.0);
     }
 }

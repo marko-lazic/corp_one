@@ -3,21 +3,36 @@ mod gui;
 mod world;
 
 //use audio::live::LivePlugin;
-use bevy::app::App;
-use bevy::prelude::Msaa;
-use bevy::window::WindowDescriptor;
-use bevy::DefaultPlugins;
+use crate::world::agency::input::InputPlugin;
+use bevy::ecs::schedule::ReportExecutionOrderAmbiguities;
+use bevy::prelude::*;
 use gui::{console::ConsolePlugin, metrics::MetricsPlugin};
-use world::{agency::input::InputPlugin, player::PlayerPlugin, scene::ScenePlugin};
+use world::{player::PlayerPlugin, scene::ScenePlugin};
 
-pub static GAME_SETUP_STARTUP_STAGE: &str = "game_setup";
 static CORP_ONE_GAME_TITLE: &str = "Corp One";
+
+#[derive(Default)]
+struct Game {}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+enum GameSate {
+    #[allow(dead_code)]
+    StarMap,
+    InWorld,
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
+enum SystemLoading {
+    Scene,
+    PlayerSetup,
+}
 
 fn main() {
     App::build()
-        .add_resource(Msaa { samples: 4 })
+        .insert_resource(ReportExecutionOrderAmbiguities)
+        .insert_resource(Msaa { samples: 4 })
         // Set WindowDescriptor Resource to change title and size
-        .add_resource(WindowDescriptor {
+        .insert_resource(WindowDescriptor {
             title: CORP_ONE_GAME_TITLE.to_string(),
             width: 1600.0,
             height: 1600.0,
@@ -25,6 +40,8 @@ fn main() {
         })
         // .add_startup_stage(GAME_SETUP_STARTUP_STAGE)
         .add_plugins(DefaultPlugins)
+        .init_resource::<Game>()
+        .add_state(GameSate::InWorld)
         .add_plugin(ConsolePlugin)
         // .add_plugin(LivePlugin)
         .add_plugin(MetricsPlugin)

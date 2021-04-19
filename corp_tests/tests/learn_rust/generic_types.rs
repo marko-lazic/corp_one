@@ -14,14 +14,7 @@ fn find_the_largest() {
 
     println!("The largest char is {} ", largest);
 
-    let wallet_list = vec![
-        Wallet {
-            money: 100,
-        },
-        Wallet {
-            money: 200,
-        },
-    ];
+    let wallet_list = vec![Wallet { money: 100 }, Wallet { money: 200 }];
 
     let richest = find_greatest(wallet_list);
 
@@ -37,7 +30,7 @@ fn find_greatest<T: PartialOrd + Copy>(number_list: Vec<T>) -> T {
     }
     largest
 }
-#[derive(Copy, Clone,Debug)]
+#[derive(Copy, Clone, Debug)]
 struct Wallet {
     money: i32,
 }

@@ -1,8 +1,8 @@
+use crate::SystemLoading;
 use bevy::prelude::*;
 
-use super::camera;
-
 pub struct Player;
+
 #[derive(Debug)]
 pub struct MovementSpeed {
     pub acceleration: f32,
@@ -21,52 +21,54 @@ impl Default for MovementSpeed {
         }
     }
 }
+
 pub struct PlayerPlugin;
-pub struct PlayerRes {
-    mesh: Handle<Mesh>,
-    material: Handle<StandardMaterial>,
-}
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_startup_system(setup.system());
-        app.add_startup_stage("game_setup", SystemStage::single(spawn_player.system()));
+        app.add_startup_system(
+            setup
+                .system()
+                .after(SystemLoading::Scene)
+                .label(SystemLoading::PlayerSetup),
+        );
     }
 }
 
 fn setup(
-    commands: &mut Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let player_handle =
+        asset_server.load("models/mannequiny/mannequiny-0.3.0.glb#Mesh0/Primitive0");
+
     let material_handle = materials.add(StandardMaterial {
-        albedo: Color::rgb(0.8, 0.7, 0.6),
+        base_color: Color::rgb(0.8, 0.7, 0.6),
         ..Default::default()
     });
 
-    let player_handle =
-        asset_server.load("models/mannequiny/mannequiny-0.3.0.glb#Mesh0/Primitive0");
-    commands.insert_resource(PlayerRes {
-        mesh: player_handle,
-        material: material_handle.clone(),
-    });
-}
-
-pub fn spawn_player(commands: &mut Commands, player_res: Res<PlayerRes>) {
     // player
     let player = commands
-        .spawn(PbrBundle {
-            mesh: player_res.mesh.clone(),
-            material: player_res.material.clone(),
-            transform: Transform::from_translation(Vec3::new(10.0, 0., -10.0)),
+        .spawn_bundle(PbrBundle {
+            mesh: player_handle,
+            material: material_handle.clone(),
+            transform: Transform::from_xyz(10.0, 0., -10.0),
             ..Default::default()
         })
-        .with(Player)
-        .with(MovementSpeed::default())
-        .current_entity();
+        .insert(Player {})
+        .insert(MovementSpeed::default())
+        .id();
 
-    let camera = camera::spawn_camera(commands);
+    let camera = commands
+        .spawn_bundle(PerspectiveCameraBundle {
+            transform: Transform::from_matrix(Mat4::from_rotation_translation(
+                Quat::from_xyzw(-0.3, -0.5, -0.3, 0.5).normalize(),
+                Vec3::new(-7.0, 20.0, 4.0),
+            )),
+            ..Default::default()
+        })
+        .id();
 
-    // Append camera to player as child.
-    commands.push_children(player.unwrap(), &[camera.unwrap()]);
+    commands.entity(player).push_children(&[camera]);
 }

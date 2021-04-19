@@ -1,8 +1,6 @@
 use crate::world::player::{MovementSpeed, Player};
-use bevy::app::{AppBuilder, Plugin};
-use bevy::asset::{AssetServer, Handle};
-use bevy::audio::{Audio, AudioSource};
-use bevy::ecs::{Commands, IntoSystem, Query, Res, SystemStage};
+
+use bevy::prelude::*;
 
 pub struct LivePlugin;
 
@@ -25,7 +23,7 @@ impl Plugin for LivePlugin {
     }
 }
 
-fn setup(commands: &mut Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let music = asset_server.load("sounds/music.mp3");
     commands.insert_resource(MusicRes { music });
     let footsteps_concrete = asset_server.load("sounds/footsteps_concrete.mp3");

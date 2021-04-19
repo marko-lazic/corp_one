@@ -1,7 +1,6 @@
 use std::fs;
 
-use bevy::app::{AppExit, Events};
-use bevy::ecs::ResMut;
+use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
@@ -10,12 +9,6 @@ use std::ops::AddAssign;
 use crate::world::player::{MovementSpeed, Player};
 
 use super::control;
-
-#[derive(Default)]
-pub struct ActionState {
-    active_reader: EventReader<OnActionActive>,
-    end_reader: EventReader<OnActionEnd>,
-}
 
 pub struct InputPlugin;
 
@@ -36,25 +29,23 @@ fn setup(mut kurinji: ResMut<Kurinji>) {
 }
 
 fn action_end_events_system(
-    mut state: Local<ActionState>,
-    mut app_exit_events: ResMut<Events<AppExit>>,
-    action_end_event: Res<Events<OnActionEnd>>,
+    mut reader: EventReader<OnActionEnd>,
+    mut writer: EventWriter<AppExit>,
 ) {
-    if let Some(value) = state.end_reader.latest(&action_end_event) {
-        if value.action == "QUIT_APP" {
-            println!("Quiting...");
-            app_exit_events.send(AppExit);
+    for event in reader.iter() {
+        if event.action == "QUIT_APP" {
+            println!("Quitting...");
+            writer.send(AppExit);
         }
     }
 }
+
 fn action_active_events_system(
-    mut state: Local<ActionState>,
-    action_active_event: Res<Events<OnActionActive>>,
+    mut reader: EventReader<OnActionActive>,
     mut player_position: Query<(&Player, &mut Transform, &mut MovementSpeed)>,
 ) {
     let mut delta_move: Vec3 = Default::default();
-    let event_iter = state.active_reader.iter(&action_active_event);
-    for event in event_iter {
+    for event in reader.iter() {
         control::move_player(&mut delta_move, &event.action);
         control::aim_mouse(&event.action);
     }
@@ -70,19 +61,17 @@ fn is_moving(delta_move: &Vec3) -> bool {
 }
 
 fn rotate_camera_system(
-    mut state: Local<ActionState>,
-    action_active_event: Res<Events<OnActionActive>>,
+    mut reader: EventReader<OnActionActive>,
     mut cameras: Query<(&mut Transform, &Camera)>,
 ) {
     let mut translation: Vec3 = Vec3::default();
-    let event_iter = state.active_reader.iter(&action_active_event);
-    for event in event_iter {
+    for event in reader.iter() {
         control::rotate_camera(&mut translation, &event.action);
     }
 
     for (mut camera_transform, _) in cameras.iter_mut() {
         let rotation = camera_transform.rotation;
         camera_transform.translation += rotation * translation;
-        camera_transform.look_at(Vec3::zero(), Vec3::unit_y());
+        camera_transform.look_at(Vec3::ZERO, Vec3::Y);
     }
 }

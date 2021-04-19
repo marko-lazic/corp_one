@@ -1,4 +1,3 @@
-
 #[test]
 fn reference_test() {
     let mut vectr = vec![1, 2];
@@ -14,7 +13,7 @@ fn memory_and_allocation() {
 
     let s1 = String::from("world");
     // Rust defaults to moving a value
-    let _s2 = s1.clone();  // To copy string call clone()
+    let _s2 = s1.clone(); // To copy string call clone()
 
     println!("{} {}", hello, s1);
 
@@ -60,18 +59,15 @@ fn takes_and_gives_back(a_string: String) -> String {
 }
 
 struct WordList {
-    s1: String
+    s1: String,
 }
 impl Default for WordList {
     fn default() -> Self {
-        WordList {
-            s1: String::new()
-        }
+        WordList { s1: String::new() }
     }
 }
 
 impl WordList {
-
     fn change(&mut self, some_string: &String) {
         self.s1.push_str(some_string);
     }
@@ -91,15 +87,9 @@ fn some_funny_dereference_test() {
 
     println!("{}", ptr);
 
-    let a: Vec<_> = vec![2, 3 , 5]
-        .into_iter()
-        .map(|x| x * 2)
-        .collect();
+    let a: Vec<_> = vec![2, 3, 5].into_iter().map(|x| x * 2).collect();
 
-    let b: Vec<_> = vec![1,2,3]
-        .iter()
-        .map(|x| x * 2)
-        .collect();
+    let b: Vec<_> = vec![1, 2, 3].iter().map(|x| x * 2).collect();
 
     println!("{:?}", a);
     println!("{:?}", b);

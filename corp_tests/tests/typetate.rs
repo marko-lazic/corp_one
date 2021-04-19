@@ -32,22 +32,18 @@ impl HttpResponse<Start> {
     fn new() -> Self {
         HttpResponse::<Start> {
             state: Box::new(ActualResponseState {}),
-            extra: Start {}
+            extra: Start {},
         }
     }
 
-    fn status_line(self, response_code: u8, message: &str)
-                   -> HttpResponse<Headers>
-    {
+    fn status_line(self, response_code: u8, message: &str) -> HttpResponse<Headers> {
         // Capture the response code in the new state.
         // In an actual HTTP implementation you'd
         // probably also want to send some data. ;-)
         println!("status line message {}", message);
         HttpResponse {
             state: self.state,
-            extra: Headers {
-                response_code,
-            },
+            extra: Headers { response_code },
         }
     }
 }
@@ -64,11 +60,13 @@ impl HttpResponse<Headers> {
 
     fn body(self, contents: &str) {
         println!("Http response body called!");
-        println!("response code from HttpResponse<Start> state {}", self.response_code());
+        println!(
+            "response code from HttpResponse<Start> state {}",
+            self.response_code()
+        );
         println!("Contents {} ", contents);
     }
 }
-
 
 // trait SendingState {}
 //

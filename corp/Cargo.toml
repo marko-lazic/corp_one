@@ -5,5 +5,5 @@ authors = ["marko.lazic <markolazic@protonmail.com>"]
 edition = "2018"
 
 [dependencies]
-bevy = "0.4.0"
-kurinji = "1.0.5"
+bevy = "0.5"
+kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }

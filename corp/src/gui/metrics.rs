@@ -23,12 +23,8 @@ impl Plugin for MetricsPlugin {
     }
 }
 
-fn update_pos(
-    mut mouse_loc: ResMut<MouseRes>,
-    mut event_reader: Local<EventReader<CursorMoved>>,
-    cursor_moved: Res<Events<CursorMoved>>,
-) {
-    for event in event_reader.iter(&cursor_moved) {
+fn update_pos(mut mouse_loc: ResMut<MouseRes>, mut cursor_moved_events: EventReader<CursorMoved>) {
+    for event in cursor_moved_events.iter() {
         mouse_loc.0 = event.position;
     }
 }
@@ -37,7 +33,7 @@ fn fps_update(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<Fp
     for mut text in query.iter_mut() {
         if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {
-                text.value = format!("FPS: {:.2}", average);
+                text.sections[0].value = format!("FPS: {:.2}", average);
             }
         }
     }
@@ -56,7 +52,7 @@ fn player_position_update(
         player_z = transform.translation.z;
     }
     for mut text in query.iter_mut() {
-        text.value = format!(
+        text.sections[0].value = format!(
             "Player position: X: ({:.1}) Y: ({:.1}) Z: ({:.1})",
             player_x, player_y, player_z
         );
@@ -70,55 +66,58 @@ fn mouse_screen_position_update(
     let mouse_screen_x = mouse_pos.0.x;
     let mouse_screen_y = mouse_pos.0.y;
     for mut text in query.iter_mut() {
-        text.value = format!(
+        text.sections[0].value = format!(
             "Mouse screen position: X: ({:.1}) Y: ({:.1})",
             mouse_screen_x, mouse_screen_y
         );
     }
 }
 
-fn setup(commands: &mut Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(MouseRes(Vec2::zero()));
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(MouseRes(Vec2::ZERO));
 
     commands
-        .spawn(CameraUiBundle::default())
-        .spawn(TextBundle {
+        .spawn_bundle(UiCameraBundle::default());
+    commands
+        .spawn_bundle(TextBundle {
             style: default_style(5.0, 10.0),
             text: default_text(&asset_server),
             ..Default::default()
         })
-        .with(FpsText);
+        .insert(FpsText);
 
     commands
-        .spawn(CameraUiBundle::default())
-        .spawn(TextBundle {
+        .spawn_bundle(UiCameraBundle::default());
+    commands
+        .spawn_bundle(TextBundle {
             style: default_style(25.0, 10.0),
             text: default_text(&asset_server),
             ..Default::default()
         })
-        .with(PlayerPositionText);
+        .insert(PlayerPositionText);
 
     commands
-        .spawn(CameraUiBundle::default())
-        .spawn(TextBundle {
+        .spawn_bundle(UiCameraBundle::default());
+    commands
+        .spawn_bundle(TextBundle {
             style: default_style(45.0, 10.0),
             text: default_text(&asset_server),
             ..Default::default()
         })
-        .with(MousePositionText);
+        .insert(MousePositionText);
 }
 
 fn default_text(asset_server: &Res<AssetServer>) -> Text {
     let font_handle = asset_server.load("fonts/FiraMono-Medium.ttf");
-    Text {
-        value: "FPS".to_string(),
-        font: font_handle,
-        style: TextStyle {
+    Text::with_section(
+        "FPS".to_string(),
+        TextStyle {
+            font: font_handle,
             font_size: 20.0,
             color: Color::WHITE,
-            alignment: Default::default(),
         },
-    }
+        TextAlignment::default(),
+    )
 }
 
 fn default_style(top: f32, left: f32) -> Style {
