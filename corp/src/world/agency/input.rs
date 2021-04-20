@@ -12,13 +12,34 @@ use super::control;
 
 pub struct InputPlugin;
 
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
+pub enum InputSystem {
+    ActionActiveEvent,
+    RotateCamera,
+    ActionEndEvent,
+}
+
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(KurinjiPlugin::default())
             .add_startup_system(setup.system())
-            .add_system(action_active_events_system.system())
-            .add_system(rotate_camera_system.system())
-            .add_system(action_end_events_system.system());
+            .add_system(
+                action_active_events_system
+                    .system()
+                    .label(InputSystem::ActionActiveEvent),
+            )
+            .add_system(
+                rotate_camera_system
+                    .system()
+                    .label(InputSystem::RotateCamera)
+                    .after(InputSystem::ActionActiveEvent),
+            )
+            .add_system(
+                action_end_events_system
+                    .system()
+                    .label(InputSystem::ActionEndEvent)
+                    .after(InputSystem::RotateCamera),
+            );
     }
 }
 

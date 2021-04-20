@@ -4,6 +4,13 @@ version = "0.1.0"
 authors = ["marko.lazic <markolazic@protonmail.com>"]
 edition = "2018"
 
+
+[features]
+default = [
+    "bevy_kira_audio/wav"
+]
+
 [dependencies]
 bevy = "0.5"
 kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }
+bevy_kira_audio = "0.4.0"

@@ -2,9 +2,8 @@ mod audio;
 mod gui;
 mod world;
 
-//use audio::live::LivePlugin;
 use crate::world::agency::input::InputPlugin;
-use bevy::ecs::schedule::ReportExecutionOrderAmbiguities;
+use audio::live::LivePlugin;
 use bevy::prelude::*;
 use gui::{console::ConsolePlugin, metrics::MetricsPlugin};
 use world::{player::PlayerPlugin, scene::ScenePlugin};
@@ -29,7 +28,7 @@ enum SystemLoading {
 
 fn main() {
     App::build()
-        .insert_resource(ReportExecutionOrderAmbiguities)
+        // .insert_resource(ReportExecutionOrderAmbiguities)
         .insert_resource(Msaa { samples: 4 })
         // Set WindowDescriptor Resource to change title and size
         .insert_resource(WindowDescriptor {
@@ -43,7 +42,7 @@ fn main() {
         .init_resource::<Game>()
         .add_state(GameSate::InWorld)
         .add_plugin(ConsolePlugin)
-        // .add_plugin(LivePlugin)
+        .add_plugin(LivePlugin)
         .add_plugin(MetricsPlugin)
         .add_plugin(ScenePlugin)
         .add_plugin(InputPlugin)

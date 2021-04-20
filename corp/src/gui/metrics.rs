@@ -12,14 +12,37 @@ struct MousePositionText;
 
 pub struct MouseRes(pub Vec2);
 
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
+pub enum MetricsSystem {
+    Fps,
+    Position,
+    Mouse,
+    UpdateMouse,
+}
+
 impl Plugin for MetricsPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default())
             .add_startup_system(setup.system())
-            .add_system(fps_update.system())
-            .add_system(player_position_update.system())
-            .add_system(mouse_screen_position_update.system())
-            .add_system(update_pos.system());
+            .add_system(fps_update.system().label(MetricsSystem::Fps))
+            .add_system(
+                player_position_update
+                    .system()
+                    .label(MetricsSystem::Position)
+                    .after(MetricsSystem::Fps),
+            )
+            .add_system(
+                update_pos
+                    .system()
+                    .label(MetricsSystem::UpdateMouse)
+                    .after(MetricsSystem::Position),
+            )
+            .add_system(
+                mouse_screen_position_update
+                    .system()
+                    .label(MetricsSystem::Mouse)
+                    .after(MetricsSystem::UpdateMouse),
+            );
     }
 }
 
@@ -76,8 +99,7 @@ fn mouse_screen_position_update(
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(MouseRes(Vec2::ZERO));
 
-    commands
-        .spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(UiCameraBundle::default());
     commands
         .spawn_bundle(TextBundle {
             style: default_style(5.0, 10.0),
@@ -86,8 +108,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .insert(FpsText);
 
-    commands
-        .spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(UiCameraBundle::default());
     commands
         .spawn_bundle(TextBundle {
             style: default_style(25.0, 10.0),
@@ -96,8 +117,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .insert(PlayerPositionText);
 
-    commands
-        .spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(UiCameraBundle::default());
     commands
         .spawn_bundle(TextBundle {
             style: default_style(45.0, 10.0),
