@@ -1,3 +1,5 @@
+use crate::loading::AudioAssets;
+use crate::GameState;
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin, AudioSource};
@@ -13,19 +15,19 @@ struct AudioState {
 }
 
 struct ChannelAudioState {
-    stopped: bool,
-    paused: bool,
+    _stopped: bool,
+    _paused: bool,
     loop_started: bool,
-    volume: f32,
+    _volume: f32,
 }
 
 impl Default for ChannelAudioState {
     fn default() -> Self {
         ChannelAudioState {
-            volume: 1.0,
-            stopped: true,
+            _volume: 1.0,
+            _stopped: true,
             loop_started: false,
-            paused: false,
+            _paused: false,
         }
     }
 }
@@ -33,9 +35,14 @@ impl Default for ChannelAudioState {
 impl Plugin for LivePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(AudioPlugin);
-        app.add_startup_system(prepare_audio.system());
-        app.add_system(check_audio_loading.system());
-        app.add_system(start_background_music_loop.system());
+        app.add_system_set(
+            SystemSet::on_enter(GameState::Playing).with_system(prepare_audio.system()),
+        );
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(check_audio_loading.system())
+                .with_system(start_background_music_loop.system()),
+        );
     }
 }
 
@@ -48,12 +55,12 @@ fn check_audio_loading(mut audio_state: ResMut<AudioState>, asset_server: ResMut
     audio_state.audio_loaded = true;
 }
 
-fn prepare_audio(mut commands: Commands, asset_server: ResMut<AssetServer>) {
+fn prepare_audio(mut commands: Commands, audio_assets: Res<AudioAssets>) {
     let mut channels = HashMap::new();
     let music_channel = AudioChannel::new("music".to_owned());
     channels.insert(music_channel.clone(), ChannelAudioState::default());
 
-    let slow_travel = asset_server.load("sounds/slow-travel.wav");
+    let slow_travel = audio_assets.slow_travel.clone();
 
     let audio_state = AudioState {
         audio_loaded: false,
@@ -80,6 +87,6 @@ fn start_background_music_loop(audio: Res<Audio>, mut audio_state: ResMut<AudioS
     }
 
     channel_audio_state.loop_started = true;
-    channel_audio_state.stopped = false;
+    channel_audio_state._stopped = false;
     audio.play_looped_in_channel(audio_state.slow_travel.clone(), &audio_state.music_channel);
 }

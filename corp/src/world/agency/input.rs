@@ -9,6 +9,7 @@ use std::ops::AddAssign;
 use crate::world::player::{MovementSpeed, Player};
 
 use super::control;
+use crate::GameState;
 
 pub struct InputPlugin;
 
@@ -22,23 +23,26 @@ pub enum InputSystem {
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(KurinjiPlugin::default())
-            .add_startup_system(setup.system())
-            .add_system(
-                action_active_events_system
-                    .system()
-                    .label(InputSystem::ActionActiveEvent),
-            )
-            .add_system(
-                rotate_camera_system
-                    .system()
-                    .label(InputSystem::RotateCamera)
-                    .after(InputSystem::ActionActiveEvent),
-            )
-            .add_system(
-                action_end_events_system
-                    .system()
-                    .label(InputSystem::ActionEndEvent)
-                    .after(InputSystem::RotateCamera),
+            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup.system()))
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing)
+                    .with_system(
+                        action_active_events_system
+                            .system()
+                            .label(InputSystem::ActionActiveEvent),
+                    )
+                    .with_system(
+                        rotate_camera_system
+                            .system()
+                            .label(InputSystem::RotateCamera)
+                            .after(InputSystem::ActionActiveEvent),
+                    )
+                    .with_system(
+                        action_end_events_system
+                            .system()
+                            .label(InputSystem::ActionEndEvent)
+                            .after(InputSystem::RotateCamera),
+                    ),
             );
     }
 }

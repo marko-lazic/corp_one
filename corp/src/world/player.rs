@@ -1,4 +1,5 @@
-use crate::SystemLoading;
+use crate::loading::MeshAssets;
+use crate::GameState;
 use bevy::prelude::*;
 
 pub struct Player;
@@ -26,22 +27,18 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_startup_system(
-            setup
-                .system()
-                .after(SystemLoading::Scene)
-                .label(SystemLoading::PlayerSetup),
+        app.add_system_set(
+            SystemSet::on_enter(GameState::Playing).with_system(spawn_player_and_camera.system()),
         );
     }
 }
 
-fn setup(
+fn spawn_player_and_camera(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    mesh_assets: Res<MeshAssets>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let player_handle =
-        asset_server.load("models/mannequiny/mannequiny-0.3.0.glb#Mesh0/Primitive0");
+    let player_handle = mesh_assets.mannequiny.clone();
 
     let material_handle = materials.add(StandardMaterial {
         base_color: Color::rgb(0.8, 0.7, 0.6),

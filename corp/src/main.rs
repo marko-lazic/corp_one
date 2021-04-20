@@ -1,7 +1,10 @@
 mod audio;
 mod gui;
+mod loading;
+mod paths;
 mod world;
 
+use crate::loading::LoadingPlugin;
 use crate::world::agency::input::InputPlugin;
 use audio::live::LivePlugin;
 use bevy::prelude::*;
@@ -14,33 +17,31 @@ static CORP_ONE_GAME_TITLE: &str = "Corp One";
 struct Game {}
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
-enum GameSate {
-    #[allow(dead_code)]
-    StarMap,
-    InWorld,
+enum GameState {
+    Loading,
+    _StarMap,
+    Playing,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
-enum SystemLoading {
-    Scene,
-    PlayerSetup,
+fn create_window_descriptor() -> WindowDescriptor {
+    WindowDescriptor {
+        title: CORP_ONE_GAME_TITLE.to_string(),
+        width: 1600.0,
+        height: 1600.0,
+        ..Default::default()
+    }
 }
 
 fn main() {
     App::build()
         // .insert_resource(ReportExecutionOrderAmbiguities)
         .insert_resource(Msaa { samples: 4 })
-        // Set WindowDescriptor Resource to change title and size
-        .insert_resource(WindowDescriptor {
-            title: CORP_ONE_GAME_TITLE.to_string(),
-            width: 1600.0,
-            height: 1600.0,
-            ..Default::default()
-        })
+        .insert_resource(create_window_descriptor())
         // .add_startup_stage(GAME_SETUP_STARTUP_STAGE)
         .add_plugins(DefaultPlugins)
+        .add_state(GameState::Loading)
         .init_resource::<Game>()
-        .add_state(GameSate::InWorld)
+        .add_plugin(LoadingPlugin)
         .add_plugin(ConsolePlugin)
         .add_plugin(LivePlugin)
         .add_plugin(MetricsPlugin)
