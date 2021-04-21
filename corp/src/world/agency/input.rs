@@ -23,6 +23,7 @@ pub enum InputSystem {
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(KurinjiPlugin::default())
+            .init_resource::<PlayerAgency>()
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup.system()))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
@@ -47,6 +48,11 @@ impl Plugin for InputPlugin {
     }
 }
 
+#[derive(Default)]
+pub struct PlayerAgency {
+    pub moving: bool,
+}
+
 fn setup(mut kurinji: ResMut<Kurinji>) {
     let binding_json =
         fs::read_to_string("corp/config/binding.json").expect("Error! could not open config file");
@@ -67,6 +73,7 @@ fn action_end_events_system(
 
 fn action_active_events_system(
     mut reader: EventReader<OnActionActive>,
+    mut agency: ResMut<PlayerAgency>,
     mut player_position: Query<(&Player, &mut Transform, &mut MovementSpeed)>,
 ) {
     let mut delta_move: Vec3 = Default::default();
@@ -76,13 +83,12 @@ fn action_active_events_system(
     }
     for (_player, mut transform, mut movement) in player_position.iter_mut() {
         transform.translation.add_assign(delta_move);
-        movement.is_moving = is_moving(&delta_move);
+        agency.moving = is_moving(&delta_move);
     }
 }
 
 fn is_moving(delta_move: &Vec3) -> bool {
-    let zero_vec: Vec3 = Default::default();
-    delta_move.ne(&zero_vec)
+    delta_move.ne(&Vec3::ZERO)
 }
 
 fn rotate_camera_system(

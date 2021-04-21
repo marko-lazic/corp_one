@@ -2,27 +2,6 @@ use crate::loading::MeshAssets;
 use crate::GameState;
 use bevy::prelude::*;
 
-pub struct Player;
-
-#[derive(Debug)]
-pub struct MovementSpeed {
-    pub acceleration: f32,
-    pub max: f32,
-    pub is_moving: bool,
-    pub moving_happen: bool,
-}
-
-impl Default for MovementSpeed {
-    fn default() -> Self {
-        Self {
-            acceleration: 12.0,
-            max: 400.0,
-            is_moving: false,
-            moving_happen: false,
-        }
-    }
-}
-
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -30,6 +9,23 @@ impl Plugin for PlayerPlugin {
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing).with_system(spawn_player_and_camera.system()),
         );
+    }
+}
+
+pub struct Player;
+
+#[derive(Debug)]
+pub struct MovementSpeed {
+    pub acceleration: f32,
+    pub max: f32,
+}
+
+impl Default for MovementSpeed {
+    fn default() -> Self {
+        Self {
+            acceleration: 12.0,
+            max: 400.0,
+        }
     }
 }
 

@@ -32,6 +32,7 @@ pub struct FontAssets {
 
 pub struct AudioAssets {
     pub slow_travel: Handle<AudioSource>,
+    pub walk: Handle<AudioSource>,
 }
 
 pub struct MeshAssets {
@@ -46,6 +47,7 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let mut audio: Vec<HandleUntyped> = vec![];
     audio.push(asset_server.load_untyped(PATHS.audio_slow_travel));
+    audio.push(asset_server.load_untyped(PATHS.audio_walk));
 
     let mut mesh: Vec<HandleUntyped> = vec![];
     mesh.push(asset_server.load_untyped(PATHS.mesh_energy_node));
@@ -85,6 +87,7 @@ fn check_state(
 
     commands.insert_resource(AudioAssets {
         slow_travel: asset_server.get_handle(PATHS.audio_slow_travel),
+        walk: asset_server.get_handle(PATHS.audio_walk),
     });
 
     commands.insert_resource(MeshAssets {

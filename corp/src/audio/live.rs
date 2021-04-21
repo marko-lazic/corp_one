@@ -1,92 +1,59 @@
 use crate::loading::AudioAssets;
+use crate::world::agency::input::PlayerAgency;
 use crate::GameState;
-use bevy::asset::LoadState;
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin, AudioSource};
-use std::collections::HashMap;
+use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
 
 pub struct LivePlugin;
 
-struct AudioState {
-    audio_loaded: bool,
-    channels: HashMap<AudioChannel, ChannelAudioState>,
-    music_channel: AudioChannel,
-    slow_travel: Handle<AudioSource>,
-}
-
-struct ChannelAudioState {
-    _stopped: bool,
-    _paused: bool,
-    loop_started: bool,
-    _volume: f32,
-}
-
-impl Default for ChannelAudioState {
-    fn default() -> Self {
-        ChannelAudioState {
-            _volume: 1.0,
-            _stopped: true,
-            loop_started: false,
-            _paused: false,
-        }
-    }
+struct LiveChannels {
+    music: AudioChannel,
+    walk: AudioChannel,
 }
 
 impl Plugin for LivePlugin {
     fn build(&self, app: &mut AppBuilder) {
+        app.insert_resource(LiveChannels {
+            music: AudioChannel::new("music".to_owned()),
+            walk: AudioChannel::new("walk".to_owned()),
+        });
         app.add_plugin(AudioPlugin);
         app.add_system_set(
-            SystemSet::on_enter(GameState::Playing).with_system(prepare_audio.system()),
+            SystemSet::on_enter(GameState::Playing)
+                .with_system(setup_live_state.system())
+                .with_system(play_music.system()),
         );
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_system(check_audio_loading.system())
-                .with_system(start_background_music_loop.system()),
+            SystemSet::on_update(GameState::Playing).with_system(walk_sound.system()),
         );
+        app.add_system_set(SystemSet::on_exit(GameState::Playing).with_system(stop_audio.system()));
     }
 }
 
-fn check_audio_loading(mut audio_state: ResMut<AudioState>, asset_server: ResMut<AssetServer>) {
-    if audio_state.audio_loaded
-        || LoadState::Loaded != asset_server.get_load_state(&audio_state.slow_travel)
-    {
-        return;
-    }
-    audio_state.audio_loaded = true;
+fn setup_live_state(
+    audio: Res<Audio>,
+    audio_assets: Res<AudioAssets>,
+    channels: Res<LiveChannels>,
+) {
+    audio.set_volume_in_channel(0.1, &channels.walk);
+    audio.play_looped_in_channel(audio_assets.walk.clone(), &channels.walk);
+    audio.pause_channel(&channels.walk);
 }
 
-fn prepare_audio(mut commands: Commands, audio_assets: Res<AudioAssets>) {
-    let mut channels = HashMap::new();
-    let music_channel = AudioChannel::new("music".to_owned());
-    channels.insert(music_channel.clone(), ChannelAudioState::default());
-
-    let slow_travel = audio_assets.slow_travel.clone();
-
-    let audio_state = AudioState {
-        audio_loaded: false,
-        channels,
-        music_channel,
-        slow_travel,
-    };
-
-    commands.insert_resource(audio_state);
+fn play_music(audio: Res<Audio>, audio_assets: Res<AudioAssets>, channels: Res<LiveChannels>) {
+    audio.set_volume_in_channel(0.3, &channels.music);
+    audio.play_looped_in_channel(audio_assets.slow_travel.clone(), &channels.music);
 }
 
-fn start_background_music_loop(audio: Res<Audio>, mut audio_state: ResMut<AudioState>) {
-    if !audio_state.audio_loaded {
-        return;
+fn stop_audio(audio: Res<Audio>, channels: Res<LiveChannels>) {
+    audio.stop_channel(&channels.music);
+    audio.stop_channel(&channels.walk);
+}
+
+fn walk_sound(audio: Res<Audio>, channels: Res<LiveChannels>, agency: Res<PlayerAgency>) {
+    if agency.moving {
+        audio.resume_channel(&channels.walk);
+    } else {
+        audio.pause_channel(&channels.walk);
     }
-
-    let mut channel_audio_state = audio_state
-        .channels
-        .get_mut(&AudioChannel::new("music".to_owned()))
-        .unwrap();
-
-    if channel_audio_state.loop_started {
-        return;
-    }
-
-    channel_audio_state.loop_started = true;
-    channel_audio_state._stopped = false;
-    audio.play_looped_in_channel(audio_state.slow_travel.clone(), &audio_state.music_channel);
 }
