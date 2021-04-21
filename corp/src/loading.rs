@@ -9,7 +9,9 @@ pub struct LoadingPlugin;
 impl Plugin for LoadingPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
-            SystemSet::on_enter(GameState::Loading).with_system(start_loading.system()),
+            SystemSet::on_enter(GameState::Loading)
+                .with_system(print_loading.system())
+                .with_system(start_loading.system()),
         )
         .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_state.system()))
         .add_system_set(
@@ -39,6 +41,29 @@ pub struct MeshAssets {
     pub energy_node: Handle<Mesh>,
     pub cube: Handle<Mesh>,
     pub mannequiny: Handle<Mesh>,
+}
+
+struct LoadingData {
+    loading_entity: Entity,
+}
+
+fn print_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let loading_entity = commands
+        .spawn_bundle(TextBundle {
+            text: Text::with_section(
+                "Loading",
+                TextStyle {
+                    font: asset_server.load(PATHS.font_fira_sans),
+                    font_size: 40.0,
+                    color: Color::rgb(0.9, 0.9, 0.9),
+                },
+                Default::default(),
+            ),
+            ..Default::default()
+        })
+        .id();
+
+    commands.insert_resource(LoadingData { loading_entity });
 }
 
 fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -99,8 +124,15 @@ fn check_state(
     state.set(GameState::Playing).unwrap();
 }
 
-fn clean_up_loading(mut commands: Commands, text_query: Query<Entity, With<LoadingIndicator>>) {
+fn clean_up_loading(
+    mut commands: Commands,
+    text_query: Query<Entity, With<LoadingIndicator>>,
+    loading_data: Res<LoadingData>,
+) {
     for remove in text_query.iter() {
         commands.entity(remove).despawn_recursive();
     }
+    commands
+        .entity(loading_data.loading_entity)
+        .despawn_recursive();
 }
