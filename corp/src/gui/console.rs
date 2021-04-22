@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+
 struct Person;
 
 struct GreetTimer {
@@ -20,9 +21,15 @@ impl Plugin for ConsolePlugin {
 }
 
 fn add_people(mut commands: Commands) {
-    commands.spawn().insert((Person, Name("Marko Lazic".to_string())));
-    commands.spawn().insert((Person, Name("Ilija Nikolic".to_string())));
-    commands.spawn().insert((Person, Name("Borka Lazic".to_string())));
+    commands
+        .spawn()
+        .insert((Person, Name("Marko Lazic".to_string())));
+    commands
+        .spawn()
+        .insert((Person, Name("Ilija Nikolic".to_string())));
+    commands
+        .spawn()
+        .insert((Person, Name("Borka Lazic".to_string())));
 }
 
 fn greet_people(time: Res<Time>, mut my_timer: ResMut<GreetTimer>, query: Query<(&Person, &Name)>) {

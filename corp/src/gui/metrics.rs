@@ -1,6 +1,7 @@
-use crate::world::player::Player;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
+
+use crate::world::player::Player;
 
 pub struct MetricsPlugin;
 

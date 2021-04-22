@@ -1,5 +1,6 @@
-use bevy::{math::Vec3, prelude::info};
 use std::ops::{AddAssign, SubAssign};
+
+use bevy::{math::Vec3, prelude::info};
 
 pub(crate) fn move_player(delta_move: &mut Vec3, action: &str) {
     if action == "MOVE_FORWARD" {

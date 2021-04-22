@@ -1,15 +1,17 @@
+use bevy::prelude::*;
+
+use audio::live::LivePlugin;
+use gui::{console::ConsolePlugin, metrics::MetricsPlugin};
+use world::{player::PlayerPlugin, scene::ScenePlugin};
+
+use crate::loading::LoadingPlugin;
+use crate::world::agency::input::InputPlugin;
+
 mod audio;
 mod gui;
 mod loading;
 mod paths;
 mod world;
-
-use crate::loading::LoadingPlugin;
-use crate::world::agency::input::InputPlugin;
-use audio::live::LivePlugin;
-use bevy::prelude::*;
-use gui::{console::ConsolePlugin, metrics::MetricsPlugin};
-use world::{player::PlayerPlugin, scene::ScenePlugin};
 
 static CORP_ONE_GAME_TITLE: &str = "Corp One";
 

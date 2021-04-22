@@ -1106,6 +1106,7 @@ dependencies = [
  "bevy",
  "bevy_kira_audio",
  "kurinji",
+ "rand",
 ]
 
 [[package]]

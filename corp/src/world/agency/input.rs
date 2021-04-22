@@ -1,15 +1,15 @@
 use std::fs;
+use std::ops::AddAssign;
 
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
-use std::ops::AddAssign;
 
 use crate::world::player::{MovementSpeed, Player};
+use crate::GameState;
 
 use super::control;
-use crate::GameState;
 
 pub struct InputPlugin;
 

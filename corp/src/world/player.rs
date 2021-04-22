@@ -1,6 +1,7 @@
+use bevy::prelude::*;
+
 use crate::loading::MeshAssets;
 use crate::GameState;
-use bevy::prelude::*;
 
 pub struct PlayerPlugin;
 
@@ -29,39 +30,57 @@ impl Default for MovementSpeed {
     }
 }
 
+struct PlayerPbrBundle;
+
+impl PlayerPbrBundle {
+    fn create(
+        mesh_assets: Res<MeshAssets>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+    ) -> PbrBundle {
+        let mesh = mesh_assets.mannequiny.clone();
+
+        let material = materials.add(StandardMaterial {
+            base_color: Color::rgb(0.8, 0.7, 0.6),
+            ..Default::default()
+        });
+
+        PbrBundle {
+            mesh,
+            material,
+            transform: Transform::from_xyz(10.0, 0., -10.0),
+            ..Default::default()
+        }
+    }
+}
+
+struct CorpCameraBundle;
+
+impl CorpCameraBundle {
+    fn create() -> PerspectiveCameraBundle {
+        let mat4 = Mat4::from_rotation_translation(
+            Quat::from_xyzw(-0.3, -0.5, -0.3, 0.5).normalize(),
+            Vec3::new(-7.0, 20.0, 4.0),
+        );
+        PerspectiveCameraBundle {
+            transform: Transform::from_matrix(mat4),
+            ..Default::default()
+        }
+    }
+}
+
 fn spawn_player_and_camera(
     mut commands: Commands,
     mesh_assets: Res<MeshAssets>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let player_handle = mesh_assets.mannequiny.clone();
-
-    let material_handle = materials.add(StandardMaterial {
-        base_color: Color::rgb(0.8, 0.7, 0.6),
-        ..Default::default()
-    });
-
     // player
     let player = commands
-        .spawn_bundle(PbrBundle {
-            mesh: player_handle,
-            material: material_handle.clone(),
-            transform: Transform::from_xyz(10.0, 0., -10.0),
-            ..Default::default()
-        })
+        .spawn_bundle(PlayerPbrBundle::create(mesh_assets, materials))
         .insert(Player {})
         .insert(MovementSpeed::default())
         .id();
 
-    let camera = commands
-        .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_matrix(Mat4::from_rotation_translation(
-                Quat::from_xyzw(-0.3, -0.5, -0.3, 0.5).normalize(),
-                Vec3::new(-7.0, 20.0, 4.0),
-            )),
-            ..Default::default()
-        })
-        .id();
+    let camera = commands.spawn_bundle(CorpCameraBundle::create()).id();
 
     commands.entity(player).push_children(&[camera]);
 }

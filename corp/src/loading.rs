@@ -1,8 +1,9 @@
-use crate::paths::PATHS;
-use crate::GameState;
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy_kira_audio::AudioSource;
+
+use crate::paths::PATHS;
+use crate::GameState;
 
 pub struct LoadingPlugin;
 
@@ -41,6 +42,10 @@ pub struct MeshAssets {
     pub energy_node: Handle<Mesh>,
     pub cube: Handle<Mesh>,
     pub mannequiny: Handle<Mesh>,
+}
+
+pub struct MaterialAssets {
+    pub cube: Handle<StandardMaterial>,
 }
 
 struct LoadingData {
@@ -86,6 +91,7 @@ fn check_state(
     mut commands: Commands,
     mut state: ResMut<State<GameState>>,
     asset_server: Res<AssetServer>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     loading_state: Res<LoadingState>,
 ) {
     if LoadState::Loaded
@@ -119,6 +125,13 @@ fn check_state(
         energy_node: asset_server.get_handle(PATHS.mesh_energy_node),
         cube: asset_server.get_handle(PATHS.mesh_cube),
         mannequiny: asset_server.get_handle(PATHS.mesh_mannequiny),
+    });
+
+    commands.insert_resource(MaterialAssets {
+        cube: materials.add(StandardMaterial {
+            base_color: Color::rgb(0.8, 0.7, 0.6),
+            ..Default::default()
+        }),
     });
 
     state.set(GameState::Playing).unwrap();
