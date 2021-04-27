@@ -6,6 +6,7 @@ use world::{player::PlayerPlugin, scene::ScenePlugin};
 
 use crate::loading::LoadingPlugin;
 use crate::world::agency::input::InputPlugin;
+use crate::world::camera::TopDownCameraPlugin;
 
 mod audio;
 mod gui;
@@ -13,10 +14,16 @@ mod loading;
 mod paths;
 mod world;
 
-static CORP_ONE_GAME_TITLE: &str = "Corp One";
+mod options {
+    pub const CORP_ONE_GAME_TITLE: &str = "Corp One";
+    pub const WIDTH: f32 = 1600.0;
+    pub const HEIGHT: f32 = 1600.0;
+}
 
 #[derive(Default)]
-struct Game {}
+struct Game {
+    player: Option<Entity>,
+}
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 enum GameState {
@@ -27,9 +34,9 @@ enum GameState {
 
 fn create_window_descriptor() -> WindowDescriptor {
     WindowDescriptor {
-        title: CORP_ONE_GAME_TITLE.to_string(),
-        width: 1600.0,
-        height: 1600.0,
+        title: options::CORP_ONE_GAME_TITLE.to_string(),
+        width: options::WIDTH,
+        height: options::HEIGHT,
         ..Default::default()
     }
 }
@@ -39,7 +46,6 @@ fn main() {
         // .insert_resource(ReportExecutionOrderAmbiguities)
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(create_window_descriptor())
-        // .add_startup_stage(GAME_SETUP_STARTUP_STAGE)
         .add_plugins(DefaultPlugins)
         .add_state(GameState::Loading)
         .init_resource::<Game>()
@@ -50,5 +56,6 @@ fn main() {
         .add_plugin(ScenePlugin)
         .add_plugin(InputPlugin)
         .add_plugin(PlayerPlugin)
+        .add_plugin(TopDownCameraPlugin)
         .run();
 }

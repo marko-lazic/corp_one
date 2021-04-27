@@ -1,19 +1,21 @@
 use bevy::prelude::*;
 
 use crate::loading::MeshAssets;
-use crate::GameState;
+use crate::world::WorldSystem;
+use crate::{Game, GameState};
+
+pub struct Player;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
-            SystemSet::on_enter(GameState::Playing).with_system(spawn_player_and_camera.system()),
+            SystemSet::on_enter(GameState::Playing)
+                .with_system(spawn_player.system().label(WorldSystem::PlayerSetup)),
         );
     }
 }
-
-pub struct Player;
 
 #[derive(Debug)]
 pub struct MovementSpeed {
@@ -53,34 +55,17 @@ impl PlayerPbrBundle {
     }
 }
 
-struct CorpCameraBundle;
-
-impl CorpCameraBundle {
-    fn create() -> PerspectiveCameraBundle {
-        let mat4 = Mat4::from_rotation_translation(
-            Quat::from_xyzw(-0.3, -0.5, -0.3, 0.5).normalize(),
-            Vec3::new(-7.0, 20.0, 4.0),
-        );
-        PerspectiveCameraBundle {
-            transform: Transform::from_matrix(mat4),
-            ..Default::default()
-        }
-    }
-}
-
-fn spawn_player_and_camera(
+fn spawn_player(
     mut commands: Commands,
     mesh_assets: Res<MeshAssets>,
     materials: ResMut<Assets<StandardMaterial>>,
+    mut game: ResMut<Game>,
 ) {
-    // player
     let player = commands
         .spawn_bundle(PlayerPbrBundle::create(mesh_assets, materials))
         .insert(Player {})
         .insert(MovementSpeed::default())
         .id();
 
-    let camera = commands.spawn_bundle(CorpCameraBundle::create()).id();
-
-    commands.entity(player).push_children(&[camera]);
+    game.player = Some(player);
 }

@@ -14,4 +14,5 @@ default = [
 bevy = "0.5"
 kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }
 bevy_kira_audio = "0.4.0"
-rand ="0.8.3"
+rand = "0.8.3"
+bevy_mod_raycast = "0.2.2"
