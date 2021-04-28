@@ -7,18 +7,6 @@ use crate::{Game, GameState};
 
 pub struct MyRaycastSet;
 
-pub struct TopDownCamera {
-    _zoom_sensitivity: f32,
-}
-
-impl Default for TopDownCamera {
-    fn default() -> Self {
-        TopDownCamera {
-            _zoom_sensitivity: 1.,
-        }
-    }
-}
-
 pub struct TopDownCameraPlugin;
 
 impl Plugin for TopDownCameraPlugin {
@@ -36,10 +24,10 @@ impl Plugin for TopDownCameraPlugin {
     }
 }
 
-struct CorpCameraBundle;
+struct CameraFactory;
 
-impl CorpCameraBundle {
-    fn create() -> PerspectiveCameraBundle {
+impl CameraFactory {
+    fn create_perspective_camera_bundle() -> PerspectiveCameraBundle {
         let mat4 = Mat4::from_rotation_translation(
             Quat::from_xyzw(-0.3, -0.5, -0.3, 0.5).normalize(),
             Vec3::new(-7.0, 20.0, 4.0),
@@ -53,8 +41,7 @@ impl CorpCameraBundle {
 
 fn setup_camera(mut commands: Commands, game: Res<Game>) {
     let camera = commands
-        .spawn_bundle(CorpCameraBundle::create())
-        .insert(TopDownCamera::default())
+        .spawn_bundle(CameraFactory::create_perspective_camera_bundle())
         .insert(RayCastSource::<MyRaycastSet>::new())
         .id();
 
