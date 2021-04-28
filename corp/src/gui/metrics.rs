@@ -5,52 +5,65 @@ use crate::world::player::Player;
 
 pub struct MetricsPlugin;
 
-struct FpsText;
-
-struct PlayerPositionText;
-
-struct MousePositionText;
-
-pub struct MouseRes(pub Vec2);
-
-#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
-pub enum MetricsSystem {
-    Fps,
-    Position,
-    Mouse,
-    UpdateMouse,
+pub struct Metrics {
+    pub mouse_screen_position: Vec2,
+    pub mouse_world_position: Vec3,
 }
 
 impl Plugin for MetricsPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_plugin(FrameTimeDiagnosticsPlugin::default())
-            .add_startup_system(setup.system())
-            .add_system(fps_update.system().label(MetricsSystem::Fps))
-            .add_system(
-                player_position_update
-                    .system()
-                    .label(MetricsSystem::Position)
-                    .after(MetricsSystem::Fps),
-            )
-            .add_system(
-                update_pos
-                    .system()
-                    .label(MetricsSystem::UpdateMouse)
-                    .after(MetricsSystem::Position),
-            )
-            .add_system(
-                mouse_screen_position_update
-                    .system()
-                    .label(MetricsSystem::Mouse)
-                    .after(MetricsSystem::UpdateMouse),
-            );
+        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+        app.add_startup_system(setup.system());
+        app.add_system(fps_update.system());
+        app.add_system(player_position_update.system());
+        app.add_system(mouse_screen_position_update.system());
+        app.add_system(mouse_world_position_update.system());
     }
 }
 
-fn update_pos(mut mouse_loc: ResMut<MouseRes>, mut cursor_moved_events: EventReader<CursorMoved>) {
-    for event in cursor_moved_events.iter() {
-        mouse_loc.0 = event.position;
-    }
+struct FpsText;
+struct PlayerPositionText;
+struct MouseScreenPositionText;
+struct MouseWorldPositionText;
+
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(Metrics {
+        mouse_screen_position: Vec2::ZERO,
+        mouse_world_position: Vec3::ZERO,
+    });
+
+    commands.spawn_bundle(UiCameraBundle::default());
+    commands
+        .spawn_bundle(TextBundle {
+            style: default_style(5.0, 10.0),
+            text: default_text(&asset_server),
+            ..Default::default()
+        })
+        .insert(FpsText);
+
+    commands
+        .spawn_bundle(TextBundle {
+            style: default_style(25.0, 10.0),
+            text: default_text(&asset_server),
+            ..Default::default()
+        })
+        .insert(PlayerPositionText);
+
+    commands
+        .spawn_bundle(TextBundle {
+            style: default_style(45.0, 10.0),
+            text: default_text(&asset_server),
+            ..Default::default()
+        })
+        .insert(MouseScreenPositionText);
+
+    commands
+        .spawn_bundle(TextBundle {
+            style: default_style(65.0, 10.0),
+            text: default_text(&asset_server),
+            ..Default::default()
+        })
+        .insert(MouseWorldPositionText);
 }
 
 fn fps_update(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
@@ -77,55 +90,39 @@ fn player_position_update(
     }
     for mut text in query.iter_mut() {
         text.sections[0].value = format!(
-            "Player position: X: ({:.1}) Y: ({:.1}) Z: ({:.1})",
+            "Player position: X: {:.1} Y: {:.1} Z: {:.1}",
             player_x, player_y, player_z
         );
     }
 }
 
 fn mouse_screen_position_update(
-    mouse_pos: Res<MouseRes>,
-    mut query: Query<&mut Text, With<MousePositionText>>,
+    metrics: Res<Metrics>,
+    mut query: Query<&mut Text, With<MouseScreenPositionText>>,
 ) {
-    let mouse_screen_x = mouse_pos.0.x;
-    let mouse_screen_y = mouse_pos.0.y;
+    let mouse_screen_x = metrics.mouse_screen_position.x;
+    let mouse_screen_y = metrics.mouse_screen_position.y;
     for mut text in query.iter_mut() {
         text.sections[0].value = format!(
-            "Mouse screen position: X: ({:.1}) Y: ({:.1})",
+            "Mouse screen position: X: {:.1} Y: {:.1}",
             mouse_screen_x, mouse_screen_y
         );
     }
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(MouseRes(Vec2::ZERO));
-
-    commands.spawn_bundle(UiCameraBundle::default());
-    commands
-        .spawn_bundle(TextBundle {
-            style: default_style(5.0, 10.0),
-            text: default_text(&asset_server),
-            ..Default::default()
-        })
-        .insert(FpsText);
-
-    commands.spawn_bundle(UiCameraBundle::default());
-    commands
-        .spawn_bundle(TextBundle {
-            style: default_style(25.0, 10.0),
-            text: default_text(&asset_server),
-            ..Default::default()
-        })
-        .insert(PlayerPositionText);
-
-    commands.spawn_bundle(UiCameraBundle::default());
-    commands
-        .spawn_bundle(TextBundle {
-            style: default_style(45.0, 10.0),
-            text: default_text(&asset_server),
-            ..Default::default()
-        })
-        .insert(MousePositionText);
+fn mouse_world_position_update(
+    metrics: Res<Metrics>,
+    mut query: Query<&mut Text, With<MouseWorldPositionText>>,
+) {
+    let world_x = metrics.mouse_world_position.x;
+    let world_y = metrics.mouse_world_position.y;
+    let world_z = metrics.mouse_world_position.z;
+    for mut text in query.iter_mut() {
+        text.sections[0].value = format!(
+            "Mouse world position: X: {:.1} Y: {:.1} Z: {:.1}",
+            world_x, world_y, world_z
+        );
+    }
 }
 
 fn default_text(asset_server: &Res<AssetServer>) -> Text {
