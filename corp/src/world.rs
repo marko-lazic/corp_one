@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 pub mod camera;
+mod character;
 pub mod control;
 pub mod cube;
 pub mod player;

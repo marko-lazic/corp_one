@@ -1,12 +1,11 @@
 use bevy::prelude::*;
 
 use crate::loading::MeshAssets;
+use crate::world::character::{CharacterBundle, CharacterName};
 use crate::world::WorldSystem;
 use crate::{Game, GameState};
 
-pub struct Player {
-    pub _movement: Movement,
-}
+pub struct Player;
 
 pub struct PlayerPlugin;
 
@@ -16,21 +15,6 @@ impl Plugin for PlayerPlugin {
             SystemSet::on_enter(GameState::Playing)
                 .with_system(spawn_player.system().label(WorldSystem::PlayerSetup)),
         );
-    }
-}
-
-#[derive(Debug)]
-pub struct Movement {
-    pub acceleration: f32,
-    pub speed: f32,
-}
-
-impl Default for Movement {
-    fn default() -> Self {
-        Self {
-            acceleration: 12.0,
-            speed: 400.0,
-        }
     }
 }
 
@@ -65,8 +49,10 @@ fn spawn_player(
 ) {
     let player = commands
         .spawn_bundle(PlayerPbrBundle::create(mesh_assets, materials))
-        .insert(Player {
-            _movement: Movement::default(),
+        .insert(Player)
+        .insert_bundle(CharacterBundle {
+            name: CharacterName::new("The Guy"),
+            ..Default::default()
         })
         .id();
 
