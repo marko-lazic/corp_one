@@ -79,7 +79,8 @@ fn action_active_events_system(
         move_player(&mut delta_move, &event.action);
         aim_mouse(&event.action);
     }
-    for (_player, mut transform) in player_position.iter_mut() {
+
+    if let Ok((_player, mut transform)) = player_position.single_mut() {
         transform.translation.add_assign(delta_move);
         agency.moving = is_moving(&delta_move);
     }
