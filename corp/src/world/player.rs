@@ -4,7 +4,9 @@ use crate::loading::MeshAssets;
 use crate::world::WorldSystem;
 use crate::{Game, GameState};
 
-pub struct Player;
+pub struct Player {
+    pub _movement: Movement,
+}
 
 pub struct PlayerPlugin;
 
@@ -18,16 +20,16 @@ impl Plugin for PlayerPlugin {
 }
 
 #[derive(Debug)]
-pub struct MovementSpeed {
+pub struct Movement {
     pub acceleration: f32,
-    pub max: f32,
+    pub speed: f32,
 }
 
-impl Default for MovementSpeed {
+impl Default for Movement {
     fn default() -> Self {
         Self {
             acceleration: 12.0,
-            max: 400.0,
+            speed: 400.0,
         }
     }
 }
@@ -63,8 +65,9 @@ fn spawn_player(
 ) {
     let player = commands
         .spawn_bundle(PlayerPbrBundle::create(mesh_assets, materials))
-        .insert(Player {})
-        .insert(MovementSpeed::default())
+        .insert(Player {
+            _movement: Movement::default(),
+        })
         .id();
 
     game.player = Some(player);

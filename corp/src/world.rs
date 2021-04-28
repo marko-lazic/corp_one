@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-pub mod agency;
 pub mod camera;
+pub mod control;
 pub mod cube;
 pub mod player;
 pub mod scene;

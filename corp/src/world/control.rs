@@ -1,26 +1,24 @@
 use std::fs;
-use std::ops::AddAssign;
+use std::ops::{AddAssign, SubAssign};
 
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
-use crate::world::player::{MovementSpeed, Player};
+use crate::world::player::Player;
 use crate::GameState;
 
-use super::control;
-
-pub struct InputPlugin;
+pub struct ControlPlugin;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
-pub enum InputSystem {
+pub enum ControlSystem {
     ActionActiveEvent,
     RotateCamera,
     ActionEndEvent,
 }
 
-impl Plugin for InputPlugin {
+impl Plugin for ControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(KurinjiPlugin::default())
             .init_resource::<PlayerAgency>()
@@ -30,19 +28,19 @@ impl Plugin for InputPlugin {
                     .with_system(
                         action_active_events_system
                             .system()
-                            .label(InputSystem::ActionActiveEvent),
+                            .label(ControlSystem::ActionActiveEvent),
                     )
                     .with_system(
                         rotate_camera_system
                             .system()
-                            .label(InputSystem::RotateCamera)
-                            .after(InputSystem::ActionActiveEvent),
+                            .label(ControlSystem::RotateCamera)
+                            .after(ControlSystem::ActionActiveEvent),
                     )
                     .with_system(
                         action_end_events_system
                             .system()
-                            .label(InputSystem::ActionEndEvent)
-                            .after(InputSystem::RotateCamera),
+                            .label(ControlSystem::ActionEndEvent)
+                            .after(ControlSystem::RotateCamera),
                     ),
             );
     }
@@ -74,14 +72,14 @@ fn action_end_events_system(
 fn action_active_events_system(
     mut reader: EventReader<OnActionActive>,
     mut agency: ResMut<PlayerAgency>,
-    mut player_position: Query<(&Player, &mut Transform, &mut MovementSpeed)>,
+    mut player_position: Query<(&Player, &mut Transform)>,
 ) {
     let mut delta_move: Vec3 = Default::default();
     for event in reader.iter() {
-        control::move_player(&mut delta_move, &event.action);
-        control::aim_mouse(&event.action);
+        move_player(&mut delta_move, &event.action);
+        aim_mouse(&event.action);
     }
-    for (_player, mut transform, _movement) in player_position.iter_mut() {
+    for (_player, mut transform) in player_position.iter_mut() {
         transform.translation.add_assign(delta_move);
         agency.moving = is_moving(&delta_move);
     }
@@ -97,12 +95,48 @@ fn rotate_camera_system(
 ) {
     let mut translation: Vec3 = Vec3::default();
     for event in reader.iter() {
-        control::rotate_camera(&mut translation, &event.action);
+        rotate_camera(&mut translation, &event.action);
     }
 
     for (mut camera_transform, _) in cameras.iter_mut() {
         let rotation = camera_transform.rotation;
         camera_transform.translation += rotation * translation;
         camera_transform.look_at(Vec3::ZERO, Vec3::Y);
+    }
+}
+
+fn move_player(delta_move: &mut Vec3, action: &str) {
+    if action == "MOVE_FORWARD" {
+        delta_move.add_assign(Vec3::new(0.1, 0.0, 0.0));
+    }
+    if action == "MOVE_BACKWARD" {
+        delta_move.add_assign(Vec3::new(-0.1, 0.0, 0.0));
+    }
+    if action == "MOVE_LEFT" {
+        delta_move.add_assign(Vec3::new(0.0, 0.0, -0.1));
+    }
+    if action == "MOVE_RIGHT" {
+        delta_move.add_assign(Vec3::new(0.0, 0.0, 0.1));
+    }
+}
+
+fn aim_mouse(action: &str) {
+    if action == "MOUSE_SHOOT" {
+        info!("Bang");
+    }
+    if action == "AIM_UP" {}
+    if action == "AIM_DOWN" {}
+    if action == "AIM_LEFT" {}
+    if action == "AIM_RIGHT" {}
+}
+
+fn rotate_camera(translation: &mut Vec3, action: &str) {
+    let speed: f32 = 0.5;
+
+    if action == "ARROW_LEFT" {
+        translation.add_assign(Vec3::X * speed * 1.0);
+    }
+    if action == "ARROW_RIGHT" {
+        translation.sub_assign(Vec3::X * speed * 1.0);
     }
 }

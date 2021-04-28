@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
 
 use crate::loading::AudioAssets;
-use crate::world::agency::input::PlayerAgency;
+use crate::world::control::PlayerAgency;
 use crate::GameState;
 
 pub struct LivePlugin;

@@ -5,8 +5,8 @@ use gui::{console::ConsolePlugin, metrics::MetricsPlugin};
 use world::{player::PlayerPlugin, scene::ScenePlugin};
 
 use crate::loading::LoadingPlugin;
-use crate::world::agency::input::InputPlugin;
 use crate::world::camera::TopDownCameraPlugin;
+use world::control::ControlPlugin;
 
 mod audio;
 mod gui;
@@ -54,7 +54,7 @@ fn main() {
         .add_plugin(LivePlugin)
         .add_plugin(MetricsPlugin)
         .add_plugin(ScenePlugin)
-        .add_plugin(InputPlugin)
+        .add_plugin(ControlPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(TopDownCameraPlugin)
         .run();
