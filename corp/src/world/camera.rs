@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RayCastSource};
+use bevy_orbit_controls::{OrbitCamera, OrbitCameraPlugin};
 
 use crate::gui::metrics::Metrics;
 use crate::world::WorldSystem;
@@ -11,6 +12,7 @@ pub struct TopDownCameraPlugin;
 
 impl Plugin for TopDownCameraPlugin {
     fn build(&self, app: &mut AppBuilder) {
+        app.add_plugin(OrbitCameraPlugin);
         app.add_plugin(DefaultRaycastingPlugin::<MyRaycastSet>::default());
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing).with_system(
@@ -42,6 +44,7 @@ impl CameraFactory {
 fn setup_camera(mut commands: Commands, game: Res<Game>) {
     let camera = commands
         .spawn_bundle(CameraFactory::create_perspective_camera_bundle())
+        .insert(OrbitCamera::new(20.0, Vec3::ZERO))
         .insert(RayCastSource::<MyRaycastSet>::new())
         .id();
 
