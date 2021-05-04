@@ -1,5 +1,4 @@
 use std::fs;
-use std::ops::AddAssign;
 
 use bevy::app::AppExit;
 use bevy::prelude::*;
@@ -8,21 +7,15 @@ use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 use crate::world::player::Player;
 use crate::GameState;
 
-#[derive(Default)]
-pub struct PlayerAgency {
-    pub moving: bool,
-}
-
 pub struct ControlPlugin;
 
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(KurinjiPlugin::default())
-            .init_resource::<PlayerAgency>()
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup.system()))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(player_movement.system())
+                    .with_system(player_input.system())
                     .with_system(quit_app.system()),
             );
     }
@@ -43,39 +36,27 @@ fn quit_app(mut reader: EventReader<OnActionEnd>, mut writer: EventWriter<AppExi
     }
 }
 
-fn player_movement(
-    mut reader: EventReader<OnActionActive>,
-    mut agency: ResMut<PlayerAgency>,
-    mut player_position: Query<(&Player, &mut Transform)>,
-) {
-    let mut delta_move: Vec3 = Default::default();
-    for event in reader.iter() {
-        move_player(&mut delta_move, &event.action);
-        aim_mouse(&event.action);
-    }
-
-    if let Ok((_player, mut transform)) = player_position.single_mut() {
-        transform.translation.add_assign(delta_move);
-        agency.moving = is_moving(&delta_move);
+fn player_input(mut reader: EventReader<OnActionActive>, mut query: Query<&mut Player>) {
+    if let Ok(mut player) = query.single_mut() {
+        for event in reader.iter() {
+            move_player(&mut player, &event.action);
+            aim_mouse(&event.action);
+        }
     }
 }
 
-fn is_moving(delta_move: &Vec3) -> bool {
-    delta_move.ne(&Vec3::ZERO)
-}
-
-fn move_player(delta_move: &mut Vec3, action: &str) {
+fn move_player(player: &mut Player, action: &str) {
     if action == "MOVE_FORWARD" {
-        delta_move.add_assign(Vec3::new(0.1, 0.0, 0.0));
+        player.input.forward = true;
     }
     if action == "MOVE_BACKWARD" {
-        delta_move.add_assign(Vec3::new(-0.1, 0.0, 0.0));
+        player.input.backward = true;
     }
     if action == "MOVE_LEFT" {
-        delta_move.add_assign(Vec3::new(0.0, 0.0, -0.1));
+        player.input.left = true;
     }
     if action == "MOVE_RIGHT" {
-        delta_move.add_assign(Vec3::new(0.0, 0.0, 0.1));
+        player.input.right = true;
     }
 }
 

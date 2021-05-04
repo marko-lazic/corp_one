@@ -1,19 +1,63 @@
 use bevy::prelude::*;
 
 use crate::loading::MeshAssets;
-use crate::world::character::{CharacterBundle, CharacterName};
+use crate::world::character::{CharacterBundle, CharacterName, Movement};
 use crate::world::WorldSystem;
 use crate::{Game, GameState};
 
-pub struct Player;
+#[derive(Default)]
+pub struct Input {
+    pub forward: bool,
+    pub backward: bool,
+    pub left: bool,
+    pub right: bool,
+}
 
-#[derive(Bundle)]
-pub struct PlayerBundle {
-    #[bundle]
-    pub character: CharacterBundle,
+#[derive(Default)]
+pub struct Player {
+    pub input: Input,
+    pub is_moving: bool,
+}
 
-    #[bundle]
-    pub pbr: PbrBundle,
+impl Player {
+    fn move_player(
+        game: Res<Game>,
+        mut query: Query<(&mut Player, &mut Movement, &mut Transform)>,
+    ) {
+        if let Ok((mut player, mut movement, mut transform)) = query.single_mut() {
+            let direction = Player::calculate_direction(&player, &transform);
+            player.input = Input::default();
+
+            movement.velocity = direction * movement.speed;
+
+            if let Some(_cam_transform) = game.camera_transform {}
+
+            transform.translation += movement.velocity;
+            player.is_moving = is_moving(&movement.velocity);
+        }
+    }
+
+    fn calculate_direction(player: &Player, transform: &Mut<Transform>) -> Vec3 {
+        let mut direction = Vec3::ZERO;
+        if player.input.forward {
+            direction += transform.local_z();
+        }
+        if player.input.backward {
+            direction -= transform.local_z();
+        }
+        if player.input.left {
+            direction += transform.local_x();
+        }
+        if player.input.right {
+            direction -= transform.local_x();
+        }
+        direction = direction.normalize_or_zero();
+        direction
+    }
+}
+
+fn is_moving(delta_move: &Vec3) -> bool {
+    delta_move.ne(&Vec3::ZERO)
 }
 
 pub struct PlayerPlugin;
@@ -23,6 +67,9 @@ impl Plugin for PlayerPlugin {
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
                 .with_system(spawn_player.system().label(WorldSystem::PlayerSetup)),
+        );
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing).with_system(Player::move_player.system()),
         );
     }
 }
@@ -41,9 +88,18 @@ fn create_pbr(
     PbrBundle {
         mesh,
         material,
-        transform: Transform::from_xyz(10.0, 0., -10.0),
+        transform: Transform::from_xyz(0.0, 0., 0.0),
         ..Default::default()
     }
+}
+
+#[derive(Bundle)]
+struct PlayerBundle {
+    #[bundle]
+    pub character: CharacterBundle,
+
+    #[bundle]
+    pub pbr: PbrBundle,
 }
 
 fn spawn_player(
@@ -60,8 +116,9 @@ fn spawn_player(
             },
             pbr: create_pbr(mesh_assets, materials),
         })
-        .insert(Player)
+        .insert(Player::default())
+        .insert(Movement::default())
         .id();
 
-    game.player = Some(player);
+    game._player = Some(player);
 }

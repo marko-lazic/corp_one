@@ -1,4 +1,4 @@
-use bevy::prelude::Bundle;
+use bevy::prelude::*;
 
 pub const EMPTY_CHARACTER_NAME: &str = "";
 
@@ -22,13 +22,15 @@ impl Default for Health {
 pub struct Movement {
     pub acceleration: f32,
     pub speed: f32,
+    pub velocity: Vec3,
 }
 
 impl Default for Movement {
     fn default() -> Self {
         Self {
-            acceleration: 12.0,
-            speed: 400.0,
+            acceleration: 15.0,
+            speed: 0.8,
+            velocity: Vec3::ZERO,
         }
     }
 }
