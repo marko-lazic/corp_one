@@ -1,12 +1,9 @@
 use bevy::prelude::*;
 
-use audio::live::LivePlugin;
-use gui::{console::ConsolePlugin, metrics::MetricsPlugin};
-use world::{player::PlayerPlugin, scene::ScenePlugin};
+use gui::metrics::MetricsPlugin;
 
 use crate::loading::LoadingPlugin;
-use crate::world::camera::TopDownCameraPlugin;
-use world::control::ControlPlugin;
+use crate::world::WorldPlugin;
 
 mod audio;
 mod gui;
@@ -22,7 +19,8 @@ mod options {
 
 #[derive(Default)]
 struct Game {
-    player: Option<Entity>,
+    _player_entity: Option<Entity>,
+    camera_transform: Option<Transform>,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -50,12 +48,9 @@ fn main() {
         .add_state(GameState::Loading)
         .init_resource::<Game>()
         .add_plugin(LoadingPlugin)
-        .add_plugin(ConsolePlugin)
-        .add_plugin(LivePlugin)
+        // .add_plugin(ConsolePlugin)
+        // .add_plugin(LivePlugin)
         .add_plugin(MetricsPlugin)
-        .add_plugin(ScenePlugin)
-        .add_plugin(ControlPlugin)
-        .add_plugin(PlayerPlugin)
-        .add_plugin(TopDownCameraPlugin)
+        .add_plugin(WorldPlugin)
         .run();
 }

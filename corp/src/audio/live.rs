@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
 
 use crate::loading::AudioAssets;
-use crate::world::control::PlayerAgency;
+use crate::world::player::Player;
 use crate::GameState;
 
 pub struct LivePlugin;
@@ -51,10 +51,12 @@ fn stop_audio(audio: Res<Audio>, channels: Res<LiveChannels>) {
     audio.stop_channel(&channels.walk);
 }
 
-fn walk_sound(audio: Res<Audio>, channels: Res<LiveChannels>, agency: Res<PlayerAgency>) {
-    if agency.moving {
-        audio.resume_channel(&channels.walk);
-    } else {
-        audio.pause_channel(&channels.walk);
+fn walk_sound(audio: Res<Audio>, channels: Res<LiveChannels>, mut player_query: Query<&Player>) {
+    if let Ok(player) = player_query.single_mut() {
+        if player.is_moving {
+            audio.resume_channel(&channels.walk);
+        } else {
+            audio.pause_channel(&channels.walk);
+        }
     }
 }

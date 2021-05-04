@@ -2,6 +2,7 @@ use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 
 use crate::world::player::Player;
+use crate::Game;
 use bevy::render::camera::Camera;
 use bevy_orbit_controls::OrbitCamera;
 
@@ -10,7 +11,6 @@ pub struct MetricsPlugin;
 pub struct Metrics {
     pub mouse_screen_position: Vec2,
     pub mouse_world_position: Vec3,
-    pub camera_transform: Transform,
 }
 
 impl Plugin for MetricsPlugin {
@@ -43,7 +43,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(Metrics {
         mouse_screen_position: Vec2::ZERO,
         mouse_world_position: Vec3::ZERO,
-        camera_transform: Transform::default(),
     });
 
     commands.spawn_bundle(UiCameraBundle::default());
@@ -125,17 +124,19 @@ fn mouse_world_position_update(
 }
 
 fn camera_metrics(
-    mut metrics: ResMut<Metrics>,
+    mut game: ResMut<Game>,
     mut query: Query<(&mut OrbitCamera, &mut Transform, &mut Camera)>,
 ) {
     for (_camera, transform, _) in query.iter_mut() {
-        metrics.camera_transform = transform.clone();
+        game.camera_transform = Some(transform.clone());
     }
 }
 
-fn camera_debug_text(metrics: Res<Metrics>, mut query: Query<&mut Text, With<CameraDebugText>>) {
-    for mut text in query.iter_mut() {
-        text.sections[0].value = format!("{:?}", metrics.camera_transform);
+fn camera_debug_text(game: Res<Game>, mut query: Query<&mut Text, With<CameraDebugText>>) {
+    if let Some(transform) = game.camera_transform {
+        for mut text in query.iter_mut() {
+            text.sections[0].value = format!("Cam {:?}", transform.translation);
+        }
     }
 }
 

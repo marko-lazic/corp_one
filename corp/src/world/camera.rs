@@ -3,8 +3,9 @@ use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RayCastSource};
 use bevy_orbit_controls::{OrbitCamera, OrbitCameraPlugin};
 
 use crate::gui::metrics::Metrics;
+use crate::world::player::Player;
 use crate::world::WorldSystem;
-use crate::{Game, GameState};
+use crate::GameState;
 
 pub struct MyRaycastSet;
 
@@ -22,7 +23,22 @@ impl Plugin for TopDownCameraPlugin {
                     .after(WorldSystem::PlayerSetup),
             ),
         );
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing).with_system(update_camera_center.system()),
+        );
         app.add_system(update_raycast_with_cursor.system());
+    }
+}
+
+fn update_camera_center(
+    mut camera_query: Query<&mut OrbitCamera>,
+    mut player_query: Query<(&Player, &Transform)>,
+) {
+    if let Ok((_, transform)) = player_query.single_mut() {
+        if let Ok(mut camera) = camera_query.single_mut() {
+            camera.center.x = transform.translation.x;
+            camera.center.z = transform.translation.z;
+        }
     }
 }
 
@@ -41,16 +57,11 @@ impl CameraFactory {
     }
 }
 
-fn setup_camera(mut commands: Commands, game: Res<Game>) {
-    let camera = commands
+fn setup_camera(mut commands: Commands) {
+    commands
         .spawn_bundle(CameraFactory::create_perspective_camera_bundle())
         .insert(OrbitCamera::new(20.0, Vec3::ZERO))
-        .insert(RayCastSource::<MyRaycastSet>::new())
-        .id();
-
-    commands
-        .entity(game.player.unwrap())
-        .push_children(&[camera]);
+        .insert(RayCastSource::<MyRaycastSet>::new());
 }
 
 // Update our `RayCastSource` with the current cursor position every frame.
