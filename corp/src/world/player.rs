@@ -1,11 +1,13 @@
+use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use crate::asset::loading::MeshAssets;
 use crate::world::character::Movement;
 use crate::world::input_command::PlayerCommand;
 use crate::world::player_bundle::PlayerBundle;
+use crate::world::world_utils::Label;
 use crate::world::WorldSystem;
-use crate::{Game, GameState};
+use crate::{Game, GameState, FRAME_RATE};
 
 #[derive(Default)]
 pub struct Player {
@@ -75,7 +77,9 @@ impl Plugin for PlayerPlugin {
                 .with_system(Self::spawn_player.system().label(WorldSystem::PlayerSetup)),
         );
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing).with_system(Self::move_player.system()),
+            SystemSet::on_update(GameState::Playing)
+                .with_run_criteria(FixedTimestep::steps_per_second(FRAME_RATE))
+                .with_system(Self::move_player.system().label(Label::Movement)),
         );
     }
 }

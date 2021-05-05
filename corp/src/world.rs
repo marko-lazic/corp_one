@@ -14,6 +14,7 @@ pub mod input_control;
 pub mod player;
 mod player_bundle;
 pub mod scene;
+mod world_utils;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum WorldSystem {

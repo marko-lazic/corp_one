@@ -1,10 +1,11 @@
+use bevy::core::FixedTimestep;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use bevy_orbit_controls::OrbitCamera;
 
 use crate::world::player::Player;
-use crate::Game;
+use crate::{Game, FRAME_RATE};
 
 pub struct Metrics {
     pub mouse_screen_position: Vec2,
@@ -126,12 +127,16 @@ impl Plugin for MetricsPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
         app.add_startup_system(Self::setup.system());
-        app.add_system(Self::fps_update.system());
-        app.add_system(Self::player_position_update.system());
-        app.add_system(Self::mouse_screen_position_update.system());
-        app.add_system(Self::mouse_world_position_update.system());
-        app.add_system(Self::camera_metrics.system());
-        app.add_system(Self::camera_debug_text.system());
+        app.add_system_set(
+            SystemSet::new()
+                .with_run_criteria(FixedTimestep::steps_per_second(FRAME_RATE))
+                .with_system(Self::fps_update.system())
+                .with_system(Self::player_position_update.system())
+                .with_system(Self::mouse_screen_position_update.system())
+                .with_system(Self::mouse_world_position_update.system())
+                .with_system(Self::camera_metrics.system())
+                .with_system(Self::camera_debug_text.system()),
+        );
     }
 }
 

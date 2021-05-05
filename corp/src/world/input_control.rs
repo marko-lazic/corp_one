@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
 use crate::world::input_command::PlayerCommand;
+use crate::world::world_utils::Label;
 use crate::GameState;
 
 pub struct InputControlPlugin;
@@ -41,7 +42,12 @@ impl Plugin for InputControlPlugin {
             )
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
-                    .with_system(Self::player_command.system())
+                    .with_system(
+                        Self::player_command
+                            .system()
+                            .label(Label::Input)
+                            .before(Label::Movement),
+                    )
                     .with_system(Self::quit_app.system()),
             );
     }

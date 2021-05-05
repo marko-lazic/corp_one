@@ -10,6 +10,8 @@ mod audio;
 mod gui;
 mod world;
 
+pub const FRAME_RATE: f64 = 60.0;
+
 #[derive(Default)]
 pub struct Game {
     _player_entity: Option<Entity>,
