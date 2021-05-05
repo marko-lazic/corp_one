@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
-use crate::loading::MeshAssets;
+use crate::asset::loading::MeshAssets;
 use crate::world::character::Movement;
-use crate::world::command::PlayerCommand;
+use crate::world::input_command::PlayerCommand;
 use crate::world::player_bundle::PlayerBundle;
 use crate::world::WorldSystem;
 use crate::{Game, GameState};

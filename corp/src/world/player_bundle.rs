@@ -1,6 +1,7 @@
-use crate::loading::MeshAssets;
-use crate::world::character::{CharacterBundle, CharacterName};
 use bevy::prelude::*;
+
+use crate::asset::loading::MeshAssets;
+use crate::world::character::{CharacterBundle, CharacterName};
 
 #[derive(Bundle)]
 pub struct PlayerBundle {

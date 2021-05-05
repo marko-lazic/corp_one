@@ -1,15 +1,46 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
 
-use crate::loading::AudioAssets;
+use crate::asset::loading::AudioAssets;
 use crate::world::player::Player;
 use crate::GameState;
 
 pub struct LivePlugin;
 
-struct LiveChannels {
-    music: AudioChannel,
-    walk: AudioChannel,
+impl LivePlugin {
+    fn setup_live_state(
+        audio: Res<Audio>,
+        audio_assets: Res<AudioAssets>,
+        channels: Res<LiveChannels>,
+    ) {
+        audio.set_volume_in_channel(0.1, &channels.walk);
+        audio.play_looped_in_channel(audio_assets.walk.clone(), &channels.walk);
+        audio.pause_channel(&channels.walk);
+    }
+
+    fn play_music(audio: Res<Audio>, audio_assets: Res<AudioAssets>, channels: Res<LiveChannels>) {
+        audio.set_volume_in_channel(0.3, &channels.music);
+        audio.play_looped_in_channel(audio_assets.slow_travel.clone(), &channels.music);
+    }
+
+    fn stop_audio(audio: Res<Audio>, channels: Res<LiveChannels>) {
+        audio.stop_channel(&channels.music);
+        audio.stop_channel(&channels.walk);
+    }
+
+    fn walk_sound(
+        audio: Res<Audio>,
+        channels: Res<LiveChannels>,
+        mut player_query: Query<&Player>,
+    ) {
+        if let Ok(player) = player_query.single_mut() {
+            if player.is_moving {
+                audio.resume_channel(&channels.walk);
+            } else {
+                audio.pause_channel(&channels.walk);
+            }
+        }
+    }
 }
 
 impl Plugin for LivePlugin {
@@ -21,42 +52,19 @@ impl Plugin for LivePlugin {
         app.add_plugin(AudioPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
-                .with_system(setup_live_state.system())
-                .with_system(play_music.system()),
+                .with_system(Self::setup_live_state.system())
+                .with_system(Self::play_music.system()),
         );
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing).with_system(walk_sound.system()),
+            SystemSet::on_update(GameState::Playing).with_system(Self::walk_sound.system()),
         );
-        app.add_system_set(SystemSet::on_exit(GameState::Playing).with_system(stop_audio.system()));
+        app.add_system_set(
+            SystemSet::on_exit(GameState::Playing).with_system(Self::stop_audio.system()),
+        );
     }
 }
 
-fn setup_live_state(
-    audio: Res<Audio>,
-    audio_assets: Res<AudioAssets>,
-    channels: Res<LiveChannels>,
-) {
-    audio.set_volume_in_channel(0.1, &channels.walk);
-    audio.play_looped_in_channel(audio_assets.walk.clone(), &channels.walk);
-    audio.pause_channel(&channels.walk);
-}
-
-fn play_music(audio: Res<Audio>, audio_assets: Res<AudioAssets>, channels: Res<LiveChannels>) {
-    audio.set_volume_in_channel(0.3, &channels.music);
-    audio.play_looped_in_channel(audio_assets.slow_travel.clone(), &channels.music);
-}
-
-fn stop_audio(audio: Res<Audio>, channels: Res<LiveChannels>) {
-    audio.stop_channel(&channels.music);
-    audio.stop_channel(&channels.walk);
-}
-
-fn walk_sound(audio: Res<Audio>, channels: Res<LiveChannels>, mut player_query: Query<&Player>) {
-    if let Ok(player) = player_query.single_mut() {
-        if player.is_moving {
-            audio.resume_channel(&channels.walk);
-        } else {
-            audio.pause_channel(&channels.walk);
-        }
-    }
+struct LiveChannels {
+    music: AudioChannel,
+    walk: AudioChannel,
 }

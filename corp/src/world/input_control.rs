@@ -4,12 +4,12 @@ use bevy::app::AppExit;
 use bevy::prelude::*;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
-use crate::world::command::PlayerCommand;
+use crate::world::input_command::PlayerCommand;
 use crate::GameState;
 
-pub struct ControlPlugin;
+pub struct InputControlPlugin;
 
-impl ControlPlugin {
+impl InputControlPlugin {
     fn setup(mut kurinji: ResMut<Kurinji>) {
         let binding_json = fs::read_to_string("corp/config/binding.json")
             .expect("Error! could not open config file");
@@ -33,7 +33,7 @@ impl ControlPlugin {
     }
 }
 
-impl Plugin for ControlPlugin {
+impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(KurinjiPlugin::default())
             .add_system_set(
