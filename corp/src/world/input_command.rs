@@ -1,3 +1,4 @@
+use crate::constants::input;
 use bevy::math::Vec3;
 use bevy::prelude::Transform;
 
@@ -11,28 +12,24 @@ pub struct PlayerCommand {
 
 impl PlayerCommand {
     pub fn key_command(&mut self, action: &str) {
-        if action == "MOVE_FORWARD" {
+        if action == input::MOVE_FORWARD {
             self.forward = true;
         }
-        if action == "MOVE_BACKWARD" {
+        if action == input::MOVE_BACKWARD {
             self.backward = true;
         }
-        if action == "MOVE_LEFT" {
+        if action == input::MOVE_LEFT {
             self.left = true;
         }
-        if action == "MOVE_RIGHT" {
+        if action == input::MOVE_RIGHT {
             self.right = true;
         }
     }
 
     pub fn mouse_command(&mut self, action: &str) {
-        if action == "MOUSE_SHOOT" {
+        if action == input::MOUSE_SHOOT {
             bevy::log::info!("Bang");
         }
-        if action == "AIM_UP" {}
-        if action == "AIM_DOWN" {}
-        if action == "AIM_LEFT" {}
-        if action == "AIM_RIGHT" {}
     }
 
     pub fn reset(&mut self) {
@@ -72,9 +69,9 @@ mod tests {
     fn move_direction() {
         // given
         let mut command = PlayerCommand::default();
-        command.key_command("MOVE_RIGHT");
-        command.key_command("MOVE_FORWARD");
-        let position = Transform::from_xyz(0.0, 0.0, 0.0);
+        command.key_command(input::MOVE_RIGHT);
+        command.key_command(input::MOVE_FORWARD);
+        let position = Transform::default();
 
         // when
         let direction = command.new_direction(&position);

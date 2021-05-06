@@ -1,8 +1,6 @@
 use crate::constants::tick;
 use bevy::prelude::*;
 
-pub const EMPTY_CHARACTER_NAME: &str = "";
-
 pub struct CharacterName(String);
 
 impl CharacterName {
@@ -78,3 +76,5 @@ mod tests {
         assert_eq!(movement.velocity, Vec3::new(0.16499159, 0.0, -0.16499159));
     }
 }
+
+const EMPTY_CHARACTER_NAME: &str = "";
