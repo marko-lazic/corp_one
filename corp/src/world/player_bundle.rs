@@ -37,10 +37,15 @@ impl PlayerBundle {
             ..Default::default()
         });
 
+        let transform = Transform {
+            translation: Vec3::new(0.0, 0., 0.0),
+            ..Default::default()
+        };
+
         PbrBundle {
             mesh,
             material,
-            transform: Transform::from_xyz(0.0, 0., 0.0),
+            transform,
             ..Default::default()
         }
     }

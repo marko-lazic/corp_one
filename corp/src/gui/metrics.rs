@@ -4,8 +4,9 @@ use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use bevy_orbit_controls::OrbitCamera;
 
+use crate::constants::tick;
 use crate::world::player::Player;
-use crate::{Game, FRAME_RATE};
+use crate::Game;
 
 pub struct Metrics {
     pub mouse_screen_position: Vec2,
@@ -129,7 +130,7 @@ impl Plugin for MetricsPlugin {
         app.add_startup_system(Self::setup.system());
         app.add_system_set(
             SystemSet::new()
-                .with_run_criteria(FixedTimestep::steps_per_second(FRAME_RATE))
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::fps_update.system())
                 .with_system(Self::player_position_update.system())
                 .with_system(Self::mouse_screen_position_update.system())

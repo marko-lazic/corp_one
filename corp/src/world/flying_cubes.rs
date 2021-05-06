@@ -3,8 +3,8 @@ use bevy_mod_raycast::RayCastMesh;
 use rand::Rng;
 
 use crate::asset::loading::{MaterialAssets, MeshAssets};
+use crate::constants::state::GameState;
 use crate::world::camera::MyRaycastSet;
-use crate::GameState;
 
 pub struct FlyingCubesPlugin;
 

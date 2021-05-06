@@ -2,12 +2,14 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use crate::asset::loading::MeshAssets;
+use crate::constants::state::GameState;
+use crate::constants::tick;
 use crate::world::character::Movement;
 use crate::world::input_command::PlayerCommand;
 use crate::world::player_bundle::PlayerBundle;
 use crate::world::world_utils::Label;
 use crate::world::WorldSystem;
-use crate::{Game, GameState, FRAME_RATE};
+use crate::Game;
 
 #[derive(Default)]
 pub struct Player {
@@ -36,33 +38,13 @@ impl PlayerPlugin {
         mut command: ResMut<PlayerCommand>,
         mut query: Query<(&mut Player, &mut Movement, &mut Transform)>,
     ) {
-        if let Ok((mut player, mut movement, mut transform)) = query.single_mut() {
-            let direction = Self::calculate_direction(&command, &transform);
-            command.reset();
+        if let Ok((mut player, mut movement, mut position)) = query.single_mut() {
+            let direction = command.new_direction(&position);
+            position.translation += movement.update_velocity(direction);
 
-            movement.velocity = direction * movement.speed;
-
-            transform.translation += movement.velocity;
             player.is_moving = Self::is_moving(&movement.velocity);
+            command.reset();
         }
-    }
-
-    fn calculate_direction(cmd: &PlayerCommand, transform: &Mut<Transform>) -> Vec3 {
-        let mut direction = Vec3::ZERO;
-        if cmd.forward {
-            direction += transform.local_z();
-        }
-        if cmd.backward {
-            direction -= transform.local_z();
-        }
-        if cmd.left {
-            direction += transform.local_x();
-        }
-        if cmd.right {
-            direction -= transform.local_x();
-        }
-        direction = direction.normalize_or_zero();
-        direction
     }
 
     fn is_moving(delta_move: &Vec3) -> bool {
@@ -78,7 +60,7 @@ impl Plugin for PlayerPlugin {
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(FRAME_RATE))
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::move_player.system().label(Label::Movement)),
         );
     }

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_kira_audio::AudioSource;
 
 use crate::asset::paths::PATHS;
-use crate::GameState;
+use crate::constants::state::GameState;
 
 pub struct FontAssets {
     pub fira_sans: Handle<Font>,

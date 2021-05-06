@@ -3,10 +3,11 @@ use bevy::prelude::*;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RayCastSource};
 use bevy_orbit_controls::{OrbitCamera, OrbitCameraPlugin};
 
+use crate::constants::state::GameState;
+use crate::constants::tick;
 use crate::gui::metrics::Metrics;
 use crate::world::player::Player;
 use crate::world::WorldSystem;
-use crate::{GameState, FRAME_RATE};
 
 pub struct MyRaycastSet;
 
@@ -69,7 +70,7 @@ impl Plugin for TopDownCameraPlugin {
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(FRAME_RATE))
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::update_camera_center.system())
                 .with_system(Self::update_raycast_with_cursor.system()),
         );

@@ -4,9 +4,11 @@ use bevy::app::AppExit;
 use bevy::prelude::*;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
+use crate::constants::state::GameState;
+use crate::constants::tick;
 use crate::world::input_command::PlayerCommand;
 use crate::world::world_utils::Label;
-use crate::GameState;
+use bevy::core::FixedTimestep;
 
 pub struct InputControlPlugin;
 
@@ -42,6 +44,7 @@ impl Plugin for InputControlPlugin {
             )
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
+                    .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                     .with_system(
                         Self::player_command
                             .system()

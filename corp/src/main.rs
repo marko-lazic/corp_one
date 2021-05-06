@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use constants::state::GameState;
+use constants::window;
 use gui::metrics::MetricsPlugin;
 
 use crate::asset::loading::LoadingPlugin;
@@ -7,22 +9,14 @@ use crate::world::WorldPlugin;
 
 mod asset;
 mod audio;
+mod constants;
 mod gui;
 mod world;
-
-pub const FRAME_RATE: f64 = 60.0;
 
 #[derive(Default)]
 pub struct Game {
     _player_entity: Option<Entity>,
     camera_transform: Option<Transform>,
-}
-
-#[derive(Debug, Hash, PartialEq, Eq, Clone)]
-pub enum GameState {
-    Loading,
-    _StarMap,
-    Playing,
 }
 
 fn main() {
@@ -38,17 +32,11 @@ fn main() {
         .run();
 }
 
-mod options {
-    pub const CORP_ONE_GAME_TITLE: &str = "Corp One";
-    pub const WIDTH: f32 = 1600.0;
-    pub const HEIGHT: f32 = 1600.0;
-}
-
 fn create_window_descriptor() -> WindowDescriptor {
     WindowDescriptor {
-        title: options::CORP_ONE_GAME_TITLE.to_string(),
-        width: options::WIDTH,
-        height: options::HEIGHT,
+        title: window::CORP_ONE_GAME_TITLE.to_string(),
+        width: window::WIDTH,
+        height: window::HEIGHT,
         ..Default::default()
     }
 }
