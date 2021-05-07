@@ -2,9 +2,9 @@ use bevy::core::FixedTimestep;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
-use bevy_orbit_controls::OrbitCamera;
 
 use crate::constants::tick;
+use crate::world::camera::TopDownCamera;
 use crate::world::player::Player;
 use crate::Game;
 
@@ -108,9 +108,9 @@ impl MetricsPlugin {
 
     fn camera_metrics(
         mut game: ResMut<Game>,
-        mut query: Query<(&mut OrbitCamera, &mut Transform, &mut Camera)>,
+        mut query: Query<(&mut Transform, &mut TopDownCamera, &mut Camera)>,
     ) {
-        for (_camera, transform, _) in query.iter_mut() {
+        for (transform, _, _) in query.iter_mut() {
             game.camera_transform = Some(transform.clone());
         }
     }

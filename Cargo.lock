@@ -228,15 +228,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d5f2f58f0aec3c50a20799792c3705e80dd7df327e79791cacec197e84e5e61"
 
 [[package]]
-name = "bevy-orbit-controls"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec95770a5c7c27156a9ae77859337374a83ee0cbc61faede4f59769e30b9dfa8"
-dependencies = [
- "bevy",
-]
-
-[[package]]
 name = "bevy_app"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1122,7 +1113,6 @@ name = "corp_one"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy-orbit-controls",
  "bevy_kira_audio",
  "bevy_mod_raycast",
  "kurinji",

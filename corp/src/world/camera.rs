@@ -1,78 +1,73 @@
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RayCastSource};
-use bevy_orbit_controls::{OrbitCamera, OrbitCameraPlugin};
+use bevy::render::camera::Camera;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::gui::metrics::Metrics;
-use crate::world::player::Player;
-use crate::world::WorldSystem;
+use crate::Game;
 
-pub struct MyRaycastSet;
+pub struct TopDownCamera {
+    pub x: f32,
+    pub y: f32,
+    pub distance: f32,
+    pub rotate_sensitivity: f32,
+    pub zoom_sensitivity: f32,
+}
+
+impl TopDownCamera {
+    pub fn new(distance: f32) -> TopDownCamera {
+        TopDownCamera {
+            distance,
+            ..Default::default()
+        }
+    }
+}
+
+pub struct CameraCenter;
+
+impl Default for TopDownCamera {
+    fn default() -> Self {
+        TopDownCamera {
+            x: 0.0,
+            y: 0.0,
+            distance: 5.0,
+            rotate_sensitivity: 1.0,
+            zoom_sensitivity: 0.8,
+        }
+    }
+}
 
 pub struct TopDownCameraPlugin;
 
 impl TopDownCameraPlugin {
-    fn setup(mut commands: Commands) {
-        commands
-            .spawn_bundle(PerspectiveCameraBundle {
-                transform: Transform::from_translation(Vec3::new(-3.0, 3.0, 5.0))
-                    .looking_at(Vec3::default(), Vec3::Y),
-                ..Default::default()
-            })
-            .insert(OrbitCamera::new(20.0, Vec3::ZERO))
-            .insert(RayCastSource::<MyRaycastSet>::new());
-    }
-
-    fn update_camera_center(
-        mut camera_query: Query<&mut OrbitCamera>,
-        mut player_query: Query<(&Player, &Transform)>,
+    fn target_motion(
+        time: Res<Time>,
+        game: Res<Game>,
+        mut query: Query<(&mut TopDownCamera, &mut Transform, &mut Camera)>,
     ) {
-        if let Ok((_, transform)) = player_query.single_mut() {
-            if let Ok(mut camera) = camera_query.single_mut() {
-                camera.center.x = transform.translation.x;
-                camera.center.z = transform.translation.z;
-            }
-        }
-    }
+        for (mut camera, mut transform, _) in query.iter_mut() {
+            let delta = Vec2::ZERO;
+            camera.x -= delta.x * camera.rotate_sensitivity * time.delta_seconds();
+            camera.y -= delta.y * camera.rotate_sensitivity * time.delta_seconds();
 
-    // Update our `RayCastSource` with the current cursor position every frame.
-    fn update_raycast_with_cursor(
-        mut cursor: EventReader<CursorMoved>,
-        mut query: Query<&mut RayCastSource<MyRaycastSet>>,
-        mut metrics: ResMut<Metrics>,
-    ) {
-        for mut pick_source in &mut query.iter_mut() {
-            // Grab the most recent cursor event if it exists:
-            if let Some(cursor_latest) = cursor.iter().last() {
-                pick_source.cast_method = RayCastMethod::Screenspace(cursor_latest.position);
-                if let Some((_entity, intersect)) = pick_source.intersect_top() {
-                    metrics.mouse_world_position = intersect.position();
-                    metrics.mouse_screen_position = cursor_latest.position;
-                }
-            }
+            camera.y = camera.y.max(0.01).min(3.13);
+
+            let rot = Quat::from_axis_angle(Vec3::Y, camera.x)
+                * Quat::from_axis_angle(-Vec3::X, camera.y);
+
+            transform.translation =
+                (rot * Vec3::new(0.0, 1.0, 0.0)) * camera.distance + game.camera_center;
+            transform.look_at(game.camera_center, Vec3::Y);
         }
     }
 }
 
 impl Plugin for TopDownCameraPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_plugin(OrbitCameraPlugin);
-        app.add_plugin(DefaultRaycastingPlugin::<MyRaycastSet>::default());
-        app.add_system_set(
-            SystemSet::on_enter(GameState::Playing).with_system(
-                Self::setup
-                    .system()
-                    .label(WorldSystem::CameraSetup)
-                    .after(WorldSystem::PlayerSetup),
-            ),
-        );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::update_camera_center.system())
-                .with_system(Self::update_raycast_with_cursor.system()),
+                .with_system(Self::target_motion.system()),
         );
     }
 }

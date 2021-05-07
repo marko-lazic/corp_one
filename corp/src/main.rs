@@ -17,6 +17,7 @@ mod world;
 pub struct Game {
     _player_entity: Option<Entity>,
     camera_transform: Option<Transform>,
+    camera_center: Vec3,
 }
 
 fn main() {

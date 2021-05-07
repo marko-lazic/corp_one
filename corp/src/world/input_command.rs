@@ -45,16 +45,16 @@ impl PlayerCommand {
     pub fn new_direction(&self, position: &Transform) -> Vec3 {
         let mut direction = Vec3::ZERO;
         if self.forward {
-            direction -= position.local_z();
-        }
-        if self.backward {
             direction += position.local_z();
         }
+        if self.backward {
+            direction -= position.local_z();
+        }
         if self.left {
-            direction -= position.local_x();
+            direction += position.local_x();
         }
         if self.right {
-            direction += position.local_x();
+            direction -= position.local_x();
         }
         direction = direction.normalize_or_zero();
         direction
@@ -79,6 +79,6 @@ mod tests {
         let expected = std::f32::consts::FRAC_1_SQRT_2;
 
         // then
-        assert_eq!(direction, Vec3::new(expected, 0.0, -expected));
+        assert_eq!(direction, Vec3::new(-expected, 0.0, expected));
     }
 }

@@ -3,7 +3,7 @@ use bevy_mod_raycast::RayCastMesh;
 
 use crate::asset::loading::MeshAssets;
 use crate::constants::state::GameState;
-use crate::world::camera::MyRaycastSet;
+use crate::world::cursor::MyRaycastSet;
 use crate::world::flying_cubes::FlyingCubesPlugin;
 
 pub struct ScenePlugin;

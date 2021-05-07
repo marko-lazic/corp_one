@@ -1,13 +1,19 @@
 use bevy::prelude::*;
 
+use crate::constants::state::GameState;
+use crate::constants::tick;
 use crate::world::camera::TopDownCameraPlugin;
+use crate::world::cursor::MyRaycastSet;
 use crate::world::input_command::PlayerCommand;
 use crate::world::input_control::InputControlPlugin;
 use crate::world::player::PlayerPlugin;
 use crate::world::scene::ScenePlugin;
+use bevy::core::FixedTimestep;
+use bevy_mod_raycast::DefaultRaycastingPlugin;
 
 pub mod camera;
 pub mod character;
+mod cursor;
 pub mod flying_cubes;
 pub mod input_command;
 pub mod input_control;
@@ -18,8 +24,8 @@ mod world_utils;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum WorldSystem {
-    PlayerSetup,
-    CameraSetup,
+    SetupPlayer,
+    SetupCamera,
 }
 
 pub struct WorldPlugin;
@@ -31,5 +37,11 @@ impl Plugin for WorldPlugin {
         app.add_plugin(InputControlPlugin);
         app.add_plugin(PlayerPlugin);
         app.add_plugin(TopDownCameraPlugin);
+        app.add_plugin(DefaultRaycastingPlugin::<MyRaycastSet>::default());
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
+                .with_system(cursor::update_raycast_with_cursor.system()),
+        );
     }
 }
