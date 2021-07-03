@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_mod_raycast::RayCastMesh;
 
-use crate::asset::loading::MeshAssets;
+use crate::asset::asset_loading::MeshAssets;
 use crate::constants::state::GameState;
 use crate::world::cursor::MyRaycastSet;
 use crate::world::flying_cubes::FlyingCubesPlugin;
@@ -55,7 +55,19 @@ impl ScenePlugin {
             .insert(RayCastMesh::<MyRaycastSet>::default());
         // Light
         commands.spawn_bundle(LightBundle {
+            light: Light {
+                color: Color::LIME_GREEN,
+                ..Default::default()
+            },
             transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
+            ..Default::default()
+        });
+        commands.spawn_bundle(LightBundle {
+            light: Light {
+                color: Color::RED,
+                ..Default::default()
+            },
+            transform: Transform::from_translation(Vec3::new(-8.0, 8.0, -8.0)),
             ..Default::default()
         });
     }
