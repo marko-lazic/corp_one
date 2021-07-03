@@ -4,7 +4,7 @@ use constants::state::GameState;
 use constants::window;
 use gui::metrics::MetricsPlugin;
 
-use crate::asset::loading::LoadingPlugin;
+use crate::asset::asset_loading::AssetLoadingPlugin;
 use crate::world::WorldPlugin;
 
 mod asset;
@@ -24,10 +24,10 @@ fn main() {
     App::build()
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(create_window_descriptor())
+        .add_state(GameState::AssetLoading)
         .add_plugins(DefaultPlugins)
-        .add_state(GameState::Loading)
         .init_resource::<Game>()
-        .add_plugin(LoadingPlugin)
+        .add_plugin(AssetLoadingPlugin)
         .add_plugin(MetricsPlugin)
         .add_plugin(WorldPlugin)
         .run();

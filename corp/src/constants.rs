@@ -13,7 +13,7 @@ pub mod window {
 pub mod state {
     #[derive(Debug, Hash, PartialEq, Eq, Clone)]
     pub enum GameState {
-        Loading,
+        AssetLoading,
         _StarMap,
         Playing,
     }

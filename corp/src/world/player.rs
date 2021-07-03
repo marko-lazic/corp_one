@@ -2,7 +2,7 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_mod_raycast::RayCastSource;
 
-use crate::asset::loading::MeshAssets;
+use crate::asset::asset_loading::MeshAssets;
 use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::world::camera::{CameraCenter, TopDownCamera};

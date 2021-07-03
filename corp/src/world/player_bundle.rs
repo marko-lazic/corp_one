@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::asset::loading::MeshAssets;
+use crate::asset::asset_loading::MeshAssets;
 use crate::world::character::{CharacterBundle, CharacterName};
 
 #[derive(Bundle)]

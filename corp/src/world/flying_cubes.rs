@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_raycast::RayCastMesh;
 use rand::Rng;
 
-use crate::asset::loading::{MaterialAssets, MeshAssets};
+use crate::asset::asset_loading::{MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
 use crate::world::cursor::MyRaycastSet;
 
