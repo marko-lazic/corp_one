@@ -478,14 +478,13 @@ dependencies = [
 
 [[package]]
 name = "bevy_kira_audio"
-version = "0.4.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "951bf582ef28c2d50f830837ac7ce35d2f0872fe5ef07a71ede5f068b259a7c9"
+checksum = "204c447c7fdec25474195c1c5f271181064fc39bd2cda35eecb10f72bfcffaf9"
 dependencies = [
  "anyhow",
  "bevy",
  "bevy_reflect",
- "hound",
  "kira",
  "parking_lot",
 ]
@@ -1975,14 +1974,15 @@ dependencies = [
 
 [[package]]
 name = "kira"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c8daa3226929b9f9e0c9e5c5285ed3f909fae6694b6333d5c5a830b2b19cbe0"
+checksum = "6e7a756bb5de5a0dea42a6f514037db18736b56c9e2313928746025721f9cca0"
 dependencies = [
  "atomic",
  "basedrop",
  "cpal",
  "getrandom",
+ "hound",
  "indexmap",
  "instant",
  "rand",
