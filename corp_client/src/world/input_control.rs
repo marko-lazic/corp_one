@@ -14,7 +14,7 @@ pub struct InputControlPlugin;
 
 impl InputControlPlugin {
     fn setup(mut kurinji: ResMut<Kurinji>) {
-        let binding_json = fs::read_to_string("corp/config/binding.json")
+        let binding_json = fs::read_to_string("corp_client/config/binding.json")
             .expect("Error! could not open config file");
         kurinji.set_bindings_with_json(&binding_json);
     }
