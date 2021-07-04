@@ -5,10 +5,12 @@ use constants::window;
 use gui::metrics::MetricsPlugin;
 
 use crate::asset::asset_loading::AssetLoadingPlugin;
+use crate::connection::ConnectionPlugin;
 use crate::world::WorldPlugin;
 
 mod asset;
 mod audio;
+mod connection;
 mod constants;
 mod gui;
 mod world;
@@ -30,6 +32,7 @@ fn main() {
         .add_plugin(AssetLoadingPlugin)
         .add_plugin(MetricsPlugin)
         .add_plugin(WorldPlugin)
+        .add_plugin(ConnectionPlugin)
         .run();
 }
 
