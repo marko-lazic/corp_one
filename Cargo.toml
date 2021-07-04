@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "corp",
+    "corp_server",
     "corp_tests",
 ]

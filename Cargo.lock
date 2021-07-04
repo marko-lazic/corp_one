@@ -1141,6 +1141,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "corp_server"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "corp_tests"
 version = "0.1.0"
 dependencies = [
