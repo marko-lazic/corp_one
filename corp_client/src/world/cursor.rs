@@ -1,6 +1,7 @@
-use crate::gui::metrics::Metrics;
 use bevy::prelude::*;
 use bevy_mod_raycast::{RayCastMethod, RayCastSource};
+
+use crate::gui::metrics::Metrics;
 
 pub struct MyRaycastSet;
 

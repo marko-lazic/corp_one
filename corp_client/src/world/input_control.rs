@@ -1,6 +1,7 @@
 use std::fs;
 
 use bevy::app::AppExit;
+use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
@@ -8,7 +9,6 @@ use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::world::input_command::PlayerCommand;
 use crate::world::world_utils::Label;
-use bevy::core::FixedTimestep;
 
 pub struct InputControlPlugin;
 

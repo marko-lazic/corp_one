@@ -1,5 +1,6 @@
-use crate::constants::tick;
 use bevy::prelude::*;
+
+use crate::constants::tick;
 
 pub struct CharacterName(String);
 

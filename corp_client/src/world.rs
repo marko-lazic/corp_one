@@ -1,4 +1,6 @@
+use bevy::core::FixedTimestep;
 use bevy::prelude::*;
+use bevy_mod_raycast::DefaultRaycastingPlugin;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
@@ -8,8 +10,6 @@ use crate::world::input_command::PlayerCommand;
 use crate::world::input_control::InputControlPlugin;
 use crate::world::player::PlayerPlugin;
 use crate::world::scene::ScenePlugin;
-use bevy::core::FixedTimestep;
-use bevy_mod_raycast::DefaultRaycastingPlugin;
 
 pub mod camera;
 pub mod character;

@@ -1,6 +1,7 @@
-use crate::constants::input;
 use bevy::math::Vec3;
 use bevy::prelude::Transform;
+
+use crate::constants::input;
 
 #[derive(Default)]
 pub struct PlayerCommand {
