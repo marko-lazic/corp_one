@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "corp_client",
-    "corp_server",
-    "corp_shared",
-    "corp_tests",
+    "client",
+    "server",
+    "shared",
+    "tests",
 ]
