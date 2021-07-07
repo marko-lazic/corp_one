@@ -1,3 +1,18 @@
+[package]
+name = "crop_one"
+version = "0.1.0"
+edition = "2018"
+authors = [
+    "Marko Lazic <bevyengine@gmail.com>",
+]
+categories = ["game"]
+description = "Online action role playing game"
+homepage = "https://github.com/marko-lazic/corp_on"
+keywords = ["game", "online", "role", "playing"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/marko-lazic/corp_one"
+
 [workspace]
 members = [
     "client",
@@ -5,3 +20,10 @@ members = [
     "shared",
     "tests",
 ]
+
+[dependencies]
+bevy = "0.5"
+
+[[example]]
+name = "transforms"
+path = "examples/transforms.rs"
