@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy::render::camera::Camera;
 
 use crate::constants::tick;
+use crate::input::mouse::MousePosWorld;
 use crate::world::camera::TopDownCamera;
 use crate::world::player::Player;
 use crate::Game;
@@ -92,17 +93,11 @@ impl MetricsPlugin {
     }
 
     fn mouse_world_position_update(
-        metrics: Res<Metrics>,
+        mouse: Res<MousePosWorld>,
         mut query: Query<&mut Text, With<MouseWorldPositionText>>,
     ) {
-        let world_x = metrics.mouse_world_position.x;
-        let world_y = metrics.mouse_world_position.y;
-        let world_z = metrics.mouse_world_position.z;
         for mut text in query.iter_mut() {
-            text.sections[0].value = format!(
-                "Mouse world position: X: {:.1} Y: {:.1} Z: {:.1}",
-                world_x, world_y, world_z
-            );
+            text.sections[0].value = format!("Mouse world position: {}", *mouse);
         }
     }
 

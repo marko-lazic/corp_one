@@ -21,8 +21,33 @@ members = [
     "tests",
 ]
 
+[features]
+default = [
+    "bevy_kira_audio/wav"
+]
+
 [dependencies]
+corp_shared = { path = "shared" }
 bevy = "0.5"
+kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }
+bevy_kira_audio = "0.5.1"
+rand = "0.8.3"
+bevy_mod_raycast = "0.2.2"
+bevy_asset_loader = "0.4.0"
+bevy_networking_turbulence = "0.3.2"
+
+[[bin]]
+name = "corp"
+path = "client/src/main.rs"
+
+[[bin]]
+name = "server"
+path = "server/src/main.rs"
+
+
+[lib]
+name = "common"
+path = "shared/src/lib.rs"
 
 [[example]]
 name = "transforms"

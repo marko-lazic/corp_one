@@ -4,10 +4,10 @@ use bevy_mod_raycast::DefaultRaycastingPlugin;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::input::input_command::PlayerCommand;
+use crate::input::InputControlPlugin;
 use crate::world::camera::TopDownCameraPlugin;
 use crate::world::cursor::MyRaycastSet;
-use crate::world::input_command::PlayerCommand;
-use crate::world::input_control::InputControlPlugin;
 use crate::world::player::PlayerPlugin;
 use crate::world::scene::ScenePlugin;
 
@@ -15,12 +15,9 @@ pub mod camera;
 pub mod character;
 mod cursor;
 pub mod flying_cubes;
-pub mod input_command;
-pub mod input_control;
 pub mod player;
 mod player_bundle;
 pub mod scene;
-mod world_utils;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum WorldSystem {

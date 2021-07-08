@@ -13,6 +13,7 @@ mod audio;
 mod connection;
 mod constants;
 mod gui;
+pub mod input;
 mod world;
 
 #[derive(Default)]

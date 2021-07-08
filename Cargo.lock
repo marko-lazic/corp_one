@@ -1193,29 +1193,17 @@ dependencies = [
 [[package]]
 name = "corp_client"
 version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_asset_loader",
- "bevy_kira_audio",
- "bevy_mod_raycast",
- "bevy_networking_turbulence",
- "corp_shared",
- "kurinji",
- "rand 0.8.3",
-]
 
 [[package]]
 name = "corp_server"
 version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_networking_turbulence",
- "corp_shared",
-]
 
 [[package]]
 name = "corp_shared"
 version = "0.1.0"
+dependencies = [
+ "bevy",
+]
 
 [[package]]
 name = "corp_tests"
@@ -1257,6 +1245,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81156fece84ab6a9f2afdb109ce3ae577e42b1228441eded99bd77f627953b1a"
 dependencies = [
  "cfg-if 1.0.0",
+]
+
+[[package]]
+name = "crop_one"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_asset_loader",
+ "bevy_kira_audio",
+ "bevy_mod_raycast",
+ "bevy_networking_turbulence",
+ "corp_shared",
+ "kurinji",
+ "rand 0.8.3",
 ]
 
 [[package]]
