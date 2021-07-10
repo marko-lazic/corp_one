@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy_mod_raycast::{DefaultRaycastingPlugin, Ray3d, RayCastMesh, RayCastMethod, RayCastSource};
+use bevy_mod_picking::{PickableBundle, PickingCamera, PickingCameraBundle, PickingPlugin};
+use bevy_mod_raycast::Ray3d;
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 
 fn main() {
@@ -7,20 +8,19 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_plugin(DebugLinesPlugin)
-        .add_plugin(DefaultRaycastingPlugin::<SeekRaycast>::default())
+        .add_plugin(PickingPlugin)
         .add_startup_system(setup.system())
         .add_system(rotate_object.system())
-        .add_system(update_raycast_with_cursor.system())
         .run();
 }
 
 fn rotate_object(
     mut player_transform_query: Query<&mut Transform, With<Player>>,
     mut lines: ResMut<DebugLines>,
-    seek_ray_query: Query<&RayCastSource<SeekRaycast>>,
+    picking_camera_query: Query<&PickingCamera>,
 ) {
     for mut player_transform in player_transform_query.iter_mut() {
-        for raycast_source in seek_ray_query.iter() {
+        for raycast_source in picking_camera_query.iter() {
             match raycast_source.intersect_top() {
                 Some(top_intersection) => {
                     let transform_new = top_intersection.1.normal_ray().to_transform();
@@ -38,18 +38,6 @@ fn rotate_object(
     }
 }
 
-fn update_raycast_with_cursor(
-    mut cursor: EventReader<CursorMoved>,
-    mut query: Query<&mut RayCastSource<SeekRaycast>>,
-) {
-    for mut pick_source in &mut query.iter_mut() {
-        // Grab the most recent cursor event if it exists:
-        if let Some(cursor_latest) = cursor.iter().last() {
-            pick_source.cast_method = RayCastMethod::Screenspace(cursor_latest.position);
-        }
-    }
-}
-
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -63,7 +51,7 @@ fn setup(
             ..Default::default()
         })
         // Make this mesh ray cast-able
-        .insert(RayCastMesh::<SeekRaycast>::default());
+        .insert_bundle(PickableBundle::default());
 
     // light
     commands.spawn_bundle(LightBundle {
@@ -78,7 +66,7 @@ fn setup(
             ..Default::default()
         })
         // Designate the camera as our source
-        .insert(RayCastSource::<SeekRaycast>::new());
+        .insert_bundle(PickingCameraBundle::default());
 
     // seeker
     commands
@@ -92,6 +80,3 @@ fn setup(
 }
 
 struct Player;
-
-// Mark our generic `RayCastMesh`s and `RayCastSource`s as part of the same group, or "RayCastSet".
-struct SeekRaycast;
