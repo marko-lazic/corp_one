@@ -3,12 +3,12 @@ use std::fs;
 use bevy::app::AppExit;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
+use common::mouse::MousePlugin;
 use input_command::PlayerCommand;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::input::mouse::MousePlugin;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum PlayerLabel {
@@ -17,7 +17,6 @@ pub enum PlayerLabel {
 }
 
 pub mod input_command;
-pub mod mouse;
 
 pub struct InputControlPlugin;
 

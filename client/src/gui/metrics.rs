@@ -4,10 +4,10 @@ use bevy::prelude::*;
 use bevy::render::camera::Camera;
 
 use crate::constants::tick;
-use crate::input::mouse::MousePosWorld;
 use crate::world::camera::TopDownCamera;
 use crate::world::player::Player;
 use crate::Game;
+use common::mouse::MousePosWorld;
 
 pub struct Metrics {
     pub mouse_screen_position: Vec2,
