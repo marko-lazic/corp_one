@@ -1,7 +1,10 @@
+use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_mod_picking::{PickableBundle, PickingCamera, PickingCameraBundle, PickingPlugin};
 use bevy_mod_raycast::Ray3d;
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
+
+const TIME_STEP: f32 = 1.0 / 60.0;
 
 fn main() {
     App::build()
@@ -11,29 +14,60 @@ fn main() {
         .add_plugin(DebugLinesPlugin)
         .add_plugin(PickingPlugin)
         .add_startup_system(setup.system())
-        .add_system(player_look_at_hit_point.system())
+        .add_system_set(
+            SystemSet::new()
+                .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
+                .with_system(player_look_at_hit_point.system())
+                .with_system(player_move.system()),
+        )
         .run();
 }
 
+fn player_move(
+    mut query: Query<(&mut Transform, &PlayerSpeed)>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    if let Ok((mut transform, speed)) = query.single_mut() {
+        let mut dir_x = 0.0;
+        let mut dir_z = 0.0;
+        if keyboard_input.pressed(KeyCode::A) {
+            dir_x -= 1.0;
+        }
+
+        if keyboard_input.pressed(KeyCode::D) {
+            dir_x += 1.0;
+        }
+
+        if keyboard_input.pressed(KeyCode::W) {
+            dir_z -= 1.0;
+        }
+
+        if keyboard_input.pressed(KeyCode::S) {
+            dir_z += 1.0;
+        }
+
+        transform.translation.x += dir_x * speed.speed * TIME_STEP;
+        transform.translation.z += dir_z * speed.speed * TIME_STEP;
+    }
+}
+
 fn player_look_at_hit_point(
-    game: Res<Game>,
     mut lines: ResMut<DebugLines>,
     pickings: Query<&PickingCamera>,
-    mut transforms: Query<&mut Transform>,
+    mut query: Query<(&mut Transform, &PlayerSpeed)>,
 ) {
     for raycast_source in pickings.iter() {
         match raycast_source.intersect_top() {
             Some(top_intersection) => {
                 let transform_new = top_intersection.1.normal_ray().to_transform();
                 let mouse_world = Transform::from_matrix(transform_new);
-                let mut player_transform = game.player.transform;
-                let hit_point = Ray3d::new(player_transform.translation, mouse_world.translation);
-                let aim_point = Vec3::new(hit_point.direction().x, 0.5, hit_point.direction().z);
-
-                player_transform.look_at(aim_point, Vec3::Y);
-                *transforms.get_mut(game.player.entity.unwrap()).unwrap() = player_transform;
-
-                lines.line(hit_point.origin(), hit_point.direction(), 0.);
+                if let Ok((mut transform, _)) = query.single_mut() {
+                    let hit_point = Ray3d::new(transform.translation, mouse_world.translation);
+                    let aim_point =
+                        Vec3::new(hit_point.direction().x, 0.5, hit_point.direction().z);
+                    transform.look_at(aim_point, Vec3::Y);
+                    lines.line(transform.translation, mouse_world.translation, 0.);
+                }
             }
             None => {}
         }
@@ -49,7 +83,7 @@ fn setup(
     // plane
     commands
         .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
+            mesh: meshes.add(Mesh::from(shape::Plane { size: 25.0 })),
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..Default::default()
         })
@@ -81,6 +115,7 @@ fn setup(
                 transform: game.player.transform,
                 ..Default::default()
             })
+            .insert(PlayerSpeed::new(2.))
             .id(),
     );
 }
@@ -89,6 +124,16 @@ fn setup(
 struct Player {
     entity: Option<Entity>,
     transform: Transform,
+}
+
+struct PlayerSpeed {
+    speed: f32,
+}
+
+impl PlayerSpeed {
+    fn new(speed: f32) -> Self {
+        PlayerSpeed { speed }
+    }
 }
 
 #[derive(Default)]
