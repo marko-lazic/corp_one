@@ -27,7 +27,6 @@ default = [
 ]
 
 [dependencies]
-corp_shared = { path = "shared" }
 bevy = "0.5"
 kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }
 bevy_kira_audio = "0.5.1"
@@ -39,22 +38,20 @@ bevy_asset_loader = "0.4.0"
 bevy_networking_turbulence = "0.3.2"
 
 [[bin]]
-name = "corp"
+name = "corp_client"
 path = "client/src/main.rs"
 
 [[bin]]
-name = "server"
+name = "corp_server"
 path = "server/src/main.rs"
 
-
 [lib]
-name = "common"
+name = "corp_shared"
 path = "shared/src/lib.rs"
 
 [[example]]
 name = "transforms"
 path = "examples/transforms.rs"
-
 
 [[example]]
 name = "look"

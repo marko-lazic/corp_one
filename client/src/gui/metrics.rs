@@ -2,10 +2,10 @@ use bevy::core::FixedTimestep;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
+use corp_shared::components::Player;
 
 use crate::constants::tick;
 use crate::world::camera::TopDownCamera;
-use crate::world::player::Player;
 use crate::Game;
 
 pub struct Metrics {

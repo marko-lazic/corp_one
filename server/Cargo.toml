@@ -3,3 +3,6 @@ name = "corp_server"
 version = "0.1.0"
 authors = ["Marko Lazić <marko.lazic@comyno.com>"]
 edition = "2018"
+
+[dependencies]
+bevy = "0.5.0"

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::asset::asset_loading::MeshAssets;
 use crate::world::character::{CharacterBundle, CharacterName};
+use corp_shared::CLONING_SPAWN_POSITION;
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -38,7 +39,7 @@ impl PlayerBundle {
         });
 
         let transform = Transform {
-            translation: Vec3::new(0.0, 0., 0.0),
+            translation: CLONING_SPAWN_POSITION,
             ..Default::default()
         };
 

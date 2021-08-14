@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
+use corp_shared::components::Player;
 
 use crate::asset::asset_loading::AudioAssets;
 use crate::constants::state::GameState;
-use crate::world::player::Player;
 
 pub struct LivePlugin;
 

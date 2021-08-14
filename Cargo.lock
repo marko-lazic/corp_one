@@ -1216,6 +1216,9 @@ version = "0.1.0"
 [[package]]
 name = "corp_server"
 version = "0.1.0"
+dependencies = [
+ "bevy",
+]
 
 [[package]]
 name = "corp_shared"
@@ -1277,7 +1280,6 @@ dependencies = [
  "bevy_mod_raycast",
  "bevy_networking_turbulence",
  "bevy_prototype_debug_lines",
- "corp_shared",
  "kurinji",
  "rand 0.8.3",
 ]

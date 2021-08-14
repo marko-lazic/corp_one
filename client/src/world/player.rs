@@ -13,11 +13,7 @@ use crate::world::cursor::MyRaycastSet;
 use crate::world::player_bundle::PlayerBundle;
 use crate::world::WorldSystem;
 use crate::Game;
-
-#[derive(Default)]
-pub struct Player {
-    pub is_moving: bool,
-}
+use corp_shared::components::{Health, Player};
 
 pub struct PlayerPlugin;
 
@@ -32,6 +28,7 @@ impl PlayerPlugin {
             .spawn_bundle(PlayerBundle::new(mesh_assets, materials))
             .insert(Player::default())
             .insert(Movement::default())
+            .insert(Health::default())
             .insert(CameraCenter)
             .id();
 
