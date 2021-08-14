@@ -7,7 +7,6 @@ use crate::constants::tick;
 use crate::world::camera::TopDownCamera;
 use crate::world::player::Player;
 use crate::Game;
-use common::mouse::MousePosWorld;
 
 pub struct Metrics {
     pub mouse_screen_position: Vec2,
@@ -92,15 +91,6 @@ impl MetricsPlugin {
         }
     }
 
-    fn mouse_world_position_update(
-        mouse: Res<MousePosWorld>,
-        mut query: Query<&mut Text, With<MouseWorldPositionText>>,
-    ) {
-        for mut text in query.iter_mut() {
-            text.sections[0].value = format!("Mouse world position: {}", *mouse);
-        }
-    }
-
     fn camera_metrics(
         mut game: ResMut<Game>,
         mut query: Query<(&mut Transform, &mut TopDownCamera, &mut Camera)>,
@@ -129,7 +119,6 @@ impl Plugin for MetricsPlugin {
                 .with_system(Self::fps_update.system())
                 .with_system(Self::player_position_update.system())
                 .with_system(Self::mouse_screen_position_update.system())
-                .with_system(Self::mouse_world_position_update.system())
                 .with_system(Self::camera_metrics.system())
                 .with_system(Self::camera_debug_text.system()),
         );

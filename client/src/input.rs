@@ -3,7 +3,6 @@ use std::fs;
 use bevy::app::AppExit;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use common::mouse::MousePlugin;
 use input_command::PlayerCommand;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
@@ -47,7 +46,6 @@ impl InputControlPlugin {
 impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(KurinjiPlugin::default())
-            .add_plugin(MousePlugin)
             .add_system_set(
                 SystemSet::on_enter(GameState::Playing).with_system(Self::setup.system()),
             )
