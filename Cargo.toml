@@ -32,10 +32,13 @@ kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bev
 bevy_kira_audio = "0.5.1"
 rand = "0.8.3"
 bevy_mod_picking = "0.4.0"
-bevy_prototype_debug_lines = "0.3.1"
+glam = "0.15.1"
+bam3d = { git = "https://github.com/marko-lazic/bam3d", branch = "migrate-glam" }
 bevy_mod_raycast = "0.2.2"
+bevy_mod_bounding = "0.1.1"
 bevy_asset_loader = "0.4.0"
 bevy_networking_turbulence = "0.3.2"
+bevy_prototype_debug_lines = "0.3.1"
 
 [[bin]]
 name = "corp_client"

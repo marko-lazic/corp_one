@@ -5,6 +5,8 @@ use crate::asset::asset_loading::MeshAssets;
 use crate::constants::state::GameState;
 use crate::world::cursor::MyRaycastSet;
 use crate::world::flying_cubes::FlyingCubesPlugin;
+use crate::world::zone::DamageZone;
+use bevy_mod_bounding::{aabb, debug, Bounded};
 
 pub struct ScenePlugin;
 
@@ -53,6 +55,21 @@ impl ScenePlugin {
                 ..Default::default()
             })
             .insert(RayCastMesh::<MyRaycastSet>::default());
+        // Damage zone
+        commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Plane { size: 1.0 })),
+                transform: Transform::from_translation(Vec3::new(-5., 0.1, -4.)),
+                material: materials.add(StandardMaterial {
+                    base_color: Color::ORANGE_RED,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            })
+            .insert(DamageZone::new(50))
+            .insert(Bounded::<aabb::Aabb>::default())
+            .insert(debug::DebugBounds);
+
         // Light
         commands.spawn_bundle(LightBundle {
             light: Light {

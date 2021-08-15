@@ -6,7 +6,6 @@ use bevy::prelude::*;
 
 use crate::server::ServerPlugin;
 
-mod cloning;
 mod server;
 
 fn main() {

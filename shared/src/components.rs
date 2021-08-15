@@ -8,6 +8,10 @@ pub struct Health {
 }
 
 impl Health {
+    pub fn deal_damage(&mut self, damage: u32) {
+        self.hit_points -= damage;
+    }
+
     pub fn get_hit_points(&self) -> u32 {
         self.hit_points
     }

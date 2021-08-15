@@ -224,6 +224,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
+name = "bam3d"
+version = "0.1.0"
+source = "git+https://github.com/marko-lazic/bam3d?branch=migrate-glam#3cb85594188ef029f6b599fa5762ddf9bf078d9f"
+dependencies = [
+ "bit-set",
+ "glam 0.15.2",
+ "rand 0.7.3",
+ "smallvec",
+]
+
+[[package]]
 name = "base-x"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -540,7 +551,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb36a879cdc96f554b62dd7c7c02392a9a10e94082e4bc686a8242e1d674e7cc"
 dependencies = [
  "bevy_reflect",
- "glam",
+ "glam 0.13.1",
+]
+
+[[package]]
+name = "bevy_mod_bounding"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "500131fec86cd66057089520b6bfbdc1f7eaa80c4710ed627ce0f542819ddb24"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
@@ -622,7 +642,7 @@ dependencies = [
  "bevy_utils",
  "downcast-rs",
  "erased-serde",
- "glam",
+ "glam 0.13.1",
  "parking_lot",
  "serde",
  "smallvec",
@@ -1273,13 +1293,16 @@ dependencies = [
 name = "crop_one"
 version = "0.1.0"
 dependencies = [
+ "bam3d",
  "bevy",
  "bevy_asset_loader",
  "bevy_kira_audio",
+ "bevy_mod_bounding",
  "bevy_mod_picking",
  "bevy_mod_raycast",
  "bevy_networking_turbulence",
  "bevy_prototype_debug_lines",
+ "glam 0.15.2",
  "kurinji",
  "rand 0.8.3",
 ]
@@ -1860,6 +1883,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glam"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3abb554f8ee44336b72d522e0a7fe86a29e09f839a36022fa869a7dfe941a54b"
+
+[[package]]
 name = "glob"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2004,7 +2033,7 @@ version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c592a42961cf144138e04a4bddbe3ef5c6f9fe6ef5eff6fd3bb767b254194171"
 dependencies = [
- "glam",
+ "glam 0.13.1",
  "lazy_static",
 ]
 

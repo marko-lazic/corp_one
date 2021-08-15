@@ -1,5 +1,6 @@
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
+use bevy_mod_bounding::{aabb, BoundingVolumePlugin};
 use bevy_mod_raycast::DefaultRaycastingPlugin;
 
 use crate::constants::state::GameState;
@@ -10,14 +11,17 @@ use crate::world::camera::TopDownCameraPlugin;
 use crate::world::cursor::MyRaycastSet;
 use crate::world::player::PlayerPlugin;
 use crate::world::scene::ScenePlugin;
+use crate::world::zone::ZonePlugin;
 
 pub mod camera;
 pub mod character;
+mod cloning;
 mod cursor;
 pub mod flying_cubes;
 pub mod player;
 mod player_bundle;
 pub mod scene;
+pub mod zone;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum WorldSystem {
@@ -32,6 +36,8 @@ impl Plugin for WorldPlugin {
         app.init_resource::<PlayerCommand>();
         app.add_plugin(ScenePlugin);
         app.add_plugin(InputControlPlugin);
+        app.add_plugin(BoundingVolumePlugin::<aabb::Aabb>::default());
+        app.add_plugin(ZonePlugin);
         app.add_plugin(PlayerPlugin);
         app.add_plugin(TopDownCameraPlugin);
         app.add_plugin(DefaultRaycastingPlugin::<MyRaycastSet>::default());
