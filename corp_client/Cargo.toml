@@ -1,0 +1,33 @@
+[package]
+name = "corp_client"
+version = "0.1.0"
+authors = ["marko.lazic <markolazic@protonmail.com>"]
+edition = "2018"
+
+[features]
+default = [
+    "bevy_kira_audio/wav"
+]
+
+[dependencies]
+corp_shared = { path = "../corp_shared" }
+rand = "0.8.3"
+bevy = "0.5.0"
+bevy_mod_raycast = "0.2.2"
+bevy_mod_bounding = "0.1.1"
+bevy_mod_picking = "0.4.0"
+bevy_prototype_debug_lines = "0.3.3"
+bevy_asset_loader = "0.4.0"
+bevy_kira_audio = "0.5.1"
+bevy_networking_turbulence = "0.3.3"
+kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }
+bam3d = { git = "https://github.com/marko-lazic/bam3d", branch = "migrate-glam" }
+glam = "0.15.1"
+
+[[example]]
+name = "transforms"
+path = "examples/transforms.rs"
+
+[[example]]
+name = "look"
+path = "examples/look.rs"

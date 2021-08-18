@@ -1,5 +1,0 @@
-[package]
-name = "corp_client"
-version = "0.1.0"
-authors = ["marko.lazic <markolazic@protonmail.com>"]
-edition = "2018"

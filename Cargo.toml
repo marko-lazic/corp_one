@@ -1,61 +1,13 @@
-[package]
-name = "crop_one"
-version = "0.1.0"
-edition = "2018"
-authors = [
-    "Marko Lazic <bevyengine@gmail.com>",
-]
-categories = ["game"]
-description = "Online action role playing game"
-homepage = "https://github.com/marko-lazic/corp_on"
-keywords = ["game", "online", "role", "playing"]
-license = "MIT"
-readme = "README.md"
-repository = "https://github.com/marko-lazic/corp_one"
-
 [workspace]
 members = [
-    "client",
-    "server",
-    "shared",
+    "corp_client",
+    "corp_server",
+    "corp_shared",
     "tests",
 ]
-
-[features]
-default = [
-    "bevy_kira_audio/wav"
+default-members = [
+    "corp_client",
+    "corp_server",
+    "corp_shared",
+    "tests",
 ]
-
-[dependencies]
-bevy = "0.5"
-kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }
-bevy_kira_audio = "0.5.1"
-rand = "0.8.3"
-bevy_mod_picking = "0.4.0"
-glam = "0.15.1"
-bam3d = { git = "https://github.com/marko-lazic/bam3d", branch = "migrate-glam" }
-bevy_mod_raycast = "0.2.2"
-bevy_mod_bounding = "0.1.1"
-bevy_asset_loader = "0.4.0"
-bevy_networking_turbulence = "0.3.2"
-bevy_prototype_debug_lines = "0.3.1"
-
-[[bin]]
-name = "corp_client"
-path = "client/src/main.rs"
-
-[[bin]]
-name = "corp_server"
-path = "server/src/main.rs"
-
-[lib]
-name = "corp_shared"
-path = "shared/src/lib.rs"
-
-[[example]]
-name = "transforms"
-path = "examples/transforms.rs"
-
-[[example]]
-name = "look"
-path = "examples/look.rs"
