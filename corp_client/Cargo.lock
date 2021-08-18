@@ -1219,26 +1219,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "corp_server"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_networking_turbulence",
- "corp_shared",
-]
-
-[[package]]
 name = "corp_shared"
 version = "0.1.0"
 dependencies = [
  "bevy",
-]
-
-[[package]]
-name = "corp_tests"
-version = "0.1.0"
-dependencies = [
- "unicode-segmentation",
 ]
 
 [[package]]
