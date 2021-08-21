@@ -4,15 +4,15 @@ use bevy::prelude::Transform;
 use crate::constants::input;
 
 #[derive(Default)]
-pub struct PlayerCommand {
+pub struct PlayerAction {
     pub forward: bool,
     pub backward: bool,
     pub left: bool,
     pub right: bool,
 }
 
-impl PlayerCommand {
-    pub fn key_command(&mut self, action: &str) {
+impl PlayerAction {
+    pub fn key_action(&mut self, action: &str) {
         if action == input::MOVE_FORWARD {
             self.forward = true;
         }
@@ -27,7 +27,7 @@ impl PlayerCommand {
         }
     }
 
-    pub fn mouse_command(&mut self, action: &str) {
+    pub fn mouse_action(&mut self, action: &str) {
         if action == input::MOUSE_SHOOT {
             bevy::log::info!("Bang");
         }
@@ -69,9 +69,9 @@ mod tests {
     #[test]
     fn move_direction() {
         // given
-        let mut command = PlayerCommand::default();
-        command.key_command(input::MOVE_RIGHT);
-        command.key_command(input::MOVE_FORWARD);
+        let mut command = PlayerAction::default();
+        command.key_action(input::MOVE_RIGHT);
+        command.key_action(input::MOVE_FORWARD);
         let position = Transform::default();
 
         // when

@@ -12,12 +12,12 @@ default = [
 [dependencies]
 corp_shared = { path = "../corp_shared" }
 rand = "0.8.3"
-bevy = "0.5.0"
+bevy = { version = "0.5.0", features = ["dynamic"] }
 bevy_mod_raycast = "0.2.2"
 bevy_mod_bounding = "0.1.1"
 bevy_mod_picking = "0.4.0"
 bevy_prototype_debug_lines = "0.3.3"
-bevy_asset_loader = "0.4.0"
+bevy_asset_loader = "0.5.0"
 bevy_kira_audio = "0.5.1"
 bevy_networking_turbulence = "0.3.3"
 kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }

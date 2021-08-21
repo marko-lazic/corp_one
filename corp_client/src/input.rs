@@ -3,14 +3,14 @@ use std::fs;
 use bevy::app::AppExit;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use input_command::PlayerCommand;
+use input_command::PlayerAction;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum PlayerLabel {
+pub enum InputSystemLabel {
     Input,
     Movement,
 }
@@ -35,30 +35,28 @@ impl InputControlPlugin {
         }
     }
 
-    fn player_command(mut command: ResMut<PlayerCommand>, mut reader: EventReader<OnActionActive>) {
+    fn player_action(
+        mut player_action: ResMut<PlayerAction>,
+        mut reader: EventReader<OnActionActive>,
+    ) {
         for event in reader.iter() {
-            command.key_command(&event.action);
-            command.mouse_command(&event.action);
+            player_action.key_action(&event.action);
+            player_action.mouse_action(&event.action);
         }
     }
 }
 
 impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_plugin(KurinjiPlugin::default())
-            .add_system_set(
-                SystemSet::on_enter(GameState::Playing).with_system(Self::setup.system()),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Playing)
-                    .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                    .with_system(
-                        Self::player_command
-                            .system()
-                            .label(PlayerLabel::Input)
-                            .before(PlayerLabel::Movement),
-                    )
-                    .with_system(Self::quit_app.system()),
-            );
+        app.add_plugin(KurinjiPlugin::default()).add_system_set(
+            SystemSet::on_enter(GameState::Playing).with_system(Self::setup.system()),
+        );
+
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
+                .with_system(Self::player_action.system().label(InputSystemLabel::Input))
+                .with_system(Self::quit_app.system()),
+        );
     }
 }

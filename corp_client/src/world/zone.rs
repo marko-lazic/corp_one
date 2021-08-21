@@ -3,6 +3,9 @@ use bevy::core::prelude::Timer;
 use bevy::prelude::*;
 use glam::Vec3;
 
+use crate::constants::state::GameState;
+use crate::constants::tick;
+use bevy::core::FixedTimestep;
 use bevy_mod_bounding::aabb;
 use corp_shared::components::Player;
 use corp_shared::events::DealDamageEvent;
@@ -56,7 +59,11 @@ impl ZonePlugin {
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(DamageTimer::default());
-        app.add_system(Self::check_player_in_zone.system());
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
+                .with_system(Self::check_player_in_zone.system()),
+        );
     }
 }
 

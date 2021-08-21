@@ -1,3 +1,6 @@
+use crate::constants::state::GameState;
+use crate::constants::tick;
+use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use corp_shared::components::Player;
 use corp_shared::{components::Health, CLONING_SPAWN_POSITION};
@@ -17,7 +20,11 @@ impl CloningPlugin {
 
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_system(Self::respawn_dead_player.system());
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
+                .with_system(Self::respawn_dead_player.system()),
+        );
     }
 }
 

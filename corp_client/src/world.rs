@@ -5,7 +5,7 @@ use bevy_mod_raycast::DefaultRaycastingPlugin;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::input::input_command::PlayerCommand;
+use crate::input::input_command::PlayerAction;
 use crate::input::InputControlPlugin;
 use crate::world::camera::TopDownCameraPlugin;
 use crate::world::cursor::MyRaycastSet;
@@ -23,17 +23,11 @@ mod player_bundle;
 pub mod scene;
 pub mod zone;
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
-pub enum WorldSystem {
-    SetupPlayer,
-    SetupCamera,
-}
-
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.init_resource::<PlayerCommand>();
+        app.init_resource::<PlayerAction>();
         app.add_plugin(ScenePlugin);
         app.add_plugin(InputControlPlugin);
         app.add_plugin(BoundingVolumePlugin::<aabb::Aabb>::default());

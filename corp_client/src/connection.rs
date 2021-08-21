@@ -1,8 +1,10 @@
-use std::net::SocketAddr;
-
+use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_networking_turbulence::{NetworkEvent, NetworkResource, NetworkingPlugin, Packet};
+use std::net::SocketAddr;
 
+use crate::constants::state::GameState;
+use crate::constants::tick;
 use corp_shared::{SERVER_HOST, SERVER_PORT};
 
 pub struct ConnectionPlugin;
@@ -16,7 +18,6 @@ impl ConnectionPlugin {
 
     fn send_pings(mut net: ResMut<NetworkResource>, time: Res<Time>) {
         if (time.seconds_since_startup() * 60.) as i64 % 60 == 0 {
-            info!("PING");
             net.broadcast(Packet::from("PING"));
         }
     }
@@ -38,7 +39,11 @@ impl Plugin for ConnectionPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(NetworkingPlugin::default());
         app.add_startup_system(Self::startup.system());
-        app.add_system(Self::send_pings.system());
-        app.add_system(Self::handle_packets.system());
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
+                .with_system(Self::send_pings.system())
+                .with_system(Self::handle_packets.system()),
+        );
     }
 }

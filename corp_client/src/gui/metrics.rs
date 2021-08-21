@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use corp_shared::components::Player;
 
+use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::world::camera::TopDownCamera;
 use crate::Game;
@@ -23,11 +24,6 @@ pub struct MetricsPlugin;
 
 impl MetricsPlugin {
     fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-        commands.insert_resource(Metrics {
-            mouse_screen_position: Vec2::ZERO,
-            mouse_world_position: Vec3::ZERO,
-        });
-
         commands.spawn_bundle(UiCameraBundle::default());
 
         commands
@@ -81,8 +77,8 @@ impl MetricsPlugin {
         metrics: Res<Metrics>,
         mut query: Query<&mut Text, With<MouseScreenPositionText>>,
     ) {
-        let mouse_screen_x = metrics.mouse_screen_position.x;
-        let mouse_screen_y = metrics.mouse_screen_position.y;
+        let mouse_screen_x = &metrics.mouse_screen_position.x;
+        let mouse_screen_y = &metrics.mouse_screen_position.y;
         for mut text in query.iter_mut() {
             text.sections[0].value = format!(
                 "Mouse screen position: X: {:.1} Y: {:.1}",
@@ -112,9 +108,15 @@ impl MetricsPlugin {
 impl Plugin for MetricsPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-        app.add_startup_system(Self::setup.system());
+        app.insert_resource(Metrics {
+            mouse_screen_position: Vec2::ZERO,
+            mouse_world_position: Vec3::ZERO,
+        });
         app.add_system_set(
-            SystemSet::new()
+            SystemSet::on_enter(GameState::Playing).with_system(Self::setup.system()),
+        );
+        app.add_system_set(
+            SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::fps_update.system())
                 .with_system(Self::player_position_update.system())
