@@ -2,7 +2,7 @@ use bevy::core::FixedTimestep;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
-use corp_shared::components::Player;
+use corp_shared::components::{Health, Player};
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
@@ -19,6 +19,7 @@ struct PlayerPositionText;
 struct MouseScreenPositionText;
 struct MouseWorldPositionText;
 struct CameraDebugText;
+struct PlayerHealth;
 
 pub struct MetricsPlugin;
 
@@ -41,6 +42,9 @@ impl MetricsPlugin {
         commands
             .spawn_bundle(metrics_utils::label(85.0, 10.0, &asset_server))
             .insert(CameraDebugText);
+        commands
+            .spawn_bundle(metrics_utils::label(105.0, 10.0, &asset_server))
+            .insert(PlayerHealth);
     }
 
     fn fps_update(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
@@ -103,6 +107,20 @@ impl MetricsPlugin {
             }
         }
     }
+
+    fn player_health_metric_system(
+        game: Res<Game>,
+        healths: Query<&Health>,
+        mut query: Query<&mut Text, With<PlayerHealth>>,
+    ) {
+        if let Some(entity) = game.player_entity {
+            if let Ok(health) = healths.get(entity) {
+                for mut text in query.iter_mut() {
+                    text.sections[0].value = format!("Player health: {}", health.get_hit_points());
+                }
+            }
+        }
+    }
 }
 
 impl Plugin for MetricsPlugin {
@@ -122,7 +140,8 @@ impl Plugin for MetricsPlugin {
                 .with_system(Self::player_position_update.system())
                 .with_system(Self::mouse_screen_position_update.system())
                 .with_system(Self::camera_metrics.system())
-                .with_system(Self::camera_debug_text.system()),
+                .with_system(Self::camera_debug_text.system())
+                .with_system(Self::player_health_metric_system.system()),
         );
     }
 }

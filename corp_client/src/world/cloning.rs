@@ -2,7 +2,7 @@ use crate::constants::state::GameState;
 use crate::constants::tick;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use corp_shared::components::Player;
+use corp_shared::components::{Player, MAX_HEALTH, MIN_HEALTH};
 use corp_shared::{components::Health, CLONING_SPAWN_POSITION};
 
 pub struct CloningPlugin;
@@ -10,9 +10,9 @@ pub struct CloningPlugin;
 impl CloningPlugin {
     fn respawn_dead_player(mut query: Query<(&mut Transform, &mut Health), With<Player>>) {
         for (mut transform, mut health) in query.iter_mut() {
-            if health.get_hit_points() == 0 {
+            if health.get_hit_points() == &MIN_HEALTH {
                 transform.translation = CLONING_SPAWN_POSITION;
-                health.set_hit_points(100);
+                health.set_hit_points(MAX_HEALTH);
             }
         }
     }

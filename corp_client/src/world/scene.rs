@@ -5,7 +5,7 @@ use crate::asset::asset_loading::MeshAssets;
 use crate::constants::state::GameState;
 use crate::world::cursor::MyRaycastSet;
 use crate::world::flying_cubes::FlyingCubesPlugin;
-use crate::world::zone::DamageZone;
+use crate::world::zone::{Zone, ZoneType};
 use bevy_mod_bounding::{aabb, debug, Bounded};
 
 pub struct ScenePlugin;
@@ -59,14 +59,28 @@ impl ScenePlugin {
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 1.0 })),
-                transform: Transform::from_translation(Vec3::new(-5., 0.1, -4.)),
+                transform: Transform::from_translation(Vec3::new(-3., 0.1, -4.)),
                 material: materials.add(StandardMaterial {
                     base_color: Color::ORANGE_RED,
                     ..Default::default()
                 }),
                 ..Default::default()
             })
-            .insert(DamageZone::new(50))
+            .insert(Zone::new(ZoneType::Damage(3.3)))
+            .insert(Bounded::<aabb::Aabb>::default())
+            .insert(debug::DebugBounds);
+        // Heal zone
+        commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Plane { size: 1.0 })),
+                transform: Transform::from_translation(Vec3::new(3., 0.1, -4.)),
+                material: materials.add(StandardMaterial {
+                    base_color: Color::SEA_GREEN,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            })
+            .insert(Zone::new(ZoneType::Heal(0.5)))
             .insert(Bounded::<aabb::Aabb>::default())
             .insert(debug::DebugBounds);
 

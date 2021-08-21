@@ -1,5 +1,4 @@
 pub mod components;
-pub mod events;
 
 use std::net::{IpAddr, Ipv4Addr};
 

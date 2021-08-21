@@ -15,7 +15,6 @@ use crate::world::player_bundle::PlayerBundle;
 use crate::Game;
 use bevy_mod_bounding::{aabb, debug, Bounded};
 use corp_shared::components::{Health, Player};
-use corp_shared::events::DealDamageEvent;
 
 pub struct PlayerPlugin;
 
@@ -68,24 +67,10 @@ impl PlayerPlugin {
     fn is_moving(delta_move: &Vec3) -> bool {
         delta_move.ne(&Vec3::ZERO)
     }
-
-    fn deal_damage(
-        mut ev_damage: EventReader<DealDamageEvent>,
-        game: Res<Game>,
-        mut healths: Query<&mut Health>,
-    ) {
-        for ev in ev_damage.iter() {
-            healths
-                .get_mut(game.player_entity.unwrap())
-                .unwrap()
-                .deal_damage(ev.0);
-        }
-    }
 }
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_event::<DealDamageEvent>();
         app.add_plugin(CloningPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
@@ -95,7 +80,6 @@ impl Plugin for PlayerPlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::deal_damage.system())
                 .with_system(Self::move_player.system().after(InputSystemLabel::Input)),
         );
     }
