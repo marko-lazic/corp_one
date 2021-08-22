@@ -1,7 +1,8 @@
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
-use corp_shared::components::Player;
+
+use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::AudioAssets;
 use crate::constants::state::GameState;

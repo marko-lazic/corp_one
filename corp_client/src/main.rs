@@ -6,7 +6,6 @@ use gui::metrics::MetricsPlugin;
 
 use crate::asset::asset_loading::AssetLoadingPlugin;
 use crate::connection::ConnectionPlugin;
-use crate::sound::sound::SoundPlugin;
 use crate::world::WorldPlugin;
 
 mod asset;

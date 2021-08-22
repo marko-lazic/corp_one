@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_mod_bounding::{aabb, debug, Bounded};
 use bevy_mod_raycast::RayCastMesh;
 
 use crate::asset::asset_loading::MeshAssets;
@@ -6,7 +7,6 @@ use crate::constants::state::GameState;
 use crate::world::cursor::MyRaycastSet;
 use crate::world::flying_cubes::FlyingCubesPlugin;
 use crate::world::zone::{Zone, ZoneType};
-use bevy_mod_bounding::{aabb, debug, Bounded};
 
 pub struct ScenePlugin;
 

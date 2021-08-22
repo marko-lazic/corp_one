@@ -10,3 +10,8 @@ pub const SERVER_PORT: u16 = 9001;
 
 // world
 pub const CLONING_SPAWN_POSITION: Vec3 = const_vec3!([0.; 3]);
+
+pub mod prelude {
+    pub use crate::components::{health::*, Player};
+    pub use crate::CLONING_SPAWN_POSITION;
+}

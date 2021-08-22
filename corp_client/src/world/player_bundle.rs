@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
+use corp_shared::CLONING_SPAWN_POSITION;
+
 use crate::asset::asset_loading::MeshAssets;
 use crate::world::character::{CharacterBundle, CharacterName};
-use corp_shared::CLONING_SPAWN_POSITION;
 
 #[derive(Bundle)]
 pub struct PlayerBundle {

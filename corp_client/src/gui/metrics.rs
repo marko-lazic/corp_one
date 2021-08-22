@@ -2,7 +2,8 @@ use bevy::core::FixedTimestep;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
-use corp_shared::components::{Health, Player};
+
+use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;

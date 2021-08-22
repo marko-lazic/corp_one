@@ -1,11 +1,13 @@
+use std::net::SocketAddr;
+
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_networking_turbulence::{NetworkEvent, NetworkResource, NetworkingPlugin, Packet};
-use std::net::SocketAddr;
+
+use corp_shared::{SERVER_HOST, SERVER_PORT};
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use corp_shared::{SERVER_HOST, SERVER_PORT};
 
 pub struct ConnectionPlugin;
 

@@ -1,9 +1,10 @@
-use crate::constants::state::GameState;
-use crate::constants::tick;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use corp_shared::components::{Player, MAX_HEALTH, MIN_HEALTH};
-use corp_shared::{components::Health, CLONING_SPAWN_POSITION};
+
+use corp_shared::prelude::*;
+
+use crate::constants::state::GameState;
+use crate::constants::tick;
 
 pub struct CloningPlugin;
 
@@ -32,15 +33,15 @@ impl Plugin for CloningPlugin {
 mod tests {
     use super::*;
 
-    fn move_player(mut query: Query<&mut Transform, With<Player>>) {
+    fn move_player_system(mut query: Query<&mut Transform, With<Player>>) {
         for mut transform in query.iter_mut() {
             transform.translation = Vec3::new(42., 42., 42.);
         }
     }
 
-    fn kill_player(mut query: Query<&mut Health, With<Player>>) {
+    fn kill_player_system(mut query: Query<&mut Health, With<Player>>) {
         for mut health in query.iter_mut() {
-            health.set_hit_points(0);
+            health.kill();
         }
     }
 
@@ -51,8 +52,13 @@ mod tests {
 
         // Setup stage with our two systems
         let mut update_stage = SystemStage::parallel();
-        update_stage.add_system(move_player.system().before("killing"));
-        update_stage.add_system(kill_player.system().label("killing").before("cloning"));
+        update_stage.add_system(move_player_system.system().before("killing"));
+        update_stage.add_system(
+            kill_player_system
+                .system()
+                .label("killing")
+                .before("cloning"),
+        );
         update_stage.add_system(CloningPlugin::respawn_dead_player.system().label("cloning"));
 
         // Setup test entities

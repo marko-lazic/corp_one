@@ -3,8 +3,9 @@ use std::fs;
 use bevy::app::AppExit;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use input_command::PlayerAction;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
+
+use input_command::PlayerAction;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
