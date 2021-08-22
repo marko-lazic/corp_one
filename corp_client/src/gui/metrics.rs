@@ -117,7 +117,7 @@ impl MetricsPlugin {
         if let Some(entity) = game.player_entity {
             if let Ok(health) = healths.get(entity) {
                 for mut text in query.iter_mut() {
-                    text.sections[0].value = format!("Player health: {}", health.get_hit_points());
+                    text.sections[0].value = format!("Player health: {}", health.get_health());
                 }
             }
         }

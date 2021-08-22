@@ -77,7 +77,7 @@ mod tests {
 
         let expected_hit_points = 100;
         assert_eq!(
-            world.get::<Health>(player_id).unwrap().get_hit_points(),
+            world.get::<Health>(player_id).unwrap().get_health(),
             expected_hit_points
         );
 

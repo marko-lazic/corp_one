@@ -6,7 +6,7 @@ pub struct Health {
 }
 
 impl Health {
-    pub fn deal_damage(&mut self, damage: f64) {
+    pub fn take_damage(&mut self, damage: f64) {
         self.hit_points = (&self.hit_points - damage).max(MIN_HEALTH);
     }
 
@@ -14,7 +14,7 @@ impl Health {
         self.hit_points = (&self.hit_points + heal).min(MAX_HEALTH);
     }
 
-    pub fn get_hit_points(&self) -> &f64 {
+    pub fn get_health(&self) -> &f64 {
         &self.hit_points
     }
 
@@ -32,5 +32,32 @@ impl Default for Health {
         Health {
             hit_points: MAX_HEALTH,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn take_damage_hit_points_min_value() {
+        let mut health = Health::default();
+        health.take_damage(9000.);
+        assert_eq!(health.get_health(), &MIN_HEALTH);
+    }
+
+    #[test]
+    fn heal_hit_points_max_value() {
+        let mut health = Health::default();
+        health.heal(200.);
+        assert_eq!(health.get_health(), &MAX_HEALTH);
+    }
+
+    #[test]
+    fn take_damage_and_heal() {
+        let mut health = Health::default();
+        health.take_damage(50.);
+        health.heal(30.);
+        assert_eq!(health.get_health(), &80.);
     }
 }

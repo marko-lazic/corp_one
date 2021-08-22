@@ -71,7 +71,7 @@ impl ZonePlugin {
             let mut health = healths.get_mut(game.player_entity.unwrap()).unwrap();
 
             match ev.0 {
-                ZoneType::Damage(amount) => health.deal_damage(amount),
+                ZoneType::Damage(amount) => health.take_damage(amount),
                 ZoneType::Heal(amount) => health.heal(amount),
             }
         }
