@@ -9,8 +9,8 @@ pub struct AssetPaths {
 
 pub const PATHS: AssetPaths = AssetPaths {
     font_fira_sans: "fonts/FiraMono-Medium.ttf",
-    audio_slow_travel: "audio/slow-travel.wav",
-    audio_walk: "audio/walk.wav",
+    audio_slow_travel: "sound/slow-travel.wav",
+    audio_walk: "sound/walk.wav",
     mesh_energy_node: "mesh/node/node_template.gltf#Mesh0/Primitive0",
     mesh_cube: "mesh/cube/cube.gltf#Mesh0/Primitive0",
     mesh_mannequiny: "mesh/mannequiny/mannequiny-0.3.0.glb#Mesh0/Primitive0",

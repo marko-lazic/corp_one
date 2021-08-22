@@ -7,32 +7,32 @@ use crate::asset::asset_loading::AudioAssets;
 use crate::constants::state::GameState;
 use crate::constants::tick;
 
-pub struct LivePlugin;
+pub struct SoundPlugin;
 
-impl LivePlugin {
+impl SoundPlugin {
     fn setup_live_state(
         audio: Res<Audio>,
         audio_assets: Res<AudioAssets>,
-        channels: Res<LiveChannels>,
+        channels: Res<SoundChannels>,
     ) {
         audio.set_volume_in_channel(0.1, &channels.walk);
         audio.play_looped_in_channel(audio_assets.walk.clone(), &channels.walk);
         audio.pause_channel(&channels.walk);
     }
 
-    fn play_music(audio: Res<Audio>, audio_assets: Res<AudioAssets>, channels: Res<LiveChannels>) {
+    fn play_music(audio: Res<Audio>, audio_assets: Res<AudioAssets>, channels: Res<SoundChannels>) {
         audio.set_volume_in_channel(0.3, &channels.music);
         audio.play_looped_in_channel(audio_assets.slow_travel.clone(), &channels.music);
     }
 
-    fn stop_audio(audio: Res<Audio>, channels: Res<LiveChannels>) {
+    fn stop_audio(audio: Res<Audio>, channels: Res<SoundChannels>) {
         audio.stop_channel(&channels.music);
         audio.stop_channel(&channels.walk);
     }
 
     fn walk_sound(
         audio: Res<Audio>,
-        channels: Res<LiveChannels>,
+        channels: Res<SoundChannels>,
         mut player_query: Query<&Player>,
     ) {
         if let Ok(player) = player_query.single_mut() {
@@ -45,9 +45,9 @@ impl LivePlugin {
     }
 }
 
-impl Plugin for LivePlugin {
+impl Plugin for SoundPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(LiveChannels {
+        app.insert_resource(SoundChannels {
             music: AudioChannel::new("music".to_owned()),
             walk: AudioChannel::new("walk".to_owned()),
         });
@@ -68,7 +68,7 @@ impl Plugin for LivePlugin {
     }
 }
 
-struct LiveChannels {
+struct SoundChannels {
     music: AudioChannel,
     walk: AudioChannel,
 }
