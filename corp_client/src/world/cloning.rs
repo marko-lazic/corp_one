@@ -11,7 +11,7 @@ pub struct CloningPlugin;
 impl CloningPlugin {
     fn respawn_dead_player(mut query: Query<(&mut Transform, &mut Health), With<Player>>) {
         for (mut transform, mut health) in query.iter_mut() {
-            if health.get_hit_points() == &MIN_HEALTH {
+            if health.get_health() == &MIN_HEALTH {
                 transform.translation = CLONING_SPAWN_POSITION;
                 health.set_hit_points(MAX_HEALTH);
             }
