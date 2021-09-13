@@ -8,9 +8,10 @@ use crate::constants::tick;
 use crate::input::input_command::PlayerAction;
 use crate::input::InputControlPlugin;
 use crate::world::camera::TopDownCameraPlugin;
+use crate::world::colony::ColonyPlugin;
 use crate::world::cursor::MyRaycastSet;
 use crate::world::player::PlayerPlugin;
-use crate::world::scene::ScenePlugin;
+use crate::world::star_map::StarMapPlugin;
 use crate::world::zone::ZonePlugin;
 
 pub mod camera;
@@ -22,13 +23,17 @@ pub mod player;
 mod player_bundle;
 pub mod scene;
 pub mod zone;
+pub mod colony;
+mod star_map;
 
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<PlayerAction>();
-        app.add_plugin(ScenePlugin);
+        // app.add_plugin(ScenePlugin);
+        app.add_plugin(ColonyPlugin);
+        app.add_plugin(StarMapPlugin);
         app.add_plugin(InputControlPlugin);
         app.add_plugin(BoundingVolumePlugin::<aabb::Aabb>::default());
         app.add_plugin(ZonePlugin);

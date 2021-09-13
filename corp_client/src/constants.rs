@@ -6,15 +6,15 @@ pub mod tick {
 
 pub mod window {
     pub const CORP_ONE_GAME_TITLE: &str = "Corp One";
-    pub const WIDTH: f32 = 1600.0;
-    pub const HEIGHT: f32 = 1600.0;
+    pub const WIDTH: f32 = 1200.0;
+    pub const HEIGHT: f32 = 720.0;
 }
 
 pub mod state {
     #[derive(Debug, Hash, PartialEq, Eq, Clone)]
     pub enum GameState {
         AssetLoading,
-        _StarMap,
+        StarMap,
         Playing,
     }
 }

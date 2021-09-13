@@ -5,7 +5,6 @@ use constants::window;
 use gui::metrics::MetricsPlugin;
 
 use crate::asset::asset_loading::AssetLoadingPlugin;
-use crate::connection::ConnectionPlugin;
 use crate::world::WorldPlugin;
 
 mod asset;
@@ -33,7 +32,7 @@ fn main() {
         .add_state(GameState::AssetLoading)
         .add_plugin(MetricsPlugin)
         .add_plugin(WorldPlugin)
-        .add_plugin(ConnectionPlugin)
+        // .add_plugin(ConnectionPlugin)
         .run();
 }
 

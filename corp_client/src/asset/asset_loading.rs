@@ -4,6 +4,13 @@ use bevy_kira_audio::AudioSource;
 
 use crate::asset::paths::PATHS;
 use crate::constants::state::GameState;
+use crate::world::colony::colony_assets::ColonyAsset;
+
+#[derive(AssetCollection)]
+pub struct ColonyAssets {
+    #[asset(path = "data/colony/iris.colony")]
+    pub iris: Handle<ColonyAsset>,
+}
 
 #[derive(AssetCollection)]
 pub struct FontAssets {
@@ -82,10 +89,11 @@ impl AssetLoadingPlugin {
 
 impl Plugin for AssetLoadingPlugin {
     fn build(&self, mut app: &mut AppBuilder) {
-        AssetLoader::new(GameState::AssetLoading, GameState::Playing)
+        AssetLoader::new(GameState::AssetLoading, GameState::StarMap)
             .with_collection::<MeshAssets>()
             .with_collection::<AudioAssets>()
             .with_collection::<FontAssets>()
+            .with_collection::<ColonyAssets>()
             .build(&mut app);
 
         app.add_system_set(

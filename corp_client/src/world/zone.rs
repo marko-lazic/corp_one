@@ -1,9 +1,10 @@
 use bam3d::{Aabb3, Discrete};
-use bevy::core::prelude::Timer;
 use bevy::core::FixedTimestep;
+use bevy::core::prelude::Timer;
 use bevy::prelude::*;
 use bevy_mod_bounding::aabb;
 use glam::Vec3;
+use serde::Deserialize;
 
 use corp_shared::prelude::*;
 
@@ -11,10 +12,17 @@ use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::Game;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, Deserialize)]
 pub enum ZoneType {
     Heal(f64),
     Damage(f64),
+    Unknown,
+}
+
+impl Default for ZoneType {
+    fn default() -> Self {
+        Self::Unknown
+    }
 }
 
 pub struct Zone {
@@ -30,7 +38,7 @@ impl Zone {
 pub struct ZonePlugin;
 
 impl ZonePlugin {
-    fn player_in_zone_system(
+    fn player_in_zone(
         mut players: Query<(&GlobalTransform, &aabb::Aabb), With<Player>>,
         bounds: Query<(&GlobalTransform, &aabb::Aabb, &Zone)>,
         mut ev_damage: EventWriter<ZoneEvent>,
@@ -62,7 +70,7 @@ impl ZonePlugin {
         )
     }
 
-    fn zone_event_system(
+    fn zone_event(
         mut ev_damage: EventReader<ZoneEvent>,
         game: Res<Game>,
         mut healths: Query<&mut Health>,
@@ -73,6 +81,7 @@ impl ZonePlugin {
             match ev.0 {
                 ZoneType::Damage(amount) => health.take_damage(amount),
                 ZoneType::Heal(amount) => health.heal(amount),
+                ZoneType::Unknown => {}
             }
         }
     }
@@ -85,8 +94,8 @@ impl Plugin for ZonePlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::player_in_zone_system.system())
-                .with_system(Self::zone_event_system.system()),
+                .with_system(Self::player_in_zone.system())
+                .with_system(Self::zone_event.system()),
         );
     }
 }

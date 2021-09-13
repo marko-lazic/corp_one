@@ -11,9 +11,9 @@ use crate::constants::state::GameState;
 use crate::constants::tick;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum InputSystemLabel {
-    Input,
-    Movement,
+pub enum InputSystem {
+    Playing,
+    Starmap,
 }
 
 pub mod input_command;
@@ -21,7 +21,7 @@ pub mod input_command;
 pub struct InputControlPlugin;
 
 impl InputControlPlugin {
-    fn setup(mut kurinji: ResMut<Kurinji>) {
+    fn setup_kurinji_binding(mut kurinji: ResMut<Kurinji>) {
         let binding_json = fs::read_to_string("corp_client/config/binding.json")
             .expect("Error! could not open config file");
         kurinji.set_bindings_with_json(&binding_json);
@@ -36,7 +36,7 @@ impl InputControlPlugin {
         }
     }
 
-    fn player_action(
+    fn player_keyboard_action(
         mut player_action: ResMut<PlayerAction>,
         mut reader: EventReader<OnActionActive>,
     ) {
@@ -45,19 +45,38 @@ impl InputControlPlugin {
             player_action.mouse_action(&event.action);
         }
     }
+
+    fn starmap_keyboard(keyboard_input: Res<Input<KeyCode>>, mut app_state: ResMut<State<GameState>>) {
+        if !keyboard_input.is_changed() {
+            return;
+        }
+
+        if keyboard_input.just_pressed(KeyCode::I) {
+            info!("Moonbase: Station Iris");
+            let _result = app_state.set(GameState::Playing);
+        } else if keyboard_input.just_pressed(KeyCode::L) {
+            info!("Mars: Colony Liberte");
+        }
+    }
 }
 
 impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_plugin(KurinjiPlugin::default()).add_system_set(
-            SystemSet::on_enter(GameState::Playing).with_system(Self::setup.system()),
+        app.add_plugin(KurinjiPlugin::default());
+        app.add_system(Self::setup_kurinji_binding.system());
+        app.add_system(Self::quit_app.system());
+
+        app.add_system_set(
+            SystemSet::on_update(GameState::StarMap)
+                .label(InputSystem::Starmap)
+                .with_system(Self::starmap_keyboard.system())
         );
 
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
+                .label(InputSystem::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::player_action.system().label(InputSystemLabel::Input))
-                .with_system(Self::quit_app.system()),
+                .with_system(Self::player_keyboard_action.system())
         );
     }
 }

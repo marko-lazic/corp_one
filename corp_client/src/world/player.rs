@@ -1,6 +1,6 @@
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use bevy_mod_bounding::{aabb, debug, Bounded};
+use bevy_mod_bounding::{aabb, Bounded, debug};
 use bevy_mod_raycast::RayCastSource;
 
 use corp_shared::prelude::*;
@@ -8,14 +8,14 @@ use corp_shared::prelude::*;
 use crate::asset::asset_loading::MeshAssets;
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::Game;
 use crate::input::input_command::PlayerAction;
-use crate::input::InputSystemLabel;
+use crate::input::InputSystem;
 use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
 use crate::world::cursor::MyRaycastSet;
 use crate::world::player_bundle::PlayerBundle;
-use crate::Game;
 
 pub struct PlayerPlugin;
 
@@ -81,7 +81,7 @@ impl Plugin for PlayerPlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::move_player.system().after(InputSystemLabel::Input)),
+                .with_system(Self::move_player.system().after(InputSystem::Playing)),
         );
     }
 }
