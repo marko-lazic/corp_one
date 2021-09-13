@@ -1,7 +1,8 @@
 use bevy::{prelude::*, reflect::TypeUuid};
 use serde::Deserialize;
 
-use crate::world::colony::asset_color::AssetColor;
+use crate::world::colony::asset::color::ColorAsset;
+use crate::world::colony::asset::material::MaterialAsset;
 use crate::world::zone::ZoneType;
 
 #[derive(Deserialize, Debug, TypeUuid)]
@@ -18,6 +19,7 @@ pub struct ColonyAsset {
 #[derive(Default, Debug, Deserialize, Clone)]
 pub struct EnergyNodeAsset {
     pub position: Vec3,
+    pub material: MaterialAsset,
 }
 
 #[derive(Default, Debug, Deserialize, Clone)]
@@ -35,11 +37,11 @@ pub struct ZoneAsset {
     pub position: Vec3,
     pub zone_type: ZoneType,
     pub size: f32,
-    pub base_color: AssetColor,
+    pub base_color: ColorAsset,
 }
 
 #[derive(Default, Debug, Deserialize, Clone)]
 pub struct LightAsset {
     pub position: Vec3,
-    pub color: AssetColor,
+    pub color: ColorAsset,
 }

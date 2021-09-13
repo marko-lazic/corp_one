@@ -3,9 +3,11 @@
     energy_nodes: [
         EnergyNodeAsset(
             position: Vec3(-1.5, 1.0, 0.0),
+            material: Green
         ),
         EnergyNodeAsset(
             position: Vec3(1.5, 1.0, 0.0),
+            material: Blue
         ),
     ],
     vortex_nodes: [
