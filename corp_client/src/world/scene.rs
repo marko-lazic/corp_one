@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_mod_bounding::{aabb, debug, Bounded};
+use bevy_mod_bounding::{aabb, Bounded, debug};
 use bevy_mod_raycast::RayCastMesh;
 
 use crate::asset::asset_loading::MeshAssets;

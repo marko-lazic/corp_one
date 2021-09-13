@@ -61,6 +61,7 @@ fn takes_and_gives_back(a_string: String) -> String {
 struct WordList {
     s1: String,
 }
+
 impl Default for WordList {
     fn default() -> Self {
         WordList { s1: String::new() }

@@ -12,6 +12,7 @@ fn test_get_value() {
 
     assert_eq!(guess.value(), 1);
 }
+
 struct Guess {
     value: i32,
 }

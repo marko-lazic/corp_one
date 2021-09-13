@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use bevy_networking_turbulence::{NetworkEvent, NetworkResource, NetworkingPlugin, Packet};
+use bevy_networking_turbulence::{NetworkEvent, NetworkingPlugin, NetworkResource, Packet};
 
 use corp_shared::{SERVER_HOST, SERVER_PORT};
 

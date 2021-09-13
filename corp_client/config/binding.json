@@ -1,16 +1,16 @@
 {
   "KeyboardKeys": {
-    "Escape" :  "QUIT_APP",
-    "W" : "MOVE_FORWARD",
-    "D" : "MOVE_RIGHT",
-    "A" : "MOVE_LEFT",
-    "S" : "MOVE_BACKWARD",
-    "E" : "USE",
-    "Left" :  "ARROW_LEFT",
-    "Up" : "ARROW_UP",
-    "Right" : "ARROW_RIGHT",
+    "Escape": "QUIT_APP",
+    "W": "MOVE_FORWARD",
+    "D": "MOVE_RIGHT",
+    "A": "MOVE_LEFT",
+    "S": "MOVE_BACKWARD",
+    "E": "USE",
+    "Left": "ARROW_LEFT",
+    "Up": "ARROW_UP",
+    "Right": "ARROW_RIGHT",
     "Down": "ARROW_DOWN",
-    "Return" : "ENTER"
+    "Return": "ENTER"
   },
   "MouseButtons": {
     "Right": "MOUSE_CONTEXT",

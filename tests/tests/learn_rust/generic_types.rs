@@ -30,6 +30,7 @@ fn find_greatest<T: PartialOrd + Copy>(number_list: Vec<T>) -> T {
     }
     largest
 }
+
 #[derive(Copy, Clone, Debug)]
 struct Wallet {
     money: i32,
@@ -40,6 +41,7 @@ impl PartialOrd for Wallet {
         self.money.partial_cmp(&other.money)
     }
 }
+
 impl PartialEq for Wallet {
     fn eq(&self, other: &Self) -> bool {
         self.money == other.money

@@ -33,7 +33,7 @@ impl Plugin for CloningPlugin {
 mod tests {
     use super::*;
 
-    fn move_player_system(mut query: Query<&mut Transform, With<Player>>) {
+    fn move_player(mut query: Query<&mut Transform, With<Player>>) {
         for mut transform in query.iter_mut() {
             transform.translation = Vec3::new(42., 42., 42.);
         }
@@ -52,7 +52,7 @@ mod tests {
 
         // Setup stage with our two systems
         let mut update_stage = SystemStage::parallel();
-        update_stage.add_system(move_player_system.system().before("killing"));
+        update_stage.add_system(move_player.system().before("killing"));
         update_stage.add_system(
             kill_player_system
                 .system()
@@ -75,9 +75,9 @@ mod tests {
         // Check resulting changes
         assert!(world.get::<Player>(player_id).is_some());
 
-        let expected_hit_points = 100;
+        let expected_hit_points: f64 = 100.0;
         assert_eq!(
-            world.get::<Health>(player_id).unwrap().get_health(),
+            *world.get::<Health>(player_id).unwrap().get_health(),
             expected_hit_points
         );
 

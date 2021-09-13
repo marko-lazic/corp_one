@@ -7,8 +7,8 @@ use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::world::camera::TopDownCamera;
 use crate::Game;
+use crate::world::camera::TopDownCamera;
 
 pub struct Metrics {
     pub mouse_screen_position: Vec2,
@@ -16,10 +16,15 @@ pub struct Metrics {
 }
 
 struct FpsText;
+
 struct PlayerPositionText;
+
 struct MouseScreenPositionText;
+
 struct MouseWorldPositionText;
+
 struct CameraDebugText;
+
 struct PlayerHealth;
 
 pub struct MetricsPlugin;
@@ -109,7 +114,7 @@ impl MetricsPlugin {
         }
     }
 
-    fn player_health_metric_system(
+    fn player_health_metric(
         game: Res<Game>,
         healths: Query<&Health>,
         mut query: Query<&mut Text, With<PlayerHealth>>,
@@ -142,7 +147,7 @@ impl Plugin for MetricsPlugin {
                 .with_system(Self::mouse_screen_position_update.system())
                 .with_system(Self::camera_metrics.system())
                 .with_system(Self::camera_debug_text.system())
-                .with_system(Self::player_health_metric_system.system()),
+                .with_system(Self::player_health_metric.system()),
         );
     }
 }
