@@ -8,6 +8,8 @@ use crate::asset::asset_loading::MaterialAssets;
 pub enum MaterialAsset {
     Green,
     Blue,
+    OrangeRed,
+    SeaGreen,
     Unknown,
 }
 
@@ -22,6 +24,8 @@ impl MaterialAssets {
         match asset_material {
             MaterialAsset::Green => self.green_material.clone(),
             MaterialAsset::Blue => self.blue_material.clone(),
+            MaterialAsset::OrangeRed => self.orange_red.clone(),
+            MaterialAsset::SeaGreen => self.sea_green.clone(),
             MaterialAsset::Unknown => self.pink_material.clone(),
         }
     }

@@ -41,6 +41,8 @@ pub struct MaterialAssets {
     pub green_material: Handle<StandardMaterial>,
     pub blue_material: Handle<StandardMaterial>,
     pub pink_material: Handle<StandardMaterial>,
+    pub orange_red: Handle<StandardMaterial>,
+    pub sea_green: Handle<StandardMaterial>,
 }
 
 pub struct AssetLoadingPlugin;
@@ -76,6 +78,8 @@ impl AssetLoadingPlugin {
             green_material: materials.add(Color::rgb(0.1, 0.2, 0.1).into()),
             blue_material: materials.add(Color::rgb(0.1, 0.4, 0.8).into()),
             pink_material: materials.add(Color::PINK.into()),
+            orange_red: materials.add(Color::ORANGE_RED.into()),
+            sea_green: materials.add(Color::SEA_GREEN.into()),
         });
     }
 

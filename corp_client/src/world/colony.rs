@@ -1,11 +1,13 @@
 use bevy::prelude::*;
 use bevy_asset_ron::RonAssetPlugin;
+use bevy_mod_bounding::{aabb, debug, Bounded};
 use bevy_mod_raycast::RayCastMesh;
 
 use crate::asset::asset_loading::{ColonyAssets, MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::cursor::MyRaycastSet;
+use crate::world::zone::Zone;
 
 mod asset;
 pub mod colony_assets;
@@ -71,6 +73,31 @@ impl ColonyPlugin {
             }
         }
     }
+
+    fn setup_zones(
+        mut commands: Commands,
+        colony_assets: Res<ColonyAssets>,
+        assets: Res<Assets<ColonyAsset>>,
+        material_assets: Res<MaterialAssets>,
+        mut meshes: ResMut<Assets<Mesh>>,
+    ) {
+        if let Some(colony_asset) = assets.get(&colony_assets.iris) {
+            for zone in &colony_asset.zones {
+                commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Plane {
+                            size: zone.size.clone(),
+                        })),
+                        transform: Transform::from_translation(zone.position),
+                        material: material_assets.get_material(&zone.material),
+                        ..Default::default()
+                    })
+                    .insert(Bounded::<aabb::Aabb>::default())
+                    .insert(debug::DebugBounds)
+                    .insert(Zone::new(zone.zone_type));
+            }
+        }
+    }
 }
 
 impl Plugin for ColonyPlugin {
@@ -80,7 +107,8 @@ impl Plugin for ColonyPlugin {
             SystemSet::on_enter(GameState::Playing)
                 .with_system(Self::setup_plane.system())
                 .with_system(Self::setup_light.system())
-                .with_system(Self::setup_energy_nodes.system()),
+                .with_system(Self::setup_energy_nodes.system())
+                .with_system(Self::setup_zones.system()),
         );
     }
 }

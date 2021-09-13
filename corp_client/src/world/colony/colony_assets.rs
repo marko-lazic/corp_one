@@ -37,7 +37,7 @@ pub struct ZoneAsset {
     pub position: Vec3,
     pub zone_type: ZoneType,
     pub size: f32,
-    pub base_color: ColorAsset,
+    pub material: MaterialAsset,
 }
 
 #[derive(Default, Debug, Deserialize, Clone)]

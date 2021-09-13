@@ -25,13 +25,13 @@
             position: Vec3(-3.0, 0.1, -4.0),
             zone_type: Damage(3.3),
             size: 1.0,
-            base_color: OrangeRed,
+            material: OrangeRed,
         ),
         ZoneAsset(
             position: Vec3(3.0, 0.1, -4.0),
             zone_type: Heal(0.5),
             size: 1.0,
-            base_color: SeaGreen,
+            material: SeaGreen,
         ),
     ],
     lights: [
