@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use bevy_mod_bounding::{aabb, BoundingVolumePlugin};
 use bevy_mod_raycast::DefaultRaycastingPlugin;
 
+use colony::zone::ZonePlugin;
+
 use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::input::input_command::PlayerAction;
@@ -12,18 +14,16 @@ use crate::world::colony::ColonyPlugin;
 use crate::world::cursor::MyRaycastSet;
 use crate::world::player::PlayerPlugin;
 use crate::world::star_map::StarMapPlugin;
-use crate::world::zone::ZonePlugin;
 
 pub mod camera;
 pub mod character;
 mod cloning;
+pub mod colony;
 mod cursor;
 pub mod flying_cubes;
 pub mod player;
 mod player_bundle;
 pub mod scene;
-pub mod zone;
-pub mod colony;
 mod star_map;
 
 pub struct WorldPlugin;

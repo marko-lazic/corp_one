@@ -4,9 +4,9 @@ use bevy_mod_raycast::RayCastMesh;
 
 use crate::asset::asset_loading::MeshAssets;
 use crate::constants::state::GameState;
+use crate::world::colony::zone::{Zone, ZoneType};
 use crate::world::cursor::MyRaycastSet;
 use crate::world::flying_cubes::FlyingCubesPlugin;
-use crate::world::zone::{Zone, ZoneType};
 
 pub struct ScenePlugin;
 

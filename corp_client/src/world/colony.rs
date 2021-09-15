@@ -3,15 +3,18 @@ use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_bounding::{aabb, debug, Bounded};
 use bevy_mod_raycast::RayCastMesh;
 
-use crate::asset::asset_loading::{ColonyAssets, MaterialAssets, MeshAssets};
+use crate::asset::asset_loading::{ColonyAssets, MaterialAsset, MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
+use crate::world::colony::vortex::VortexPlugin;
+use crate::world::colony::zone::{Zone, ZoneType};
 use crate::world::cursor::MyRaycastSet;
-use crate::world::zone::Zone;
+use crate::Game;
 
 mod asset;
 pub mod colony_assets;
 mod vortex;
+pub mod zone;
 
 pub struct ColonyPlugin;
 
@@ -98,17 +101,52 @@ impl ColonyPlugin {
             }
         }
     }
+
+    fn setup_vortex_gates(
+        mut commands: Commands,
+        colony_assets: Res<ColonyAssets>,
+        assets: Res<Assets<ColonyAsset>>,
+        material_assets: Res<MaterialAssets>,
+        mut meshes: ResMut<Assets<Mesh>>,
+    ) {
+        if let Some(colony_asset) = assets.get(&colony_assets.iris) {
+            for vortex_gate in &colony_asset.vortex_gates {
+                commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Plane { size: 1.0 })),
+                        transform: Transform::from_translation(vortex_gate.position),
+                        material: material_assets.get_material(&MaterialAsset::SkyBlue),
+                        ..Default::default()
+                    })
+                    .insert(Bounded::<aabb::Aabb>::default())
+                    .insert(debug::DebugBounds)
+                    .insert(Zone::new(ZoneType::VortexGate));
+            }
+        }
+    }
+
+    fn cleanup_colony(mut commands: Commands, entities: Query<Entity>, mut game: ResMut<Game>) {
+        for entity in entities.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
+        game.is_vorting = false;
+    }
 }
 
 impl Plugin for ColonyPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
+        app.add_plugin(VortexPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
                 .with_system(Self::setup_plane.system())
                 .with_system(Self::setup_light.system())
                 .with_system(Self::setup_energy_nodes.system())
-                .with_system(Self::setup_zones.system()),
+                .with_system(Self::setup_zones.system())
+                .with_system(Self::setup_vortex_gates.system()),
+        );
+        app.add_system_set(
+            SystemSet::on_exit(GameState::Playing).with_system(Self::cleanup_colony.system()),
         );
     }
 }

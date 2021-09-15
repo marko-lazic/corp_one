@@ -17,7 +17,7 @@
     ],
     vortex_gates: [
         VortexGateAsset(
-            position: Vec3(-5.0, 6.0, 0.0),
+            position: Vec3(-5.0, 0.1, 0.0),
         ),
     ],
     zones: [

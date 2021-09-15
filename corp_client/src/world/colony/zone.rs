@@ -1,6 +1,6 @@
 use bam3d::{Aabb3, Discrete};
-use bevy::core::FixedTimestep;
 use bevy::core::prelude::Timer;
+use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_mod_bounding::aabb;
 use glam::Vec3;
@@ -10,12 +10,14 @@ use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::world::colony::vortex::VortexGateEvent;
 use crate::Game;
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 pub enum ZoneType {
     Heal(f64),
     Damage(f64),
+    VortexGate,
     Unknown,
 }
 
@@ -41,7 +43,7 @@ impl ZonePlugin {
     fn player_in_zone(
         mut players: Query<(&GlobalTransform, &aabb::Aabb), With<Player>>,
         bounds: Query<(&GlobalTransform, &aabb::Aabb, &Zone)>,
-        mut ev_damage: EventWriter<ZoneEvent>,
+        mut ev_zone: EventWriter<ZoneEvent>,
         time: Res<Time>,
         mut timer: ResMut<DamageTimer>,
     ) {
@@ -56,7 +58,7 @@ impl ZonePlugin {
 
                 if zone_aabb.intersects(&player_aabb) {
                     if timer.timer.tick(time.delta()).just_finished() {
-                        ev_damage.send(ZoneEvent(zone.zone_type));
+                        ev_zone.send(ZoneEvent(zone.zone_type));
                     }
                 }
             }
@@ -71,17 +73,19 @@ impl ZonePlugin {
     }
 
     fn zone_event(
-        mut ev_damage: EventReader<ZoneEvent>,
+        mut ev_zone: EventReader<ZoneEvent>,
+        mut ev_vortex_gate: EventWriter<VortexGateEvent>,
         game: Res<Game>,
         mut healths: Query<&mut Health>,
     ) {
-        for ev in ev_damage.iter() {
+        for event in ev_zone.iter() {
             let mut health = healths.get_mut(game.player_entity.unwrap()).unwrap();
 
-            match ev.0 {
+            match event.0 {
                 ZoneType::Damage(amount) => health.take_damage(amount),
                 ZoneType::Heal(amount) => health.heal(amount),
-                ZoneType::Unknown => {}
+                ZoneType::VortexGate => ev_vortex_gate.send(VortexGateEvent),
+                _ => {}
             }
         }
     }

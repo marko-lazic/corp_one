@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_kira_audio::AudioSource;
+use serde::Deserialize;
 
 use crate::asset::paths::PATHS;
 use crate::constants::state::GameState;
@@ -36,13 +37,43 @@ pub struct MeshAssets {
     pub mannequiny: Handle<Mesh>,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub enum MaterialAsset {
+    Green,
+    Blue,
+    SkyBlue,
+    OrangeRed,
+    SeaGreen,
+    Unknown,
+}
+
+impl Default for MaterialAsset {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
 pub struct MaterialAssets {
     pub cube: Handle<StandardMaterial>,
     pub green_material: Handle<StandardMaterial>,
     pub blue_material: Handle<StandardMaterial>,
+    pub sky_blue_material: Handle<StandardMaterial>,
     pub pink_material: Handle<StandardMaterial>,
-    pub orange_red: Handle<StandardMaterial>,
-    pub sea_green: Handle<StandardMaterial>,
+    pub orange_red_material: Handle<StandardMaterial>,
+    pub sea_green_material: Handle<StandardMaterial>,
+}
+
+impl MaterialAssets {
+    pub fn get_material(&self, asset_material: &MaterialAsset) -> Handle<StandardMaterial> {
+        match asset_material {
+            MaterialAsset::Green => self.green_material.clone(),
+            MaterialAsset::Blue => self.blue_material.clone(),
+            MaterialAsset::SkyBlue => self.sky_blue_material.clone(),
+            MaterialAsset::OrangeRed => self.orange_red_material.clone(),
+            MaterialAsset::SeaGreen => self.sea_green_material.clone(),
+            MaterialAsset::Unknown => self.pink_material.clone(),
+        }
+    }
 }
 
 pub struct AssetLoadingPlugin;
@@ -77,9 +108,10 @@ impl AssetLoadingPlugin {
             }),
             green_material: materials.add(Color::rgb(0.1, 0.2, 0.1).into()),
             blue_material: materials.add(Color::rgb(0.1, 0.4, 0.8).into()),
+            sky_blue_material: materials.add(Color::rgb(0.55, 0.71, 0.73).into()),
             pink_material: materials.add(Color::PINK.into()),
-            orange_red: materials.add(Color::ORANGE_RED.into()),
-            sea_green: materials.add(Color::SEA_GREEN.into()),
+            orange_red_material: materials.add(Color::ORANGE_RED.into()),
+            sea_green_material: materials.add(Color::SEA_GREEN.into()),
         });
     }
 
