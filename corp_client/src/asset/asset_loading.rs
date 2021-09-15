@@ -11,6 +11,8 @@ use crate::world::colony::colony_assets::ColonyAsset;
 pub struct ColonyAssets {
     #[asset(path = "data/colony/iris.colony")]
     pub iris: Handle<ColonyAsset>,
+    #[asset(path = "data/colony/liberte.colony")]
+    pub liberte: Handle<ColonyAsset>,
 }
 
 #[derive(AssetCollection)]

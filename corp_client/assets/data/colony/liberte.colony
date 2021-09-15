@@ -1,0 +1,21 @@
+(
+    name: "Iris",
+    energy_nodes: [],
+    vortex_gates: [
+        VortexGateAsset(
+            position: Vec3(4.0, 0.1, 2.0),
+        ),
+    ],
+    vortex_nodes: [],
+    zones: [],
+    lights: [
+        LightAsset(
+            position: Vec3(0.0, 10.0, -1.0),
+            color: White,
+        ),
+        LightAsset(
+            position: Vec3(-1.0, 10.0, 1.0),
+            color: White,
+        ),
+    ],
+)

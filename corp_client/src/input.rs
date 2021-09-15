@@ -7,8 +7,10 @@ use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
 use input_command::PlayerAction;
 
+use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::Game;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum InputSystem {
@@ -46,16 +48,24 @@ impl InputControlPlugin {
         }
     }
 
-    fn starmap_keyboard(keyboard_input: Res<Input<KeyCode>>, mut app_state: ResMut<State<GameState>>) {
+    fn starmap_keyboard(
+        mut game: ResMut<Game>,
+        colony_assets: Res<ColonyAssets>,
+        keyboard_input: Res<Input<KeyCode>>,
+        mut app_state: ResMut<State<GameState>>,
+    ) {
         if !keyboard_input.is_changed() {
             return;
         }
 
         if keyboard_input.just_pressed(KeyCode::I) {
             info!("Moonbase: Station Iris");
+            game.current_colony_asset = colony_assets.iris.clone();
             let _result = app_state.set(GameState::Playing);
         } else if keyboard_input.just_pressed(KeyCode::L) {
             info!("Mars: Colony Liberte");
+            game.current_colony_asset = colony_assets.liberte.clone();
+            let _result = app_state.set(GameState::Playing);
         }
     }
 }
@@ -69,14 +79,14 @@ impl Plugin for InputControlPlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::StarMap)
                 .label(InputSystem::Starmap)
-                .with_system(Self::starmap_keyboard.system())
+                .with_system(Self::starmap_keyboard.system()),
         );
 
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .label(InputSystem::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::player_keyboard_action.system())
+                .with_system(Self::player_keyboard_action.system()),
         );
     }
 }

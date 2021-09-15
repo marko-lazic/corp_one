@@ -3,7 +3,7 @@ use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_bounding::{aabb, debug, Bounded};
 use bevy_mod_raycast::RayCastMesh;
 
-use crate::asset::asset_loading::{ColonyAssets, MaterialAsset, MaterialAssets, MeshAssets};
+use crate::asset::asset_loading::{MaterialAsset, MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::VortexPlugin;
@@ -37,12 +37,8 @@ impl ColonyPlugin {
             .insert(RayCastMesh::<MyRaycastSet>::default());
     }
 
-    fn setup_light(
-        mut commands: Commands,
-        colony_assets: Res<ColonyAssets>,
-        assets: Res<Assets<ColonyAsset>>,
-    ) {
-        if let Some(colony_asset) = assets.get(&colony_assets.iris) {
+    fn setup_light(mut commands: Commands, game: Res<Game>, assets: Res<Assets<ColonyAsset>>) {
+        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             for light in &colony_asset.lights {
                 commands.spawn_bundle(LightBundle {
                     light: Light {
@@ -58,12 +54,12 @@ impl ColonyPlugin {
 
     fn setup_energy_nodes(
         mut commands: Commands,
-        colony_assets: Res<ColonyAssets>,
+        game: Res<Game>,
         assets: Res<Assets<ColonyAsset>>,
         material_assets: Res<MaterialAssets>,
         mesh_assets: Res<MeshAssets>,
     ) {
-        if let Some(colony_asset) = assets.get(&colony_assets.iris) {
+        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             for energy_node in &colony_asset.energy_nodes {
                 commands
                     .spawn_bundle(PbrBundle {
@@ -79,12 +75,12 @@ impl ColonyPlugin {
 
     fn setup_zones(
         mut commands: Commands,
-        colony_assets: Res<ColonyAssets>,
+        game: Res<Game>,
         assets: Res<Assets<ColonyAsset>>,
         material_assets: Res<MaterialAssets>,
         mut meshes: ResMut<Assets<Mesh>>,
     ) {
-        if let Some(colony_asset) = assets.get(&colony_assets.iris) {
+        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             for zone in &colony_asset.zones {
                 commands
                     .spawn_bundle(PbrBundle {
@@ -104,12 +100,12 @@ impl ColonyPlugin {
 
     fn setup_vortex_gates(
         mut commands: Commands,
-        colony_assets: Res<ColonyAssets>,
+        game: Res<Game>,
         assets: Res<Assets<ColonyAsset>>,
         material_assets: Res<MaterialAssets>,
         mut meshes: ResMut<Assets<Mesh>>,
     ) {
-        if let Some(colony_asset) = assets.get(&colony_assets.iris) {
+        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             for vortex_gate in &colony_asset.vortex_gates {
                 commands
                     .spawn_bundle(PbrBundle {

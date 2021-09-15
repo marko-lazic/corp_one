@@ -3,6 +3,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub enum ColorAsset {
+    White,
     OrangeRed,
     SeaGreen,
     LimeGreen,
@@ -19,6 +20,7 @@ impl Default for ColorAsset {
 impl ColorAsset {
     pub fn get_color(&self) -> BevyColor {
         match self {
+            ColorAsset::White => BevyColor::WHITE,
             ColorAsset::OrangeRed => BevyColor::ORANGE_RED,
             ColorAsset::SeaGreen => BevyColor::SEA_GREEN,
             ColorAsset::LimeGreen => BevyColor::LIME_GREEN,

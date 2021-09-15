@@ -5,6 +5,7 @@ use constants::window;
 use gui::metrics::MetricsPlugin;
 
 use crate::asset::asset_loading::AssetLoadingPlugin;
+use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::WorldPlugin;
 
 mod asset;
@@ -21,6 +22,7 @@ pub struct Game {
     camera_transform: Option<Transform>,
     camera_center: Vec3,
     is_vorting: bool,
+    current_colony_asset: Handle<ColonyAsset>,
 }
 
 fn main() {
