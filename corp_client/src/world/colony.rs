@@ -3,6 +3,7 @@ use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_bounding::{aabb, debug, Bounded};
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMesh;
+use rand::prelude::SliceRandom;
 
 use corp_shared::prelude::{Health, Player};
 
@@ -16,7 +17,6 @@ use crate::world::colony::zone::{Zone, ZoneType};
 use crate::world::cursor::MyRaycastSet;
 use crate::world::player::PlayerBundle;
 use crate::Game;
-use rand::prelude::SliceRandom;
 
 mod asset;
 pub mod colony_assets;
@@ -145,10 +145,14 @@ impl ColonyPlugin {
                 commands
                     .spawn_bundle(PbrBundle {
                         mesh: mesh_assets.vortex_node.clone(),
-                        transform: {
-                            let mut transform = Transform::from_translation(vortex_node.position);
-                            transform.scale = Vec3::new(0.36, 0.36, 0.36);
-                            transform
+                        transform: Transform {
+                            scale: Vec3::new(0.3, 0.3, 0.3),
+                            translation: Vec3::new(
+                                vortex_node.position.x.clone(),
+                                3.0,
+                                vortex_node.position.z.clone(),
+                            ),
+                            ..Default::default()
                         },
                         material: {
                             let material = materials.add(Color::rgba(1.0, 0.9, 0.9, 0.4).into());
@@ -180,10 +184,8 @@ impl ColonyPlugin {
                 .collect::<Vec<Vec3>>();
             let random_node_position = vortex_node_positions.choose(&mut rand::thread_rng());
             if let Some(position) = random_node_position {
-                let mut position = *position;
-                position.y = 0.0;
                 let player = commands
-                    .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
+                    .spawn_bundle(PlayerBundle::new(mesh_assets, materials, *position))
                     .insert(Player::default())
                     .insert(Movement::default())
                     .insert(Health::default())

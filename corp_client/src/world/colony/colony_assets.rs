@@ -4,6 +4,7 @@ use serde::Deserialize;
 use crate::asset::asset_loading::MaterialAsset;
 use crate::world::colony::asset::color::ColorAsset;
 use crate::world::colony::zone::ZoneType;
+use std::ops::Deref;
 
 #[derive(Deserialize, Debug, TypeUuid)]
 #[uuid = "962DF4C2-C221-4364-A9F7-B7340FB60437"]
@@ -16,6 +17,14 @@ pub struct ColonyAsset {
     pub lights: Vec<LightAsset>,
 }
 
+impl Deref for ColonyAsset {
+    type Target = ColonyAsset;
+
+    fn deref(&self) -> &Self::Target {
+        &self
+    }
+}
+
 #[derive(Default, Debug, Deserialize, Clone)]
 pub struct EnergyNodeAsset {
     pub position: Vec3,
@@ -25,6 +34,14 @@ pub struct EnergyNodeAsset {
 #[derive(Default, Debug, Deserialize, Clone)]
 pub struct VortexNodeAsset {
     pub position: Vec3,
+}
+
+impl Deref for VortexNodeAsset {
+    type Target = VortexNodeAsset;
+
+    fn deref(&self) -> &Self::Target {
+        &self
+    }
 }
 
 #[derive(Default, Debug, Deserialize, Clone)]
