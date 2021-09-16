@@ -23,7 +23,6 @@ mod cursor;
 pub mod flying_cubes;
 pub mod player;
 mod player_bundle;
-pub mod scene;
 mod star_map;
 
 pub struct WorldPlugin;

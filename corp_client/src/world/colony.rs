@@ -121,7 +121,7 @@ impl ColonyPlugin {
         }
     }
 
-    fn cleanup_colony(mut commands: Commands, entities: Query<Entity>, mut game: ResMut<Game>) {
+    fn teardown(mut commands: Commands, entities: Query<Entity>, mut game: ResMut<Game>) {
         for entity in entities.iter() {
             commands.entity(entity).despawn_recursive();
         }
@@ -142,7 +142,7 @@ impl Plugin for ColonyPlugin {
                 .with_system(Self::setup_vortex_gates.system()),
         );
         app.add_system_set(
-            SystemSet::on_exit(GameState::Playing).with_system(Self::cleanup_colony.system()),
+            SystemSet::on_exit(GameState::Playing).with_system(Self::teardown.system()),
         );
     }
 }
