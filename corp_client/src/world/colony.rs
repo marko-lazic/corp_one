@@ -6,7 +6,7 @@ use bevy_mod_raycast::RayCastMesh;
 use crate::asset::asset_loading::{MaterialAsset, MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
-use crate::world::colony::vortex::VortexPlugin;
+use crate::world::colony::vortex::{VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneType};
 use crate::world::cursor::MyRaycastSet;
 use crate::Game;
@@ -121,6 +121,38 @@ impl ColonyPlugin {
         }
     }
 
+    fn setup_vortex_nodes(
+        mut commands: Commands,
+        game: Res<Game>,
+        assets: Res<Assets<ColonyAsset>>,
+        mesh_assets: Res<MeshAssets>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+    ) {
+        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
+            for vortex_node in &colony_asset.vortex_nodes {
+                commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: mesh_assets.vortex_node.clone(),
+                        transform: {
+                            let mut transform = Transform::from_translation(vortex_node.position);
+                            transform.scale = Vec3::new(0.36, 0.36, 0.36);
+                            transform
+                        },
+                        material: {
+                            let material = materials.add(Color::rgba(1.0, 0.9, 0.9, 0.4).into());
+                            material
+                        },
+                        visible: Visible {
+                            is_visible: true,
+                            is_transparent: true,
+                        },
+                        ..Default::default()
+                    })
+                    .insert(VortexNode);
+            }
+        }
+    }
+
     fn teardown(mut commands: Commands, entities: Query<Entity>, mut game: ResMut<Game>) {
         for entity in entities.iter() {
             commands.entity(entity).despawn_recursive();
@@ -139,7 +171,8 @@ impl Plugin for ColonyPlugin {
                 .with_system(Self::setup_light.system())
                 .with_system(Self::setup_energy_nodes.system())
                 .with_system(Self::setup_zones.system())
-                .with_system(Self::setup_vortex_gates.system()),
+                .with_system(Self::setup_vortex_gates.system())
+                .with_system(Self::setup_vortex_nodes.system()),
         );
         app.add_system_set(
             SystemSet::on_exit(GameState::Playing).with_system(Self::teardown.system()),

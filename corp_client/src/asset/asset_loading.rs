@@ -37,6 +37,8 @@ pub struct MeshAssets {
     pub cube: Handle<Mesh>,
     #[asset(path = "mesh/mannequiny/mannequiny-0.3.0.glb#Mesh0/Primitive0")]
     pub mannequiny: Handle<Mesh>,
+    #[asset(path = "mesh/vortex_node.glb#Mesh0/Primitive0")]
+    pub vortex_node: Handle<Mesh>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

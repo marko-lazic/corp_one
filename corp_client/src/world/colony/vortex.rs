@@ -7,6 +7,8 @@ pub struct VortexPlugin;
 
 pub struct VortexGateEvent;
 
+pub struct VortexNode;
+
 impl VortexPlugin {
     fn vortex_gate_event(
         mut ev_vortex_gate: EventReader<VortexGateEvent>,
@@ -20,6 +22,12 @@ impl VortexPlugin {
             }
         }
     }
+
+    fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<Time>) {
+        for mut transform in nodes.iter_mut() {
+            transform.rotate(Quat::from_rotation_y(time.delta_seconds() * 0.2));
+        }
+    }
 }
 
 impl Plugin for VortexPlugin {
@@ -27,7 +35,8 @@ impl Plugin for VortexPlugin {
         app.add_event::<VortexGateEvent>();
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(VortexPlugin::vortex_gate_event.system()),
+                .with_system(Self::vortex_gate_event.system())
+                .with_system(Self::animate_nodes.system()),
         );
     }
 }
