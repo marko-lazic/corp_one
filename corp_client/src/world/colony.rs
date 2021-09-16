@@ -3,7 +3,6 @@ use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_bounding::{aabb, debug, Bounded};
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMesh;
-use rand::prelude::SliceRandom;
 
 use corp_shared::prelude::{Health, Player};
 
@@ -177,13 +176,7 @@ impl ColonyPlugin {
         assets: Res<Assets<ColonyAsset>>,
     ) {
         if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
-            let vortex_node_positions = colony_asset
-                .vortex_nodes
-                .iter()
-                .map(|x| x.position)
-                .collect::<Vec<Vec3>>();
-            let random_node_position = vortex_node_positions.choose(&mut rand::thread_rng());
-            if let Some(position) = random_node_position {
+            if let Some(position) = colony_asset.random_vortex_node_position() {
                 let player = commands
                     .spawn_bundle(PlayerBundle::new(mesh_assets, materials, *position))
                     .insert(Player::default())
