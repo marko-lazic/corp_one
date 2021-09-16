@@ -13,6 +13,12 @@
         VortexNodeAsset(
             position: Vec3(-6.0, 3.0, -2.0),
         ),
+        VortexNodeAsset(
+            position: Vec3(8.0, 3.0, -3.0),
+        ),
+        VortexNodeAsset(
+            position: Vec3(6.0, 3.0, 6.0),
+        ),
     ],
     zones: [],
     lights: [

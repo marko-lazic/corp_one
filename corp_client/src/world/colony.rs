@@ -1,15 +1,22 @@
 use bevy::prelude::*;
 use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_bounding::{aabb, debug, Bounded};
+use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMesh;
+
+use corp_shared::prelude::{Health, Player};
 
 use crate::asset::asset_loading::{MaterialAsset, MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
+use crate::world::camera::{CameraCenter, TopDownCamera};
+use crate::world::character::Movement;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneType};
 use crate::world::cursor::MyRaycastSet;
+use crate::world::player::PlayerBundle;
 use crate::Game;
+use rand::prelude::SliceRandom;
 
 mod asset;
 pub mod colony_assets;
@@ -17,6 +24,11 @@ mod vortex;
 pub mod zone;
 
 pub struct ColonyPlugin;
+
+#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
+enum ColonySystem {
+    Environment,
+}
 
 impl ColonyPlugin {
     fn setup_plane(
@@ -153,6 +165,49 @@ impl ColonyPlugin {
         }
     }
 
+    fn setup_player(
+        mut commands: Commands,
+        mesh_assets: Res<MeshAssets>,
+        materials: ResMut<Assets<StandardMaterial>>,
+        mut game: ResMut<Game>,
+        assets: Res<Assets<ColonyAsset>>,
+    ) {
+        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
+            let vortex_node_positions = colony_asset
+                .vortex_nodes
+                .iter()
+                .map(|x| x.position)
+                .collect::<Vec<Vec3>>();
+            let random_node_position = vortex_node_positions.choose(&mut rand::thread_rng());
+            if let Some(position) = random_node_position {
+                let mut position = *position;
+                position.y = 0.0;
+                let player = commands
+                    .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
+                    .insert(Player::default())
+                    .insert(Movement::default())
+                    .insert(Health::default())
+                    .insert(CameraCenter)
+                    .insert(Bounded::<aabb::Aabb>::default())
+                    .insert(debug::DebugBounds)
+                    .id();
+
+                game.player_entity = Some(player);
+            }
+        }
+    }
+
+    fn setup_camera(mut commands: Commands) {
+        commands
+            .spawn_bundle(PerspectiveCameraBundle {
+                transform: Transform::from_translation(Vec3::new(-3.0, 3.0, 5.0))
+                    .looking_at(Vec3::default(), Vec3::Y),
+                ..Default::default()
+            })
+            .insert(TopDownCamera::new(20.0))
+            .insert(RayCastSource::<MyRaycastSet>::new());
+    }
+
     fn teardown(mut commands: Commands, entities: Query<Entity>, mut game: ResMut<Game>) {
         for entity in entities.iter() {
             commands.entity(entity).despawn_recursive();
@@ -167,12 +222,19 @@ impl Plugin for ColonyPlugin {
         app.add_plugin(VortexPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
+                .label(ColonySystem::Environment)
                 .with_system(Self::setup_plane.system())
                 .with_system(Self::setup_light.system())
                 .with_system(Self::setup_energy_nodes.system())
                 .with_system(Self::setup_zones.system())
                 .with_system(Self::setup_vortex_gates.system())
                 .with_system(Self::setup_vortex_nodes.system()),
+        );
+        app.add_system_set(
+            SystemSet::on_enter(GameState::Playing)
+                .after(ColonySystem::Environment)
+                .with_system(Self::setup_player.system())
+                .with_system(Self::setup_camera.system()),
         );
         app.add_system_set(
             SystemSet::on_exit(GameState::Playing).with_system(Self::teardown.system()),

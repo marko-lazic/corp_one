@@ -1,55 +1,53 @@
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use bevy_mod_bounding::{aabb, Bounded, debug};
-use bevy_mod_raycast::RayCastSource;
 
 use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::MeshAssets;
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::Game;
 use crate::input::input_command::PlayerAction;
 use crate::input::InputSystem;
-use crate::world::camera::{CameraCenter, TopDownCamera};
-use crate::world::character::Movement;
+use crate::world::character::{CharacterBundle, CharacterName, Movement};
 use crate::world::cloning::CloningPlugin;
-use crate::world::cursor::MyRaycastSet;
-use crate::world::player_bundle::PlayerBundle;
+use crate::Game;
+
+#[derive(Bundle)]
+pub struct PlayerBundle {
+    #[bundle]
+    pub character: CharacterBundle,
+
+    #[bundle]
+    pub pbr: PbrBundle,
+}
+
+impl PlayerBundle {
+    pub fn new(
+        mesh_assets: Res<MeshAssets>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+        spawn_position: Vec3,
+    ) -> PlayerBundle {
+        PlayerBundle {
+            character: CharacterBundle {
+                name: CharacterName::new("The Guy"),
+                ..Default::default()
+            },
+            pbr: PbrBundle {
+                mesh: mesh_assets.mannequiny.clone(),
+                material: materials.add(StandardMaterial {
+                    base_color: Color::rgb(0.8, 0.7, 0.6),
+                    ..Default::default()
+                }),
+                transform: Transform::from_translation(spawn_position),
+                ..Default::default()
+            },
+        }
+    }
+}
 
 pub struct PlayerPlugin;
 
 impl PlayerPlugin {
-    fn setup_player(
-        mut commands: Commands,
-        mesh_assets: Res<MeshAssets>,
-        materials: ResMut<Assets<StandardMaterial>>,
-        mut game: ResMut<Game>,
-    ) {
-        let player = commands
-            .spawn_bundle(PlayerBundle::new(mesh_assets, materials))
-            .insert(Player::default())
-            .insert(Movement::default())
-            .insert(Health::default())
-            .insert(CameraCenter)
-            .insert(Bounded::<aabb::Aabb>::default())
-            .insert(debug::DebugBounds)
-            .id();
-
-        game.player_entity = Some(player);
-    }
-
-    fn setup_camera(mut commands: Commands) {
-        commands
-            .spawn_bundle(PerspectiveCameraBundle {
-                transform: Transform::from_translation(Vec3::new(-3.0, 3.0, 5.0))
-                    .looking_at(Vec3::default(), Vec3::Y),
-                ..Default::default()
-            })
-            .insert(TopDownCamera::new(20.0))
-            .insert(RayCastSource::<MyRaycastSet>::new());
-    }
-
     fn move_player(
         mut game: ResMut<Game>,
         mut command: ResMut<PlayerAction>,
@@ -73,11 +71,6 @@ impl PlayerPlugin {
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(CloningPlugin);
-        app.add_system_set(
-            SystemSet::on_enter(GameState::Playing)
-                .with_system(Self::setup_player.system())
-                .with_system(Self::setup_camera.system()),
-        );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
