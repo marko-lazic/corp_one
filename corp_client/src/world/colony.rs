@@ -178,7 +178,7 @@ impl ColonyPlugin {
         if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             if let Some(position) = colony_asset.random_vortex_node_position() {
                 let player = commands
-                    .spawn_bundle(PlayerBundle::new(mesh_assets, materials, *position))
+                    .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
                     .insert(Player::default())
                     .insert(Movement::default())
                     .insert(Health::default())
