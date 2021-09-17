@@ -6,7 +6,7 @@ pub struct StarMapPlugin;
 
 impl StarMapPlugin {
     fn setup_starmap() {
-        info!("Entering Starmap");
+        info!("Entering Starmap state");
     }
 }
 

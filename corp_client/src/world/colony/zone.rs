@@ -10,7 +10,8 @@ use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::world::colony::vortex::VortexGateEvent;
+use crate::world::colony::vortex::VortexEvent;
+use crate::world::colony::Colony;
 use crate::Game;
 
 #[derive(Copy, Clone, Debug, Deserialize)]
@@ -56,10 +57,10 @@ impl ZonePlugin {
                 let zone_vertices = zone_bounding.vertices(*zone_global);
                 let zone_aabb = Self::convert_to_aabb3(zone_vertices);
 
-                if zone_aabb.intersects(&player_aabb) {
-                    if timer.timer.tick(time.delta()).just_finished() {
-                        ev_zone.send(ZoneEvent(zone.zone_type));
-                    }
+                if zone_aabb.intersects(&player_aabb)
+                    && timer.timer.tick(time.delta()).just_finished()
+                {
+                    ev_zone.send(ZoneEvent(zone.zone_type));
                 }
             }
         }
@@ -74,7 +75,7 @@ impl ZonePlugin {
 
     fn zone_event(
         mut ev_zone: EventReader<ZoneEvent>,
-        mut ev_vortex_gate: EventWriter<VortexGateEvent>,
+        mut vortex_events: EventWriter<VortexEvent>,
         game: Res<Game>,
         mut healths: Query<&mut Health>,
     ) {
@@ -84,7 +85,7 @@ impl ZonePlugin {
             match event.0 {
                 ZoneType::Damage(amount) => health.take_damage(amount),
                 ZoneType::Heal(amount) => health.heal(amount),
-                ZoneType::VortexGate => ev_vortex_gate.send(VortexGateEvent),
+                ZoneType::VortexGate => vortex_events.send(VortexEvent::vort(Colony::StarMap)),
                 _ => {}
             }
         }

@@ -5,12 +5,13 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
+use corp_shared::prelude::{Health, Player};
 use input_command::PlayerAction;
 
-use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::Game;
+use crate::world::colony::vortex::VortexEvent;
+use crate::world::colony::Colony;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum InputSystem {
@@ -49,23 +50,21 @@ impl InputControlPlugin {
     }
 
     fn starmap_keyboard(
-        mut game: ResMut<Game>,
-        colony_assets: Res<ColonyAssets>,
         keyboard_input: Res<Input<KeyCode>>,
-        mut game_state: ResMut<State<GameState>>,
+        mut vortex_events: EventWriter<VortexEvent>,
     ) {
-        if !keyboard_input.is_changed() {
-            return;
-        }
-
         if keyboard_input.just_pressed(KeyCode::I) {
-            info!("Moonbase: Station Iris");
-            game.current_colony_asset = colony_assets.iris.clone();
-            let _result = game_state.set(GameState::Playing);
+            vortex_events.send(VortexEvent::vort(Colony::Iris));
         } else if keyboard_input.just_pressed(KeyCode::L) {
-            info!("Mars: Colony Liberte");
-            game.current_colony_asset = colony_assets.liberte.clone();
-            let _result = game_state.set(GameState::Playing);
+            vortex_events.send(VortexEvent::vort(Colony::Liberte));
+        }
+    }
+
+    fn kill(keyboard_input: Res<Input<KeyCode>>, mut healths: Query<&mut Health, With<Player>>) {
+        if keyboard_input.just_pressed(KeyCode::K) {
+            if let Some(mut health) = healths.iter_mut().next() {
+                health.kill();
+            }
         }
     }
 }
@@ -86,7 +85,8 @@ impl Plugin for InputControlPlugin {
             SystemSet::on_update(GameState::Playing)
                 .label(InputSystem::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::player_keyboard_action.system()),
+                .with_system(Self::player_keyboard_action.system())
+                .with_system(Self::kill.system()),
         );
     }
 }

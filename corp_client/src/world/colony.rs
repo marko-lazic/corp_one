@@ -19,8 +19,21 @@ use crate::Game;
 
 mod asset;
 pub mod colony_assets;
-mod vortex;
+pub mod vortex;
 pub mod zone;
+
+pub enum Colony {
+    StarMap,
+    Cloning,
+    Iris,
+    Liberte,
+}
+
+impl Default for Colony {
+    fn default() -> Self {
+        Self::StarMap
+    }
+}
 
 pub struct ColonyPlugin;
 
@@ -203,11 +216,10 @@ impl ColonyPlugin {
             .insert(RayCastSource::<MyRaycastSet>::new());
     }
 
-    fn teardown(mut commands: Commands, entities: Query<Entity>, mut game: ResMut<Game>) {
+    fn teardown(mut commands: Commands, entities: Query<Entity>) {
         for entity in entities.iter() {
             commands.entity(entity).despawn_recursive();
         }
-        game.is_vorting = false;
     }
 }
 

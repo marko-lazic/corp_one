@@ -22,7 +22,6 @@ pub struct Game {
     player_entity: Option<Entity>,
     camera_transform: Option<Transform>,
     camera_center: Vec3,
-    is_vorting: bool,
     current_colony_asset: Handle<ColonyAsset>,
     health: Health,
 }

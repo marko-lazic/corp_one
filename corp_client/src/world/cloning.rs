@@ -3,9 +3,10 @@ use bevy::prelude::*;
 
 use corp_shared::prelude::*;
 
-use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::world::colony::vortex::VortexEvent;
+use crate::world::colony::Colony;
 use crate::Game;
 
 pub struct CloningPlugin;
@@ -13,26 +14,21 @@ pub struct CloningPlugin;
 impl CloningPlugin {
     fn vort_out_dead_player(
         mut game: ResMut<Game>,
-        mut game_state: ResMut<State<GameState>>,
         healths: Query<&Health, With<Player>>,
+        mut vortex_events: EventWriter<VortexEvent>,
     ) {
         if let Some(health) = healths.iter().next() {
             if health.is_dead() {
                 game.health = health.clone();
-                let _result = game_state.set(GameState::StarMap);
+                vortex_events.send(VortexEvent::vort(Colony::StarMap));
             }
         }
     }
 
-    fn vort_in_dead_player(
-        mut game: ResMut<Game>,
-        mut game_state: ResMut<State<GameState>>,
-        colony_assets: Res<ColonyAssets>,
-    ) {
+    fn vort_in_cloned_player(mut game: ResMut<Game>, mut vortex_events: EventWriter<VortexEvent>) {
         if game.health.is_dead() {
-            game.current_colony_asset = colony_assets.cloning.clone();
             game.health.set_hit_points(CLONE_HEALTH);
-            let _result = game_state.set(GameState::Playing);
+            vortex_events.send(VortexEvent::vort(Colony::Cloning));
         }
     }
 }
@@ -40,12 +36,14 @@ impl CloningPlugin {
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
+            SystemSet::on_enter(GameState::StarMap)
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
+                .with_system(Self::vort_in_cloned_player.system()),
+        );
+        app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::vort_out_dead_player.system()),
-        );
-        app.add_system_set(
-            SystemSet::on_enter(GameState::StarMap).with_system(Self::vort_in_dead_player.system()),
         );
     }
 }
@@ -112,7 +110,7 @@ mod tests {
         // Setup stage
         let mut stage = SystemStage::parallel()
             .with_system_set(State::<GameState>::get_driver())
-            .with_system(CloningPlugin::vort_in_dead_player.system());
+            .with_system(CloningPlugin::vort_in_cloned_player.system());
 
         // Setup world
         let mut world = World::default();
@@ -127,11 +125,6 @@ mod tests {
         game.health.kill();
         world.insert_resource(game);
         world.insert_resource(State::new(GameState::StarMap));
-        world.insert_resource(ColonyAssets {
-            iris: Handle::default(),
-            liberte: Handle::default(),
-            cloning: Handle::default(),
-        });
 
         // Run systems
         stage.run(&mut world);
