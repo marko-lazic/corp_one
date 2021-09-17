@@ -7,6 +7,7 @@ use gui::metrics::MetricsPlugin;
 use crate::asset::asset_loading::AssetLoadingPlugin;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::WorldPlugin;
+use corp_shared::prelude::Health;
 
 mod asset;
 mod connection;
@@ -23,6 +24,7 @@ pub struct Game {
     camera_center: Vec3,
     is_vorting: bool,
     current_colony_asset: Handle<ColonyAsset>,
+    health: Health,
 }
 
 fn main() {

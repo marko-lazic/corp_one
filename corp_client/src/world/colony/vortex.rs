@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use corp_shared::prelude::{Health, Player};
+
 use crate::constants::state::GameState;
 use crate::Game;
 
@@ -11,14 +13,17 @@ pub struct VortexNode;
 
 impl VortexPlugin {
     fn vortex_gate_event(
-        mut vortex_gate_event: EventReader<VortexGateEvent>,
-        mut state: ResMut<State<crate::GameState>>,
         mut game: ResMut<Game>,
+        mut state: ResMut<State<crate::GameState>>,
+        mut vortex_gate_event: EventReader<VortexGateEvent>,
+        healths: Query<&Health, With<Player>>,
     ) {
         for _ in vortex_gate_event.iter() {
             if !game.is_vorting {
                 game.is_vorting = true;
-                state.set(crate::GameState::StarMap).unwrap();
+                let health = healths.get(game.player_entity.unwrap()).unwrap();
+                game.health = health.clone();
+                let _result = state.set(crate::GameState::StarMap);
             }
         }
     }

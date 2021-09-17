@@ -1,0 +1,37 @@
+(
+    name: "Cloning Facility",
+    energy_nodes: [],
+    vortex_nodes: [
+        VortexNodeAsset(
+            position: Vec3(5.0, 0.0, 2.0),
+        ),
+        VortexNodeAsset(
+            position: Vec3(5.0, 0.0, -2.0),
+        ),
+        VortexNodeAsset(
+            position: Vec3(6.0, 0.0, 2.0),
+        ),
+        VortexNodeAsset(
+            position: Vec3(6.0, 0.0, -2.0),
+        ),
+    ],
+    vortex_gates: [
+        VortexGateAsset(
+            position: Vec3(1.0, 0.1, 0.0),
+        ),
+    ],
+    zones: [
+        ZoneAsset(
+            position: Vec3(5.5, 0.1, 0.0),
+            zone_type: Heal(0.5),
+            size: 1.0,
+            material: SeaGreen,
+        ),
+    ],
+    lights: [
+        LightAsset(
+            position: Vec3(4.0, 8.0, 0.0),
+            color: White,
+        ),
+    ],
+)

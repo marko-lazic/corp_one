@@ -4,7 +4,7 @@ use bevy_mod_bounding::{aabb, debug, Bounded};
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMesh;
 
-use corp_shared::prelude::{Health, Player};
+use corp_shared::prelude::Player;
 
 use crate::asset::asset_loading::{MaterialAsset, MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
@@ -181,7 +181,7 @@ impl ColonyPlugin {
                     .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
                     .insert(Player::default())
                     .insert(Movement::default())
-                    .insert(Health::default())
+                    .insert(game.health.clone())
                     .insert(CameraCenter)
                     .insert(Bounded::<aabb::Aabb>::default())
                     .insert(debug::DebugBounds)

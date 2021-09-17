@@ -1,6 +1,8 @@
 pub const MAX_HEALTH: f64 = 100.0;
+pub const CLONE_HEALTH: f64 = 80.0;
 pub const MIN_HEALTH: f64 = 0.0;
 
+#[derive(Clone)]
 pub struct Health {
     hit_points: f64,
 }
@@ -16,6 +18,10 @@ impl Health {
 
     pub fn get_health(&self) -> &f64 {
         &self.hit_points
+    }
+
+    pub fn is_dead(&self) -> bool {
+        &self.hit_points <= &MIN_HEALTH
     }
 
     pub fn set_hit_points(&mut self, hit_points: f64) {

@@ -5,15 +5,22 @@ use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::Game;
 
 pub struct CloningPlugin;
 
 impl CloningPlugin {
-    fn respawn_dead_player(mut query: Query<(&mut Transform, &mut Health), With<Player>>) {
-        for (mut transform, mut health) in query.iter_mut() {
-            if health.get_health() == &MIN_HEALTH {
-                transform.translation = CLONING_SPAWN_POSITION;
-                health.set_hit_points(MAX_HEALTH);
+    fn check_player_died(
+        mut game: ResMut<Game>,
+        mut app_state: ResMut<State<GameState>>,
+        healths: Query<&Health, With<Player>>,
+    ) {
+        if game.player_entity.is_some() {
+            for health in healths.iter() {
+                if health.is_dead() {
+                    game.health = health.clone();
+                    let _result = app_state.set(GameState::StarMap);
+                }
             }
         }
     }
@@ -24,7 +31,7 @@ impl Plugin for CloningPlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::respawn_dead_player.system()),
+                .with_system(Self::check_player_died.system()),
         );
     }
 }
@@ -59,7 +66,7 @@ mod tests {
                 .label("killing")
                 .before("cloning"),
         );
-        update_stage.add_system(CloningPlugin::respawn_dead_player.system().label("cloning"));
+        update_stage.add_system(CloningPlugin::check_player_died.system().label("cloning"));
 
         // Setup test entities
         let player_id = world

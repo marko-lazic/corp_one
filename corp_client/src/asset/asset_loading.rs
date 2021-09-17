@@ -13,6 +13,8 @@ pub struct ColonyAssets {
     pub iris: Handle<ColonyAsset>,
     #[asset(path = "data/colony/liberte.colony")]
     pub liberte: Handle<ColonyAsset>,
+    #[asset(path = "data/colony/cloning.colony")]
+    pub cloning: Handle<ColonyAsset>,
 }
 
 #[derive(AssetCollection)]
