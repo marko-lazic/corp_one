@@ -12,15 +12,13 @@ pub struct CloningPlugin;
 impl CloningPlugin {
     fn check_player_died(
         mut game: ResMut<Game>,
-        mut app_state: ResMut<State<GameState>>,
+        mut game_state: ResMut<State<GameState>>,
         healths: Query<&Health, With<Player>>,
     ) {
-        if game.player_entity.is_some() {
-            for health in healths.iter() {
-                if health.is_dead() {
-                    game.health = health.clone();
-                    let _result = app_state.set(GameState::StarMap);
-                }
+        if let Some(health) = healths.iter().next() {
+            if health.is_dead() {
+                game.health = health.clone();
+                let _result = game_state.set(GameState::StarMap);
             }
         }
     }
@@ -40,58 +38,56 @@ impl Plugin for CloningPlugin {
 mod tests {
     use super::*;
 
-    fn move_player(mut query: Query<&mut Transform, With<Player>>) {
-        for mut transform in query.iter_mut() {
-            transform.translation = Vec3::new(42., 42., 42.);
-        }
-    }
-
-    fn kill_player_system(mut query: Query<&mut Health, With<Player>>) {
-        for mut health in query.iter_mut() {
+    fn kill_player(mut healths: Query<&mut Health, With<Player>>) {
+        for mut health in healths.iter_mut() {
             health.kill();
         }
     }
 
+    const KILLING_LABEL: &'static str = "killing";
+
     #[test]
-    fn did_respawn() {
+    fn state_changes_to_starmap_when_player_is_dead() {
+        // Setup stage
+        let mut stage = SystemStage::parallel()
+            .with_system_set(State::<GameState>::get_driver())
+            .with_system(kill_player.system().label(KILLING_LABEL))
+            .with_system(
+                CloningPlugin::check_player_died
+                    .system()
+                    .after(KILLING_LABEL),
+            );
+
         // Setup world
         let mut world = World::default();
 
-        // Setup stage with our two systems
-        let mut update_stage = SystemStage::parallel();
-        update_stage.add_system(move_player.system().before("killing"));
-        update_stage.add_system(
-            kill_player_system
-                .system()
-                .label("killing")
-                .before("cloning"),
-        );
-        update_stage.add_system(CloningPlugin::check_player_died.system().label("cloning"));
-
         // Setup test entities
-        let player_id = world
+        let player_entity = world
             .spawn()
             .insert(Player::default())
-            .insert(Transform::default())
             .insert(Health::default())
             .id();
 
+        world.insert_resource(Game::default());
+        world.insert_resource(State::new(GameState::Playing));
+
         // Run systems
-        update_stage.run(&mut world);
+        stage.run(&mut world);
 
         // Check resulting changes
-        assert!(world.get::<Player>(player_id).is_some());
+        assert!(world.get::<Player>(player_entity).is_some());
 
-        let expected_hit_points: f64 = 100.0;
+        let dead_player_expected_health: f64 = 0.0;
         assert_eq!(
-            *world.get::<Health>(player_id).unwrap().get_health(),
-            expected_hit_points
+            *world.get::<Health>(player_entity).unwrap().get_health(),
+            dead_player_expected_health,
+            "Player is dead"
         );
 
-        let expected_translation: Vec3 = Vec3::new(0., 0., 0.);
         assert_eq!(
-            world.get::<Transform>(player_id).unwrap().translation,
-            expected_translation
-        )
+            world.get_resource::<State<GameState>>().unwrap().current(),
+            &GameState::StarMap,
+            "Game state changed to StarMap"
+        );
     }
 }

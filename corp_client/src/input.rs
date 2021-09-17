@@ -52,7 +52,7 @@ impl InputControlPlugin {
         mut game: ResMut<Game>,
         colony_assets: Res<ColonyAssets>,
         keyboard_input: Res<Input<KeyCode>>,
-        mut app_state: ResMut<State<GameState>>,
+        mut game_state: ResMut<State<GameState>>,
     ) {
         if !keyboard_input.is_changed() {
             return;
@@ -61,11 +61,11 @@ impl InputControlPlugin {
         if keyboard_input.just_pressed(KeyCode::I) {
             info!("Moonbase: Station Iris");
             game.current_colony_asset = colony_assets.iris.clone();
-            let _result = app_state.set(GameState::Playing);
+            let _result = game_state.set(GameState::Playing);
         } else if keyboard_input.just_pressed(KeyCode::L) {
             info!("Mars: Colony Liberte");
             game.current_colony_asset = colony_assets.liberte.clone();
-            let _result = app_state.set(GameState::Playing);
+            let _result = game_state.set(GameState::Playing);
         }
     }
 }

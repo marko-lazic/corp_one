@@ -11,13 +11,13 @@ pub struct StarMapPlugin;
 impl StarMapPlugin {
     fn vort_dead_player_to_cloning(
         mut game: ResMut<Game>,
-        mut app_state: ResMut<State<GameState>>,
+        mut game_state: ResMut<State<GameState>>,
         colony_assets: Res<ColonyAssets>,
     ) {
         if game.health.is_dead() {
             game.current_colony_asset = colony_assets.cloning.clone();
             game.health.set_hit_points(CLONE_HEALTH);
-            let _result = app_state.set(GameState::Playing);
+            let _result = game_state.set(GameState::Playing);
         }
     }
 }
