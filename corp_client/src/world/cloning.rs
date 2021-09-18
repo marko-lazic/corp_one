@@ -14,13 +14,19 @@ pub struct CloningPlugin;
 impl CloningPlugin {
     fn vort_out_dead_player(
         mut game: ResMut<Game>,
+        mut vort_out_timer: Local<f32>,
+        time: Res<Time>,
         healths: Query<&Health, With<Player>>,
         mut vortex_events: EventWriter<VortexEvent>,
     ) {
         if let Some(health) = healths.iter().next() {
             if health.is_dead() {
-                game.health = health.clone();
-                vortex_events.send(VortexEvent::vort(Colony::StarMap));
+                *vort_out_timer += time.delta_seconds();
+                if *vort_out_timer > 1.0 {
+                    game.health = health.clone();
+                    vortex_events.send(VortexEvent::vort(Colony::StarMap));
+                    *vort_out_timer = 0.0;
+                }
             }
         }
     }

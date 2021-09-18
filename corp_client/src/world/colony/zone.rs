@@ -42,11 +42,11 @@ pub struct ZonePlugin;
 
 impl ZonePlugin {
     fn player_in_zone(
-        mut players: Query<(&GlobalTransform, &aabb::Aabb), With<Player>>,
-        bounds: Query<(&GlobalTransform, &aabb::Aabb, &Zone)>,
-        mut ev_zone: EventWriter<ZoneEvent>,
         time: Res<Time>,
         mut timer: ResMut<DamageTimer>,
+        mut players: Query<(&GlobalTransform, &aabb::Aabb), With<Player>>,
+        bounds: Query<(&GlobalTransform, &aabb::Aabb, &Zone)>,
+        mut player_zone_events: EventWriter<PlayerZoneEvent>,
     ) {
         for (player_global, player_bounding) in players.iter_mut() {
             let player_vertices = player_bounding.vertices(*player_global);
@@ -57,10 +57,10 @@ impl ZonePlugin {
                 let zone_vertices = zone_bounding.vertices(*zone_global);
                 let zone_aabb = Self::convert_to_aabb3(zone_vertices);
 
-                if zone_aabb.intersects(&player_aabb)
-                    && timer.timer.tick(time.delta()).just_finished()
+                if timer.timer.tick(time.delta()).just_finished()
+                    && zone_aabb.intersects(&player_aabb)
                 {
-                    ev_zone.send(ZoneEvent(zone.zone_type));
+                    player_zone_events.send(PlayerZoneEvent(zone.zone_type));
                 }
             }
         }
@@ -73,13 +73,13 @@ impl ZonePlugin {
         )
     }
 
-    fn zone_event(
-        mut ev_zone: EventReader<ZoneEvent>,
-        mut vortex_events: EventWriter<VortexEvent>,
+    fn player_in_zone_event(
         game: Res<Game>,
         mut healths: Query<&mut Health>,
+        mut player_zone_events: EventReader<PlayerZoneEvent>,
+        mut vortex_events: EventWriter<VortexEvent>,
     ) {
-        for event in ev_zone.iter() {
+        for event in player_zone_events.iter() {
             let mut health = healths.get_mut(game.player_entity.unwrap()).unwrap();
 
             match event.0 {
@@ -95,17 +95,17 @@ impl ZonePlugin {
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(DamageTimer::default());
-        app.add_event::<ZoneEvent>();
+        app.add_event::<PlayerZoneEvent>();
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::player_in_zone.system())
-                .with_system(Self::zone_event.system()),
+                .with_system(Self::player_in_zone_event.system()),
         );
     }
 }
 
-struct ZoneEvent(ZoneType);
+struct PlayerZoneEvent(ZoneType);
 
 struct DamageTimer {
     timer: Timer,

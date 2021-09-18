@@ -51,11 +51,13 @@ impl PlayerPlugin {
     fn move_player(
         mut game: ResMut<Game>,
         mut command: ResMut<PlayerAction>,
-        mut query: Query<(&mut Player, &mut Movement, &mut Transform)>,
+        mut query: Query<(&mut Player, &mut Movement, &mut Transform, &Health)>,
     ) {
-        if let Ok((mut player, mut movement, mut position)) = query.single_mut() {
+        if let Ok((mut player, mut movement, mut position, health)) = query.single_mut() {
             let direction = command.new_direction(&position);
-            position.translation += movement.update_velocity(direction);
+            if !health.is_dead() {
+                position.translation += movement.update_velocity(direction);
+            }
 
             player.is_moving = Self::is_moving(&movement.velocity);
             command.reset();
