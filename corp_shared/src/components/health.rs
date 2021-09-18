@@ -1,5 +1,5 @@
 pub const MAX_HEALTH: f64 = 100.0;
-pub const CLONE_HEALTH: f64 = 80.0;
+pub const CLONE_HEALTH_80: f64 = 80.0;
 pub const MIN_HEALTH: f64 = 0.0;
 
 #[derive(Clone)]

@@ -12,7 +12,7 @@ use crate::Game;
 pub struct CloningPlugin;
 
 impl CloningPlugin {
-    fn vort_out_dead_player(
+    fn vort_out_dead_player_to_starmap(
         mut game: ResMut<Game>,
         mut vort_out_timer: Local<f32>,
         time: Res<Time>,
@@ -31,9 +31,12 @@ impl CloningPlugin {
         }
     }
 
-    fn vort_in_cloned_player(mut game: ResMut<Game>, mut vortex_events: EventWriter<VortexEvent>) {
+    fn vort_in_dead_player_to_cloning(
+        mut game: ResMut<Game>,
+        mut vortex_events: EventWriter<VortexEvent>,
+    ) {
         if game.health.is_dead() {
-            game.health.set_hit_points(CLONE_HEALTH);
+            game.health.set_hit_points(CLONE_HEALTH_80);
             vortex_events.send(VortexEvent::vort(Colony::Cloning));
         }
     }
@@ -44,12 +47,12 @@ impl Plugin for CloningPlugin {
         app.add_system_set(
             SystemSet::on_enter(GameState::StarMap)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::vort_in_cloned_player.system()),
+                .with_system(Self::vort_in_dead_player_to_cloning.system()),
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::vort_out_dead_player.system()),
+                .with_system(Self::vort_out_dead_player_to_starmap.system()),
         );
     }
 }
@@ -74,7 +77,7 @@ mod tests {
             .with_system_set(State::<GameState>::get_driver())
             .with_system(kill_player.system().label(KILLING_LABEL))
             .with_system(
-                CloningPlugin::vort_out_dead_player
+                CloningPlugin::vort_out_dead_player_to_starmap
                     .system()
                     .after(KILLING_LABEL),
             );
@@ -116,7 +119,7 @@ mod tests {
         // Setup stage
         let mut stage = SystemStage::parallel()
             .with_system_set(State::<GameState>::get_driver())
-            .with_system(CloningPlugin::vort_in_cloned_player.system());
+            .with_system(CloningPlugin::vort_in_dead_player_to_cloning.system());
 
         // Setup world
         let mut world = World::default();
@@ -137,7 +140,7 @@ mod tests {
 
         assert_eq!(
             world.get_resource::<Game>().unwrap().health.get_health(),
-            &CLONE_HEALTH,
+            &CLONE_HEALTH_80,
             "Game component health is set to clone health"
         );
 
