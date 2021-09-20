@@ -10,7 +10,6 @@ use crate::input::input_command::PlayerAction;
 use crate::input::InputSystem;
 use crate::world::character::{CharacterBundle, CharacterName, Movement};
 use crate::world::cloning::CloningPlugin;
-use crate::Game;
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -49,7 +48,6 @@ pub struct PlayerPlugin;
 
 impl PlayerPlugin {
     fn move_player(
-        mut game: ResMut<Game>,
         mut command: ResMut<PlayerAction>,
         mut query: Query<(&mut Player, &mut Movement, &mut Transform, &Health)>,
     ) {
@@ -61,7 +59,6 @@ impl PlayerPlugin {
 
             player.is_moving = Self::is_moving(&movement.velocity);
             command.reset();
-            game.camera_center = position.translation;
         }
     }
 
