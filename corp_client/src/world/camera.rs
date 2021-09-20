@@ -7,6 +7,7 @@ use corp_shared::prelude::Player;
 use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::Game;
+use std::ops::Mul;
 
 pub struct TopDownCamera {
     pub x: f32,
@@ -69,25 +70,29 @@ impl TopDownCameraPlugin {
         keyboard_input: Res<Input<KeyCode>>,
         player_transform: Query<&Transform, With<Player>>,
     ) {
-        const CAM_LIMIT: f32 = 3.0;
         if keyboard_input.pressed(KeyCode::Left) {
             camera_look.x += 0.1;
         } else if keyboard_input.pressed(KeyCode::Right) {
             camera_look.x -= 0.1;
         }
-
         if keyboard_input.pressed(KeyCode::Up) {
             camera_look.z += 0.1;
         } else if keyboard_input.pressed(KeyCode::Down) {
             camera_look.z -= 0.1;
         }
 
-        camera_look.x = camera_look.x.clamp(-CAM_LIMIT, CAM_LIMIT);
-        camera_look.z = camera_look.z.clamp(-CAM_LIMIT, CAM_LIMIT);
-
+        const RADIUS: f32 = 1.0;
         if let Some(player_entity) = game.player_entity {
             if let Ok(pt) = player_transform.get(player_entity) {
-                game.camera_center = pt.translation + *camera_look;
+                let center_position = pt.translation;
+                let new_location = game.camera_center;
+                let distance = new_location.distance(center_position);
+
+                if distance > RADIUS {
+                    let mut from_origin_to_object = new_location - center_position;
+                    from_origin_to_object = from_origin_to_object.mul(RADIUS / distance);
+                    game.camera_center = center_position + from_origin_to_object;
+                }
             }
         }
     }
