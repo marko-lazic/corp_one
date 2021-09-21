@@ -8,6 +8,7 @@ use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::input::Cursor;
 use crate::Game;
+use std::ops::Neg;
 
 pub struct TopDownCamera {
     pub x: f32,
@@ -70,15 +71,12 @@ impl TopDownCameraPlugin {
         player_transform: Query<&Transform, With<Player>>,
     ) {
         if let Some(player_entity) = game.player_entity {
-            if let Ok(pt) = player_transform.get(player_entity) {
-                let mouse_pos = cursor.world;
-                let player_pos = pt.translation;
-                let threshold = 3.0f32;
-                let mut distance = Vec3::distance(player_pos, mouse_pos);
-                if distance > threshold {
-                    distance = threshold;
-                }
-                let restrict_pos = player_pos + (mouse_pos - player_pos).normalize() * distance;
+            if let Ok(transform) = player_transform.get(player_entity) {
+                let player_pos = transform.translation;
+                let vec_threshold = Vec3::new(3.0, 3.0, 3.0);
+                let target_pos = (player_pos + cursor.world) / 2.0;
+                let restrict_pos =
+                    target_pos.clamp(vec_threshold.neg() + player_pos, vec_threshold + player_pos);
                 game.camera_center = restrict_pos;
             }
         }
@@ -96,5 +94,16 @@ impl Plugin for TopDownCameraPlugin {
                 .with_system(Self::target_motion.system().label(CameraMotion))
                 .with_system(Self::input_camera_center.system().before(CameraMotion)),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_vec3_negate() {
+        let vec_threshold = Vec3::new(3.0, 3.0, 3.0);
+        println!("{:?}", vec_threshold.neg());
     }
 }
