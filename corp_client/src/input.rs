@@ -12,6 +12,7 @@ use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::world::colony::vortex::VortexEvent;
 use crate::world::colony::Colony;
+use crate::Game;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum InputSystem {
@@ -30,16 +31,42 @@ impl InputControlPlugin {
         kurinji.set_bindings_with_json(&binding_json);
     }
 
-    fn quit_app(mut reader: EventReader<OnActionEnd>, mut writer: EventWriter<AppExit>) {
+    fn keyboard_escape_action(
+        mut game: ResMut<Game>,
+        mut windows: ResMut<Windows>,
+        mut reader: EventReader<OnActionEnd>,
+        mut app_exit_events: EventWriter<AppExit>,
+        mut exit_tap: Local<ExitTap>,
+        time: Res<Time>,
+    ) {
         for event in reader.iter() {
-            if event.action == "QUIT_APP" {
-                println!("Quitting...");
-                writer.send(AppExit);
+            if event.action == "ESCAPE" {
+                let window = windows.get_primary_mut().unwrap();
+                if game.cursor_locked {
+                    window.set_cursor_lock_mode(false);
+                    window.set_cursor_visibility(true);
+                    game.cursor_locked = false;
+                } else {
+                    window.set_cursor_lock_mode(true);
+                    window.set_cursor_visibility(false);
+                    game.cursor_locked = true;
+                }
+                exit_tap.counter += 1;
+            }
+            exit_tap.cooldown.tick(time.delta());
+            if exit_tap.cooldown.finished() {
+                if exit_tap.counter >= 2 {
+                    println!("Quitting...");
+                    app_exit_events.send(AppExit);
+                } else {
+                    exit_tap.counter = 0;
+                    exit_tap.cooldown.reset();
+                }
             }
         }
     }
 
-    fn player_keyboard_action(
+    fn player_keyboard_and_mouse_action(
         mut player_action: ResMut<PlayerAction>,
         mut reader: EventReader<OnActionActive>,
     ) {
@@ -72,8 +99,8 @@ impl InputControlPlugin {
 impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(KurinjiPlugin::default());
-        app.add_system(Self::setup_kurinji_binding.system());
-        app.add_system(Self::quit_app.system());
+        app.add_startup_system(Self::setup_kurinji_binding.system());
+        app.add_system(Self::keyboard_escape_action.system());
 
         app.add_system_set(
             SystemSet::on_update(GameState::StarMap)
@@ -85,8 +112,22 @@ impl Plugin for InputControlPlugin {
             SystemSet::on_update(GameState::Playing)
                 .label(InputSystem::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::player_keyboard_action.system())
+                .with_system(Self::player_keyboard_and_mouse_action.system())
                 .with_system(Self::kill.system()),
         );
+    }
+}
+
+struct ExitTap {
+    counter: u32,
+    cooldown: Timer,
+}
+
+impl Default for ExitTap {
+    fn default() -> Self {
+        Self {
+            counter: 0,
+            cooldown: Timer::from_seconds(0.4, false),
+        }
     }
 }

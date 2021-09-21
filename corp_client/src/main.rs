@@ -19,6 +19,7 @@ mod world;
 
 #[derive(Default)]
 pub struct Game {
+    cursor_locked: bool,
     player_entity: Option<Entity>,
     camera_transform: Option<Transform>,
     camera_center: Vec3,

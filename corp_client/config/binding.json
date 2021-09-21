@@ -1,6 +1,6 @@
 {
   "KeyboardKeys": {
-    "Escape": "QUIT_APP",
+    "Escape": "ESCAPE",
     "W": "MOVE_FORWARD",
     "D": "MOVE_RIGHT",
     "A": "MOVE_LEFT",
