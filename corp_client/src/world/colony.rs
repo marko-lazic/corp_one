@@ -8,12 +8,12 @@ use corp_shared::prelude::Player;
 
 use crate::asset::asset_loading::{MaterialAsset, MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
+use crate::input::MyRayCastSet;
 use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneType};
-use crate::world::cursor::MyRaycastSet;
 use crate::world::player::PlayerBundle;
 use crate::Game;
 
@@ -58,7 +58,7 @@ impl ColonyPlugin {
                 }),
                 ..Default::default()
             })
-            .insert(RayCastMesh::<MyRaycastSet>::default());
+            .insert(RayCastMesh::<MyRayCastSet>::default());
     }
 
     fn setup_light(mut commands: Commands, game: Res<Game>, assets: Res<Assets<ColonyAsset>>) {
@@ -92,7 +92,7 @@ impl ColonyPlugin {
                         transform: Transform::from_translation(energy_node.position),
                         ..Default::default()
                     })
-                    .insert(RayCastMesh::<MyRaycastSet>::default());
+                    .insert(RayCastMesh::<MyRayCastSet>::default());
             }
         }
     }
@@ -213,7 +213,7 @@ impl ColonyPlugin {
                 ..Default::default()
             })
             .insert(TopDownCamera::new(20.0))
-            .insert(RayCastSource::<MyRaycastSet>::new());
+            .insert(RayCastSource::<MyRayCastSet>::new());
     }
 
     fn teardown(mut commands: Commands, entities: Query<Entity>) {

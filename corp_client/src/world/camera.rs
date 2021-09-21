@@ -6,8 +6,8 @@ use corp_shared::prelude::Player;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::input::Cursor;
 use crate::Game;
-use std::ops::Mul;
 
 pub struct TopDownCamera {
     pub x: f32,
@@ -65,34 +65,21 @@ impl TopDownCameraPlugin {
     }
 
     fn input_camera_center(
-        mut camera_look: Local<Vec3>,
         mut game: ResMut<Game>,
-        keyboard_input: Res<Input<KeyCode>>,
+        cursor: Res<Cursor>,
         player_transform: Query<&Transform, With<Player>>,
     ) {
-        if keyboard_input.pressed(KeyCode::Left) {
-            camera_look.x += 0.1;
-        } else if keyboard_input.pressed(KeyCode::Right) {
-            camera_look.x -= 0.1;
-        }
-        if keyboard_input.pressed(KeyCode::Up) {
-            camera_look.z += 0.1;
-        } else if keyboard_input.pressed(KeyCode::Down) {
-            camera_look.z -= 0.1;
-        }
-
-        const RADIUS: f32 = 1.0;
         if let Some(player_entity) = game.player_entity {
             if let Ok(pt) = player_transform.get(player_entity) {
-                let center_position = pt.translation;
-                let new_location = game.camera_center;
-                let distance = new_location.distance(center_position);
-
-                if distance > RADIUS {
-                    let mut from_origin_to_object = new_location - center_position;
-                    from_origin_to_object = from_origin_to_object.mul(RADIUS / distance);
-                    game.camera_center = center_position + from_origin_to_object;
+                let mouse_pos = cursor.world;
+                let player_pos = pt.translation;
+                let threshold = 3.0f32;
+                let mut distance = Vec3::distance(player_pos, mouse_pos);
+                if distance > threshold {
+                    distance = threshold;
                 }
+                let restrict_pos = player_pos + (mouse_pos - player_pos).normalize() * distance;
+                game.camera_center = restrict_pos;
             }
         }
     }

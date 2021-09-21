@@ -7,13 +7,9 @@ use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::Game;
+use crate::input::Cursor;
 use crate::world::camera::TopDownCamera;
-
-pub struct Metrics {
-    pub mouse_screen_position: Vec2,
-    pub mouse_world_position: Vec3,
-}
+use crate::Game;
 
 struct FpsText;
 
@@ -84,11 +80,11 @@ impl MetricsPlugin {
     }
 
     fn mouse_screen_position_update(
-        metrics: Res<Metrics>,
+        cursor: Res<Cursor>,
         mut query: Query<&mut Text, With<MouseScreenPositionText>>,
     ) {
-        let mouse_screen_x = &metrics.mouse_screen_position.x;
-        let mouse_screen_y = &metrics.mouse_screen_position.y;
+        let mouse_screen_x = &cursor.screen.x;
+        let mouse_screen_y = &cursor.screen.y;
         for mut text in query.iter_mut() {
             text.sections[0].value = format!(
                 "Mouse screen position: X: {:.1} Y: {:.1}",
@@ -132,10 +128,6 @@ impl MetricsPlugin {
 impl Plugin for MetricsPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-        app.insert_resource(Metrics {
-            mouse_screen_position: Vec2::ZERO,
-            mouse_world_position: Vec3::ZERO,
-        });
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing).with_system(Self::setup.system()),
         );

@@ -3,6 +3,8 @@ use std::fs;
 use bevy::app::AppExit;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
+use bevy_mod_picking::RayCastSource;
+use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod};
 use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
 use corp_shared::prelude::{Health, Player};
@@ -14,6 +16,12 @@ use crate::world::colony::vortex::VortexEvent;
 use crate::world::colony::Colony;
 use crate::Game;
 
+#[derive(Default)]
+pub struct Cursor {
+    pub screen: Vec2,
+    pub world: Vec3,
+}
+
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum InputSystem {
     Playing,
@@ -21,6 +29,8 @@ pub enum InputSystem {
 }
 
 pub mod input_command;
+
+pub struct MyRayCastSet;
 
 pub struct InputControlPlugin;
 
@@ -87,6 +97,24 @@ impl InputControlPlugin {
         }
     }
 
+    pub fn update_cursor_position(
+        mut crsor_moved_events: EventReader<CursorMoved>,
+        mut ray_cast_source: Query<&mut RayCastSource<MyRayCastSet>>,
+        mut cursor: ResMut<Cursor>,
+    ) {
+        for mut pick_source in &mut ray_cast_source.iter_mut() {
+            // Grab the most recent cursor event if it exists:
+            if let Some(cursor_latest) = crsor_moved_events.iter().last() {
+                cursor.screen = cursor_latest.position;
+            }
+
+            pick_source.cast_method = RayCastMethod::Screenspace(cursor.screen);
+            if let Some((_entity, intersect)) = pick_source.intersect_top() {
+                cursor.world = intersect.position();
+            }
+        }
+    }
+
     fn kill(keyboard_input: Res<Input<KeyCode>>, mut healths: Query<&mut Health, With<Player>>) {
         if keyboard_input.just_pressed(KeyCode::K) {
             if let Some(mut health) = healths.iter_mut().next() {
@@ -98,6 +126,8 @@ impl InputControlPlugin {
 
 impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
+        app.init_resource::<Cursor>();
+        app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
         app.add_plugin(KurinjiPlugin::default());
         app.add_startup_system(Self::setup_kurinji_binding.system());
         app.add_system(Self::keyboard_escape_action.system());
@@ -112,6 +142,7 @@ impl Plugin for InputControlPlugin {
             SystemSet::on_update(GameState::Playing)
                 .label(InputSystem::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
+                .with_system(Self::update_cursor_position.system())
                 .with_system(Self::player_keyboard_and_mouse_action.system())
                 .with_system(Self::kill.system()),
         );

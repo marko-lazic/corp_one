@@ -6,7 +6,7 @@ use rand::Rng;
 use crate::asset::asset_loading::{MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::world::cursor::MyRaycastSet;
+use crate::input::MyRayCastSet;
 
 pub struct FlyingCubesPlugin;
 
@@ -34,7 +34,7 @@ impl FlyingCubesPlugin {
                         ..Default::default()
                     })
                     .insert(Cube)
-                    .insert(RayCastMesh::<MyRaycastSet>::default());
+                    .insert(RayCastMesh::<MyRayCastSet>::default());
                 spawner.cube_count += 1;
             }
         }
