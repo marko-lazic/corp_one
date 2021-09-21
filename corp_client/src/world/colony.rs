@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_ron::RonAssetPlugin;
-use bevy_mod_bounding::{aabb, debug, Bounded};
+use bevy_mod_bounding::{aabb, debug, Bounded, BoundingVolumePlugin};
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMesh;
 
@@ -226,6 +226,7 @@ impl ColonyPlugin {
 impl Plugin for ColonyPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
+        app.add_plugin(BoundingVolumePlugin::<aabb::Aabb>::default());
         app.add_plugin(VortexPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)

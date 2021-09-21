@@ -127,14 +127,20 @@ impl InputControlPlugin {
 impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<Cursor>();
+        app.init_resource::<PlayerAction>();
         app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
         app.add_plugin(KurinjiPlugin::default());
         app.add_startup_system(Self::setup_kurinji_binding.system());
-        app.add_system(Self::keyboard_escape_action.system());
+        app.add_system_set(
+            SystemSet::new()
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
+                .with_system(Self::keyboard_escape_action.system()),
+        );
 
         app.add_system_set(
             SystemSet::on_update(GameState::StarMap)
                 .label(InputSystem::Starmap)
+                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::starmap_keyboard.system()),
         );
 
