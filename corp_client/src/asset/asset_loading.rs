@@ -43,6 +43,12 @@ pub struct MeshAssets {
     pub vortex_node: Handle<Mesh>,
 }
 
+#[derive(AssetCollection)]
+pub struct TextureAssets {
+    #[asset(path = "starmap/nebula.png")]
+    pub nebula: Handle<Texture>,
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub enum MaterialAsset {
     Green,
@@ -139,6 +145,7 @@ impl Plugin for AssetLoadingPlugin {
     fn build(&self, mut app: &mut AppBuilder) {
         AssetLoader::new(GameState::AssetLoading, GameState::StarMap)
             .with_collection::<MeshAssets>()
+            .with_collection::<TextureAssets>()
             .with_collection::<AudioAssets>()
             .with_collection::<FontAssets>()
             .with_collection::<ColonyAssets>()

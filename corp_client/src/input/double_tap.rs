@@ -43,7 +43,7 @@ impl Default for DoubleTap {
         Self {
             taps: 2,
             counter: 0,
-            timer: Timer::from_seconds(0.4, true),
+            timer: Timer::from_seconds(1.0, true),
         }
     }
 }
