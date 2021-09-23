@@ -12,6 +12,7 @@ use input_command::PlayerAction;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::input::double_tap::DoubleTap;
 use crate::world::colony::vortex::VortexEvent;
 use crate::world::colony::Colony;
 use crate::Game;
@@ -28,6 +29,7 @@ pub enum InputSystem {
     Starmap,
 }
 
+mod double_tap;
 pub mod input_command;
 
 pub struct MyRayCastSet;
@@ -46,11 +48,12 @@ impl InputControlPlugin {
         mut windows: ResMut<Windows>,
         mut reader: EventReader<OnActionEnd>,
         mut app_exit_events: EventWriter<AppExit>,
-        mut exit_tap: Local<ExitTap>,
+        mut double_tap: Local<DoubleTap>,
         time: Res<Time>,
     ) {
         for event in reader.iter() {
             if event.action == "ESCAPE" {
+                double_tap.increment();
                 let window = windows.get_primary_mut().unwrap();
                 if game.cursor_locked {
                     window.set_cursor_lock_mode(false);
@@ -61,19 +64,12 @@ impl InputControlPlugin {
                     window.set_cursor_visibility(false);
                     game.cursor_locked = true;
                 }
-                exit_tap.counter += 1;
-            }
-            exit_tap.cooldown.tick(time.delta());
-            if exit_tap.cooldown.finished() {
-                if exit_tap.counter >= 2 {
-                    println!("Quitting...");
-                    app_exit_events.send(AppExit);
-                } else {
-                    exit_tap.counter = 0;
-                    exit_tap.cooldown.reset();
-                }
             }
         }
+
+        double_tap
+            .tick(time.delta())
+            .on_complete(|| app_exit_events.send(AppExit));
     }
 
     fn player_keyboard_and_mouse_action(
@@ -118,7 +114,7 @@ impl InputControlPlugin {
     fn kill(keyboard_input: Res<Input<KeyCode>>, mut healths: Query<&mut Health, With<Player>>) {
         if keyboard_input.just_pressed(KeyCode::K) {
             if let Some(mut health) = healths.iter_mut().next() {
-                health.kill();
+                health.kill_mut();
             }
         }
     }
@@ -152,19 +148,5 @@ impl Plugin for InputControlPlugin {
                 .with_system(Self::player_keyboard_and_mouse_action.system())
                 .with_system(Self::kill.system()),
         );
-    }
-}
-
-struct ExitTap {
-    counter: u32,
-    cooldown: Timer,
-}
-
-impl Default for ExitTap {
-    fn default() -> Self {
-        Self {
-            counter: 0,
-            cooldown: Timer::from_seconds(0.4, false),
-        }
     }
 }
