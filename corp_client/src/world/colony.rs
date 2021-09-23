@@ -54,6 +54,9 @@ impl ColonyPlugin {
                 transform: Transform::from_translation(Vec3::new(4., 0., 4.)),
                 material: materials.add(StandardMaterial {
                     base_color: Color::WHITE,
+                    roughness: 0.0,
+                    reflectance: 0.0,
+                    metallic: 0.0,
                     ..Default::default()
                 }),
                 ..Default::default()
@@ -189,19 +192,21 @@ impl ColonyPlugin {
         assets: Res<Assets<ColonyAsset>>,
     ) {
         if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
-            if let Some(position) = colony_asset.random_vortex_node_position() {
-                let player = commands
-                    .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
-                    .insert(Player::default())
-                    .insert(Movement::default())
-                    .insert(game.health.clone())
-                    .insert(CameraCenter)
-                    .insert(Bounded::<aabb::Aabb>::default())
-                    .insert(debug::DebugBounds)
-                    .id();
+            let position = colony_asset
+                .random_vortex_node_position()
+                .unwrap_or_default();
 
-                game.player_entity = Some(player);
-            }
+            let player = commands
+                .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
+                .insert(Player::default())
+                .insert(Movement::default())
+                .insert(game.health.clone())
+                .insert(CameraCenter)
+                .insert(Bounded::<aabb::Aabb>::default())
+                .insert(debug::DebugBounds)
+                .id();
+
+            game.player_entity = Some(player);
         }
     }
 

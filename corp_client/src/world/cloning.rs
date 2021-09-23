@@ -42,17 +42,24 @@ impl CloningPlugin {
     }
 }
 
+#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
+enum CloningSystem {
+    VortOut,
+}
+
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system_set(
             SystemSet::on_enter(GameState::StarMap)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::vort_in_dead_player_to_cloning.system()),
+                .with_system(Self::vort_in_dead_player_to_cloning.system())
+                .after(CloningSystem::VortOut),
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::vort_out_dead_player_to_starmap.system()),
+                .with_system(Self::vort_out_dead_player_to_starmap.system())
+                .label(CloningSystem::VortOut),
         );
     }
 }
@@ -64,7 +71,7 @@ mod tests {
 
     fn kill_player(mut healths: Query<&mut Health, With<Player>>) {
         for mut health in healths.iter_mut() {
-            health.kill();
+            health.kill_mut();
         }
     }
 
@@ -131,7 +138,7 @@ mod tests {
             .id();
 
         let mut game = Game::default();
-        game.health.kill();
+        game.health.kill_mut();
         world.insert_resource(game);
         world.insert_resource(State::new(GameState::StarMap));
 

@@ -15,6 +15,7 @@ pub struct Movement {
     pub acceleration: f32,
     pub speed: f32,
     pub velocity: Vec3,
+    pub can_move: bool,
 }
 
 impl Movement {
@@ -28,8 +29,9 @@ impl Default for Movement {
     fn default() -> Self {
         Self {
             acceleration: 10.0,
-            speed: 14.0,
+            speed: 400.0,
             velocity: Vec3::ZERO,
+            can_move: true,
         }
     }
 }

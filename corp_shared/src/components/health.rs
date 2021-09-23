@@ -28,7 +28,7 @@ impl Health {
         self.hit_points = hit_points;
     }
 
-    pub fn kill(&mut self) {
+    pub fn kill_mut(&mut self) {
         self.hit_points = MIN_HEALTH;
     }
 }

@@ -47,14 +47,25 @@ impl PlayerBundle {
 pub struct PlayerPlugin;
 
 impl PlayerPlugin {
+    fn handle_dead(mut query: Query<(&mut Movement, &Health)>) {
+        for (mut movement, health) in query.iter_mut() {
+            if !health.is_dead() {
+                movement.can_move = true;
+            } else {
+                movement.can_move = false;
+            }
+        }
+    }
+
     fn move_player(
         mut command: ResMut<PlayerAction>,
-        mut query: Query<(&mut Player, &mut Movement, &mut Transform, &Health)>,
+        time: Res<Time>,
+        mut query: Query<(&mut Player, &mut Movement, &mut Transform)>,
     ) {
-        if let Ok((mut player, mut movement, mut position, health)) = query.single_mut() {
+        if let Ok((mut player, mut movement, mut position)) = query.single_mut() {
             let direction = command.new_direction(&position);
-            if !health.is_dead() {
-                position.translation += movement.update_velocity(direction);
+            if movement.can_move {
+                position.translation += movement.update_velocity(direction) * time.delta_seconds();
             }
 
             player.is_moving = Self::is_moving(&movement.velocity);
@@ -73,7 +84,8 @@ impl Plugin for PlayerPlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::move_player.system().after(InputSystem::Playing)),
+                .with_system(Self::move_player.system().after(InputSystem::Playing))
+                .with_system(Self::handle_dead.system()),
         );
     }
 }
