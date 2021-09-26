@@ -1,7 +1,7 @@
 use bevy::render::color::Color as BevyColor;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Copy, Clone)]
 pub enum ColorAsset {
     White,
     OrangeRed,

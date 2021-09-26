@@ -32,13 +32,17 @@
     zones: [
         ZoneAsset(
             position: Vec3(-3.0, 0.1, -4.0),
-            zone_type: Damage(9.3),
+            value: 9.3,
+            second: 1.0,
+            zone_type: Damage,
             size: 1.0,
             material: OrangeRed,
         ),
         ZoneAsset(
             position: Vec3(3.0, 0.1, -4.0),
-            zone_type: Heal(0.5),
+            value: 0.5,
+            second: 1.0,
+            zone_type: Heal,
             size: 1.0,
             material: SeaGreen,
         ),

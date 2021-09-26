@@ -49,7 +49,7 @@ pub struct TextureAssets {
     pub nebula: Handle<Texture>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Copy, Clone)]
 pub enum MaterialAsset {
     Green,
     Blue,

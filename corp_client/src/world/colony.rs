@@ -14,7 +14,7 @@ use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexNode, VortexPlugin};
-use crate::world::colony::zone::{Zone, ZoneType};
+use crate::world::colony::zone::{Zone, ZoneEntities, ZoneType};
 use crate::world::player::PlayerBundle;
 use crate::Game;
 
@@ -136,7 +136,8 @@ impl ColonyPlugin {
                             .with_group(Layer::Zone)
                             .with_mask(Layer::Player),
                     )
-                    .insert(Zone::new(zone.zone_type));
+                    .insert(Zone::from_asset(zone.clone()))
+                    .insert(ZoneEntities::default());
             }
         }
     }
@@ -166,8 +167,7 @@ impl ColonyPlugin {
                         CollisionLayers::none()
                             .with_group(Layer::VortexGate)
                             .with_mask(Layer::Player),
-                    )
-                    .insert(Zone::new(ZoneType::VortexGate));
+                    );
             }
         }
     }

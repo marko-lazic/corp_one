@@ -8,16 +8,32 @@ use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
+use crate::world::colony::colony_assets::ZoneAsset;
 use crate::world::colony::vortex::VortexEvent;
 use crate::world::colony::{Colony, Layer};
-use crate::Game;
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 pub enum ZoneType {
-    Heal(f64),
-    Damage(f64),
-    VortexGate,
+    Heal,
+    Damage,
     Unknown,
+}
+
+#[derive(Default)]
+pub struct ZoneEntities {
+    entities: Vec<Entity>,
+}
+
+impl ZoneEntities {
+    fn add(&mut self, entity: Entity) {
+        self.entities.push(entity);
+    }
+
+    fn remove(&mut self, entity: Entity) {
+        if let Some(entity) = self.entities.iter().position(|e| *e == entity) {
+            self.entities.remove(entity);
+        }
+    }
 }
 
 impl Default for ZoneType {
@@ -28,11 +44,24 @@ impl Default for ZoneType {
 
 pub struct Zone {
     zone_type: ZoneType,
+    value: f32,
+    second: f32,
 }
 
 impl Zone {
-    pub fn new(zone_type: ZoneType) -> Self {
-        Zone { zone_type }
+    pub fn from_asset(asset: ZoneAsset) -> Self {
+        Zone {
+            zone_type: asset.zone_type,
+            value: asset.value,
+            second: asset.second,
+        }
+    }
+    pub fn new(zone_type: ZoneType, value: f32, second: f32) -> Self {
+        Zone {
+            zone_type,
+            value,
+            second,
+        }
     }
 }
 
@@ -42,27 +71,24 @@ impl ZonePlugin {
     fn vortex_gate_collision(
         mut collision_events: EventReader<CollisionEvent>,
         mut vortex_events: EventWriter<VortexEvent>,
-        mut player_zone_events: EventWriter<PlayerZoneEvent>,
-        zones: Query<&Zone>,
-        mut healths: Query<&mut Health>,
+        mut zone_entities: Query<&mut ZoneEntities>,
     ) {
         for event in collision_events.iter() {
             match event {
                 CollisionEvent::Started(d1, d2) => {
-                    if Self::check_collision_data(d1, d2, [Layer::Player, Layer::VortexGate]) {
+                    if Self::check_collision_data(&d1, &d2, [Layer::Player, Layer::VortexGate]) {
                         vortex_events.send(VortexEvent::vort(Colony::StarMap));
                     } else if let Some((player, zone)) = Self::player_on_zone(&d1, &d2) {
-                        let zone_type = zones.get(zone).unwrap().zone_type;
-                        player_zone_events.send(PlayerZoneEvent(zone_type));
-                        let mut health = healths.get_mut(player).unwrap();
-                        match zone_type {
-                            ZoneType::Damage(amount) => health.take_damage(amount),
-                            ZoneType::Heal(amount) => health.heal(amount),
-                            _ => {}
-                        }
+                        let mut zone_entities = zone_entities.get_mut(zone).unwrap();
+                        zone_entities.add(player)
                     }
                 }
-                CollisionEvent::Stopped(_, _) => {}
+                CollisionEvent::Stopped(d1, d2) => {
+                    if let Some((player, zone)) = Self::player_on_zone(&d1, &d2) {
+                        let mut zone_entities = zone_entities.get_mut(zone).unwrap();
+                        zone_entities.remove(player)
+                    }
+                }
             }
         }
     }
@@ -91,20 +117,19 @@ impl ZonePlugin {
         data.collision_layers().contains_group(Layer::Zone)
     }
 
-    fn player_in_zone_event(
-        game: Res<Game>,
+    fn handle_entities_in_zones(
+        zones: Query<(&Zone, &ZoneEntities)>,
         mut healths: Query<&mut Health>,
-        mut player_zone_events: EventReader<PlayerZoneEvent>,
-        mut vortex_events: EventWriter<VortexEvent>,
     ) {
-        for event in player_zone_events.iter() {
-            let mut health = healths.get_mut(game.player_entity.unwrap()).unwrap();
-
-            match event.0 {
-                ZoneType::Damage(amount) => health.take_damage(amount),
-                ZoneType::Heal(amount) => health.heal(amount),
-                ZoneType::VortexGate => vortex_events.send(VortexEvent::vort(Colony::StarMap)),
-                _ => {}
+        for (zone, zone_entities) in zones.iter() {
+            for entity in zone_entities.entities.iter() {
+                let mut health = healths.get_mut(*entity).unwrap();
+                println!("healht {:?}", health);
+                // match zone.zone_type {
+                //     ZoneType::Damage => health.take_damage(zone.value),
+                //     ZoneType::Heal => health.heal(zone.value),
+                //     _ => {}
+                // }
             }
         }
     }
@@ -112,14 +137,11 @@ impl ZonePlugin {
 
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_event::<PlayerZoneEvent>();
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::vortex_gate_collision.system())
-                .with_system(Self::player_in_zone_event.system()),
+                .with_system(Self::handle_entities_in_zones.system()),
         );
     }
 }
-
-struct PlayerZoneEvent(ZoneType);

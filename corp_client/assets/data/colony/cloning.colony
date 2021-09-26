@@ -23,7 +23,9 @@
     zones: [
         ZoneAsset(
             position: Vec3(5.5, 0.1, 0.0),
-            zone_type: Heal(0.5),
+            value: 0.5,
+            second: 1.0,
+            zone_type: Heal,
             size: 1.0,
             material: SeaGreen,
         ),

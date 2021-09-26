@@ -51,20 +51,22 @@ impl Deref for VortexNodeAsset {
     }
 }
 
-#[derive(Default, Debug, Deserialize, Clone)]
+#[derive(Default, Debug, Deserialize, Copy, Clone)]
 pub struct VortexGateAsset {
     pub position: Vec3,
 }
 
-#[derive(Default, Debug, Deserialize, Clone)]
+#[derive(Default, Debug, Deserialize, Copy, Clone)]
 pub struct ZoneAsset {
     pub position: Vec3,
+    pub value: f32,
+    pub second: f32,
     pub zone_type: ZoneType,
     pub size: f32,
     pub material: MaterialAsset,
 }
 
-#[derive(Default, Debug, Deserialize, Clone)]
+#[derive(Default, Debug, Deserialize, Copy, Clone)]
 pub struct LightAsset {
     pub position: Vec3,
     pub color: ColorAsset,
