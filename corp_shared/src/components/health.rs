@@ -1,22 +1,22 @@
-pub const MAX_HEALTH: f64 = 100.0;
-pub const CLONE_HEALTH_80: f64 = 80.0;
-pub const MIN_HEALTH: f64 = 0.0;
+pub const MAX_HEALTH: f32 = 100.0;
+pub const CLONE_HEALTH_80: f32 = 80.0;
+pub const MIN_HEALTH: f32 = 0.0;
 
 #[derive(Clone, Debug)]
 pub struct Health {
-    hit_points: f64,
+    hit_points: f32,
 }
 
 impl Health {
-    pub fn take_damage(&mut self, damage: f64) {
+    pub fn take_damage(&mut self, damage: f32) {
         self.hit_points = (&self.hit_points - damage).max(MIN_HEALTH);
     }
 
-    pub fn heal(&mut self, heal: f64) {
+    pub fn heal(&mut self, heal: f32) {
         self.hit_points = (&self.hit_points + heal).min(MAX_HEALTH);
     }
 
-    pub fn get_health(&self) -> &f64 {
+    pub fn get_health(&self) -> &f32 {
         &self.hit_points
     }
 
@@ -24,7 +24,7 @@ impl Health {
         &self.hit_points <= &MIN_HEALTH
     }
 
-    pub fn set_hit_points(&mut self, hit_points: f64) {
+    pub fn set_hit_points(&mut self, hit_points: f32) {
         self.hit_points = hit_points;
     }
 

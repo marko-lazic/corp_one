@@ -14,7 +14,7 @@ use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexNode, VortexPlugin};
-use crate::world::colony::zone::{Zone, ZoneEntities, ZoneType};
+use crate::world::colony::zone::{Zone, ZoneEntities};
 use crate::world::player::PlayerBundle;
 use crate::Game;
 
@@ -116,14 +116,14 @@ impl ColonyPlugin {
         mut meshes: ResMut<Assets<Mesh>>,
     ) {
         if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
-            for zone in &colony_asset.zones {
+            for zone_asset in &colony_asset.zones {
                 commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Plane {
-                            size: zone.size.clone(),
+                            size: zone_asset.size.clone(),
                         })),
-                        transform: Transform::from_translation(zone.position),
-                        material: material_assets.get_material(&zone.material),
+                        transform: Transform::from_translation(zone_asset.position),
+                        material: material_assets.get_material(&zone_asset.material),
                         ..Default::default()
                     })
                     .insert(RigidBody::Sensor)
@@ -136,7 +136,7 @@ impl ColonyPlugin {
                             .with_group(Layer::Zone)
                             .with_mask(Layer::Player),
                     )
-                    .insert(Zone::from_asset(zone.clone()))
+                    .insert(Zone::from(zone_asset.clone()))
                     .insert(ZoneEntities::default());
             }
         }

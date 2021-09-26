@@ -45,22 +45,15 @@ impl Default for ZoneType {
 pub struct Zone {
     zone_type: ZoneType,
     value: f32,
-    second: f32,
+    timer: Timer,
 }
 
 impl Zone {
-    pub fn from_asset(asset: ZoneAsset) -> Self {
+    pub fn from(asset: ZoneAsset) -> Self {
         Zone {
             zone_type: asset.zone_type,
             value: asset.value,
-            second: asset.second,
-        }
-    }
-    pub fn new(zone_type: ZoneType, value: f32, second: f32) -> Self {
-        Zone {
-            zone_type,
-            value,
-            second,
+            timer: Timer::from_seconds(asset.second, true),
         }
     }
 }
@@ -68,7 +61,7 @@ impl Zone {
 pub struct ZonePlugin;
 
 impl ZonePlugin {
-    fn vortex_gate_collision(
+    fn collision_events(
         mut collision_events: EventReader<CollisionEvent>,
         mut vortex_events: EventWriter<VortexEvent>,
         mut zone_entities: Query<&mut ZoneEntities>,
@@ -78,13 +71,13 @@ impl ZonePlugin {
                 CollisionEvent::Started(d1, d2) => {
                     if Self::check_collision_data(&d1, &d2, [Layer::Player, Layer::VortexGate]) {
                         vortex_events.send(VortexEvent::vort(Colony::StarMap));
-                    } else if let Some((player, zone)) = Self::player_on_zone(&d1, &d2) {
+                    } else if let Some((player, zone)) = Self::player_in_zone(&d1, &d2) {
                         let mut zone_entities = zone_entities.get_mut(zone).unwrap();
                         zone_entities.add(player)
                     }
                 }
                 CollisionEvent::Stopped(d1, d2) => {
-                    if let Some((player, zone)) = Self::player_on_zone(&d1, &d2) {
+                    if let Some((player, zone)) = Self::player_in_zone(&d1, &d2) {
                         let mut zone_entities = zone_entities.get_mut(zone).unwrap();
                         zone_entities.remove(player)
                     }
@@ -93,7 +86,7 @@ impl ZonePlugin {
         }
     }
 
-    fn player_on_zone(d1: &CollisionData, d2: &CollisionData) -> Option<(Entity, Entity)> {
+    fn player_in_zone(d1: &CollisionData, d2: &CollisionData) -> Option<(Entity, Entity)> {
         if Self::is_zone(d1) && Self::is_player(d2) {
             Some((d2.rigid_body_entity(), d1.collision_shape_entity()))
         } else if Self::is_player(d1) && Self::is_zone(d2) {
@@ -117,19 +110,22 @@ impl ZonePlugin {
         data.collision_layers().contains_group(Layer::Zone)
     }
 
-    fn handle_entities_in_zones(
-        zones: Query<(&Zone, &ZoneEntities)>,
+    fn handle_health_in_zones(
+        time: Res<Time>,
+        mut zones: Query<(&mut Zone, &ZoneEntities)>,
         mut healths: Query<&mut Health>,
     ) {
-        for (zone, zone_entities) in zones.iter() {
-            for entity in zone_entities.entities.iter() {
-                let mut health = healths.get_mut(*entity).unwrap();
-                println!("healht {:?}", health);
-                // match zone.zone_type {
-                //     ZoneType::Damage => health.take_damage(zone.value),
-                //     ZoneType::Heal => health.heal(zone.value),
-                //     _ => {}
-                // }
+        for (mut zone, zone_entities) in zones.iter_mut() {
+            zone.timer.tick(time.delta());
+            if zone.timer.finished() {
+                for entity in zone_entities.entities.iter() {
+                    let mut health = healths.get_mut(*entity).unwrap();
+                    match zone.zone_type {
+                        ZoneType::Damage => health.take_damage(zone.value),
+                        ZoneType::Heal => health.heal(zone.value),
+                        _ => {}
+                    }
+                }
             }
         }
     }
@@ -140,8 +136,8 @@ impl Plugin for ZonePlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::vortex_gate_collision.system())
-                .with_system(Self::handle_entities_in_zones.system()),
+                .with_system(Self::collision_events.system())
+                .with_system(Self::handle_health_in_zones.system()),
         );
     }
 }

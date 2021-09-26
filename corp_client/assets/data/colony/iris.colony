@@ -40,7 +40,7 @@
         ),
         ZoneAsset(
             position: Vec3(3.0, 0.1, -4.0),
-            value: 0.5,
+            value: 3.5,
             second: 1.0,
             zone_type: Heal,
             size: 1.0,
