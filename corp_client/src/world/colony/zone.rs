@@ -69,15 +69,15 @@ impl ZonePlugin {
         for event in collision_events.iter() {
             match event {
                 CollisionEvent::Started(d1, d2) => {
-                    if Self::check_collision_data(&d1, &d2, [Layer::Player, Layer::VortexGate]) {
+                    if Self::player_in_vortex_gate(d1, d2) {
                         vortex_events.send(VortexEvent::vort(Colony::StarMap));
-                    } else if let Some((player, zone)) = Self::player_in_zone(&d1, &d2) {
+                    } else if let Some((player, zone)) = Self::player_in_zone(d1, d2) {
                         let mut zone_entities = zone_entities.get_mut(zone).unwrap();
                         zone_entities.add(player)
                     }
                 }
                 CollisionEvent::Stopped(d1, d2) => {
-                    if let Some((player, zone)) = Self::player_in_zone(&d1, &d2) {
+                    if let Some((player, zone)) = Self::player_in_zone(d1, d2) {
                         let mut zone_entities = zone_entities.get_mut(zone).unwrap();
                         zone_entities.remove(player)
                     }
@@ -96,10 +96,9 @@ impl ZonePlugin {
         }
     }
 
-    fn check_collision_data(d1: &CollisionData, d2: &CollisionData, l: [Layer; 2]) -> bool {
-        d1.collision_layers().contains_group(l[0]) && d2.collision_layers().contains_group(l[1])
-            || d1.collision_layers().contains_group(l[1])
-                && d2.collision_layers().contains_group(l[0])
+    fn player_in_vortex_gate(d1: &CollisionData, d2: &CollisionData) -> bool {
+        Self::is_vortex_gate(d1) && Self::is_player(d2)
+            || Self::is_player(d1) && Self::is_vortex_gate(d2)
     }
 
     fn is_player(data: &CollisionData) -> bool {
@@ -108,6 +107,10 @@ impl ZonePlugin {
 
     fn is_zone(data: &CollisionData) -> bool {
         data.collision_layers().contains_group(Layer::Zone)
+    }
+
+    fn is_vortex_gate(data: &CollisionData) -> bool {
+        data.collision_layers().contains_group(Layer::VortexGate)
     }
 
     fn handle_health_in_zones(
