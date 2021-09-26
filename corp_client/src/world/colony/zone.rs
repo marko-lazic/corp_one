@@ -1,9 +1,7 @@
-use bam3d::{Aabb3, Discrete};
 use bevy::core::prelude::Timer;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use bevy_mod_bounding::aabb;
-use glam::Vec3;
+use heron::{CollisionData, CollisionEvent};
 use serde::Deserialize;
 
 use corp_shared::prelude::*;
@@ -11,7 +9,7 @@ use corp_shared::prelude::*;
 use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::world::colony::vortex::VortexEvent;
-use crate::world::colony::Colony;
+use crate::world::colony::{Colony, Layer};
 use crate::Game;
 
 #[derive(Copy, Clone, Debug, Deserialize)]
@@ -41,36 +39,56 @@ impl Zone {
 pub struct ZonePlugin;
 
 impl ZonePlugin {
-    fn player_in_zone(
-        time: Res<Time>,
-        mut timer: ResMut<DamageTimer>,
-        mut players: Query<(&GlobalTransform, &aabb::Aabb), With<Player>>,
-        bounds: Query<(&GlobalTransform, &aabb::Aabb, &Zone)>,
+    fn vortex_gate_collision(
+        mut collision_events: EventReader<CollisionEvent>,
+        mut vortex_events: EventWriter<VortexEvent>,
         mut player_zone_events: EventWriter<PlayerZoneEvent>,
+        zones: Query<&Zone>,
+        mut healths: Query<&mut Health>,
     ) {
-        for (player_global, player_bounding) in players.iter_mut() {
-            let player_vertices = player_bounding.vertices(*player_global);
-
-            let player_aabb = Self::convert_to_aabb3(player_vertices);
-
-            for (zone_global, zone_bounding, zone) in bounds.iter() {
-                let zone_vertices = zone_bounding.vertices(*zone_global);
-                let zone_aabb = Self::convert_to_aabb3(zone_vertices);
-
-                if timer.timer.tick(time.delta()).just_finished()
-                    && zone_aabb.intersects(&player_aabb)
-                {
-                    player_zone_events.send(PlayerZoneEvent(zone.zone_type));
+        for event in collision_events.iter() {
+            match event {
+                CollisionEvent::Started(d1, d2) => {
+                    if Self::check_collision_data(d1, d2, [Layer::Player, Layer::VortexGate]) {
+                        vortex_events.send(VortexEvent::vort(Colony::StarMap));
+                    } else if let Some((player, zone)) = Self::player_on_zone(&d1, &d2) {
+                        let zone_type = zones.get(zone).unwrap().zone_type;
+                        player_zone_events.send(PlayerZoneEvent(zone_type));
+                        let mut health = healths.get_mut(player).unwrap();
+                        match zone_type {
+                            ZoneType::Damage(amount) => health.take_damage(amount),
+                            ZoneType::Heal(amount) => health.heal(amount),
+                            _ => {}
+                        }
+                    }
                 }
+                CollisionEvent::Stopped(_, _) => {}
             }
         }
     }
 
-    fn convert_to_aabb3(vertices: [bevy::math::Vec3; 8]) -> Aabb3 {
-        Aabb3::new(
-            Vec3::new(vertices[0].x, vertices[0].y, vertices[0].z),
-            Vec3::new(vertices[6].x, vertices[6].y, vertices[6].z),
-        )
+    fn player_on_zone(d1: &CollisionData, d2: &CollisionData) -> Option<(Entity, Entity)> {
+        if Self::is_zone(d1) && Self::is_player(d2) {
+            Some((d2.rigid_body_entity(), d1.collision_shape_entity()))
+        } else if Self::is_player(d1) && Self::is_zone(d2) {
+            Some((d1.rigid_body_entity(), d2.collision_shape_entity()))
+        } else {
+            None
+        }
+    }
+
+    fn check_collision_data(d1: &CollisionData, d2: &CollisionData, l: [Layer; 2]) -> bool {
+        d1.collision_layers().contains_group(l[0]) && d2.collision_layers().contains_group(l[1])
+            || d1.collision_layers().contains_group(l[1])
+                && d2.collision_layers().contains_group(l[0])
+    }
+
+    fn is_player(data: &CollisionData) -> bool {
+        data.collision_layers().contains_group(Layer::Player)
+    }
+
+    fn is_zone(data: &CollisionData) -> bool {
+        data.collision_layers().contains_group(Layer::Zone)
     }
 
     fn player_in_zone_event(
@@ -94,27 +112,14 @@ impl ZonePlugin {
 
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.insert_resource(DamageTimer::default());
         app.add_event::<PlayerZoneEvent>();
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::player_in_zone.system())
+                .with_system(Self::vortex_gate_collision.system())
                 .with_system(Self::player_in_zone_event.system()),
         );
     }
 }
 
 struct PlayerZoneEvent(ZoneType);
-
-struct DamageTimer {
-    timer: Timer,
-}
-
-impl Default for DamageTimer {
-    fn default() -> Self {
-        DamageTimer {
-            timer: Timer::from_seconds(0.5, true),
-        }
-    }
-}

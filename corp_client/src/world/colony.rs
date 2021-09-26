@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use heron::prelude::*;
+
 use bevy_asset_ron::RonAssetPlugin;
-use bevy_mod_bounding::{aabb, debug, Bounded, BoundingVolumePlugin};
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMesh;
 
@@ -21,6 +22,13 @@ mod asset;
 pub mod colony_assets;
 pub mod vortex;
 pub mod zone;
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PhysicsLayer)]
+pub enum Layer {
+    VortexGate,
+    Zone,
+    Player,
+}
 
 pub enum Colony {
     StarMap,
@@ -118,8 +126,16 @@ impl ColonyPlugin {
                         material: material_assets.get_material(&zone.material),
                         ..Default::default()
                     })
-                    .insert(Bounded::<aabb::Aabb>::default())
-                    .insert(debug::DebugBounds)
+                    .insert(RigidBody::Sensor)
+                    .insert(CollisionShape::Cuboid {
+                        half_extends: Vec3::new(0.5, 1.0, 0.5),
+                        border_radius: None,
+                    })
+                    .insert(
+                        CollisionLayers::none()
+                            .with_group(Layer::Zone)
+                            .with_mask(Layer::Player),
+                    )
                     .insert(Zone::new(zone.zone_type));
             }
         }
@@ -141,8 +157,16 @@ impl ColonyPlugin {
                         material: material_assets.get_material(&MaterialAsset::SkyBlue),
                         ..Default::default()
                     })
-                    .insert(Bounded::<aabb::Aabb>::default())
-                    .insert(debug::DebugBounds)
+                    .insert(RigidBody::Sensor)
+                    .insert(CollisionShape::Cuboid {
+                        half_extends: Vec3::new(0.5, 1.0, 0.5),
+                        border_radius: None,
+                    })
+                    .insert(
+                        CollisionLayers::none()
+                            .with_group(Layer::VortexGate)
+                            .with_mask(Layer::Player),
+                    )
                     .insert(Zone::new(ZoneType::VortexGate));
             }
         }
@@ -202,8 +226,16 @@ impl ColonyPlugin {
                 .insert(Movement::default())
                 .insert(game.health.clone())
                 .insert(CameraCenter)
-                .insert(Bounded::<aabb::Aabb>::default())
-                .insert(debug::DebugBounds)
+                .insert(RigidBody::Dynamic)
+                .insert(CollisionShape::Cuboid {
+                    half_extends: Vec3::new(0.5, 1.0, 0.5),
+                    border_radius: None,
+                })
+                .insert(
+                    CollisionLayers::none()
+                        .with_group(Layer::Player)
+                        .with_masks(vec![Layer::Zone, Layer::VortexGate]),
+                )
                 .id();
 
             game.player_entity = Some(player);
@@ -231,7 +263,7 @@ impl ColonyPlugin {
 impl Plugin for ColonyPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
-        app.add_plugin(BoundingVolumePlugin::<aabb::Aabb>::default());
+        app.add_plugin(PhysicsPlugin::default());
         app.add_plugin(VortexPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
