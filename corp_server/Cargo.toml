@@ -2,9 +2,9 @@
 name = "corp_server"
 version = "0.1.0"
 authors = ["Marko Lazić <marko.lazic@comyno.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-bevy = { version = "0.5.0", features = ["dynamic"] }
-bevy_networking_turbulence = "0.3.2"
+bevy = { version = "0.6.0", features = ["dynamic"] }
+bevy_networking_turbulence = "0.4.1"

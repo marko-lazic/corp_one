@@ -7,7 +7,7 @@ use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 const TIME_STEP: f32 = 1.0 / 60.0;
 
 fn main() {
-    App::build()
+    App::new()
         .init_resource::<Game>()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
@@ -27,7 +27,7 @@ fn player_move(
     mut query: Query<(&mut Transform, &PlayerSpeed)>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
-    if let Ok((mut transform, speed)) = query.single_mut() {
+    if let Ok((mut transform, speed)) = query.get_single_mut() {
         let mut dir_x = 0.0;
         let mut dir_z = 0.0;
         if keyboard_input.pressed(KeyCode::A) {
@@ -61,7 +61,7 @@ fn player_look_at_hit_point(
             Some(top_intersection) => {
                 let transform_new = top_intersection.1.normal_ray().to_transform();
                 let mouse_world = Transform::from_matrix(transform_new);
-                if let Ok((mut transform, _)) = query.single_mut() {
+                if let Ok((mut transform, _)) = query.get_single_mut() {
                     let hit_point = Ray3d::new(transform.translation, mouse_world.translation);
                     let aim_point =
                         Vec3::new(hit_point.direction().x, 0.5, hit_point.direction().z);
@@ -91,7 +91,13 @@ fn setup(
         .insert_bundle(PickableBundle::default());
 
     // light
-    commands.spawn_bundle(LightBundle {
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            color: Color::rgb(1.0, 1.0, 1.0),
+            intensity: 200.0,
+            range: 20.0,
+            ..Default::default()
+        },
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..Default::default()
     });

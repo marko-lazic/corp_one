@@ -1,11 +1,9 @@
-use std::fs;
-
 use bevy::app::AppExit;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
+use bevy_input_actionmap::*;
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod};
-use kurinji::{Kurinji, KurinjiPlugin, OnActionActive, OnActionEnd};
 
 use corp_shared::prelude::{Health, Player};
 use input_command::PlayerAction;
@@ -16,6 +14,9 @@ use crate::input::double_tap::DoubleTap;
 use crate::world::colony::vortex::VortexEvent;
 use crate::world::colony::Colony;
 use crate::Game;
+
+mod double_tap;
+pub mod input_command;
 
 #[derive(Default)]
 pub struct Cursor {
@@ -29,41 +30,43 @@ pub enum InputSystem {
     Starmap,
 }
 
-mod double_tap;
-pub mod input_command;
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+pub enum Action {
+    Forward,
+    Backward,
+    Left,
+    Right,
+    Shoot,
+    Escape,
+    Kill,
+    ColonyIris,
+    ColonyLiberte,
+}
 
 pub struct MyRayCastSet;
 
 pub struct InputControlPlugin;
 
 impl InputControlPlugin {
-    fn setup_kurinji_binding(mut kurinji: ResMut<Kurinji>) {
-        let binding_json = fs::read_to_string("corp_client/config/binding.json")
-            .expect("Error! could not open config file");
-        kurinji.set_bindings_with_json(&binding_json);
-    }
-
     fn keyboard_escape_action(
+        input: Res<InputMap<Action>>,
+        time: Res<Time>,
         mut game: ResMut<Game>,
         mut windows: ResMut<Windows>,
-        mut reader: EventReader<OnActionEnd>,
         mut app_exit_events: EventWriter<AppExit>,
         mut double_tap: Local<DoubleTap>,
-        time: Res<Time>,
     ) {
-        for event in reader.iter() {
-            if event.action == "ESCAPE" {
-                double_tap.increment();
-                let window = windows.get_primary_mut().unwrap();
-                if game.cursor_locked {
-                    window.set_cursor_lock_mode(false);
-                    window.set_cursor_visibility(true);
-                    game.cursor_locked = false;
-                } else {
-                    window.set_cursor_lock_mode(true);
-                    window.set_cursor_visibility(false);
-                    game.cursor_locked = true;
-                }
+        if input.just_active(Action::Escape) {
+            double_tap.increment();
+            let window = windows.get_primary_mut().unwrap();
+            if game.cursor_locked {
+                window.set_cursor_lock_mode(false);
+                window.set_cursor_visibility(true);
+                game.cursor_locked = false;
+            } else {
+                window.set_cursor_lock_mode(true);
+                window.set_cursor_visibility(false);
+                game.cursor_locked = true;
             }
         }
 
@@ -72,23 +75,37 @@ impl InputControlPlugin {
             .on_complete(|| app_exit_events.send(AppExit));
     }
 
-    fn player_keyboard_and_mouse_action(
+    fn player_keyboard_action(
+        input: Res<InputMap<Action>>,
         mut player_action: ResMut<PlayerAction>,
-        mut reader: EventReader<OnActionActive>,
     ) {
-        for event in reader.iter() {
-            player_action.key_action(&event.action);
-            player_action.mouse_action(&event.action);
-        }
+        player_action.key_action(&input);
     }
 
-    fn starmap_keyboard(
-        keyboard_input: Res<Input<KeyCode>>,
-        mut vortex_events: EventWriter<VortexEvent>,
+    fn player_mouse_action(
+        buttons: Res<Input<MouseButton>>,
+        mut player_action: ResMut<PlayerAction>,
     ) {
-        if keyboard_input.just_pressed(KeyCode::I) {
+        player_action.mouse_action(&buttons);
+    }
+
+    fn setup(mut input: ResMut<InputMap<Action>>) {
+        input
+            .bind(Action::Forward, KeyCode::W)
+            .bind(Action::Backward, KeyCode::S)
+            .bind(Action::Left, KeyCode::A)
+            .bind(Action::Right, KeyCode::D)
+            // .bind(Action::Shoot, MouseButton::Left)
+            .bind(Action::Escape, KeyCode::Escape)
+            .bind(Action::Kill, KeyCode::K)
+            .bind(Action::ColonyIris, KeyCode::I)
+            .bind(Action::ColonyLiberte, KeyCode::L);
+    }
+
+    fn starmap_keyboard(input: Res<InputMap<Action>>, mut vortex_events: EventWriter<VortexEvent>) {
+        if input.just_active(Action::ColonyIris) {
             vortex_events.send(VortexEvent::vort(Colony::Iris));
-        } else if keyboard_input.just_pressed(KeyCode::L) {
+        } else if input.just_active(Action::ColonyLiberte) {
             vortex_events.send(VortexEvent::vort(Colony::Liberte));
         }
     }
@@ -111,8 +128,8 @@ impl InputControlPlugin {
         }
     }
 
-    fn kill(keyboard_input: Res<Input<KeyCode>>, mut healths: Query<&mut Health, With<Player>>) {
-        if keyboard_input.just_pressed(KeyCode::K) {
+    fn kill(input: Res<InputMap<Action>>, mut healths: Query<&mut Health, With<Player>>) {
+        if input.just_active(Action::Kill) {
             if let Some(mut health) = healths.iter_mut().next() {
                 health.kill_mut();
             }
@@ -121,12 +138,12 @@ impl InputControlPlugin {
 }
 
 impl Plugin for InputControlPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(ActionPlugin::<Action>::default());
+        app.add_startup_system(Self::setup);
         app.init_resource::<Cursor>();
         app.init_resource::<PlayerAction>();
         app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
-        app.add_plugin(KurinjiPlugin::default());
-        app.add_startup_system(Self::setup_kurinji_binding.system());
         app.add_system_set(
             SystemSet::new()
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
@@ -145,7 +162,8 @@ impl Plugin for InputControlPlugin {
                 .label(InputSystem::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::update_cursor_position.system())
-                .with_system(Self::player_keyboard_and_mouse_action.system())
+                .with_system(Self::player_keyboard_action.system())
+                .with_system(Self::player_mouse_action.system())
                 .with_system(Self::kill.system()),
         );
     }

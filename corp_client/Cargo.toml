@@ -2,7 +2,7 @@
 name = "corp_client"
 version = "0.1.0"
 authors = ["marko.lazic <markolazic@protonmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [features]
 default = [
@@ -11,19 +11,20 @@ default = [
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-rand = "0.8.3"
-bevy = { version = "0.5.0", features = ["dynamic"] }
-bevy_mod_raycast = "0.2.2"
-bevy_mod_picking = "0.4.0"
-bevy_prototype_debug_lines = "0.3.3"
-bevy_asset_loader = "0.5.0"
-bevy_kira_audio = "0.5.1"
-bevy_networking_turbulence = "0.3.3"
-bevy_asset_ron = "0.2.0"
-kurinji = { git = "https://github.com/jacobjenks/kurinji", branch = "upgrade_bevy_0.5" }
-heron = { version = "0.11.1", features = ["3d"] }
-glam = "0.15.1"
-serde = "1.0.130"
+rand = "0.8.4"
+bevy = { version = "0.6.0", features = [ "wav" ] }
+bevy_mod_raycast = "0.3.9"
+bevy_mod_picking = "0.5.4"
+#bevy_prototype_debug_lines = "0.3.4"
+bevy_prototype_debug_lines = {git = "https://github.com/Toqozz/bevy_debug_lines", branch = "bevy-main"}
+bevy_asset_loader = "0.8.0"
+bevy_kira_audio = "0.8.0"
+bevy_networking_turbulence = "0.4.1"
+bevy_asset_ron = "0.3.0"
+bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap.git", branch = "main" }
+heron = { version = "1.1.0", features = ["3d"] }
+glam = "0.20.2"
+serde = "1.0.136"
 
 [[example]]
 name = "transforms"

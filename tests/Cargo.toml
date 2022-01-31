@@ -2,7 +2,7 @@
 name = "corp_tests"
 version = "0.1.0"
 authors = ["Marko Lazić <marko.lazic@comyno.com>"]
-edition = "2018"
+edition = "2021"
 autotests = false
 autobenches = false
 

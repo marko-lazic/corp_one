@@ -62,7 +62,7 @@ impl PlayerPlugin {
         time: Res<Time>,
         mut query: Query<(&mut Player, &mut Movement, &mut Transform)>,
     ) {
-        if let Ok((mut player, mut movement, mut position)) = query.single_mut() {
+        if let Ok((mut player, mut movement, mut position)) = query.get_single_mut() {
             let direction = command.new_direction(&position);
             if movement.can_move {
                 position.translation += movement.update_velocity(direction) * time.delta_seconds();
@@ -79,7 +79,7 @@ impl PlayerPlugin {
 }
 
 impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(CloningPlugin);
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)

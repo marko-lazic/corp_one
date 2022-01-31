@@ -62,7 +62,7 @@ impl ColonyPlugin {
                 transform: Transform::from_translation(Vec3::new(4., 0., 4.)),
                 material: materials.add(StandardMaterial {
                     base_color: Color::WHITE,
-                    roughness: 0.0,
+                    perceptual_roughness: 0.0,
                     reflectance: 0.0,
                     metallic: 0.0,
                     ..Default::default()
@@ -75,8 +75,8 @@ impl ColonyPlugin {
     fn setup_light(mut commands: Commands, game: Res<Game>, assets: Res<Assets<ColonyAsset>>) {
         if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             for light in &colony_asset.lights {
-                commands.spawn_bundle(LightBundle {
-                    light: Light {
+                commands.spawn_bundle(PointLightBundle {
+                    point_light: PointLight {
                         color: light.color.get_color().clone(),
                         ..Default::default()
                     },
@@ -197,10 +197,7 @@ impl ColonyPlugin {
                             let material = materials.add(Color::rgba(1.0, 0.9, 0.9, 0.4).into());
                             material
                         },
-                        visible: Visible {
-                            is_visible: true,
-                            is_transparent: true,
-                        },
+                        visibility: Visibility { is_visible: true },
                         ..Default::default()
                     })
                     .insert(VortexNode);
@@ -261,7 +258,7 @@ impl ColonyPlugin {
 }
 
 impl Plugin for ColonyPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
         app.add_plugin(PhysicsPlugin::default());
         app.add_plugin(VortexPlugin);

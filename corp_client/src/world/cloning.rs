@@ -48,7 +48,7 @@ enum CloningSystem {
 }
 
 impl Plugin for CloningPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_enter(GameState::StarMap)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))

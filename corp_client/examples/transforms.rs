@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup.system())
@@ -60,7 +60,13 @@ fn setup(
         });
 
     // light
-    commands.spawn_bundle(LightBundle {
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            color: Color::rgb(1.0, 1.0, 1.0),
+            intensity: 200.0,
+            range: 20.0,
+            ..Default::default()
+        },
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..Default::default()
     });

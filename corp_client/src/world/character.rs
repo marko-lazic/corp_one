@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::constants::tick;
 
+#[derive(Component)]
 pub struct CharacterName(String);
 
 impl CharacterName {
@@ -11,6 +12,7 @@ impl CharacterName {
 }
 
 #[derive(Debug)]
+#[derive(Component)]
 pub struct Movement {
     pub acceleration: f32,
     pub speed: f32,

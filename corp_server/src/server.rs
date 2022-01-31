@@ -43,7 +43,7 @@ impl ServerPlugin {
 }
 
 impl Plugin for ServerPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(NetworkingPlugin::default());
         app.add_startup_system(Self::startup.system());
         app.add_system(Self::send_pongs.system());

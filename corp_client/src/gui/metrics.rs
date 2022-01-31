@@ -11,16 +11,22 @@ use crate::input::Cursor;
 use crate::world::camera::TopDownCamera;
 use crate::Game;
 
+#[derive(Component)]
 struct FpsText;
 
+#[derive(Component)]
 struct PlayerPositionText;
 
+#[derive(Component)]
 struct MouseScreenPositionText;
 
+#[derive(Component)]
 struct MouseWorldPositionText;
 
+#[derive(Component)]
 struct CameraDebugText;
 
+#[derive(Component)]
 struct PlayerHealth;
 
 pub struct MetricsPlugin;
@@ -126,7 +132,7 @@ impl MetricsPlugin {
 }
 
 impl Plugin for MetricsPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing).with_system(Self::setup.system()),

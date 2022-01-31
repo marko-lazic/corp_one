@@ -10,6 +10,7 @@ use crate::input::Cursor;
 use crate::Game;
 use std::ops::Neg;
 
+#[derive(Component)]
 pub struct TopDownCamera {
     pub x: f32,
     pub y: f32,
@@ -27,6 +28,7 @@ impl TopDownCamera {
     }
 }
 
+#[derive(Component)]
 pub struct CameraCenter;
 
 impl Default for TopDownCamera {
@@ -87,7 +89,7 @@ impl TopDownCameraPlugin {
 struct CameraMotion;
 
 impl Plugin for TopDownCameraPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))

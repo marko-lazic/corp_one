@@ -1,7 +1,9 @@
 use bevy::math::Vec3;
 use bevy::prelude::Transform;
+use bevy_input_actionmap::InputMap;
 
-use crate::constants::input;
+use crate::input::Action;
+use crate::{Input, MouseButton, Res};
 
 #[derive(Default)]
 pub struct PlayerAction {
@@ -12,23 +14,23 @@ pub struct PlayerAction {
 }
 
 impl PlayerAction {
-    pub fn key_action(&mut self, action: &str) {
-        if action == input::MOVE_FORWARD {
+    pub fn key_action(&mut self, input: &Res<InputMap<Action>>) {
+        if input.active(Action::Forward) {
             self.forward = true;
         }
-        if action == input::MOVE_BACKWARD {
+        if input.active(Action::Backward) {
             self.backward = true;
         }
-        if action == input::MOVE_LEFT {
+        if input.active(Action::Left) {
             self.left = true;
         }
-        if action == input::MOVE_RIGHT {
+        if input.active(Action::Right) {
             self.right = true;
         }
     }
 
-    pub fn mouse_action(&mut self, action: &str) {
-        if action == input::MOUSE_SHOOT {
+    pub fn mouse_action(&mut self, buttons: &Res<Input<MouseButton>>) {
+        if buttons.just_pressed(MouseButton::Left) {
             bevy::log::info!("Bang");
         }
     }
@@ -59,27 +61,5 @@ impl PlayerAction {
         }
         direction = direction.normalize_or_zero();
         direction
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn move_direction() {
-        // given
-        let mut command = PlayerAction::default();
-        command.key_action(input::MOVE_RIGHT);
-        command.key_action(input::MOVE_FORWARD);
-        let position = Transform::default();
-
-        // when
-        let direction = command.new_direction(&position);
-
-        let expected = std::f32::consts::FRAC_1_SQRT_2;
-
-        // then
-        assert_eq!(direction, Vec3::new(-expected, 0.0, expected));
     }
 }

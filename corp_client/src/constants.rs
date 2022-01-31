@@ -18,11 +18,3 @@ pub mod state {
         Playing,
     }
 }
-
-pub mod input {
-    pub const MOVE_FORWARD: &str = "MOVE_FORWARD";
-    pub const MOVE_BACKWARD: &str = "MOVE_BACKWARD";
-    pub const MOVE_RIGHT: &str = "MOVE_RIGHT";
-    pub const MOVE_LEFT: &str = "MOVE_LEFT";
-    pub const MOUSE_SHOOT: &str = "MOUSE_SHOOT";
-}

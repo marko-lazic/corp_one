@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
-use bevy_networking_turbulence::{NetworkEvent, NetworkingPlugin, NetworkResource, Packet};
+use bevy_networking_turbulence::{NetworkEvent, NetworkResource, NetworkingPlugin, Packet};
 
 use corp_shared::{SERVER_HOST, SERVER_PORT};
 
@@ -38,7 +38,7 @@ impl ConnectionPlugin {
 }
 
 impl Plugin for ConnectionPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(NetworkingPlugin::default());
         app.add_startup_system(Self::startup.system());
         app.add_system_set(

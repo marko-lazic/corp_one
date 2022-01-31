@@ -19,7 +19,7 @@ pub enum ZoneType {
     Unknown,
 }
 
-#[derive(Default)]
+#[derive(Default, Component)]
 pub struct ZoneEntities {
     entities: Vec<Entity>,
 }
@@ -42,6 +42,7 @@ impl Default for ZoneType {
     }
 }
 
+#[derive(Component)]
 pub struct Zone {
     zone_type: ZoneType,
     value: f32,
@@ -135,7 +136,7 @@ impl ZonePlugin {
 }
 
 impl Plugin for ZonePlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))

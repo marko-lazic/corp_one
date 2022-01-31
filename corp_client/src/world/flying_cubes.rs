@@ -48,7 +48,7 @@ impl FlyingCubesPlugin {
 }
 
 impl Plugin for FlyingCubesPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(SpawnerTimer::default());
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
@@ -59,6 +59,7 @@ impl Plugin for FlyingCubesPlugin {
     }
 }
 
+#[derive(Component)]
 struct Cube;
 
 struct SpawnerState {

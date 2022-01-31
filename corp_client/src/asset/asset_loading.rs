@@ -46,7 +46,7 @@ pub struct MeshAssets {
 #[derive(AssetCollection)]
 pub struct TextureAssets {
     #[asset(path = "starmap/nebula.png")]
-    pub nebula: Handle<Texture>,
+    pub nebula: Handle<Image>,
 }
 
 #[derive(Debug, Deserialize, Copy, Clone)]
@@ -142,8 +142,9 @@ impl AssetLoadingPlugin {
 }
 
 impl Plugin for AssetLoadingPlugin {
-    fn build(&self, mut app: &mut AppBuilder) {
-        AssetLoader::new(GameState::AssetLoading, GameState::StarMap)
+    fn build(&self, mut app: &mut App) {
+        AssetLoader::new(GameState::AssetLoading)
+            .continue_to_state(GameState::StarMap)
             .with_collection::<MeshAssets>()
             .with_collection::<TextureAssets>()
             .with_collection::<AudioAssets>()
@@ -167,4 +168,5 @@ struct LoadingData {
     loading_text_bundle_entity: Entity,
 }
 
+#[derive(Component)]
 struct LoadingIndicator;

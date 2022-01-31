@@ -19,7 +19,7 @@ mod star_map;
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(ColonyPlugin);
         app.add_plugin(StarMapPlugin);
         app.add_plugin(InputControlPlugin);

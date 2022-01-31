@@ -19,6 +19,7 @@ impl VortexEvent {
     }
 }
 
+#[derive(Component)]
 pub struct VortexNode;
 
 impl VortexPlugin {
@@ -65,7 +66,7 @@ impl VortexPlugin {
 }
 
 impl Plugin for VortexPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_event::<VortexEvent>();
         app.add_system_set(
             SystemSet::on_update(GameState::StarMap).with_system(Self::vortex_event.system()),

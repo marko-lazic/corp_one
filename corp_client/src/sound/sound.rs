@@ -36,7 +36,7 @@ impl SoundPlugin {
         channels: Res<SoundChannels>,
         mut player_query: Query<&Player>,
     ) {
-        if let Ok(player) = player_query.single_mut() {
+        if let Ok(player) = player_query.get_single_mut() {
             if player.is_moving {
                 audio.resume_channel(&channels.walk);
             } else {
@@ -47,7 +47,7 @@ impl SoundPlugin {
 }
 
 impl Plugin for SoundPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(SoundChannels {
             music: AudioChannel::new("music".to_owned()),
             walk: AudioChannel::new("walk".to_owned()),

@@ -28,7 +28,7 @@ pub struct Game {
 }
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(create_window_descriptor())
         .add_plugins(DefaultPlugins)

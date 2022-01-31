@@ -5,18 +5,15 @@ use crate::constants::state::GameState;
 
 pub struct StarMapPlugin;
 
+#[derive(Component)]
 struct StarmapBackground;
 
 impl StarMapPlugin {
-    fn setup_starmap(
-        mut commands: Commands,
-        texture_assets: Res<TextureAssets>,
-        mut materials: ResMut<Assets<ColorMaterial>>,
-    ) {
+    fn setup_starmap(mut commands: Commands, texture_assets: Res<TextureAssets>) {
         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
         commands
             .spawn_bundle(SpriteBundle {
-                material: materials.add(texture_assets.nebula.clone().into()),
+                texture: texture_assets.nebula.clone().into(),
                 ..Default::default()
             })
             .insert(StarmapBackground);
@@ -30,7 +27,7 @@ impl StarMapPlugin {
 }
 
 impl Plugin for StarMapPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_enter(GameState::StarMap).with_system(Self::setup_starmap.system()),
         );
