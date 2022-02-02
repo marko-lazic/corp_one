@@ -7,6 +7,9 @@ use crate::constants::state::GameState;
 use crate::world::colony::Colony;
 use crate::Game;
 
+#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
+pub struct VortexSystemLabel;
+
 pub struct VortexPlugin;
 
 pub struct VortexEvent {
@@ -73,7 +76,7 @@ impl Plugin for VortexPlugin {
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(Self::vortex_event.system())
+                .with_system(Self::vortex_event.system().label(VortexSystemLabel))
                 .with_system(Self::animate_nodes.system()),
         );
     }

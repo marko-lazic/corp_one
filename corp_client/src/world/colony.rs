@@ -30,6 +30,7 @@ pub enum Layer {
     Player,
 }
 
+#[derive(Debug)]
 pub enum Colony {
     StarMap,
     Cloning,

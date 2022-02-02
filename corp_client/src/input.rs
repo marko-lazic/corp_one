@@ -11,7 +11,7 @@ use input_command::PlayerAction;
 use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::input::double_tap::DoubleTap;
-use crate::world::colony::vortex::VortexEvent;
+use crate::world::colony::vortex::{VortexEvent, VortexSystemLabel};
 use crate::world::colony::Colony;
 use crate::Game;
 
@@ -154,7 +154,7 @@ impl Plugin for InputControlPlugin {
             SystemSet::on_update(GameState::StarMap)
                 .label(InputSystem::Starmap)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::starmap_keyboard.system()),
+                .with_system(Self::starmap_keyboard.system().before(VortexSystemLabel)),
         );
 
         app.add_system_set(

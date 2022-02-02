@@ -5,7 +5,7 @@ use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::world::colony::vortex::VortexEvent;
+use crate::world::colony::vortex::{VortexEvent, VortexSystemLabel};
 use crate::world::colony::Colony;
 use crate::Game;
 
@@ -58,7 +58,11 @@ impl Plugin for CloningPlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::vort_out_dead_player_to_starmap.system())
+                .with_system(
+                    Self::vort_out_dead_player_to_starmap
+                        .system()
+                        .before(VortexSystemLabel),
+                )
                 .label(CloningSystem::VortOut),
         );
     }
@@ -66,7 +70,6 @@ impl Plugin for CloningPlugin {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
 
     fn kill_player(mut healths: Query<&mut Health, With<Player>>) {

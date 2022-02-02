@@ -9,7 +9,7 @@ use corp_shared::prelude::*;
 use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::world::colony::colony_assets::ZoneAsset;
-use crate::world::colony::vortex::VortexEvent;
+use crate::world::colony::vortex::{VortexEvent, VortexSystemLabel};
 use crate::world::colony::{Colony, Layer};
 
 #[derive(Copy, Clone, Debug, Deserialize)]
@@ -140,7 +140,7 @@ impl Plugin for ZonePlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::collision_events.system())
+                .with_system(Self::collision_events.system().before(VortexSystemLabel))
                 .with_system(Self::handle_health_in_zones.system()),
         );
     }
