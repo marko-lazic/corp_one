@@ -1,4 +1,5 @@
 use bevy::core::FixedTimestep;
+use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 
 use corp_shared::prelude::*;
@@ -12,23 +13,18 @@ use crate::Game;
 pub struct CloningPlugin;
 
 impl CloningPlugin {
-    fn vort_out_dead_player_to_starmap(
-        mut game: ResMut<Game>,
-        mut vort_out_timer: Local<f32>,
-        time: Res<Time>,
-        healths: Query<&Health, With<Player>>,
-        mut vort_out_events: EventWriter<VortOutEvent>,
-    ) {
-        if let Some(health) = healths.iter().next() {
+    fn run_if_dead(query: Query<&Health, (With<Player>, Changed<Health>)>) -> ShouldRun {
+        if let Some(health) = query.iter().next() {
             if health.is_dead() {
-                *vort_out_timer += time.delta_seconds();
-                if *vort_out_timer > 1.0 {
-                    game.health = health.clone();
-                    vort_out_events.send(VortOutEvent);
-                    *vort_out_timer = 0.0;
-                }
+                return ShouldRun::Yes;
             }
         }
+        ShouldRun::No
+    }
+
+    fn vort_out_dead_player_to_starmap(mut vort_out_events: EventWriter<VortOutEvent>) {
+        info!("Vorting out dead player to starmap!");
+        vort_out_events.send(VortOutEvent);
     }
 
     fn vort_in_dead_player_to_cloning(
@@ -57,9 +53,8 @@ impl Plugin for CloningPlugin {
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::vort_out_dead_player_to_starmap.system())
-                .label(CloningSystem::VortOut),
+                .with_run_criteria(Self::run_if_dead)
+                .with_system(Self::vort_out_dead_player_to_starmap),
         );
     }
 }
