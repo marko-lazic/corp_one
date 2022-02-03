@@ -9,8 +9,8 @@ use corp_shared::prelude::*;
 use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::world::colony::colony_assets::ZoneAsset;
-use crate::world::colony::vortex::{VortexEvent, VortexSystemLabel};
-use crate::world::colony::{Colony, Layer};
+use crate::world::colony::vortex::VortOutEvent;
+use crate::world::colony::Layer;
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 pub enum ZoneType {
@@ -64,23 +64,23 @@ pub struct ZonePlugin;
 impl ZonePlugin {
     fn collision_events(
         mut collision_events: EventReader<CollisionEvent>,
-        mut vortex_events: EventWriter<VortexEvent>,
+        mut vort_out_events: EventWriter<VortOutEvent>,
         mut zone_entities: Query<&mut ZoneEntities>,
     ) {
         for event in collision_events.iter() {
             match event {
                 CollisionEvent::Started(d1, d2) => {
-                    if Self::player_in_vortex_gate(d1, d2) {
-                        vortex_events.send(VortexEvent::vort(Colony::StarMap));
-                    } else if let Some((player, zone)) = Self::player_in_zone(d1, d2) {
+                    if Self::player_in_vortex_gate(&d1, &d2) {
+                        vort_out_events.send(VortOutEvent);
+                    } else if let Some((player, zone)) = Self::player_in_zone(&d1, &d2) {
                         let mut zone_entities = zone_entities.get_mut(zone).unwrap();
                         zone_entities.add(player)
                     }
                 }
                 CollisionEvent::Stopped(d1, d2) => {
-                    if let Some((player, zone)) = Self::player_in_zone(d1, d2) {
+                    if let Some((player, zone)) = Self::player_in_zone(&d1, &d2) {
                         let mut zone_entities = zone_entities.get_mut(zone).unwrap();
-                        zone_entities.remove(player)
+                        zone_entities.remove(player);
                     }
                 }
             }
@@ -140,7 +140,7 @@ impl Plugin for ZonePlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::collision_events.system().before(VortexSystemLabel))
+                .with_system(Self::collision_events.system())
                 .with_system(Self::handle_health_in_zones.system()),
         );
     }

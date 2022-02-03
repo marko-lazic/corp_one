@@ -11,7 +11,7 @@ use input_command::PlayerAction;
 use crate::constants::state::GameState;
 use crate::constants::tick;
 use crate::input::double_tap::DoubleTap;
-use crate::world::colony::vortex::{VortexEvent, VortexSystemLabel};
+use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
 use crate::Game;
 
@@ -102,11 +102,11 @@ impl InputControlPlugin {
             .bind(Action::ColonyLiberte, KeyCode::L);
     }
 
-    fn starmap_keyboard(input: Res<InputMap<Action>>, mut vortex_events: EventWriter<VortexEvent>) {
+    fn starmap_keyboard(input: Res<InputMap<Action>>, mut vortex_events: EventWriter<VortInEvent>) {
         if input.just_active(Action::ColonyIris) {
-            vortex_events.send(VortexEvent::vort(Colony::Iris));
+            vortex_events.send(VortInEvent::vort(Colony::Iris));
         } else if input.just_active(Action::ColonyLiberte) {
-            vortex_events.send(VortexEvent::vort(Colony::Liberte));
+            vortex_events.send(VortInEvent::vort(Colony::Liberte));
         }
     }
 
@@ -154,7 +154,7 @@ impl Plugin for InputControlPlugin {
             SystemSet::on_update(GameState::StarMap)
                 .label(InputSystem::Starmap)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::starmap_keyboard.system().before(VortexSystemLabel)),
+                .with_system(Self::starmap_keyboard.system()),
         );
 
         app.add_system_set(

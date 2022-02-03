@@ -32,7 +32,6 @@ pub enum Layer {
 
 #[derive(Debug)]
 pub enum Colony {
-    StarMap,
     Cloning,
     Iris,
     Liberte,
@@ -40,7 +39,7 @@ pub enum Colony {
 
 impl Default for Colony {
     fn default() -> Self {
-        Self::StarMap
+        Self::Cloning
     }
 }
 

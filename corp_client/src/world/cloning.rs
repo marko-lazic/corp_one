@@ -5,7 +5,7 @@ use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
 use crate::constants::tick;
-use crate::world::colony::vortex::{VortexEvent, VortexSystemLabel};
+use crate::world::colony::vortex::{VortInEvent, VortOutEvent};
 use crate::world::colony::Colony;
 use crate::Game;
 
@@ -17,14 +17,14 @@ impl CloningPlugin {
         mut vort_out_timer: Local<f32>,
         time: Res<Time>,
         healths: Query<&Health, With<Player>>,
-        mut vortex_events: EventWriter<VortexEvent>,
+        mut vort_out_events: EventWriter<VortOutEvent>,
     ) {
         if let Some(health) = healths.iter().next() {
             if health.is_dead() {
                 *vort_out_timer += time.delta_seconds();
                 if *vort_out_timer > 1.0 {
                     game.health = health.clone();
-                    vortex_events.send(VortexEvent::vort(Colony::StarMap));
+                    vort_out_events.send(VortOutEvent);
                     *vort_out_timer = 0.0;
                 }
             }
@@ -33,11 +33,11 @@ impl CloningPlugin {
 
     fn vort_in_dead_player_to_cloning(
         mut game: ResMut<Game>,
-        mut vortex_events: EventWriter<VortexEvent>,
+        mut vortex_events: EventWriter<VortInEvent>,
     ) {
         if game.health.is_dead() {
             game.health.set_hit_points(CLONE_HEALTH_80);
-            vortex_events.send(VortexEvent::vort(Colony::Cloning));
+            vortex_events.send(VortInEvent::vort(Colony::Cloning));
         }
     }
 }
@@ -58,11 +58,7 @@ impl Plugin for CloningPlugin {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(
-                    Self::vort_out_dead_player_to_starmap
-                        .system()
-                        .before(VortexSystemLabel),
-                )
+                .with_system(Self::vort_out_dead_player_to_starmap.system())
                 .label(CloningSystem::VortOut),
         );
     }

@@ -7,18 +7,17 @@ use crate::constants::state::GameState;
 use crate::world::colony::Colony;
 use crate::Game;
 
-#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
-pub struct VortexSystemLabel;
-
 pub struct VortexPlugin;
 
-pub struct VortexEvent {
+pub struct VortOutEvent;
+
+pub struct VortInEvent {
     colony: Colony,
 }
 
-impl VortexEvent {
+impl VortInEvent {
     pub fn vort(colony: Colony) -> Self {
-        VortexEvent { colony }
+        VortInEvent { colony }
     }
 }
 
@@ -26,36 +25,41 @@ impl VortexEvent {
 pub struct VortexNode;
 
 impl VortexPlugin {
-    fn vortex_event(
+    fn vort_out_event_reader(
+        healths: Query<&Health, With<Player>>,
         mut game: ResMut<Game>,
         mut game_state: ResMut<State<GameState>>,
-        colony_assets: Res<ColonyAssets>,
-        mut vortex_events: EventReader<VortexEvent>,
-        healths: Query<&Health, With<Player>>,
+        mut vort_out_events: EventReader<VortOutEvent>,
     ) {
-        for event in vortex_events.iter() {
-            match event.colony {
-                Colony::StarMap => {
-                    if game_state.current() != &GameState::StarMap {
-                        let health = healths.get(game.player_entity.unwrap()).unwrap();
-                        game.health = health.clone();
-                        let _result = game_state.set(GameState::StarMap);
-                    }
-                }
+        if let Some(_) = vort_out_events.iter().last() {
+            let health = healths.get(game.player_entity.unwrap()).unwrap();
+            game.health = health.clone();
+            let _ = game_state.set(GameState::StarMap);
+        }
+    }
+
+    fn vort_in_event_reader(
+        colony_assets: Res<ColonyAssets>,
+        mut vort_in_events: EventReader<VortInEvent>,
+        mut game: ResMut<Game>,
+        mut game_state: ResMut<State<GameState>>,
+    ) {
+        for vort_in in vort_in_events.iter() {
+            match vort_in.colony {
                 Colony::Cloning => {
                     info!("Cloning Facility");
                     game.current_colony_asset = colony_assets.cloning.clone();
-                    let _result = game_state.set(GameState::Playing);
+                    let _ = game_state.set(GameState::Playing);
                 }
                 Colony::Iris => {
                     info!("Moonbase: Station Iris");
                     game.current_colony_asset = colony_assets.iris.clone();
-                    let _result = game_state.set(GameState::Playing);
+                    let _ = game_state.set(GameState::Playing);
                 }
                 Colony::Liberte => {
                     info!("Mars: Colony Liberte");
                     game.current_colony_asset = colony_assets.liberte.clone();
-                    let _result = game_state.set(GameState::Playing);
+                    let _ = game_state.set(GameState::Playing);
                 }
             }
         }
@@ -70,13 +74,15 @@ impl VortexPlugin {
 
 impl Plugin for VortexPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<VortexEvent>();
+        app.add_event::<VortInEvent>();
+        app.add_event::<VortOutEvent>();
         app.add_system_set(
-            SystemSet::on_update(GameState::StarMap).with_system(Self::vortex_event.system()),
+            SystemSet::on_update(GameState::StarMap)
+                .with_system(Self::vort_in_event_reader.system()),
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(Self::vortex_event.system().label(VortexSystemLabel))
+                .with_system(Self::vort_out_event_reader.system())
                 .with_system(Self::animate_nodes.system()),
         );
     }
