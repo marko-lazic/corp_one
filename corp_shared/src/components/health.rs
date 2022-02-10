@@ -1,3 +1,7 @@
+use std::time::Duration;
+
+use bevy::core::Timer;
+
 pub const MAX_HEALTH: f32 = 100.0;
 pub const CLONE_HEALTH_80: f32 = 80.0;
 pub const MIN_HEALTH: f32 = 0.0;
@@ -5,6 +9,16 @@ pub const MIN_HEALTH: f32 = 0.0;
 #[derive(Clone, Debug, bevy::ecs::component::Component)]
 pub struct Health {
     hit_points: f32,
+    pub cloning_cooldown: Timer,
+}
+
+impl Default for Health {
+    fn default() -> Self {
+        Health {
+            cloning_cooldown: Timer::new(Duration::from_secs(3), false),
+            hit_points: MAX_HEALTH,
+        }
+    }
 }
 
 impl Health {
@@ -30,14 +44,6 @@ impl Health {
 
     pub fn kill_mut(&mut self) {
         self.hit_points = MIN_HEALTH;
-    }
-}
-
-impl Default for Health {
-    fn default() -> Self {
-        Health {
-            hit_points: MAX_HEALTH,
-        }
     }
 }
 

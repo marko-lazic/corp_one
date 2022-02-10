@@ -13,18 +13,19 @@ use crate::Game;
 pub struct CloningPlugin;
 
 impl CloningPlugin {
-    fn run_if_dead(query: Query<&Health, (With<Player>, Changed<Health>)>) -> ShouldRun {
-        if let Some(health) = query.iter().next() {
+    fn run_if_dead(
+        time: Res<Time>,
+        mut query: Query<&mut Health, With<Player>>,
+        mut vort_out_events: EventWriter<VortOutEvent>,
+    ) {
+        if let Some(mut health) = query.iter_mut().next() {
             if health.is_dead() {
-                return ShouldRun::Yes;
+                health.cloning_cooldown.tick(time.delta());
+                if health.cloning_cooldown.finished() {
+                    vort_out_events.send(VortOutEvent);
+                }
             }
         }
-        ShouldRun::No
-    }
-
-    fn vort_out_dead_player_to_starmap(mut vort_out_events: EventWriter<VortOutEvent>) {
-        info!("Vorting out dead player to starmap!");
-        vort_out_events.send(VortOutEvent);
     }
 
     fn vort_in_dead_player_to_cloning(
@@ -33,29 +34,18 @@ impl CloningPlugin {
     ) {
         if game.health.is_dead() {
             game.health.set_hit_points(CLONE_HEALTH_80);
+            game.health.cloning_cooldown.reset();
             vortex_events.send(VortInEvent::vort(Colony::Cloning));
         }
     }
 }
-
-#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
-enum CloningSystem {
-    VortOut,
-}
-
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_enter(GameState::StarMap)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::vort_in_dead_player_to_cloning.system())
-                .after(CloningSystem::VortOut),
+                .with_system(Self::vort_in_dead_player_to_cloning.system()),
         );
-        app.add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(Self::run_if_dead)
-                .with_system(Self::vort_out_dead_player_to_starmap),
-        );
+        app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(Self::run_if_dead));
     }
 }
 
