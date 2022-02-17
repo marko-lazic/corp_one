@@ -13,6 +13,7 @@ default = [
 corp_shared = { path = "../corp_shared" }
 rand = "0.8.4"
 bevy = { version = "0.6.0", features = ["wav"] }
+bevy_framepace = "0.2.0"
 bevy_mod_raycast = "0.3.9"
 bevy_mod_picking = "0.5.4"
 #bevy_prototype_debug_lines = "0.3.4"

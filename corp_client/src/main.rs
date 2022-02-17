@@ -29,15 +29,20 @@ pub struct Game {
 
 fn main() {
     App::new()
+        .init_resource::<Game>()
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(create_window_descriptor())
         .add_plugins(DefaultPlugins)
-        .init_resource::<Game>()
         .add_plugin(AssetLoadingPlugin)
         .add_state(GameState::AssetLoading)
         .add_plugin(MetricsPlugin)
         .add_plugin(WorldPlugin)
-        // .add_plugin(ConnectionPlugin)
+        .add_plugin(bevy_framepace::FramepacePlugin {
+            enabled: true,
+            framerate_limit: bevy_framepace::FramerateLimit::Auto,
+            warn_on_frame_drop: true,
+            safety_margin: std::time::Duration::from_millis(2),
+        })
         .run();
 }
 
