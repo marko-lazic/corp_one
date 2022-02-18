@@ -14,6 +14,7 @@ pub mod state {
     #[derive(Debug, Hash, PartialEq, Eq, Clone)]
     pub enum GameState {
         AssetLoading,
+        ColonyLoading,
         StarMap,
         Playing,
     }

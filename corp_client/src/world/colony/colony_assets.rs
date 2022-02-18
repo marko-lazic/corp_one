@@ -7,29 +7,14 @@ use serde::Deserialize;
 use crate::asset::asset_loading::MaterialAsset;
 use crate::world::colony::asset::color::ColorAsset;
 use crate::world::colony::zone::ZoneType;
+use crate::world::colony::Colony;
 
 #[derive(Default, Deserialize, Debug, TypeUuid)]
 #[uuid = "962DF4C2-C221-4364-A9F7-B7340FB60437"]
 pub struct ColonyAsset {
-    pub name: String,
-    pub energy_nodes: Vec<EnergyNodeAsset>,
-    pub vortex_gates: Vec<VortexGateAsset>,
-    pub vortex_nodes: Vec<VortexNodeAsset>,
+    pub name: Colony,
+    pub description: String,
     pub zones: Vec<ZoneAsset>,
-    pub lights: Vec<LightAsset>,
-}
-
-impl ColonyAsset {
-    pub fn random_vortex_node_position(&self) -> Option<Vec3> {
-        let vortex_node_positions = self
-            .vortex_nodes
-            .iter()
-            .map(|n| n.position)
-            .collect::<Vec<Vec3>>();
-        vortex_node_positions
-            .choose(&mut rand::thread_rng())
-            .map(|p| p.to_owned())
-    }
 }
 
 #[derive(Default, Debug, Deserialize, Clone)]

@@ -1,5 +1,3 @@
-use bevy::core::FixedTimestep;
-use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 
 use corp_shared::prelude::*;
@@ -67,11 +65,7 @@ mod tests {
         let mut stage = SystemStage::parallel()
             .with_system_set(State::<GameState>::get_driver())
             .with_system(kill_player.system().label(KILLING_LABEL))
-            .with_system(
-                CloningPlugin::vort_out_dead_player_to_starmap
-                    .system()
-                    .after(KILLING_LABEL),
-            );
+            .with_system(CloningPlugin::run_if_dead.after(KILLING_LABEL));
 
         // Setup world
         let mut world = World::default();

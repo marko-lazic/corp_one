@@ -91,6 +91,8 @@ fn rotate_spheres(time: Res<Time>, mut spheres: Query<&mut Transform, With<Spher
     }
 }
 
+#[derive(Component)]
 struct CubeRotator;
 
+#[derive(Component)]
 struct SphereRotator;

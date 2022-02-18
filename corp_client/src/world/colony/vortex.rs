@@ -21,8 +21,13 @@ impl VortInEvent {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct VortexNode;
+
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
+pub struct VortexGate;
 
 impl VortexPlugin {
     fn vort_out_event_reader(
@@ -49,17 +54,22 @@ impl VortexPlugin {
                 Colony::Cloning => {
                     info!("Cloning Facility");
                     game.current_colony_asset = colony_assets.cloning.clone();
-                    let _ = game_state.set(GameState::Playing);
+                    let _ = game_state.set(GameState::ColonyLoading);
                 }
                 Colony::Iris => {
                     info!("Moonbase: Station Iris");
                     game.current_colony_asset = colony_assets.iris.clone();
-                    let _ = game_state.set(GameState::Playing);
+                    let _ = game_state.set(GameState::ColonyLoading);
                 }
                 Colony::Liberte => {
                     info!("Mars: Colony Liberte");
                     game.current_colony_asset = colony_assets.liberte.clone();
-                    let _ = game_state.set(GameState::Playing);
+                    let _ = game_state.set(GameState::ColonyLoading);
+                }
+                Colony::Playground => {
+                    info!("Alien Planet");
+                    game.current_colony_asset = Handle::default();
+                    let _ = game_state.set(GameState::ColonyLoading);
                 }
             }
         }

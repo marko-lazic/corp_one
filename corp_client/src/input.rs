@@ -40,6 +40,7 @@ pub enum Action {
     Escape,
     Kill,
     ColonyIris,
+    ColonyPlayground,
     ColonyLiberte,
 }
 
@@ -99,6 +100,7 @@ impl InputControlPlugin {
             .bind(Action::Escape, KeyCode::Escape)
             .bind(Action::Kill, KeyCode::K)
             .bind(Action::ColonyIris, KeyCode::I)
+            .bind(Action::ColonyPlayground, KeyCode::P)
             .bind(Action::ColonyLiberte, KeyCode::L);
     }
 
@@ -107,6 +109,8 @@ impl InputControlPlugin {
             vortex_events.send(VortInEvent::vort(Colony::Iris));
         } else if input.just_active(Action::ColonyLiberte) {
             vortex_events.send(VortInEvent::vort(Colony::Liberte));
+        } else if input.just_active(Action::ColonyPlayground) {
+            vortex_events.send(VortInEvent::vort(Colony::Playground));
         }
     }
 

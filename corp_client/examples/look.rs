@@ -11,7 +11,7 @@ fn main() {
         .init_resource::<Game>()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
-        .add_plugin(DebugLinesPlugin)
+        .add_plugin(DebugLinesPlugin::default())
         .add_plugin(PickingPlugin)
         .add_startup_system(setup.system())
         .add_system_set(
@@ -132,6 +132,7 @@ struct Player {
     transform: Transform,
 }
 
+#[derive(Component)]
 struct PlayerSpeed {
     speed: f32,
 }

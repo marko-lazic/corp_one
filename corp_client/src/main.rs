@@ -1,13 +1,14 @@
 use bevy::prelude::*;
+use blender_bevy_toolkit::BlendLoadPlugin;
 
 use constants::state::GameState;
 use constants::window;
+use corp_shared::prelude::Health;
 use gui::metrics::MetricsPlugin;
 
 use crate::asset::asset_loading::AssetLoadingPlugin;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::WorldPlugin;
-use corp_shared::prelude::Health;
 
 mod asset;
 mod connection;
@@ -37,10 +38,11 @@ fn main() {
         .add_state(GameState::AssetLoading)
         .add_plugin(MetricsPlugin)
         .add_plugin(WorldPlugin)
+        .add_plugin(BlendLoadPlugin::default())
         .add_plugin(bevy_framepace::FramepacePlugin {
             enabled: true,
             framerate_limit: bevy_framepace::FramerateLimit::Auto,
-            warn_on_frame_drop: true,
+            warn_on_frame_drop: false,
             safety_margin: std::time::Duration::from_millis(2),
         })
         .run();

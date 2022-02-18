@@ -1,19 +1,26 @@
-use bevy::prelude::*;
-use heron::prelude::*;
+use std::fs::File;
+use std::thread::spawn;
 
+use bevy::asset::AssetPath;
+use bevy::prelude::*;
+use bevy::reflect::{TypeRegistry, TypeRegistryArc};
 use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMesh;
+use heron::prelude::*;
+use rand::random;
+use rand::seq::SliceRandom;
+use serde::Deserialize;
 
 use corp_shared::prelude::Player;
 
-use crate::asset::asset_loading::{MaterialAsset, MaterialAssets, MeshAssets};
+use crate::asset::asset_loading::{MaterialAsset, MaterialAssets, MeshAssets, SceneAssets};
 use crate::constants::state::GameState;
 use crate::input::MyRayCastSet;
 use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
 use crate::world::colony::colony_assets::ColonyAsset;
-use crate::world::colony::vortex::{VortexNode, VortexPlugin};
+use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneEntities};
 use crate::world::player::PlayerBundle;
 use crate::Game;
@@ -30,11 +37,12 @@ pub enum Layer {
     Player,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Clone)]
 pub enum Colony {
     Cloning,
     Iris,
     Liberte,
+    Playground,
 }
 
 impl Default for Colony {
@@ -47,11 +55,13 @@ pub struct ColonyPlugin;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 enum ColonySystem {
-    Environment,
+    Scenery,
+    Enrichment,
+    Player,
 }
 
 impl ColonyPlugin {
-    fn setup_plane(
+    fn setup_debug_plane(
         mut commands: Commands,
         mut meshes: ResMut<Assets<Mesh>>,
         mut materials: ResMut<Assets<StandardMaterial>>,
@@ -59,7 +69,7 @@ impl ColonyPlugin {
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-                transform: Transform::from_translation(Vec3::new(4., 0., 4.)),
+                transform: Transform::from_translation(Vec3::new(4., -0.2, 4.)),
                 material: materials.add(StandardMaterial {
                     base_color: Color::WHITE,
                     perceptual_roughness: 0.0,
@@ -70,42 +80,6 @@ impl ColonyPlugin {
                 ..Default::default()
             })
             .insert(RayCastMesh::<MyRayCastSet>::default());
-    }
-
-    fn setup_light(mut commands: Commands, game: Res<Game>, assets: Res<Assets<ColonyAsset>>) {
-        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
-            for light in &colony_asset.lights {
-                commands.spawn_bundle(PointLightBundle {
-                    point_light: PointLight {
-                        color: light.color.get_color().clone(),
-                        ..Default::default()
-                    },
-                    transform: Transform::from_translation(light.position),
-                    ..Default::default()
-                });
-            }
-        }
-    }
-
-    fn setup_energy_nodes(
-        mut commands: Commands,
-        game: Res<Game>,
-        assets: Res<Assets<ColonyAsset>>,
-        material_assets: Res<MaterialAssets>,
-        mesh_assets: Res<MeshAssets>,
-    ) {
-        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
-            for energy_node in &colony_asset.energy_nodes {
-                commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: mesh_assets.energy_node.clone(),
-                        material: material_assets.get_material(&energy_node.material),
-                        transform: Transform::from_translation(energy_node.position),
-                        ..Default::default()
-                    })
-                    .insert(RayCastMesh::<MyRayCastSet>::default());
-            }
-        }
     }
 
     fn setup_zones(
@@ -142,66 +116,20 @@ impl ColonyPlugin {
         }
     }
 
-    fn setup_vortex_gates(
-        mut commands: Commands,
-        game: Res<Game>,
-        assets: Res<Assets<ColonyAsset>>,
-        material_assets: Res<MaterialAssets>,
-        mut meshes: ResMut<Assets<Mesh>>,
-    ) {
-        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
-            for vortex_gate in &colony_asset.vortex_gates {
-                commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Plane { size: 1.0 })),
-                        transform: Transform::from_translation(vortex_gate.position),
-                        material: material_assets.get_material(&MaterialAsset::SkyBlue),
-                        ..Default::default()
-                    })
-                    .insert(RigidBody::Sensor)
-                    .insert(CollisionShape::Cuboid {
-                        half_extends: Vec3::new(0.5, 1.0, 0.5),
-                        border_radius: None,
-                    })
-                    .insert(
-                        CollisionLayers::none()
-                            .with_group(Layer::VortexGate)
-                            .with_mask(Layer::Player),
-                    );
-            }
-        }
-    }
-
-    fn setup_vortex_nodes(
-        mut commands: Commands,
-        game: Res<Game>,
-        assets: Res<Assets<ColonyAsset>>,
-        mesh_assets: Res<MeshAssets>,
-        mut materials: ResMut<Assets<StandardMaterial>>,
-    ) {
-        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
-            for vortex_node in &colony_asset.vortex_nodes {
-                commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: mesh_assets.vortex_node.clone(),
-                        transform: Transform {
-                            scale: Vec3::new(0.3, 0.3, 0.3),
-                            translation: Vec3::new(
-                                vortex_node.position.x.clone(),
-                                3.0,
-                                vortex_node.position.z.clone(),
-                            ),
-                            ..Default::default()
-                        },
-                        material: {
-                            let material = materials.add(Color::rgba(1.0, 0.9, 0.9, 0.4).into());
-                            material
-                        },
-                        visibility: Visibility { is_visible: true },
-                        ..Default::default()
-                    })
-                    .insert(VortexNode);
-            }
+    fn vortex_gate_insert(mut commands: Commands, query: Query<Entity, With<VortexGate>>) {
+        for gate in query.iter() {
+            commands
+                .entity(gate)
+                .insert(RigidBody::Sensor)
+                .insert(CollisionShape::Cuboid {
+                    half_extends: Vec3::new(0.5, 1.0, 0.5),
+                    border_radius: None,
+                })
+                .insert(
+                    CollisionLayers::none()
+                        .with_group(Layer::VortexGate)
+                        .with_mask(Layer::Player),
+                );
         }
     }
 
@@ -210,33 +138,36 @@ impl ColonyPlugin {
         mesh_assets: Res<MeshAssets>,
         materials: ResMut<Assets<StandardMaterial>>,
         mut game: ResMut<Game>,
-        assets: Res<Assets<ColonyAsset>>,
+        mut vortex_nodes: Query<&mut Transform, With<VortexNode>>,
     ) {
-        if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
-            let position = colony_asset
-                .random_vortex_node_position()
-                .unwrap_or_default();
+        let random_position = vortex_nodes
+            .iter_mut()
+            .map(|t| t.translation)
+            .collect::<Vec<Vec3>>()
+            .choose(&mut rand::thread_rng())
+            .map(|p| p.to_owned());
 
-            let player = commands
-                .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
-                .insert(Player::default())
-                .insert(Movement::default())
-                .insert(game.health.clone())
-                .insert(CameraCenter)
-                .insert(RigidBody::Dynamic)
-                .insert(CollisionShape::Cuboid {
-                    half_extends: Vec3::new(0.5, 1.0, 0.5),
-                    border_radius: None,
-                })
-                .insert(
-                    CollisionLayers::none()
-                        .with_group(Layer::Player)
-                        .with_masks(vec![Layer::Zone, Layer::VortexGate]),
-                )
-                .id();
+        let position = random_position.unwrap_or_else(|| Vec3::new(1.0, 1.0, 1.0));
 
-            game.player_entity = Some(player);
-        }
+        let player = commands
+            .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
+            .insert(Player::default())
+            .insert(Movement::default())
+            .insert(game.health.clone())
+            .insert(CameraCenter)
+            .insert(RigidBody::Dynamic)
+            .insert(CollisionShape::Cuboid {
+                half_extends: Vec3::new(0.5, 1.0, 0.5),
+                border_radius: None,
+            })
+            .insert(
+                CollisionLayers::none()
+                    .with_group(Layer::Player)
+                    .with_masks(vec![Layer::Zone, Layer::VortexGate]),
+            )
+            .id();
+
+        game.player_entity = Some(player);
     }
 
     fn setup_camera(mut commands: Commands) {
@@ -250,36 +181,67 @@ impl ColonyPlugin {
             .insert(RayCastSource::<MyRayCastSet>::new());
     }
 
-    fn teardown(mut commands: Commands, entities: Query<Entity>) {
+    fn start_playing_state(mut game_state: ResMut<State<GameState>>) {
+        info!("Start playing state");
+        let _ = game_state.set(GameState::Playing);
+    }
+
+    fn teardown_entities(mut commands: Commands, entities: Query<Entity>) {
+        info!("Teardown entities");
         for entity in entities.iter() {
             commands.entity(entity).despawn_recursive();
         }
+    }
+
+    fn setup_scene_sync(world: &mut World) {
+        info!("Setup environment");
+        let server = world.get_resource::<AssetServer>().unwrap();
+        let scene: Handle<DynamicScene> = server.load("scenes/iris.scn");
+        let mut spawner = SceneSpawner::from_world(world);
+        let _ = spawner.spawn_dynamic_sync(world, &scene);
+    }
+
+    fn setup_scene_dynamic(scene_assets: Res<SceneAssets>, mut spawner: ResMut<SceneSpawner>) {
+        info!("Setup environment");
+        spawner.spawn_dynamic(scene_assets.iris.clone());
     }
 }
 
 impl Plugin for ColonyPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<VortexNode>();
+        app.register_type::<VortexGate>();
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
         app.add_plugin(PhysicsPlugin::default());
         app.add_plugin(VortexPlugin);
         app.add_system_set(
-            SystemSet::on_enter(GameState::Playing)
-                .label(ColonySystem::Environment)
-                .with_system(Self::setup_plane.system())
-                .with_system(Self::setup_light.system())
-                .with_system(Self::setup_energy_nodes.system())
-                .with_system(Self::setup_zones.system())
-                .with_system(Self::setup_vortex_gates.system())
-                .with_system(Self::setup_vortex_nodes.system()),
+            SystemSet::on_enter(GameState::ColonyLoading)
+                .label(ColonySystem::Scenery)
+                .with_system(Self::setup_debug_plane.system())
+                .with_system(Self::setup_scene_sync.exclusive_system())
+                .with_system(Self::setup_zones.system()),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::Playing)
-                .after(ColonySystem::Environment)
+            SystemSet::on_enter(GameState::ColonyLoading)
+                .after(ColonySystem::Scenery)
+                .label(ColonySystem::Enrichment)
+                .with_system(Self::vortex_gate_insert.system()),
+        );
+        app.add_system_set(
+            SystemSet::on_enter(GameState::ColonyLoading)
+                .after(ColonySystem::Scenery)
+                .label(ColonySystem::Player)
                 .with_system(Self::setup_player.system())
                 .with_system(Self::setup_camera.system()),
         );
         app.add_system_set(
-            SystemSet::on_exit(GameState::Playing).with_system(Self::teardown.system()),
+            SystemSet::on_enter(GameState::ColonyLoading)
+                .after(ColonySystem::Player)
+                .with_system(Self::start_playing_state),
+        );
+
+        app.add_system_set(
+            SystemSet::on_exit(GameState::Playing).with_system(Self::teardown_entities.system()),
         );
     }
 }

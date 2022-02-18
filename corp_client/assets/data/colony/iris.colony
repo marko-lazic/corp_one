@@ -1,34 +1,6 @@
 (
-    name: "Iris",
-    energy_nodes: [
-        EnergyNodeAsset(
-            position: Vec3(-1.5, 1.0, 0.0),
-            material: Green
-        ),
-        EnergyNodeAsset(
-            position: Vec3(1.5, 1.0, 0.0),
-            material: Blue
-        ),
-    ],
-    vortex_nodes: [
-        VortexNodeAsset(
-            position: Vec3(7.0, 0.0, 3.0),
-        ),
-        VortexNodeAsset(
-            position: Vec3(-10.0, 0.0, 0.0),
-        ),
-        VortexNodeAsset(
-            position: Vec3(-8.0, 0.0, 6.0),
-        ),
-        VortexNodeAsset(
-            position: Vec3(9.0, 0.0, -3.0),
-        ),
-    ],
-    vortex_gates: [
-        VortexGateAsset(
-            position: Vec3(-5.0, 0.1, 0.0),
-        ),
-    ],
+    name: Iris,
+    description: "Iris Relaxed Alien Adventure",
     zones: [
         ZoneAsset(
             position: Vec3(-3.0, 0.1, -4.0),
@@ -45,16 +17,6 @@
             zone_type: Heal,
             size: 1.0,
             material: SeaGreen,
-        ),
-    ],
-    lights: [
-        LightAsset(
-            position: Vec3(4.0, 8.0, 4.0),
-            color: LimeGreen,
-        ),
-        LightAsset(
-            position: Vec3(-8.0, 8.0, -8.0),
-            color: Red,
         ),
     ],
 )

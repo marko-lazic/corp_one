@@ -1,3 +1,5 @@
+use std::borrow::{Borrow, BorrowMut};
+
 use bevy::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_kira_audio::AudioSource;
@@ -6,6 +8,12 @@ use serde::Deserialize;
 use crate::asset::paths::PATHS;
 use crate::constants::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
+
+#[derive(AssetCollection)]
+pub struct SceneAssets {
+    #[asset(path = "scenes/iris.scn")]
+    pub iris: Handle<DynamicScene>,
+}
 
 #[derive(AssetCollection)]
 pub struct ColonyAssets {
@@ -150,6 +158,7 @@ impl Plugin for AssetLoadingPlugin {
             .with_collection::<AudioAssets>()
             .with_collection::<FontAssets>()
             .with_collection::<ColonyAssets>()
+            .with_collection::<SceneAssets>()
             .build(&mut app);
 
         app.add_system_set(
