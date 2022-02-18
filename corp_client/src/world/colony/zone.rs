@@ -1,5 +1,3 @@
-use bevy::core::prelude::Timer;
-use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use heron::{CollisionData, CollisionEvent};
 use serde::Deserialize;
@@ -7,7 +5,6 @@ use serde::Deserialize;
 use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
-use crate::constants::tick;
 use crate::world::colony::colony_assets::ZoneAsset;
 use crate::world::colony::vortex::VortOutEvent;
 use crate::world::colony::Layer;
@@ -139,7 +136,6 @@ impl Plugin for ZonePlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::collision_events.system())
                 .with_system(Self::handle_health_in_zones.system()),
         );

@@ -1,11 +1,9 @@
-use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
 use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::MeshAssets;
 use crate::constants::state::GameState;
-use crate::constants::tick;
 use crate::input::input_command::PlayerAction;
 use crate::input::InputSystem;
 use crate::world::character::{CharacterBundle, CharacterName, Movement};
@@ -83,7 +81,6 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(CloningPlugin);
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::move_player.system().after(InputSystem::Playing))
                 .with_system(Self::handle_dead.system()),
         );

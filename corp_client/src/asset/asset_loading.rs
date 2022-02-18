@@ -1,5 +1,3 @@
-use std::borrow::{Borrow, BorrowMut};
-
 use bevy::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_kira_audio::AudioSource;
@@ -13,6 +11,10 @@ use crate::world::colony::colony_assets::ColonyAsset;
 pub struct SceneAssets {
     #[asset(path = "scenes/iris.scn")]
     pub iris: Handle<DynamicScene>,
+    #[asset(path = "scenes/cloning.scn")]
+    pub cloning: Handle<DynamicScene>,
+    #[asset(path = "scenes/liberte.scn")]
+    pub liberte: Handle<DynamicScene>,
 }
 
 #[derive(AssetCollection)]

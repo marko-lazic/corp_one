@@ -1,4 +1,3 @@
-use bevy::core::FixedTimestep;
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
@@ -6,7 +5,6 @@ use bevy::render::camera::Camera;
 use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
-use crate::constants::tick;
 use crate::input::Cursor;
 use crate::world::camera::TopDownCamera;
 use crate::Game;
@@ -139,7 +137,6 @@ impl Plugin for MetricsPlugin {
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::fps_update.system())
                 .with_system(Self::player_position_update.system())
                 .with_system(Self::mouse_screen_position_update.system())

@@ -1,20 +1,14 @@
-use std::fs::File;
-use std::thread::spawn;
-
-use bevy::asset::AssetPath;
 use bevy::prelude::*;
-use bevy::reflect::{TypeRegistry, TypeRegistryArc};
 use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMesh;
 use heron::prelude::*;
-use rand::random;
 use rand::seq::SliceRandom;
 use serde::Deserialize;
 
 use corp_shared::prelude::Player;
 
-use crate::asset::asset_loading::{MaterialAsset, MaterialAssets, MeshAssets, SceneAssets};
+use crate::asset::asset_loading::{MaterialAssets, MeshAssets, SceneAssets};
 use crate::constants::state::GameState;
 use crate::input::MyRayCastSet;
 use crate::world::camera::{CameraCenter, TopDownCamera};
@@ -55,8 +49,8 @@ pub struct ColonyPlugin;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 enum ColonySystem {
-    Scenery,
-    Enrichment,
+    Setup,
+    Enrich,
     Player,
 }
 
@@ -194,17 +188,25 @@ impl ColonyPlugin {
     }
 
     fn setup_scene_sync(world: &mut World) {
-        info!("Setup environment");
-        let server = world.get_resource::<AssetServer>().unwrap();
-        let scene: Handle<DynamicScene> = server.load("scenes/iris.scn");
+        info!("Setup scene");
+        let game = world.get_resource::<Game>().unwrap();
+        let colony_assets = world.get_resource::<Assets<ColonyAsset>>().unwrap();
+        let scene_assets = world.get_resource::<SceneAssets>().unwrap();
+        let current_colony = colony_assets.get(&game.current_colony_asset).unwrap();
+        let colony_scene = match current_colony.name {
+            Colony::Cloning => scene_assets.cloning.clone(),
+            Colony::Iris => scene_assets.iris.clone(),
+            Colony::Liberte => scene_assets.liberte.clone(),
+            _ => scene_assets.liberte.clone(),
+        };
         let mut spawner = SceneSpawner::from_world(world);
-        let _ = spawner.spawn_dynamic_sync(world, &scene);
+        let _ = spawner.spawn_dynamic_sync(world, &colony_scene);
     }
 
-    fn setup_scene_dynamic(scene_assets: Res<SceneAssets>, mut spawner: ResMut<SceneSpawner>) {
-        info!("Setup environment");
-        spawner.spawn_dynamic(scene_assets.iris.clone());
-    }
+    // fn setup_scene_dynamic(scene_assets: Res<SceneAssets>, mut spawner: ResMut<SceneSpawner>) {
+    //     info!("Setup environment");
+    //     spawner.spawn_dynamic(scene_assets.cloning.clone());
+    // }
 }
 
 impl Plugin for ColonyPlugin {
@@ -215,28 +217,29 @@ impl Plugin for ColonyPlugin {
         app.add_plugin(PhysicsPlugin::default());
         app.add_plugin(VortexPlugin);
         app.add_system_set(
-            SystemSet::on_enter(GameState::ColonyLoading)
-                .label(ColonySystem::Scenery)
-                .with_system(Self::setup_debug_plane.system())
+            SystemSet::on_enter(GameState::LoadColony)
+                .label(ColonySystem::Setup)
                 .with_system(Self::setup_scene_sync.exclusive_system())
+                .with_system(Self::setup_debug_plane.system())
                 .with_system(Self::setup_zones.system()),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::ColonyLoading)
-                .after(ColonySystem::Scenery)
-                .label(ColonySystem::Enrichment)
+            SystemSet::on_enter(GameState::LoadColony)
+                .after(ColonySystem::Setup)
+                .label(ColonySystem::Enrich)
                 .with_system(Self::vortex_gate_insert.system()),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::ColonyLoading)
-                .after(ColonySystem::Scenery)
+            SystemSet::on_enter(GameState::LoadColony)
+                .after(ColonySystem::Setup)
                 .label(ColonySystem::Player)
                 .with_system(Self::setup_player.system())
                 .with_system(Self::setup_camera.system()),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::ColonyLoading)
+            SystemSet::on_enter(GameState::LoadColony)
                 .after(ColonySystem::Player)
+                .after(ColonySystem::Enrich)
                 .with_system(Self::start_playing_state),
         );
 

@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
-use crate::constants::tick;
 use crate::world::colony::vortex::{VortInEvent, VortOutEvent};
 use crate::world::colony::Colony;
 use crate::Game;

@@ -11,8 +11,7 @@ impl CharacterName {
     }
 }
 
-#[derive(Debug)]
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub struct Movement {
     pub acceleration: f32,
     pub speed: f32,

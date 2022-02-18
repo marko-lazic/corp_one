@@ -1,9 +1,9 @@
+use std::io::ErrorKind;
 use std::{
     fs::{self, File},
     io::Error,
     path::Path,
 };
-use std::io::ErrorKind;
 
 const FAILED_TO_OPEN_NOFILE_TXT_MESSAGE: &str = "Failed to open nofile.txt";
 

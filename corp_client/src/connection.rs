@@ -1,13 +1,11 @@
 use std::net::SocketAddr;
 
-use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_networking_turbulence::{NetworkEvent, NetworkResource, NetworkingPlugin, Packet};
 
 use corp_shared::{SERVER_HOST, SERVER_PORT};
 
 use crate::constants::state::GameState;
-use crate::constants::tick;
 
 pub struct ConnectionPlugin;
 
@@ -43,7 +41,6 @@ impl Plugin for ConnectionPlugin {
         app.add_startup_system(Self::startup.system());
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::send_pings.system())
                 .with_system(Self::handle_packets.system()),
         );

@@ -1,11 +1,9 @@
-use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 
 use corp_shared::prelude::Player;
 
 use crate::constants::state::GameState;
-use crate::constants::tick;
 use crate::input::Cursor;
 use crate::Game;
 use std::ops::Neg;
@@ -92,7 +90,6 @@ impl Plugin for TopDownCameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::target_motion.system().label(CameraMotion))
                 .with_system(Self::input_camera_center.system().before(CameraMotion)),
         );

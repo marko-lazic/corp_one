@@ -1,4 +1,3 @@
-use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
 
@@ -6,7 +5,6 @@ use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::AudioAssets;
 use crate::constants::state::GameState;
-use crate::constants::tick;
 
 pub struct SoundPlugin;
 
@@ -59,9 +57,7 @@ impl Plugin for SoundPlugin {
                 .with_system(Self::play_music.system()),
         );
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
-                .with_system(Self::walk_sound.system()),
+            SystemSet::on_update(GameState::Playing).with_system(Self::walk_sound.system()),
         );
         app.add_system_set(
             SystemSet::on_exit(GameState::Playing).with_system(Self::stop_audio.system()),

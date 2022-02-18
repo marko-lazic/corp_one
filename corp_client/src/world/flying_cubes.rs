@@ -1,11 +1,9 @@
-use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use bevy_mod_raycast::RayCastMesh;
 use rand::Rng;
 
 use crate::asset::asset_loading::{MaterialAssets, MeshAssets};
 use crate::constants::state::GameState;
-use crate::constants::tick;
 use crate::input::MyRayCastSet;
 
 pub struct FlyingCubesPlugin;
@@ -52,7 +50,6 @@ impl Plugin for FlyingCubesPlugin {
         app.insert_resource(SpawnerTimer::default());
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_run_criteria(FixedTimestep::steps_per_second(tick::FRAME_RATE))
                 .with_system(Self::cube_movement.system())
                 .with_system(Self::cube_spawner.system()),
         );

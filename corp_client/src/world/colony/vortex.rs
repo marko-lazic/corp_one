@@ -54,22 +54,22 @@ impl VortexPlugin {
                 Colony::Cloning => {
                     info!("Cloning Facility");
                     game.current_colony_asset = colony_assets.cloning.clone();
-                    let _ = game_state.set(GameState::ColonyLoading);
+                    let _ = game_state.set(GameState::LoadColony);
                 }
                 Colony::Iris => {
                     info!("Moonbase: Station Iris");
                     game.current_colony_asset = colony_assets.iris.clone();
-                    let _ = game_state.set(GameState::ColonyLoading);
+                    let _ = game_state.set(GameState::LoadColony);
                 }
                 Colony::Liberte => {
                     info!("Mars: Colony Liberte");
                     game.current_colony_asset = colony_assets.liberte.clone();
-                    let _ = game_state.set(GameState::ColonyLoading);
+                    let _ = game_state.set(GameState::LoadColony);
                 }
                 Colony::Playground => {
                     info!("Alien Planet");
                     game.current_colony_asset = Handle::default();
-                    let _ = game_state.set(GameState::ColonyLoading);
+                    let _ = game_state.set(GameState::LoadColony);
                 }
             }
         }
