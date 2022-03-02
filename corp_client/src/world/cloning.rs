@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::asset::asset_loading::ColonyAssets;
 use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
@@ -11,15 +12,18 @@ pub struct CloningPlugin;
 
 impl CloningPlugin {
     fn run_if_dead(
+        colony_assets: Res<ColonyAssets>,
         time: Res<Time>,
+        mut game: ResMut<Game>,
         mut query: Query<&mut Health, With<Player>>,
-        mut vort_out_events: EventWriter<VortOutEvent>,
+        mut game_state: ResMut<State<GameState>>,
     ) {
         if let Some(mut health) = query.iter_mut().next() {
             if health.is_dead() {
                 health.cloning_cooldown.tick(time.delta());
                 if health.cloning_cooldown.finished() {
-                    vort_out_events.send(VortOutEvent);
+                    game.current_colony_asset = colony_assets.cloning.clone();
+                    let _ = game_state.set(GameState::LoadColony).unwrap();
                 }
             }
         }
