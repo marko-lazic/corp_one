@@ -19,6 +19,7 @@ bevy_mod_picking = "0.5.4"
 #bevy_prototype_debug_lines = "0.3.4"
 bevy_prototype_debug_lines = { git = "https://github.com/Toqozz/bevy_debug_lines", branch = "bevy-main" }
 blender_bevy_toolkit = {path="../../blender_bevy_toolkit"}
+bevy-inspector-egui = "0.8.2"
 bevy_asset_loader = "0.8.0"
 bevy_kira_audio = "0.8.0"
 bevy_networking_turbulence = "0.4.1"

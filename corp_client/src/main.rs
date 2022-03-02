@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::WorldInspectorPlugin;
 use blender_bevy_toolkit::BlendLoadPlugin;
 
 use constants::state::GameState;
@@ -26,6 +27,7 @@ pub struct Game {
     camera_center: Vec3,
     current_colony_asset: Handle<ColonyAsset>,
     health: Health,
+    scene_handle: Handle<DynamicScene>,
 }
 
 fn main() {
@@ -39,6 +41,7 @@ fn main() {
         .add_plugin(MetricsPlugin)
         .add_plugin(WorldPlugin)
         .add_plugin(BlendLoadPlugin::default())
+        .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(bevy_framepace::FramepacePlugin {
             enabled: true,
             framerate_limit: bevy_framepace::FramerateLimit::Auto,

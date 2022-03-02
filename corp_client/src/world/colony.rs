@@ -1,6 +1,10 @@
+use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 use bevy_asset_ron::RonAssetPlugin;
-use bevy_mod_picking::RayCastSource;
+use bevy_mod_picking::{
+    DebugCursorPickingPlugin, DebugEventsPickingPlugin, DefaultPickingPlugins, PickableBundle,
+    PickingCameraBundle, RayCastSource,
+};
 use bevy_mod_raycast::RayCastMesh;
 use heron::prelude::*;
 use rand::seq::SliceRandom;
@@ -13,6 +17,7 @@ use crate::constants::state::GameState;
 use crate::input::MyRayCastSet;
 use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
+use crate::world::colony::barrier::{BarrierAccess, BarrierField};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneEntities};
@@ -20,6 +25,7 @@ use crate::world::player::PlayerBundle;
 use crate::Game;
 
 mod asset;
+mod barrier;
 pub mod colony_assets;
 pub mod vortex;
 pub mod zone;
@@ -49,9 +55,10 @@ pub struct ColonyPlugin;
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 enum ColonySystem {
-    Setup,
-    Enrich,
-    Player,
+    PlayerSetup,
+    CameraSetup,
+    BarrierInsert,
+    VortexGateInsert,
 }
 
 impl ColonyPlugin {
@@ -110,7 +117,7 @@ impl ColonyPlugin {
         }
     }
 
-    fn vortex_gate_insert(mut commands: Commands, query: Query<Entity, With<VortexGate>>) {
+    fn vortex_gate_insert(mut commands: Commands, query: Query<Entity, Added<VortexGate>>) {
         for gate in query.iter() {
             commands
                 .entity(gate)
@@ -127,13 +134,23 @@ impl ColonyPlugin {
         }
     }
 
+    fn barrier_access_insert(mut commands: Commands, query: Query<Entity, Added<BarrierAccess>>) {
+        for gate in query.iter() {
+            commands
+                .entity(gate)
+                .insert_bundle(PickableBundle::default());
+        }
+    }
+
     fn setup_player(
         mut commands: Commands,
         mesh_assets: Res<MeshAssets>,
         materials: ResMut<Assets<StandardMaterial>>,
         mut game: ResMut<Game>,
         mut vortex_nodes: Query<&mut Transform, With<VortexNode>>,
+        asset_server: Res<AssetServer>,
     ) {
+        asset_server.watch_for_changes().unwrap();
         let random_position = vortex_nodes
             .iter_mut()
             .map(|t| t.translation)
@@ -172,12 +189,23 @@ impl ColonyPlugin {
                 ..Default::default()
             })
             .insert(TopDownCamera::new(20.0))
+            .insert_bundle(PickingCameraBundle::default())
             .insert(RayCastSource::<MyRayCastSet>::new());
     }
 
     fn start_playing_state(mut game_state: ResMut<State<GameState>>) {
-        info!("Start playing state");
+        info!("Playing");
         let _ = game_state.set(GameState::Playing);
+    }
+
+    fn start_spawn_player_state(mut game_state: ResMut<State<GameState>>) {
+        info!("Spawn Player");
+        let _ = game_state.set(GameState::SpawnPlayer);
+    }
+
+    fn start_post_processing_state(mut game_state: ResMut<State<GameState>>) {
+        info!("Post-processing");
+        let _ = game_state.set(GameState::PostProcessing);
     }
 
     fn teardown_entities(mut commands: Commands, entities: Query<Entity>) {
@@ -187,11 +215,14 @@ impl ColonyPlugin {
         }
     }
 
-    fn setup_scene_sync(world: &mut World) {
+    fn setup_scene_dynamic(
+        colony_assets: Res<Assets<ColonyAsset>>,
+        scene_assets: Res<SceneAssets>,
+        asset_server: Res<AssetServer>,
+        mut scene_spawner: ResMut<SceneSpawner>,
+        mut game: ResMut<Game>,
+    ) {
         info!("Setup scene");
-        let game = world.get_resource::<Game>().unwrap();
-        let colony_assets = world.get_resource::<Assets<ColonyAsset>>().unwrap();
-        let scene_assets = world.get_resource::<SceneAssets>().unwrap();
         let current_colony = colony_assets.get(&game.current_colony_asset).unwrap();
         let colony_scene = match current_colony.name {
             Colony::Cloning => scene_assets.cloning.clone(),
@@ -199,50 +230,83 @@ impl ColonyPlugin {
             Colony::Liberte => scene_assets.liberte.clone(),
             _ => scene_assets.liberte.clone(),
         };
-        let mut spawner = SceneSpawner::from_world(world);
-        let _ = spawner.spawn_dynamic_sync(world, &colony_scene);
+        game.scene_handle = colony_scene.clone();
+        scene_spawner.spawn_dynamic(colony_scene);
+        asset_server.watch_for_changes().unwrap();
     }
 
-    // fn setup_scene_dynamic(scene_assets: Res<SceneAssets>, mut spawner: ResMut<SceneSpawner>) {
-    //     info!("Setup environment");
-    //     spawner.spawn_dynamic(scene_assets.cloning.clone());
-    // }
+    fn scene_loaded(
+        game_state: Res<State<GameState>>,
+        query: Query<Entity, With<VortexNode>>,
+    ) -> ShouldRun {
+        if query.iter().count() > 0 && game_state.current() == &GameState::LoadColony {
+            ShouldRun::Yes
+        } else {
+            ShouldRun::No
+        }
+    }
 }
 
 impl Plugin for ColonyPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<VortexNode>();
         app.register_type::<VortexGate>();
+        app.register_type::<BarrierField>();
+        app.register_type::<BarrierAccess>();
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
         app.add_plugin(PhysicsPlugin::default());
         app.add_plugin(VortexPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugin(DebugCursorPickingPlugin);
+        app.add_plugin(DebugEventsPickingPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::LoadColony)
-                .label(ColonySystem::Setup)
-                .with_system(Self::setup_scene_sync.exclusive_system())
+                .with_system(Self::setup_scene_dynamic.system())
                 .with_system(Self::setup_debug_plane.system())
                 .with_system(Self::setup_zones.system()),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::LoadColony)
-                .after(ColonySystem::Setup)
-                .label(ColonySystem::Enrich)
-                .with_system(Self::vortex_gate_insert.system()),
+            SystemSet::new()
+                .with_run_criteria(Self::scene_loaded.system())
+                .with_system(Self::start_post_processing_state.system()),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::LoadColony)
-                .after(ColonySystem::Setup)
-                .label(ColonySystem::Player)
-                .with_system(Self::setup_player.system())
-                .with_system(Self::setup_camera.system()),
+            SystemSet::on_enter(GameState::PostProcessing)
+                .with_system(
+                    Self::barrier_access_insert
+                        .system()
+                        .label(ColonySystem::BarrierInsert),
+                )
+                .with_system(
+                    Self::vortex_gate_insert
+                        .system()
+                        .label(ColonySystem::VortexGateInsert),
+                )
+                .with_system(
+                    Self::start_spawn_player_state
+                        .system()
+                        .after(ColonySystem::VortexGateInsert)
+                        .after(ColonySystem::BarrierInsert),
+                ),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::LoadColony)
-                .after(ColonySystem::Player)
-                .after(ColonySystem::Enrich)
-                .with_system(Self::start_playing_state),
+            SystemSet::on_enter(GameState::SpawnPlayer)
+                .with_system(Self::setup_player.system().label(ColonySystem::PlayerSetup))
+                .with_system(
+                    Self::setup_camera
+                        .system()
+                        .label(ColonySystem::CameraSetup)
+                        .after(ColonySystem::PlayerSetup),
+                ),
         );
-
+        app.add_system_set(
+            SystemSet::on_enter(GameState::SpawnPlayer).with_system(
+                Self::start_playing_state
+                    .system()
+                    .after(ColonySystem::PlayerSetup)
+                    .after(ColonySystem::CameraSetup),
+            ),
+        );
         app.add_system_set(
             SystemSet::on_exit(GameState::Playing).with_system(Self::teardown_entities.system()),
         );

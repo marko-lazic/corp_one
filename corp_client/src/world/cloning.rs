@@ -4,7 +4,7 @@ use crate::asset::asset_loading::ColonyAssets;
 use corp_shared::prelude::*;
 
 use crate::constants::state::GameState;
-use crate::world::colony::vortex::{VortInEvent, VortOutEvent};
+use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
 use crate::Game;
 
