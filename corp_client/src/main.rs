@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::WorldInspectorPlugin;
 use blender_bevy_toolkit::BlendLoadPlugin;
 
 use constants::state::GameState;
@@ -41,7 +40,6 @@ fn main() {
         .add_plugin(MetricsPlugin)
         .add_plugin(WorldPlugin)
         .add_plugin(BlendLoadPlugin::default())
-        .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(bevy_framepace::FramepacePlugin {
             enabled: true,
             framerate_limit: bevy_framepace::FramerateLimit::Auto,

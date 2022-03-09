@@ -6,5 +6,5 @@ edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-bevy = { version = "0.6.0", features = ["dynamic"] }
+bevy = { version = "0.6.1", features = ["dynamic"] }
 bevy_networking_turbulence = "0.4.1"

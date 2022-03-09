@@ -10,10 +10,12 @@ use heron::prelude::*;
 use rand::seq::SliceRandom;
 use serde::Deserialize;
 
+use bevy_hikari::Volume;
 use corp_shared::prelude::Player;
 
 use crate::asset::asset_loading::{MaterialAssets, MeshAssets, SceneAssets};
 use crate::constants::state::GameState;
+use crate::Game;
 use crate::input::MyRayCastSet;
 use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
@@ -22,7 +24,6 @@ use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneEntities};
 use crate::world::player::PlayerBundle;
-use crate::Game;
 
 mod asset;
 mod barrier;
@@ -188,6 +189,10 @@ impl ColonyPlugin {
                     .looking_at(Vec3::default(), Vec3::Y),
                 ..Default::default()
             })
+            .insert(Volume::new(
+                Vec3::new(-2.5, -2.5, -2.5),
+                Vec3::new(2.5, 2.5, 2.5),
+            ))
             .insert(TopDownCamera::new(20.0))
             .insert_bundle(PickingCameraBundle::default())
             .insert(RayCastSource::<MyRayCastSet>::new());

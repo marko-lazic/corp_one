@@ -9,11 +9,11 @@ use crate::world::colony::colony_assets::ColonyAsset;
 
 #[derive(AssetCollection)]
 pub struct SceneAssets {
-    #[asset(path = "scenes/iris.scn")]
+    #[asset(path = "scenes/iris/iris.scn")]
     pub iris: Handle<DynamicScene>,
-    #[asset(path = "scenes/cloning.scn")]
+    #[asset(path = "scenes/cloning/cloning.scn")]
     pub cloning: Handle<DynamicScene>,
-    #[asset(path = "scenes/liberte.scn")]
+    #[asset(path = "scenes/liberte/liberte.scn")]
     pub liberte: Handle<DynamicScene>,
 }
 
