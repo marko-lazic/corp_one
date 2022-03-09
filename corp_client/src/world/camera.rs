@@ -1,3 +1,5 @@
+use std::ops::Neg;
+
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 
@@ -6,7 +8,6 @@ use corp_shared::prelude::Player;
 use crate::constants::state::GameState;
 use crate::input::Cursor;
 use crate::Game;
-use std::ops::Neg;
 
 #[derive(Component)]
 pub struct TopDownCamera {
@@ -90,8 +91,8 @@ impl Plugin for TopDownCameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(Self::target_motion.system().label(CameraMotion))
-                .with_system(Self::input_camera_center.system().before(CameraMotion)),
+                .with_system(Self::target_motion.label(CameraMotion))
+                .with_system(Self::input_camera_center.before(CameraMotion)),
         );
     }
 }

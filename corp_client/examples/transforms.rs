@@ -4,9 +4,9 @@ fn main() {
     App::new()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
-        .add_startup_system(setup.system())
-        .add_system(rotate_cubes.system())
-        .add_system(rotate_spheres.system())
+        .add_startup_system(setup)
+        .add_system(rotate_cubes)
+        .add_system(rotate_spheres)
         .run();
 }
 

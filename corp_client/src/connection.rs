@@ -38,11 +38,11 @@ impl ConnectionPlugin {
 impl Plugin for ConnectionPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(NetworkingPlugin::default());
-        app.add_startup_system(Self::startup.system());
+        app.add_startup_system(Self::startup);
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(Self::send_pings.system())
-                .with_system(Self::handle_packets.system()),
+                .with_system(Self::send_pings)
+                .with_system(Self::handle_packets),
         );
     }
 }

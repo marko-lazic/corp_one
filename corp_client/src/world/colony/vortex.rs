@@ -87,13 +87,12 @@ impl Plugin for VortexPlugin {
         app.add_event::<VortInEvent>();
         app.add_event::<VortOutEvent>();
         app.add_system_set(
-            SystemSet::on_update(GameState::StarMap)
-                .with_system(Self::vort_in_event_reader.system()),
+            SystemSet::on_update(GameState::StarMap).with_system(Self::vort_in_event_reader),
         );
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(Self::vort_out_event_reader.system())
-                .with_system(Self::animate_nodes.system()),
+                .with_system(Self::vort_out_event_reader)
+                .with_system(Self::animate_nodes),
         );
     }
 }

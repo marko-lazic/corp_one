@@ -146,21 +146,21 @@ impl Plugin for InputControlPlugin {
         app.init_resource::<Cursor>();
         app.init_resource::<PlayerAction>();
         app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
-        app.add_system_set(SystemSet::new().with_system(Self::keyboard_escape_action.system()));
+        app.add_system_set(SystemSet::new().with_system(Self::keyboard_escape_action));
 
         app.add_system_set(
             SystemSet::on_update(GameState::StarMap)
                 .label(InputSystem::Starmap)
-                .with_system(Self::starmap_keyboard.system()),
+                .with_system(Self::starmap_keyboard),
         );
 
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .label(InputSystem::Playing)
-                .with_system(Self::update_cursor_position.system())
-                .with_system(Self::player_keyboard_action.system())
-                .with_system(Self::player_mouse_action.system())
-                .with_system(Self::kill.system()),
+                .with_system(Self::update_cursor_position)
+                .with_system(Self::player_keyboard_action)
+                .with_system(Self::player_mouse_action)
+                .with_system(Self::kill),
         );
     }
 }

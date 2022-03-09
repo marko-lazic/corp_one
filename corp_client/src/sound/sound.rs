@@ -53,15 +53,11 @@ impl Plugin for SoundPlugin {
         app.add_plugin(AudioPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::Playing)
-                .with_system(Self::setup_live_state.system())
-                .with_system(Self::play_music.system()),
+                .with_system(Self::setup_live_state)
+                .with_system(Self::play_music),
         );
-        app.add_system_set(
-            SystemSet::on_update(GameState::Playing).with_system(Self::walk_sound.system()),
-        );
-        app.add_system_set(
-            SystemSet::on_exit(GameState::Playing).with_system(Self::stop_audio.system()),
-        );
+        app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(Self::walk_sound));
+        app.add_system_set(SystemSet::on_exit(GameState::Playing).with_system(Self::stop_audio));
     }
 }
 

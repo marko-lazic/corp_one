@@ -132,17 +132,15 @@ impl MetricsPlugin {
 impl Plugin for MetricsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-        app.add_system_set(
-            SystemSet::on_enter(GameState::Playing).with_system(Self::setup.system()),
-        );
+        app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(Self::setup));
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(Self::fps_update.system())
-                .with_system(Self::player_position_update.system())
-                .with_system(Self::mouse_screen_position_update.system())
-                .with_system(Self::camera_metrics.system())
-                .with_system(Self::camera_debug_text.system())
-                .with_system(Self::player_health_metric.system()),
+                .with_system(Self::fps_update)
+                .with_system(Self::player_position_update)
+                .with_system(Self::mouse_screen_position_update)
+                .with_system(Self::camera_metrics)
+                .with_system(Self::camera_debug_text)
+                .with_system(Self::player_health_metric),
         );
     }
 }

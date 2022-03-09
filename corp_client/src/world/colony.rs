@@ -14,7 +14,6 @@ use corp_shared::prelude::Player;
 
 use crate::asset::asset_loading::{MaterialAssets, MeshAssets, SceneAssets};
 use crate::constants::state::GameState;
-use crate::Game;
 use crate::input::MyRayCastSet;
 use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
@@ -23,6 +22,7 @@ use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneEntities};
 use crate::world::player::PlayerBundle;
+use crate::Game;
 
 mod asset;
 mod barrier;
@@ -261,40 +261,30 @@ impl Plugin for ColonyPlugin {
         app.add_plugin(DebugEventsPickingPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::LoadColony)
-                .with_system(Self::setup_scene_dynamic.system())
-                .with_system(Self::setup_debug_plane.system())
-                .with_system(Self::setup_zones.system()),
+                .with_system(Self::setup_scene_dynamic)
+                .with_system(Self::setup_debug_plane)
+                .with_system(Self::setup_zones),
         );
         app.add_system_set(
             SystemSet::new()
-                .with_run_criteria(Self::scene_loaded.system())
-                .with_system(Self::start_post_processing_state.system()),
+                .with_run_criteria(Self::scene_loaded)
+                .with_system(Self::start_post_processing_state),
         );
         app.add_system_set(
             SystemSet::on_enter(GameState::PostProcessing)
-                .with_system(
-                    Self::barrier_access_insert
-                        .system()
-                        .label(ColonySystem::BarrierInsert),
-                )
-                .with_system(
-                    Self::vortex_gate_insert
-                        .system()
-                        .label(ColonySystem::VortexGateInsert),
-                )
+                .with_system(Self::barrier_access_insert.label(ColonySystem::BarrierInsert))
+                .with_system(Self::vortex_gate_insert.label(ColonySystem::VortexGateInsert))
                 .with_system(
                     Self::start_spawn_player_state
-                        .system()
                         .after(ColonySystem::VortexGateInsert)
                         .after(ColonySystem::BarrierInsert),
                 ),
         );
         app.add_system_set(
             SystemSet::on_enter(GameState::SpawnPlayer)
-                .with_system(Self::setup_player.system().label(ColonySystem::PlayerSetup))
+                .with_system(Self::setup_player.label(ColonySystem::PlayerSetup))
                 .with_system(
                     Self::setup_camera
-                        .system()
                         .label(ColonySystem::CameraSetup)
                         .after(ColonySystem::PlayerSetup),
                 ),
@@ -302,13 +292,12 @@ impl Plugin for ColonyPlugin {
         app.add_system_set(
             SystemSet::on_enter(GameState::SpawnPlayer).with_system(
                 Self::start_playing_state
-                    .system()
                     .after(ColonySystem::PlayerSetup)
                     .after(ColonySystem::CameraSetup),
             ),
         );
         app.add_system_set(
-            SystemSet::on_exit(GameState::Playing).with_system(Self::teardown_entities.system()),
+            SystemSet::on_exit(GameState::Playing).with_system(Self::teardown_entities),
         );
     }
 }

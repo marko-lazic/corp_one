@@ -165,12 +165,11 @@ impl Plugin for AssetLoadingPlugin {
 
         app.add_system_set(
             SystemSet::on_enter(GameState::AssetLoading)
-                .with_system(Self::print_loading_text.system())
-                .with_system(Self::start_loading.system()),
+                .with_system(Self::print_loading_text)
+                .with_system(Self::start_loading),
         );
         app.add_system_set(
-            SystemSet::on_exit(GameState::AssetLoading)
-                .with_system(Self::clean_up_loading_text.system()),
+            SystemSet::on_exit(GameState::AssetLoading).with_system(Self::clean_up_loading_text),
         );
     }
 }

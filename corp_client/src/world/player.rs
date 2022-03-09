@@ -81,8 +81,8 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(CloningPlugin);
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(Self::move_player.system().after(InputSystem::Playing))
-                .with_system(Self::handle_dead.system()),
+                .with_system(Self::move_player.after(InputSystem::Playing))
+                .with_system(Self::handle_dead),
         );
     }
 }

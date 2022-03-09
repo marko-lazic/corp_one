@@ -50,8 +50,8 @@ impl Plugin for FlyingCubesPlugin {
         app.insert_resource(SpawnerTimer::default());
         app.add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(Self::cube_movement.system())
-                .with_system(Self::cube_spawner.system()),
+                .with_system(Self::cube_movement)
+                .with_system(Self::cube_spawner),
         );
     }
 }

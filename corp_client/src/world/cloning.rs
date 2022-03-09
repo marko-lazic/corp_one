@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
-use crate::asset::asset_loading::ColonyAssets;
 use corp_shared::prelude::*;
 
+use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
 use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
@@ -44,7 +44,7 @@ impl Plugin for CloningPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_enter(GameState::StarMap)
-                .with_system(Self::vort_in_dead_player_to_cloning.system()),
+                .with_system(Self::vort_in_dead_player_to_cloning),
         );
         app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(Self::run_if_dead));
     }
@@ -67,7 +67,7 @@ mod tests {
         // Setup stage
         let mut stage = SystemStage::parallel()
             .with_system_set(State::<GameState>::get_driver())
-            .with_system(kill_player.system().label(KILLING_LABEL))
+            .with_system(kill_player.label(KILLING_LABEL))
             .with_system(CloningPlugin::run_if_dead.after(KILLING_LABEL));
 
         // Setup world
@@ -107,7 +107,7 @@ mod tests {
         // Setup stage
         let mut stage = SystemStage::parallel()
             .with_system_set(State::<GameState>::get_driver())
-            .with_system(CloningPlugin::vort_in_dead_player_to_cloning.system());
+            .with_system(CloningPlugin::vort_in_dead_player_to_cloning);
 
         // Setup world
         let mut world = World::default();
