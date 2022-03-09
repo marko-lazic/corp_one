@@ -1187,7 +1187,7 @@
 					},
 					"shadow_depth_bias":{
 						"type":"f32",
-						"value":1.0
+						"value":0.1
 					},
 					"shadow_normal_bias":{
 						"type":"f32",
@@ -1304,7 +1304,7 @@
 					},
 					"shadow_depth_bias":{
 						"type":"f32",
-						"value":1.0
+						"value":0.1
 					},
 					"shadow_normal_bias":{
 						"type":"f32",
@@ -1421,7 +1421,7 @@
 					},
 					"shadow_depth_bias":{
 						"type":"f32",
-						"value":1.0
+						"value":0.1
 					},
 					"shadow_normal_bias":{
 						"type":"f32",
