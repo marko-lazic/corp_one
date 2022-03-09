@@ -10,7 +10,6 @@ use heron::prelude::*;
 use rand::seq::SliceRandom;
 use serde::Deserialize;
 
-use bevy_hikari::Volume;
 use corp_shared::prelude::Player;
 
 use crate::asset::asset_loading::{MaterialAssets, MeshAssets, SceneAssets};
@@ -189,10 +188,6 @@ impl ColonyPlugin {
                     .looking_at(Vec3::default(), Vec3::Y),
                 ..Default::default()
             })
-            .insert(Volume::new(
-                Vec3::new(-2.5, -2.5, -2.5),
-                Vec3::new(2.5, 2.5, 2.5),
-            ))
             .insert(TopDownCamera::new(20.0))
             .insert_bundle(PickingCameraBundle::default())
             .insert(RayCastSource::<MyRayCastSet>::new());
