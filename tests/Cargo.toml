@@ -10,6 +10,7 @@ autobenches = false
 
 [dependencies]
 unicode-segmentation = "1.7.1"
+bevy = "0.6.1"
 
 [[test]]
 name = "integration"

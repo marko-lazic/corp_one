@@ -16,9 +16,10 @@ bevy = { version = "0.6.1", features = ["wav"] }
 bevy_framepace = "0.2.0"
 bevy_mod_raycast = "0.3.9"
 bevy_mod_picking = "0.5.4"
-#bevy_prototype_debug_lines = "0.3.4"
-bevy_prototype_debug_lines = { git = "https://github.com/Toqozz/bevy_debug_lines", branch = "bevy-main" }
-blender_bevy_toolkit = {path="../../blender_bevy_toolkit"}
+bevy_transform_gizmo = "0.1.0"
+bevy_prototype_debug_lines = { version = "0.6", features = ["3d"] }
+bevy_prototype_lyon = "0.4.0"
+blender_bevy_toolkit = { path = "../../blender_bevy_toolkit" }
 bevy-inspector-egui = "0.8.2"
 bevy_asset_loader = "0.8.0"
 bevy_kira_audio = "0.8.0"
@@ -36,3 +37,11 @@ path = "examples/transforms.rs"
 [[example]]
 name = "look"
 path = "examples/look.rs"
+
+[[example]]
+name = "vector_bullet"
+path = "examples/vector_bullet.rs"
+
+[[example]]
+name = "radial_trigger"
+path = "examples/radial_trigger.rs"
