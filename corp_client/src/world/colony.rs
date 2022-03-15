@@ -17,7 +17,7 @@ use crate::constants::state::GameState;
 use crate::input::MyRayCastSet;
 use crate::world::camera::{CameraCenter, TopDownCamera};
 use crate::world::character::Movement;
-use crate::world::colony::barrier::{BarrierAccess, BarrierField};
+use crate::world::colony::barrier::{BarrierAccess, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneEntities};
@@ -257,8 +257,7 @@ impl Plugin for ColonyPlugin {
         app.add_plugin(PhysicsPlugin::default());
         app.add_plugin(VortexPlugin);
         app.add_plugins(DefaultPickingPlugins);
-        app.add_plugin(DebugCursorPickingPlugin);
-        app.add_plugin(DebugEventsPickingPlugin);
+        app.add_plugin(BarrierPlugin);
         app.add_system_set(
             SystemSet::on_enter(GameState::LoadColony)
                 .with_system(Self::setup_scene_dynamic)
