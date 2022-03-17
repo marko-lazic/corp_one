@@ -664,6 +664,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_mouse_tracking_plugin"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "acb4839b356e8ac0f94e505d2510c59b6cd63fd33264f9024802e921d7c0afba"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_networking_turbulence"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1398,6 +1407,7 @@ dependencies = [
  "bevy_kira_audio",
  "bevy_mod_picking",
  "bevy_mod_raycast",
+ "bevy_mouse_tracking_plugin",
  "bevy_networking_turbulence",
  "bevy_prototype_debug_lines",
  "bevy_prototype_lyon",

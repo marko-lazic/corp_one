@@ -100,6 +100,10 @@ mod tests {
         let player_facing = Vec2::new(2.0, 4.0).normalize();
         let object = Vec2::new(4.0, 3.0).normalize();
         let threshold = player_facing.dot(object);
+        let lookness = 0.8;
+        if threshold.abs() > lookness {
+            println!("Player is looking at the object");
+        }
         println!("look at threshold: {}", threshold);
     }
 
@@ -127,5 +131,14 @@ mod tests {
 
     fn to_world(object: Vec2, local_point: Vec2) -> Vec2 {
         object + local_point
+    }
+
+    #[test]
+    fn dot_product_one_normalized() {
+        let velocity = Vec2::new(4.0, 4.1);
+        let plane_normal = Vec2::new(0.0, 1.0);
+        let dot = velocity.dot(plane_normal);
+        let same_like_velocity: Vec2 = plane_normal * dot;
+        assert_eq!(same_like_velocity, Vec2::new(0.0, 4.1));
     }
 }
