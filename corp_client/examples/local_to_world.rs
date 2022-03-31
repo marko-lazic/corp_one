@@ -50,24 +50,32 @@ fn update_world_to_local(
 ) {
     let child_tr = Option::unwrap(child_query.iter().last());
     let world_tr = Option::unwrap(world_query.iter().last());
-    let to_local = world_to_local(child_tr, world_tr.translation);
+    let to_local = world_to_local(child_tr, world_tr);
     data.world_to_local = to_local;
 }
 
 fn local_to_world(local_pt: Vec2, parent_pt: &Transform) -> Vec3 {
-    let right = parent_pt.right();
-    let up = parent_pt.up();
-    let world_offset = right * local_pt.x + up * local_pt.y;
-    parent_pt.translation + world_offset
+    // let right = parent_pt.right();
+    // let up = parent_pt.up();
+    // let world_offset = right * local_pt.x + up * local_pt.y;
+    // parent_pt.translation + world_offset
+    parent_pt
+        .compute_matrix()
+        .transform_point3(Vec3::new(local_pt.x, local_pt.y, 0.0))
 }
 
-fn world_to_local(child_pt: &Transform, world_pt: Vec3) -> Vec2 {
-    let right = child_pt.right();
-    let up = child_pt.up();
-    let relative_pt = world_pt - child_pt.translation;
-    let x = relative_pt.dot(right);
-    let y = relative_pt.dot(up);
-    Vec2::new(x, y)
+fn world_to_local(child_pt: &Transform, world_tr: &Transform) -> Vec3 {
+    // let right = child_pt.right();
+    // let up = child_pt.up();
+    // let world_pt = world_tr.translation;
+    // let relative_pt = world_pt - child_pt.translation;
+    // let x = relative_pt.dot(right);
+    // let y = relative_pt.dot(up);
+    // Vec2::new(x, y)
+    world_tr
+        .compute_matrix()
+        .inverse()
+        .transform_point3(child_pt.translation)
 }
 
 fn setup_system(mut commands: Commands) {
@@ -132,7 +140,7 @@ struct InspectorData {
     parent: Vec2,
     child: Vec2,
     world: Vec2,
-    world_to_local: Vec2,
+    world_to_local: Vec3,
 }
 
 #[derive(Component)]
@@ -150,7 +158,7 @@ impl Default for InspectorData {
             parent: Default::default(),
             child: Vec2::new(100.0, 50.0),
             world: Vec2::new(100.0, -150.0),
-            world_to_local: Vec2::new(100.0, -150.0),
+            world_to_local: Vec3::new(100.0, -150.0, 0.0),
         }
     }
 }
