@@ -54,12 +54,12 @@ fn update_world_to_local(
     data.world_to_local = to_local;
 }
 
-fn local_to_world(local_pt: Vec2, parent_pt: &Transform) -> Vec3 {
-    // let right = parent_pt.right();
-    // let up = parent_pt.up();
+fn local_to_world(local_pt: Vec2, parent_tr: &Transform) -> Vec3 {
+    // let right = parent_tr.right();
+    // let up = parent_tr.up();
     // let world_offset = right * local_pt.x + up * local_pt.y;
-    // parent_pt.translation + world_offset
-    parent_pt
+    // parent_tr.translation + world_offset
+    parent_tr
         .compute_matrix()
         .transform_point3(Vec3::new(local_pt.x, local_pt.y, 0.0))
 }
