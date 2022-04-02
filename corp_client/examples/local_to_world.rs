@@ -28,13 +28,14 @@ fn move_parent(
 fn move_child(
     mut child_query: Query<&mut Transform, With<ChildPoint>>,
     parent_query: Query<&Transform, (With<ParentPoint>, Without<ChildPoint>)>,
-    data: Res<InspectorData>,
+    mut data: ResMut<InspectorData>,
 ) {
     let mut child_tr = Option::unwrap(child_query.iter_mut().last());
     let parent_tr = Option::unwrap(parent_query.iter().last());
 
     let world_space_point = local_to_world(data.child, &parent_tr);
     child_tr.translation = Vec3::new(world_space_point.x, world_space_point.y, 0.0);
+    data.child_dir = local_to_world_dir(data.child, &parent_tr);
 }
 
 fn move_world(mut world_query: Query<&mut Transform, With<WorldPoint>>, data: Res<InspectorData>) {
@@ -62,6 +63,13 @@ fn local_to_world(local_pt: Vec2, parent_tr: &Transform) -> Vec3 {
     parent_tr
         .compute_matrix()
         .transform_point3(Vec3::new(local_pt.x, local_pt.y, 0.0))
+}
+
+fn local_to_world_dir(local_pt: Vec2, parent_tr: &Transform) -> Vec3 {
+    parent_tr
+        .compute_matrix()
+        .transform_vector3(Vec3::new(local_pt.x, local_pt.y, 0.0))
+        .normalize()
 }
 
 fn world_to_local(child_pt: &Transform, world_tr: &Transform) -> Vec3 {
@@ -139,6 +147,7 @@ fn setup_system(mut commands: Commands) {
 struct InspectorData {
     parent: Vec2,
     child: Vec2,
+    child_dir: Vec3,
     world: Vec2,
     world_to_local: Vec3,
 }
@@ -157,6 +166,7 @@ impl Default for InspectorData {
         InspectorData {
             parent: Default::default(),
             child: Vec2::new(100.0, 50.0),
+            child_dir: Vec3::default(),
             world: Vec2::new(100.0, -150.0),
             world_to_local: Vec3::new(100.0, -150.0, 0.0),
         }
