@@ -1,10 +1,7 @@
 use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 use bevy_asset_ron::RonAssetPlugin;
-use bevy_mod_picking::{
-    DebugCursorPickingPlugin, DebugEventsPickingPlugin, DefaultPickingPlugins, PickableBundle,
-    PickingCameraBundle, RayCastSource,
-};
+use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle, PickingCameraBundle, RayCastSource};
 use bevy_mod_raycast::RayCastMesh;
 use heron::prelude::*;
 use rand::seq::SliceRandom;

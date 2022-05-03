@@ -4,6 +4,7 @@ use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy_mod_picking::{HoverEvent, PickingEvent};
 
+use crate::gui::CursorInfo;
 use crate::{App, GameState, SystemSet, Timer};
 
 #[derive(Component, Reflect, Default, Debug)]
@@ -40,17 +41,21 @@ impl BarrierPlugin {
     pub fn print_events(
         mut events: EventReader<PickingEvent>,
         barrier_access: Query<&BarrierAccess>,
+        mut cursor_info: ResMut<CursorInfo>,
     ) {
         for event in events.iter() {
             match event {
                 PickingEvent::Hover(hover_event) => match hover_event {
                     HoverEvent::JustEntered(entity) => {
                         let access = barrier_access.get(*entity).unwrap();
-                        info!("Just entered access {:?}", access);
+                        // info!("Just entered access {:?}", access);
+                        cursor_info.show_use = true;
                         // Todo BarrierAccess should have private field holding name of barrier it's responsible for.
                         // Todo Scenes should hold barrier field names and access pointers to those barriers.
                     }
-                    HoverEvent::JustLeft(_) => {}
+                    HoverEvent::JustLeft(_) => {
+                        cursor_info.show_use = false;
+                    }
                 },
                 _ => {}
             }

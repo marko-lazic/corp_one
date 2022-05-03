@@ -7,6 +7,7 @@ use corp_shared::prelude::Health;
 use gui::metrics::MetricsPlugin;
 
 use crate::asset::asset_loading::AssetLoadingPlugin;
+use crate::gui::GuiPlugin;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::WorldPlugin;
 
@@ -37,7 +38,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(AssetLoadingPlugin)
         .add_state(GameState::AssetLoading)
-        .add_plugin(MetricsPlugin)
+        .add_plugin(GuiPlugin)
         .add_plugin(WorldPlugin)
         .add_plugin(BlendLoadPlugin::default())
         .add_plugin(bevy_framepace::FramepacePlugin {
