@@ -9,9 +9,10 @@ use input_command::PlayerAction;
 
 use crate::constants::state::GameState;
 use crate::input::double_tap::DoubleTap;
+use crate::world::colony::barrier::{BarrierAccess, BarrierField};
 use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
-use crate::Game;
+use crate::{Game, UseEntity};
 
 mod double_tap;
 pub mod input_command;
@@ -34,6 +35,7 @@ pub enum Action {
     Backward,
     Left,
     Right,
+    Use,
     Shoot,
     Escape,
     Kill,
@@ -94,6 +96,7 @@ impl InputControlPlugin {
             .bind(Action::Backward, KeyCode::S)
             .bind(Action::Left, KeyCode::A)
             .bind(Action::Right, KeyCode::D)
+            .bind(Action::Use, KeyCode::E)
             // .bind(Action::Shoot, MouseButton::Left)
             .bind(Action::Escape, KeyCode::Escape)
             .bind(Action::Kill, KeyCode::K)
@@ -137,6 +140,24 @@ impl InputControlPlugin {
             }
         }
     }
+
+    fn use_barrier(
+        input: Res<InputMap<Action>>,
+        mut barriers_query: Query<&mut BarrierField>,
+        barrier_access_query: Query<&BarrierAccess>,
+        game: Res<Game>,
+    ) {
+        if input.just_active(Action::Use) {
+            if let UseEntity::Barrier(entity) = game.use_entity {
+                let access = barrier_access_query.get(entity).unwrap();
+                for mut barrier in barriers_query.iter_mut() {
+                    if barrier.name == access.barrier_field_name {
+                        barrier.open = true;
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl Plugin for InputControlPlugin {
@@ -160,6 +181,7 @@ impl Plugin for InputControlPlugin {
                 .with_system(Self::update_cursor_position)
                 .with_system(Self::player_keyboard_action)
                 .with_system(Self::player_mouse_action)
+                .with_system(Self::use_barrier)
                 .with_system(Self::kill),
         );
     }

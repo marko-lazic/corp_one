@@ -1216,7 +1216,9 @@
 		components:[
 			{
 				"type":"corp_client::world::colony::barrier::BarrierField",
-				"struct":{}
+				"struct":{
+				    "name":"north_barrier"
+				}
 			},
 			{
 				"type":"bevy_render::view::visibility::ComputedVisibility",
@@ -1321,7 +1323,9 @@
 		components:[
 			{
 				"type":"corp_client::world::colony::barrier::BarrierField",
-				"struct":{}
+				"struct":{
+				    "name":"east_barrier"
+				}
 			},
 			{
 				"type":"bevy_render::view::visibility::ComputedVisibility",
@@ -1426,7 +1430,9 @@
 		components:[
 			{
 				"type":"corp_client::world::colony::barrier::BarrierAccess",
-				"struct":{}
+				"struct":{
+				    "barrier_field_name":"east_barrier"
+				}
 			},
 			{
 				"type":"bevy_render::view::visibility::ComputedVisibility",
@@ -1531,7 +1537,9 @@
 		components:[
 			{
 				"type":"corp_client::world::colony::barrier::BarrierAccess",
-				"struct":{}
+				"struct":{
+				    "barrier_field_name":"north_barrier"
+				}
 			},
 			{
 				"type":"bevy_render::view::visibility::ComputedVisibility",
@@ -1636,7 +1644,9 @@
 		components:[
 			{
 				"type":"corp_client::world::colony::barrier::BarrierAccess",
-				"struct":{}
+				"struct":{
+				    "barrier_field_name":"north_barrier"
+				}
 			},
 			{
 				"type":"bevy_render::view::visibility::ComputedVisibility",
@@ -1741,7 +1751,9 @@
 		components:[
 			{
 				"type":"corp_client::world::colony::barrier::BarrierAccess",
-				"struct":{}
+				"struct":{
+				    "barrier_field_name":"east_barrier"
+				}
 			},
 			{
 				"type":"bevy_render::view::visibility::ComputedVisibility",

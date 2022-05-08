@@ -9,6 +9,7 @@ use gui::metrics::MetricsPlugin;
 use crate::asset::asset_loading::AssetLoadingPlugin;
 use crate::gui::GuiPlugin;
 use crate::world::colony::colony_assets::ColonyAsset;
+use crate::world::colony::intractable::UseEntity;
 use crate::world::WorldPlugin;
 
 mod asset;
@@ -21,6 +22,7 @@ mod world;
 
 #[derive(Default)]
 pub struct Game {
+    use_entity: UseEntity,
     cursor_locked: bool,
     player_entity: Option<Entity>,
     camera_transform: Option<Transform>,

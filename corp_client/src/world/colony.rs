@@ -22,8 +22,9 @@ use crate::world::player::PlayerBundle;
 use crate::Game;
 
 mod asset;
-mod barrier;
+pub mod barrier;
 pub mod colony_assets;
+pub mod intractable;
 pub mod vortex;
 pub mod zone;
 

@@ -5,22 +5,22 @@ use bevy::prelude::*;
 use bevy_mod_picking::{HoverEvent, PickingEvent};
 
 use crate::gui::CursorInfo;
-use crate::{App, GameState, SystemSet, Timer};
+use crate::{App, Game, GameState, SystemSet, Timer, UseEntity};
 
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
 pub struct BarrierAccess {
-    barrier_field_name: String,
+    pub barrier_field_name: String,
 }
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 pub struct BarrierField {
-    name: String,
+    pub name: String,
     #[reflect(ignore)]
     close_cooldown: Timer,
     #[reflect(ignore)]
-    open: bool,
+    pub open: bool,
 }
 
 impl Default for BarrierField {
@@ -36,25 +36,38 @@ impl Default for BarrierField {
 pub struct BarrierPlugin;
 
 impl BarrierPlugin {
-    fn toggle_barrier() {}
+    fn open_close_barrier(
+        mut barrier_query: Query<(&mut BarrierField, &mut Visibility)>,
+        time: Res<Time>,
+    ) {
+        for (mut barrier, mut visible) in barrier_query.iter_mut() {
+            if barrier.open {
+                visible.is_visible = false;
+                barrier.close_cooldown.tick(time.delta());
+                if barrier.close_cooldown.just_finished() {
+                    barrier.open = false;
+                    barrier.close_cooldown.reset();
+                    visible.is_visible = true;
+                }
+            }
+        }
+    }
 
-    pub fn print_events(
+    pub fn pick_barrier(
         mut events: EventReader<PickingEvent>,
-        barrier_access: Query<&BarrierAccess>,
         mut cursor_info: ResMut<CursorInfo>,
+        mut game: ResMut<Game>,
     ) {
         for event in events.iter() {
             match event {
                 PickingEvent::Hover(hover_event) => match hover_event {
                     HoverEvent::JustEntered(entity) => {
-                        let access = barrier_access.get(*entity).unwrap();
-                        // info!("Just entered access {:?}", access);
                         cursor_info.show_use = true;
-                        // Todo BarrierAccess should have private field holding name of barrier it's responsible for.
-                        // Todo Scenes should hold barrier field names and access pointers to those barriers.
+                        game.use_entity = UseEntity::Barrier(entity.clone());
                     }
                     HoverEvent::JustLeft(_) => {
                         cursor_info.show_use = false;
+                        game.use_entity = UseEntity::None;
                     }
                 },
                 _ => {}
@@ -68,8 +81,8 @@ impl Plugin for BarrierPlugin {
         app.register_type::<BarrierField>();
         app.register_type::<BarrierAccess>();
         app.add_system_set(
-            SystemSet::on_enter(GameState::Playing).with_system(Self::toggle_barrier),
+            SystemSet::on_update(GameState::Playing).with_system(Self::open_close_barrier),
         );
-        app.add_system_to_stage(CoreStage::PostUpdate, Self::print_events);
+        app.add_system_to_stage(CoreStage::PostUpdate, Self::pick_barrier);
     }
 }
