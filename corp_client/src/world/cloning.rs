@@ -96,7 +96,7 @@ mod tests {
         );
 
         assert_eq!(
-            world.get_resource::<State<GameState>>().unwrap().current(),
+            world.resource::<State<GameState>>().current(),
             &GameState::StarMap,
             "Game state changed to StarMap"
         );
@@ -127,13 +127,13 @@ mod tests {
         stage.run(&mut world);
 
         assert_eq!(
-            world.get_resource::<Game>().unwrap().health.get_health(),
+            world.resource::<Game>().health.get_health(),
             &CLONE_HEALTH_80,
             "Game component health is set to clone health"
         );
 
         assert_eq!(
-            world.get_resource::<State<GameState>>().unwrap().current(),
+            world.resource::<State<GameState>>().current(),
             &GameState::Playing,
             "Game state changed to Playing"
         );

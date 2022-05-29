@@ -11,25 +11,24 @@ default = [
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-rand = "0.8.4"
-bevy = { version = "0.6.1", features = ["wav"] }
-bevy_framepace = "0.2.0"
-bevy_mod_raycast = "0.3.9"
-bevy_mod_picking = "0.5.4"
-bevy_transform_gizmo = "0.1.0"
-bevy_prototype_debug_lines = { version = "0.6" }
-bevy_mouse_tracking_plugin = "0.2.0"
-bevy_prototype_lyon = "0.4.0"
+rand = "0.8.5"
+bevy = { version = "0.7.0", features = ["wav"] }
+bevy_framepace = "0.4.0"
+bevy_mod_raycast = "0.4.0"
+bevy_mod_picking = "0.6.1"
+bevy_transform_gizmo = "0.2.1"
+bevy_prototype_debug_lines = { version = "0.7.1" }
+bevy_mouse_tracking_plugin = "0.2.1"
+bevy_prototype_lyon = "0.5.0"
 blender_bevy_toolkit = { path = "../../blender_bevy_toolkit" }
-bevy-inspector-egui = "0.8.2"
-bevy_asset_loader = "0.8.0"
-bevy_kira_audio = "0.8.0"
-bevy_networking_turbulence = "0.4.1"
-bevy_asset_ron = "0.3.0"
+bevy-inspector-egui = "0.11.0"
+bevy_asset_loader = "0.10.0"
+bevy_kira_audio = "0.10.0"
+bevy_asset_ron = "0.4.0"
 bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap.git", branch = "main" }
-heron = { version = "1.1.0", features = ["3d"] }
-glam = "0.20.2"
-serde = "1.0.136"
+heron = { version = "3.1.0", features = ["3d"] }
+glam = "0.20.5"
+serde = "1.0.137"
 
 [[example]]
 name = "transforms"

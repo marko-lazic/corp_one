@@ -13,7 +13,6 @@ use crate::world::colony::intractable::UseEntity;
 use crate::world::WorldPlugin;
 
 mod asset;
-mod connection;
 mod constants;
 mod gui;
 pub mod input;
@@ -44,10 +43,8 @@ fn main() {
         .add_plugin(WorldPlugin)
         .add_plugin(BlendLoadPlugin::default())
         .add_plugin(bevy_framepace::FramepacePlugin {
-            enabled: true,
-            framerate_limit: bevy_framepace::FramerateLimit::Auto,
             warn_on_frame_drop: false,
-            safety_margin: std::time::Duration::from_millis(2),
+            ..default()
         })
         .run();
 }

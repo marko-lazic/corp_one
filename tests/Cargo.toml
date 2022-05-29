@@ -9,8 +9,8 @@ autobenches = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-unicode-segmentation = "1.7.1"
-bevy = "0.6.1"
+unicode-segmentation = "1.9.0"
+bevy = "0.7.0"
 
 [[test]]
 name = "integration"
