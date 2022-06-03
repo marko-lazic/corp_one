@@ -22,7 +22,7 @@ bevy_mouse_tracking_plugin = "0.2.1"
 bevy_prototype_lyon = "0.5.0"
 blender_bevy_toolkit = { path = "../../blender_bevy_toolkit" }
 bevy-inspector-egui = "0.11.0"
-bevy_asset_loader = "0.10.0"
+bevy_asset_loader = "0.11.0"
 bevy_kira_audio = "0.10.0"
 bevy_asset_ron = "0.4.0"
 bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap.git", branch = "main" }
