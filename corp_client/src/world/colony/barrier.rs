@@ -3,9 +3,10 @@ use std::time::Duration;
 use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy_mod_picking::{HoverEvent, PickingEvent};
+use iyes_loopless::prelude::ConditionSet;
 
 use crate::gui::CursorInfo;
-use crate::{App, Game, GameState, SystemSet, Timer, UseEntity};
+use crate::{App, Game, GameState, Timer, UseEntity};
 
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
@@ -81,7 +82,10 @@ impl Plugin for BarrierPlugin {
         app.register_type::<BarrierField>();
         app.register_type::<BarrierAccess>();
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing).with_system(Self::open_close_barrier),
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::open_close_barrier)
+                .into(),
         );
         app.add_system_to_stage(CoreStage::PostUpdate, Self::pick_barrier);
     }

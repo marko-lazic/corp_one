@@ -2,6 +2,7 @@ use std::ops::Neg;
 
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
+use iyes_loopless::prelude::ConditionSet;
 
 use corp_shared::prelude::Player;
 
@@ -90,9 +91,19 @@ struct CameraMotion;
 impl Plugin for TopDownCameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_system(Self::target_motion.label(CameraMotion))
-                .with_system(Self::input_camera_center.before(CameraMotion)),
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .label(CameraMotion)
+                .with_system(Self::input_camera_center)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .after(CameraMotion)
+                .with_system(Self::target_motion)
+                .into(),
         );
     }
 }

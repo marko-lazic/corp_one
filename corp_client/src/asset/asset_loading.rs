@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_kira_audio::AudioSource;
+use iyes_loopless::prelude::AppLooplessStateExt;
 use serde::Deserialize;
 
 use crate::asset::paths::PATHS;
@@ -162,15 +163,9 @@ impl Plugin for AssetLoadingPlugin {
             .with_collection::<ColonyAssets>()
             .with_collection::<SceneAssets>()
             .build(&mut app);
-
-        app.add_system_set(
-            SystemSet::on_enter(GameState::AssetLoading)
-                .with_system(Self::print_loading_text)
-                .with_system(Self::start_loading),
-        );
-        app.add_system_set(
-            SystemSet::on_exit(GameState::AssetLoading).with_system(Self::clean_up_loading_text),
-        );
+        app.add_enter_system(GameState::AssetLoading, Self::print_loading_text);
+        app.add_enter_system(GameState::AssetLoading, Self::start_loading);
+        app.add_exit_system(GameState::AssetLoading, Self::clean_up_loading_text);
     }
 }
 

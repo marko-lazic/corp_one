@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
+use iyes_loopless::state::NextState;
 
 use corp_shared::prelude::*;
 
@@ -11,19 +13,19 @@ use crate::Game;
 pub struct CloningPlugin;
 
 impl CloningPlugin {
-    fn run_if_dead(
+    fn check_if_dead_and_go_to_cloning(
         colony_assets: Res<ColonyAssets>,
         time: Res<Time>,
         mut game: ResMut<Game>,
         mut query: Query<&mut Health, With<Player>>,
-        mut game_state: ResMut<State<GameState>>,
+        mut commands: Commands,
     ) {
         if let Some(mut health) = query.iter_mut().next() {
             if health.is_dead() {
                 health.cloning_cooldown.tick(time.delta());
                 if health.cloning_cooldown.finished() {
                     game.current_colony_asset = colony_assets.cloning.clone();
-                    let _ = game_state.set(GameState::LoadColony).unwrap();
+                    commands.insert_resource(NextState(GameState::LoadColony));
                 }
             }
         }
@@ -42,11 +44,13 @@ impl CloningPlugin {
 }
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut App) {
+        app.add_enter_system(GameState::StarMap, Self::vort_in_dead_player_to_cloning);
         app.add_system_set(
-            SystemSet::on_enter(GameState::StarMap)
-                .with_system(Self::vort_in_dead_player_to_cloning),
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::check_if_dead_and_go_to_cloning)
+                .into(),
         );
-        app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(Self::run_if_dead));
     }
 }
 
@@ -68,7 +72,7 @@ mod tests {
         let mut stage = SystemStage::parallel()
             .with_system_set(State::<GameState>::get_driver())
             .with_system(kill_player.label(KILLING_LABEL))
-            .with_system(CloningPlugin::run_if_dead.after(KILLING_LABEL));
+            .with_system(CloningPlugin::check_if_dead_and_go_to_cloning.after(KILLING_LABEL));
 
         // Setup world
         let mut world = World::default();

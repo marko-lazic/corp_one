@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioPlugin};
+use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
 use corp_shared::prelude::*;
 
@@ -39,11 +40,18 @@ impl Plugin for SoundPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(AudioPlugin);
         app.add_system_set(
-            SystemSet::on_enter(GameState::Playing)
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
                 .with_system(Self::setup_live_state)
-                .with_system(Self::play_music),
+                .with_system(Self::play_music)
+                .into(),
         );
-        app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(Self::walk_sound));
-        app.add_system_set(SystemSet::on_exit(GameState::Playing).with_system(Self::stop_audio));
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::walk_sound)
+                .into(),
+        );
+        app.add_exit_system(GameState::Playing, Self::stop_audio);
     }
 }

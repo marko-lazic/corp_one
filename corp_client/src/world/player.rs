@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use iyes_loopless::condition::ConditionSet;
 
 use corp_shared::prelude::*;
 
@@ -80,9 +81,18 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(CloningPlugin);
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_system(Self::move_player.after(InputSystem::Playing))
-                .with_system(Self::handle_dead),
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .after(InputSystem::CheckInteraction)
+                .with_system(Self::move_player)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::handle_dead)
+                .into(),
         );
     }
 }

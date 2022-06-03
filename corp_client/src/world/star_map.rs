@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use iyes_loopless::prelude::AppLooplessStateExt;
 
 use crate::asset::asset_loading::TextureAssets;
 use crate::constants::state::GameState;
@@ -28,10 +29,7 @@ impl StarMapPlugin {
 
 impl Plugin for StarMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_enter(GameState::StarMap).with_system(Self::setup_starmap),
-        );
-
-        app.add_system_set(SystemSet::on_exit(GameState::StarMap).with_system(Self::teardown));
+        app.add_enter_system(GameState::StarMap, Self::setup_starmap);
+        app.add_exit_system(GameState::StarMap, Self::teardown);
     }
 }

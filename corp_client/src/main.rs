@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use blender_bevy_toolkit::BlendLoadPlugin;
+use iyes_loopless::prelude::AppLooplessStateExt;
 
 use constants::state::GameState;
 use constants::window;
@@ -37,15 +38,11 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(create_window_descriptor())
         .add_plugins(DefaultPlugins)
+        .add_loopless_state(GameState::AssetLoading)
         .add_plugin(AssetLoadingPlugin)
-        .add_state(GameState::AssetLoading)
         .add_plugin(GuiPlugin)
         .add_plugin(WorldPlugin)
         .add_plugin(BlendLoadPlugin::default())
-        .add_plugin(bevy_framepace::FramepacePlugin {
-            warn_on_frame_drop: false,
-            ..default()
-        })
         .run();
 }
 

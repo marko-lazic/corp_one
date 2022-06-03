@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use heron::{CollisionData, CollisionEvent};
+use iyes_loopless::condition::ConditionSet;
 use serde::Deserialize;
 
 use corp_shared::prelude::*;
@@ -135,9 +136,11 @@ impl ZonePlugin {
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing)
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
                 .with_system(Self::collision_events)
-                .with_system(Self::handle_health_in_zones),
+                .with_system(Self::handle_health_in_zones)
+                .into(),
         );
     }
 }

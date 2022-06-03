@@ -1,9 +1,9 @@
-use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle, PickingCameraBundle, RayCastSource};
 use bevy_mod_raycast::RayCastMesh;
 use heron::prelude::*;
+use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet, NextState};
 use rand::seq::SliceRandom;
 use serde::Deserialize;
 
@@ -55,8 +55,7 @@ pub struct ColonyPlugin;
 enum ColonySystem {
     PlayerSetup,
     CameraSetup,
-    BarrierInsert,
-    VortexGateInsert,
+    SetupInsert,
 }
 
 impl ColonyPlugin {
@@ -191,19 +190,19 @@ impl ColonyPlugin {
             .insert(RayCastSource::<MyRayCastSet>::new());
     }
 
-    fn start_playing_state(mut game_state: ResMut<State<GameState>>) {
+    fn start_playing_state(mut commands: Commands) {
         info!("Playing");
-        let _ = game_state.set(GameState::Playing);
+        commands.insert_resource(NextState(GameState::Playing));
     }
 
-    fn start_spawn_player_state(mut game_state: ResMut<State<GameState>>) {
+    fn start_spawn_player_state(mut commands: Commands) {
         info!("Spawn Player");
-        let _ = game_state.set(GameState::SpawnPlayer);
+        commands.insert_resource(NextState(GameState::SpawnPlayer));
     }
 
-    fn start_post_processing_state(mut game_state: ResMut<State<GameState>>) {
+    fn start_post_processing_state(mut commands: Commands) {
         info!("Post-processing");
-        let _ = game_state.set(GameState::PostProcessing);
+        commands.insert_resource(NextState(GameState::PostProcessing));
     }
 
     fn teardown_entities(mut commands: Commands, entities: Query<Entity>) {
@@ -233,14 +232,11 @@ impl ColonyPlugin {
         asset_server.watch_for_changes().unwrap();
     }
 
-    fn scene_loaded(
-        game_state: Res<State<GameState>>,
-        query: Query<Entity, With<VortexNode>>,
-    ) -> ShouldRun {
-        if query.iter().count() > 0 && game_state.current() == &GameState::LoadColony {
-            ShouldRun::Yes
+    fn scene_loaded(query: Query<Entity, With<VortexNode>>) -> bool {
+        if query.iter().count() > 0 {
+            true
         } else {
-            ShouldRun::No
+            false
         }
     }
 }
@@ -257,44 +253,59 @@ impl Plugin for ColonyPlugin {
         app.add_plugins(DefaultPickingPlugins);
         app.add_plugin(BarrierPlugin);
         app.add_system_set(
-            SystemSet::on_enter(GameState::LoadColony)
+            ConditionSet::new()
+                .run_in_state(GameState::LoadColony)
                 .with_system(Self::setup_scene_dynamic)
                 .with_system(Self::setup_debug_plane)
-                .with_system(Self::setup_zones),
+                .with_system(Self::setup_zones)
+                .into(),
         );
         app.add_system_set(
-            SystemSet::new()
-                .with_run_criteria(Self::scene_loaded)
-                .with_system(Self::start_post_processing_state),
+            ConditionSet::new()
+                .run_in_state(GameState::LoadColony)
+                .run_if(Self::scene_loaded)
+                .with_system(Self::start_post_processing_state)
+                .into(),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::PostProcessing)
-                .with_system(Self::barrier_access_insert.label(ColonySystem::BarrierInsert))
-                .with_system(Self::vortex_gate_insert.label(ColonySystem::VortexGateInsert))
-                .with_system(
-                    Self::start_spawn_player_state
-                        .after(ColonySystem::VortexGateInsert)
-                        .after(ColonySystem::BarrierInsert),
-                ),
+            ConditionSet::new()
+                .run_in_state(GameState::PostProcessing)
+                .label(ColonySystem::SetupInsert)
+                .with_system(Self::barrier_access_insert)
+                .with_system(Self::vortex_gate_insert)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::PostProcessing)
+                .after(ColonySystem::SetupInsert)
+                .with_system(Self::start_spawn_player_state)
+                .into(),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::SpawnPlayer)
-                .with_system(Self::setup_player.label(ColonySystem::PlayerSetup))
-                .with_system(
-                    Self::setup_camera
-                        .label(ColonySystem::CameraSetup)
-                        .after(ColonySystem::PlayerSetup),
-                ),
+            ConditionSet::new()
+                .run_in_state(GameState::SpawnPlayer)
+                .label(ColonySystem::PlayerSetup)
+                .with_system(Self::setup_player)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::SpawnPlayer)
+                .label(ColonySystem::CameraSetup)
+                .after(ColonySystem::PlayerSetup)
+                .with_system(Self::setup_camera)
+                .into(),
         );
         app.add_system_set(
-            SystemSet::on_enter(GameState::SpawnPlayer).with_system(
-                Self::start_playing_state
-                    .after(ColonySystem::PlayerSetup)
-                    .after(ColonySystem::CameraSetup),
-            ),
+            ConditionSet::new()
+                .run_in_state(GameState::SpawnPlayer)
+                .after(ColonySystem::CameraSetup)
+                .with_system(Self::start_playing_state)
+                .into(),
         );
-        app.add_system_set(
-            SystemSet::on_exit(GameState::Playing).with_system(Self::teardown_entities),
-        );
+        app.add_exit_system(GameState::Playing, Self::teardown_entities);
     }
 }

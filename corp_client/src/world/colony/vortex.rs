@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use iyes_loopless::condition::ConditionSet;
+use iyes_loopless::prelude::NextState;
 
 use corp_shared::prelude::{Health, Player};
 
@@ -33,13 +35,13 @@ impl VortexPlugin {
     fn vort_out_event_reader(
         healths: Query<&Health, With<Player>>,
         mut game: ResMut<Game>,
-        mut game_state: ResMut<State<GameState>>,
+        mut commands: Commands,
         mut vort_out_events: EventReader<VortOutEvent>,
     ) {
         if let Some(_) = vort_out_events.iter().last() {
             let health = healths.get(game.player_entity.unwrap()).unwrap();
             game.health = health.clone();
-            let _ = game_state.set(GameState::StarMap).unwrap();
+            commands.insert_resource(NextState(GameState::StarMap));
         }
     }
 
@@ -47,29 +49,29 @@ impl VortexPlugin {
         colony_assets: Res<ColonyAssets>,
         mut vort_in_events: EventReader<VortInEvent>,
         mut game: ResMut<Game>,
-        mut game_state: ResMut<State<GameState>>,
+        mut commands: Commands,
     ) {
         for vort_in in vort_in_events.iter() {
             match vort_in.colony {
                 Colony::Cloning => {
                     info!("Cloning Facility");
                     game.current_colony_asset = colony_assets.cloning.clone();
-                    let _ = game_state.set(GameState::LoadColony).unwrap();
+                    commands.insert_resource(NextState(GameState::LoadColony));
                 }
                 Colony::Iris => {
                     info!("Moonbase: Station Iris");
                     game.current_colony_asset = colony_assets.iris.clone();
-                    let _ = game_state.set(GameState::LoadColony).unwrap();
+                    commands.insert_resource(NextState(GameState::LoadColony));
                 }
                 Colony::Liberte => {
                     info!("Mars: Colony Liberte");
                     game.current_colony_asset = colony_assets.liberte.clone();
-                    let _ = game_state.set(GameState::LoadColony).unwrap();
+                    commands.insert_resource(NextState(GameState::LoadColony));
                 }
                 Colony::Playground => {
                     info!("Alien Planet");
                     game.current_colony_asset = Handle::default();
-                    let _ = game_state.set(GameState::LoadColony).unwrap();
+                    commands.insert_resource(NextState(GameState::LoadColony));
                 }
             }
         }
@@ -87,12 +89,17 @@ impl Plugin for VortexPlugin {
         app.add_event::<VortInEvent>();
         app.add_event::<VortOutEvent>();
         app.add_system_set(
-            SystemSet::on_update(GameState::StarMap).with_system(Self::vort_in_event_reader),
+            ConditionSet::new()
+                .run_in_state(GameState::StarMap)
+                .with_system(Self::vort_in_event_reader)
+                .into(),
         );
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing)
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
                 .with_system(Self::vort_out_event_reader)
-                .with_system(Self::animate_nodes),
+                .with_system(Self::animate_nodes)
+                .into(),
         );
     }
 }

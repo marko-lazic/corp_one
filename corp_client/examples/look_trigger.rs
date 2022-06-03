@@ -10,7 +10,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(DebugLinesPlugin::default())
         .insert_resource(WindowDescriptor::default())
-        .add_plugin(MousePosPlugin::Orthographic)
+        .add_plugin(MousePosPlugin::SingleCamera)
         .add_plugin(ShapePlugin)
         .add_system(bevy::input::system::exit_on_esc_system)
         .add_startup_system(setup_system)

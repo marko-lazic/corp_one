@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_input_actionmap::*;
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod};
+use iyes_loopless::prelude::ConditionSet;
 
 use corp_shared::prelude::{Health, Player};
 use input_command::PlayerAction;
@@ -25,8 +26,7 @@ pub struct Cursor {
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum InputSystem {
-    Playing,
-    Starmap,
+    CheckInteraction,
 }
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
@@ -167,22 +167,25 @@ impl Plugin for InputControlPlugin {
         app.init_resource::<Cursor>();
         app.init_resource::<PlayerAction>();
         app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
-        app.add_system_set(SystemSet::new().with_system(Self::keyboard_escape_action));
+        app.add_system(Self::keyboard_escape_action);
 
         app.add_system_set(
-            SystemSet::on_update(GameState::StarMap)
-                .label(InputSystem::Starmap)
-                .with_system(Self::starmap_keyboard),
+            ConditionSet::new()
+                .run_in_state(GameState::StarMap)
+                .with_system(Self::starmap_keyboard)
+                .into(),
         );
 
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .label(InputSystem::Playing)
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .label(InputSystem::CheckInteraction)
                 .with_system(Self::update_cursor_position)
                 .with_system(Self::player_keyboard_action)
                 .with_system(Self::player_mouse_action)
                 .with_system(Self::use_barrier)
-                .with_system(Self::kill),
+                .with_system(Self::kill)
+                .into(),
         );
     }
 }
