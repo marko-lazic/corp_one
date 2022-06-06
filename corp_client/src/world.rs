@@ -20,6 +20,10 @@ pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(AmbientLight {
+            color: Color::WHITE,
+            brightness: 1.0,
+        });
         app.add_plugin(ColonyPlugin);
         app.add_plugin(StarMapPlugin);
         app.add_plugin(InputControlPlugin);
