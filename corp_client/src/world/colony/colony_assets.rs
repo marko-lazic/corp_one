@@ -55,31 +55,3 @@ pub struct LightAsset {
     pub position: Vec3,
     pub color: ColorAsset,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_random_vortex_node_position() {
-        // given
-        let expected_position = Vec3::new(0.0, 0.0, 0.0);
-        let vortex_nodes = vec![VortexNodeAsset {
-            position: expected_position,
-        }];
-        let colony_asset = ColonyAsset {
-            vortex_nodes,
-            ..Default::default()
-        };
-
-        // when
-        let position = colony_asset.random_vortex_node_position();
-
-        // then
-        assert!(position.is_some(), "Position is cloned");
-        assert_eq!(
-            colony_asset.vortex_nodes[0].position, expected_position,
-            "And position has not moved"
-        )
-    }
-}

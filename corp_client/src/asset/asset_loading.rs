@@ -16,6 +16,8 @@ pub struct SceneAssets {
     pub cloning: Handle<DynamicScene>,
     #[asset(path = "scenes/liberte/liberte.scn")]
     pub liberte: Handle<DynamicScene>,
+    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Scene0")]
+    pub mannequiny: Handle<Scene>,
 }
 
 #[derive(AssetCollection)]
@@ -48,7 +50,7 @@ pub struct MeshAssets {
     pub energy_node: Handle<Mesh>,
     #[asset(path = "mesh/cube/cube.gltf#Mesh0/Primitive0")]
     pub cube: Handle<Mesh>,
-    #[asset(path = "mesh/mannequiny/mannequiny-0.3.0.glb#Mesh0/Primitive0")]
+    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Mesh0/Primitive1")]
     pub mannequiny: Handle<Mesh>,
     #[asset(path = "mesh/vortex_node.glb#Mesh0/Primitive0")]
     pub vortex_node: Handle<Mesh>,

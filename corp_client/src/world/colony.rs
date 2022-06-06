@@ -4,21 +4,17 @@ use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle, PickingCameraBundl
 use bevy_mod_raycast::RayCastMesh;
 use heron::prelude::*;
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet, NextState};
-use rand::seq::SliceRandom;
 use serde::Deserialize;
 
-use corp_shared::prelude::Player;
-
-use crate::asset::asset_loading::{MaterialAssets, MeshAssets, SceneAssets};
+use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
 use crate::constants::state::GameState;
 use crate::input::MyRayCastSet;
-use crate::world::camera::{CameraCenter, TopDownCamera};
-use crate::world::character::Movement;
+use crate::world::camera::TopDownCamera;
 use crate::world::colony::barrier::{BarrierAccess, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneEntities};
-use crate::world::player::PlayerBundle;
+use crate::world::player::PlayerPlugin;
 use crate::Game;
 
 mod asset;
@@ -139,45 +135,6 @@ impl ColonyPlugin {
         }
     }
 
-    fn setup_player(
-        mut commands: Commands,
-        mesh_assets: Res<MeshAssets>,
-        materials: ResMut<Assets<StandardMaterial>>,
-        mut game: ResMut<Game>,
-        mut vortex_nodes: Query<&mut Transform, With<VortexNode>>,
-        asset_server: Res<AssetServer>,
-    ) {
-        asset_server.watch_for_changes().unwrap();
-        let random_position = vortex_nodes
-            .iter_mut()
-            .map(|t| t.translation)
-            .collect::<Vec<Vec3>>()
-            .choose(&mut rand::thread_rng())
-            .map(|p| p.to_owned());
-
-        let position = random_position.unwrap_or_else(|| Vec3::new(1.0, 1.0, 1.0));
-
-        let player = commands
-            .spawn_bundle(PlayerBundle::new(mesh_assets, materials, position))
-            .insert(Player::default())
-            .insert(Movement::default())
-            .insert(game.health.clone())
-            .insert(CameraCenter)
-            .insert(RigidBody::Dynamic)
-            .insert(CollisionShape::Cuboid {
-                half_extends: Vec3::new(0.5, 1.0, 0.5),
-                border_radius: None,
-            })
-            .insert(
-                CollisionLayers::none()
-                    .with_group(Layer::Player)
-                    .with_masks(vec![Layer::Zone, Layer::VortexGate]),
-            )
-            .id();
-
-        game.player_entity = Some(player);
-    }
-
     fn setup_camera(mut commands: Commands) {
         commands
             .spawn_bundle(PerspectiveCameraBundle {
@@ -287,7 +244,7 @@ impl Plugin for ColonyPlugin {
             ConditionSet::new()
                 .run_in_state(GameState::SpawnPlayer)
                 .label(ColonySystem::PlayerSetup)
-                .with_system(Self::setup_player)
+                .with_system(PlayerPlugin::setup_player)
                 .into(),
         );
 

@@ -2,15 +2,6 @@ use bevy::prelude::*;
 
 use crate::constants::tick;
 
-#[derive(Component)]
-pub struct CharacterName(String);
-
-impl CharacterName {
-    pub fn new(name: &str) -> Self {
-        CharacterName(String::from(name))
-    }
-}
-
 #[derive(Debug, Component)]
 pub struct Movement {
     pub acceleration: f32,
@@ -36,22 +27,6 @@ impl Default for Movement {
         }
     }
 }
-
-#[derive(Bundle)]
-pub struct CharacterBundle {
-    pub name: CharacterName,
-    pub movement: Movement,
-}
-
-impl Default for CharacterBundle {
-    fn default() -> Self {
-        CharacterBundle {
-            name: CharacterName(EMPTY_CHARACTER_NAME.to_string()),
-            movement: Default::default(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -70,5 +45,3 @@ mod tests {
         assert_eq!(movement.velocity, Vec3::new(0.16499159, 0.0, -0.16499159));
     }
 }
-
-const EMPTY_CHARACTER_NAME: &str = "";

@@ -28,6 +28,7 @@ rand = "0.8.5"
 bevy_mouse_tracking_plugin = "0.2.1"
 bevy_transform_gizmo = "0.2.1"
 bevy_prototype_debug_lines = { version = "0.7.1" }
+impl-tools = "0.3.2"
 
 # Should deprecate
 bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap.git", branch = "main" }
