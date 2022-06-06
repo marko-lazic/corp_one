@@ -32,3 +32,10 @@ impl Plugin for WorldPlugin {
         app.add_plugin(TopDownCameraPlugin);
     }
 }
+
+#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
+enum WorldSystem {
+    PlayerSetup,
+    CameraSetup,
+    SetupInsert,
+}

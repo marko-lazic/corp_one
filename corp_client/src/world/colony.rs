@@ -14,7 +14,7 @@ use crate::world::colony::barrier::{BarrierAccess, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::{Zone, ZoneEntities};
-use crate::world::player::PlayerPlugin;
+use crate::world::WorldSystem;
 use crate::Game;
 
 mod asset;
@@ -46,13 +46,6 @@ impl Default for Colony {
 }
 
 pub struct ColonyPlugin;
-
-#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
-enum ColonySystem {
-    PlayerSetup,
-    CameraSetup,
-    SetupInsert,
-}
 
 impl ColonyPlugin {
     fn setup_debug_plane(
@@ -227,7 +220,7 @@ impl Plugin for ColonyPlugin {
         app.add_system_set(
             ConditionSet::new()
                 .run_in_state(GameState::PostProcessing)
-                .label(ColonySystem::SetupInsert)
+                .label(WorldSystem::SetupInsert)
                 .with_system(Self::barrier_access_insert)
                 .with_system(Self::vortex_gate_insert)
                 .into(),
@@ -236,30 +229,23 @@ impl Plugin for ColonyPlugin {
         app.add_system_set(
             ConditionSet::new()
                 .run_in_state(GameState::PostProcessing)
-                .after(ColonySystem::SetupInsert)
+                .after(WorldSystem::SetupInsert)
                 .with_system(Self::start_spawn_player_state)
-                .into(),
-        );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::SpawnPlayer)
-                .label(ColonySystem::PlayerSetup)
-                .with_system(PlayerPlugin::setup_player)
                 .into(),
         );
 
         app.add_system_set(
             ConditionSet::new()
                 .run_in_state(GameState::SpawnPlayer)
-                .label(ColonySystem::CameraSetup)
-                .after(ColonySystem::PlayerSetup)
+                .label(WorldSystem::CameraSetup)
+                .after(WorldSystem::PlayerSetup)
                 .with_system(Self::setup_camera)
                 .into(),
         );
         app.add_system_set(
             ConditionSet::new()
                 .run_in_state(GameState::SpawnPlayer)
-                .after(ColonySystem::CameraSetup)
+                .after(WorldSystem::CameraSetup)
                 .with_system(Self::start_playing_state)
                 .into(),
         );

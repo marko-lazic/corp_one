@@ -57,7 +57,7 @@ impl MetricsPlugin {
         for mut text in query.iter_mut() {
             if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
                 if let Some(average) = fps.average() {
-                    text.sections[0].value = format!("FPS: {:.2}", average);
+                    text.sections[0].value = format!("FPS {:.0}", average);
                 }
             }
         }
@@ -76,24 +76,31 @@ impl MetricsPlugin {
             player_z = transform.translation.z;
         }
         for mut text in query.iter_mut() {
-            text.sections[0].value = format!(
-                "Player position: X: {:.1} Y: {:.1} Z: {:.1}",
-                player_x, player_y, player_z
-            );
+            text.sections[0].value =
+                format!("Player {:.0} {:.0} {:.0}", player_x, player_y, player_z);
         }
     }
 
     fn mouse_screen_position_update(
         cursor: Res<Cursor>,
-        mut query: Query<&mut Text, With<MouseScreenPositionText>>,
+        mut screen_text: Query<&mut Text, With<MouseScreenPositionText>>,
     ) {
-        let mouse_screen_x = &cursor.screen.x;
-        let mouse_screen_y = &cursor.screen.y;
-        for mut text in query.iter_mut() {
-            text.sections[0].value = format!(
-                "Mouse screen position: X: {:.1} Y: {:.1}",
-                mouse_screen_x, mouse_screen_y
-            );
+        let cs_x = &cursor.screen.x;
+        let cs_y = &cursor.screen.y;
+        for mut text in screen_text.iter_mut() {
+            text.sections[0].value = format!("MS Screen {:.0} {:.0}", cs_x, cs_y);
+        }
+    }
+
+    fn mouse_world_position_update(
+        cursor: Res<Cursor>,
+        mut world_text: Query<&mut Text, With<MouseWorldPositionText>>,
+    ) {
+        let ws_x = &cursor.world.x;
+        let ws_y = &cursor.world.y;
+        let ws_z = &cursor.world.z;
+        for mut text in world_text.iter_mut() {
+            text.sections[0].value = format!("MS World {:.0} {:.0} {:.0}", ws_x, ws_y, ws_z);
         }
     }
 
@@ -109,7 +116,9 @@ impl MetricsPlugin {
     fn camera_debug_text(game: Res<Game>, mut query: Query<&mut Text, With<CameraDebugText>>) {
         if let Some(transform) = game.camera_transform {
             for mut text in query.iter_mut() {
-                text.sections[0].value = format!("Cam {:?}", transform.translation);
+                let vec3 = transform.translation;
+                text.sections[0].value =
+                    format!("Camera {:.0} {:.0} {:.0}", vec3.x, vec3.y, vec3.z);
             }
         }
     }
@@ -122,7 +131,7 @@ impl MetricsPlugin {
         if let Some(entity) = game.player_entity {
             if let Ok(health) = healths.get(entity) {
                 for mut text in query.iter_mut() {
-                    text.sections[0].value = format!("Player health: {}", health.get_health());
+                    text.sections[0].value = format!("Health {:.0}", health.get_health());
                 }
             }
         }
@@ -139,6 +148,7 @@ impl Plugin for MetricsPlugin {
                 .with_system(Self::fps_update)
                 .with_system(Self::player_position_update)
                 .with_system(Self::mouse_screen_position_update)
+                .with_system(Self::mouse_world_position_update)
                 .with_system(Self::camera_metrics)
                 .with_system(Self::camera_debug_text)
                 .with_system(Self::player_health_metric)
@@ -161,7 +171,7 @@ mod metrics_utils {
     fn default_text(asset_server: &Res<AssetServer>) -> Text {
         let font_handle = asset_server.load("fonts/FiraMono-Medium.ttf");
         Text::with_section(
-            "FPS".to_string(),
+            "Corp One".to_string(),
             TextStyle {
                 font: font_handle,
                 font_size: 20.0,

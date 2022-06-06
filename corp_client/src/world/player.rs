@@ -14,9 +14,39 @@ use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
 use crate::world::colony::vortex::VortexNode;
 use crate::world::colony::Layer;
+use crate::world::WorldSystem;
 use crate::Game;
 
 pub struct PlayerPlugin;
+
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(CloningPlugin);
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::SpawnPlayer)
+                .label(WorldSystem::PlayerSetup)
+                .with_system(PlayerPlugin::setup_player)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .after(InputSystem::CheckInteraction)
+                .with_system(Self::move_player)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::handle_dead)
+                .into(),
+        );
+    }
+}
 
 impl PlayerPlugin {
     pub fn setup_player(
@@ -88,25 +118,5 @@ impl PlayerPlugin {
 
     fn is_moving(delta_move: &Vec3) -> bool {
         delta_move.ne(&Vec3::ZERO)
-    }
-}
-
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugin(CloningPlugin);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .after(InputSystem::CheckInteraction)
-                .with_system(Self::move_player)
-                .into(),
-        );
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::handle_dead)
-                .into(),
-        );
     }
 }
