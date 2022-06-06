@@ -58,3 +58,7 @@ path = "examples/radial_trigger.rs"
 [[example]]
 name = "local_to_world"
 path = "examples/local_to_world.rs"
+
+[[example]]
+name = "animation"
+path = "examples/animation.rs"
