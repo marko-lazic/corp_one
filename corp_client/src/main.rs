@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::WorldInspectorPlugin;
 use blender_bevy_toolkit::BlendLoadPlugin;
 use iyes_loopless::prelude::AppLooplessStateExt;
 
