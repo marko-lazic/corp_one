@@ -65,9 +65,7 @@ impl PlayerPlugin {
         let position = random_position.unwrap_or_else(|| Vec3::new(1.0, 1.0, 1.0));
 
         let player = commands
-            .spawn_bundle(TransformBundle::from(Transform::from_xyz(
-                position.x, position.y, position.z,
-            )))
+            .spawn_bundle(TransformBundle::from(Transform::from_translation(position)))
             .with_children(|parent| {
                 parent.spawn_scene(scene_assets.mannequiny.clone());
             })
