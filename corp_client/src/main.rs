@@ -44,6 +44,7 @@ fn main() {
         .add_plugin(GuiPlugin)
         .add_plugin(WorldPlugin)
         .add_plugin(BlendLoadPlugin::default())
+        .add_plugin(WorldInspectorPlugin::new())
         .run();
 }
 

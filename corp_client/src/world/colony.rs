@@ -53,6 +53,7 @@ impl ColonyPlugin {
         mut meshes: ResMut<Assets<Mesh>>,
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
+        info!("Setup debug plane");
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
@@ -76,6 +77,7 @@ impl ColonyPlugin {
         material_assets: Res<MaterialAssets>,
         mut meshes: ResMut<Assets<Mesh>>,
     ) {
+        info!("Setup zones");
         if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             for zone_asset in &colony_asset.zones {
                 commands
@@ -104,6 +106,7 @@ impl ColonyPlugin {
     }
 
     fn vortex_gate_insert(mut commands: Commands, query: Query<Entity, Added<VortexGate>>) {
+        info!("Vortex gate insert");
         for gate in query.iter() {
             commands
                 .entity(gate)
@@ -121,6 +124,7 @@ impl ColonyPlugin {
     }
 
     fn barrier_access_insert(mut commands: Commands, query: Query<Entity, Added<BarrierAccess>>) {
+        info!("Barrier access insert");
         for gate in query.iter() {
             commands
                 .entity(gate)
@@ -129,6 +133,7 @@ impl ColonyPlugin {
     }
 
     fn setup_camera(mut commands: Commands) {
+        info!("Setup Player");
         commands
             .spawn_bundle(PerspectiveCameraBundle {
                 transform: Transform::from_translation(Vec3::new(-3.0, 3.0, 5.0))
@@ -140,18 +145,18 @@ impl ColonyPlugin {
             .insert(RayCastSource::<MyRayCastSet>::new());
     }
 
-    fn start_playing_state(mut commands: Commands) {
-        info!("Playing");
+    fn next_state_playing(mut commands: Commands) {
+        info!("State: Playing");
         commands.insert_resource(NextState(GameState::Playing));
     }
 
-    fn start_spawn_player_state(mut commands: Commands) {
-        info!("Spawn Player");
+    fn next_state_spawn_player(mut commands: Commands) {
+        info!("State: Spawn Player");
         commands.insert_resource(NextState(GameState::SpawnPlayer));
     }
 
-    fn start_post_processing_state(mut commands: Commands) {
-        info!("Post-processing");
+    fn next_state_post_processing(mut commands: Commands) {
+        info!("State: Post-processing");
         commands.insert_resource(NextState(GameState::PostProcessing));
     }
 
@@ -162,14 +167,14 @@ impl ColonyPlugin {
         }
     }
 
-    fn setup_scene_dynamic(
+    fn setup_colony(
         colony_assets: Res<Assets<ColonyAsset>>,
         scene_assets: Res<SceneAssets>,
         asset_server: Res<AssetServer>,
         mut scene_spawner: ResMut<SceneSpawner>,
         mut game: ResMut<Game>,
     ) {
-        info!("Setup scene");
+        info!("Setup colony");
         let current_colony = colony_assets.get(&game.current_colony_asset).unwrap();
         let colony_scene = match current_colony.name {
             Colony::Cloning => scene_assets.cloning.clone(),
@@ -182,7 +187,7 @@ impl ColonyPlugin {
         asset_server.watch_for_changes().unwrap();
     }
 
-    fn scene_loaded(query: Query<Entity, With<VortexNode>>) -> bool {
+    fn is_colony_loaded(query: Query<Entity, With<VortexNode>>) -> bool {
         if query.iter().count() > 0 {
             true
         } else {
@@ -202,19 +207,14 @@ impl Plugin for ColonyPlugin {
         app.add_plugin(VortexPlugin);
         app.add_plugins(DefaultPickingPlugins);
         app.add_plugin(BarrierPlugin);
+        app.add_enter_system(GameState::LoadColony, Self::setup_colony);
+        app.add_enter_system(GameState::LoadColony, Self::setup_debug_plane);
+        app.add_enter_system(GameState::LoadColony, Self::setup_zones);
         app.add_system_set(
             ConditionSet::new()
                 .run_in_state(GameState::LoadColony)
-                .with_system(Self::setup_scene_dynamic)
-                .with_system(Self::setup_debug_plane)
-                .with_system(Self::setup_zones)
-                .into(),
-        );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::LoadColony)
-                .run_if(Self::scene_loaded)
-                .with_system(Self::start_post_processing_state)
+                .run_if(Self::is_colony_loaded)
+                .with_system(Self::next_state_post_processing)
                 .into(),
         );
         app.add_system_set(
@@ -230,7 +230,7 @@ impl Plugin for ColonyPlugin {
             ConditionSet::new()
                 .run_in_state(GameState::PostProcessing)
                 .after(WorldSystem::SetupInsert)
-                .with_system(Self::start_spawn_player_state)
+                .with_system(Self::next_state_spawn_player)
                 .into(),
         );
 
@@ -246,7 +246,7 @@ impl Plugin for ColonyPlugin {
             ConditionSet::new()
                 .run_in_state(GameState::SpawnPlayer)
                 .after(WorldSystem::CameraSetup)
-                .with_system(Self::start_playing_state)
+                .with_system(Self::next_state_playing)
                 .into(),
         );
         app.add_exit_system(GameState::Playing, Self::teardown_entities);
