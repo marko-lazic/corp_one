@@ -1185,26 +1185,35 @@
 						"type":"bool",
 						"value":true
 					},
-					"shadow_depth_bias":{
-						"type":"f32",
-						"value":0.1
-					},
-					"shadow_normal_bias":{
-						"type":"f32",
-						"value":0.0
-					}
-				}
-			},
-			{
-				"type":"bevy_transform::components::transform::Transform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							4.076244831085205,
-							5.903861999511719,
-							-1.0054540634155273
-						)
+            "shadow_depth_bias":{
+            "type":"f32",
+            "value":0.1
+            },
+            "shadow_normal_bias":{
+            "type":"f32",
+            "value":0.0
+            }
+            }
+            },
+{
+"type":"bevy_render::view::visibility::Visibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+},
+{
+"type":"bevy_transform::components::transform::Transform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
+"value":(
+4.076244831085205,
+5.903861999511719,
+-1.0054540634155273
+)
 					},
 					"rotation":{
 						"type":"glam::quat::Quat",
@@ -1302,26 +1311,35 @@
 						"type":"bool",
 						"value":true
 					},
-					"shadow_depth_bias":{
-						"type":"f32",
-						"value":0.1
-					},
-					"shadow_normal_bias":{
-						"type":"f32",
-						"value":0.0
-					}
-				}
-			},
-			{
-				"type":"bevy_transform::components::transform::Transform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							-2.54215931892395,
-							10.500261306762695,
-							-8.165712356567383
-						)
+            "shadow_depth_bias":{
+            "type":"f32",
+            "value":0.1
+            },
+            "shadow_normal_bias":{
+            "type":"f32",
+            "value":0.0
+            }
+            }
+            },
+            {
+            "type":"bevy_render::view::visibility::Visibility",
+            "struct":{
+            "is_visible":{
+            "type":"bool",
+            "value":true
+            }
+            }
+            },
+            {
+            "type":"bevy_transform::components::transform::Transform",
+            "struct":{
+            "translation":{
+            "type":"glam::vec3::Vec3",
+            "value":(
+            -2.54215931892395,
+            10.500261306762695,
+            -8.165712356567383
+            )
 					},
 					"rotation":{
 						"type":"glam::quat::Quat",
@@ -1419,26 +1437,35 @@
 						"type":"bool",
 						"value":true
 					},
-					"shadow_depth_bias":{
-						"type":"f32",
-						"value":0.1
-					},
-					"shadow_normal_bias":{
-						"type":"f32",
-						"value":0.0
-					}
-				}
-			},
-			{
-				"type":"bevy_transform::components::transform::Transform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							-15.981468200683594,
-							9.245529174804688,
-							-7.966259002685547
-						)
+            "shadow_depth_bias":{
+            "type":"f32",
+            "value":0.1
+            },
+            "shadow_normal_bias":{
+            "type":"f32",
+            "value":0.0
+            }
+            }
+            },
+{
+"type":"bevy_render::view::visibility::Visibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+},
+{
+"type":"bevy_transform::components::transform::Transform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
+"value":(
+-15.981468200683594,
+9.245529174804688,
+-7.966259002685547
+)
 					},
 					"rotation":{
 						"type":"glam::quat::Quat",
