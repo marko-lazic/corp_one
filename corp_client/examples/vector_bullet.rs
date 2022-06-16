@@ -1,7 +1,6 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable, InspectorPlugin, WorldInspectorPlugin};
+use bevy_inspector_egui::{Inspectable, InspectorPlugin};
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
-use bevy_prototype_lyon::prelude::*;
 
 fn main() {
     App::new()
@@ -28,14 +27,14 @@ fn draw_distance_vec(
     let green = Color::GREEN;
     let blue = Color::BLUE;
 
-    let a_to_b = (b - a); // to point (b) minus (-) from point (a)
+    let a_to_b = b - a; // to point (b) minus (-) from point (a)
     let a_to_b_dir = a_to_b.normalize();
     let c = a + a_to_b_dir * 8.0;
     lines.line_colored(zero, a, 0.0, red);
     lines.line_colored(zero, b, 0.0, blue);
     lines.line_colored(a, c, 0.0, green);
 
-    let midpoint = (a - b) / 2.;
+    // let midpoint = (a - b) / 2.;
     let mut sphere = query.get_mut(game.sphere.unwrap()).unwrap();
     let offset_vec = a_to_b_dir * inspector.offset;
     sphere.translation = a + offset_vec;

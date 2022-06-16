@@ -42,6 +42,6 @@ mod tests {
         movement.update_velocity(direction);
 
         // then
-        assert_eq!(movement.velocity, Vec3::new(0.16499159, 0.0, -0.16499159));
+        assert_eq!(movement.velocity, Vec3::new(4.7140455, 0.0, -4.7140455));
     }
 }

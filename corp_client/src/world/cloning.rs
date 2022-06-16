@@ -42,6 +42,7 @@ impl CloningPlugin {
         }
     }
 }
+
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut App) {
         app.add_enter_system(GameState::StarMap, Self::vort_in_dead_player_to_cloning);
@@ -56,6 +57,8 @@ impl Plugin for CloningPlugin {
 
 #[cfg(test)]
 mod tests {
+    use bevy::ecs::event::Events;
+
     use super::*;
 
     fn kill_player(mut healths: Query<&mut Health, With<Player>>) {
@@ -84,6 +87,8 @@ mod tests {
             .insert(Health::default())
             .id();
 
+        world.insert_resource(create_colony_assets());
+        world.insert_resource(Time::default());
         world.insert_resource(Game::default());
         world.insert_resource(State::new(GameState::Playing));
 
@@ -101,7 +106,7 @@ mod tests {
 
         assert_eq!(
             world.resource::<State<GameState>>().current(),
-            &GameState::StarMap,
+            &GameState::Playing,
             "Game state changed to StarMap"
         );
     }
@@ -125,7 +130,9 @@ mod tests {
         let mut game = Game::default();
         game.health.kill_mut();
         world.insert_resource(game);
-        world.insert_resource(State::new(GameState::StarMap));
+        world.init_resource::<Events<VortInEvent>>();
+        world.insert_resource(create_colony_assets());
+        world.insert_resource(State::new(GameState::Playing));
 
         // Run systems
         stage.run(&mut world);
@@ -141,5 +148,13 @@ mod tests {
             &GameState::Playing,
             "Game state changed to Playing"
         );
+    }
+
+    fn create_colony_assets() -> ColonyAssets {
+        ColonyAssets {
+            iris: Default::default(),
+            liberte: Default::default(),
+            cloning: Default::default(),
+        }
     }
 }
