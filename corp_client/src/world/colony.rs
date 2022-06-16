@@ -170,7 +170,6 @@ impl ColonyPlugin {
     fn setup_colony(
         colony_assets: Res<Assets<ColonyAsset>>,
         scene_assets: Res<SceneAssets>,
-        asset_server: Res<AssetServer>,
         mut scene_spawner: ResMut<SceneSpawner>,
         mut game: ResMut<Game>,
     ) {
@@ -184,7 +183,6 @@ impl ColonyPlugin {
         };
         game.scene_handle = colony_scene.clone();
         scene_spawner.spawn_dynamic(colony_scene);
-        asset_server.watch_for_changes().unwrap();
     }
 
     fn is_colony_loaded(query: Query<Entity, With<VortexNode>>) -> bool {
@@ -192,6 +190,14 @@ impl ColonyPlugin {
             true
         } else {
             false
+        }
+    }
+
+    // Temporary fixes the problem with shadows not working
+    fn update_lights(mut query: Query<&mut PointLight>) {
+        info!("Update lights");
+        for mut point_light in query.iter_mut() {
+            point_light.shadows_enabled = true;
         }
     }
 }
@@ -249,6 +255,8 @@ impl Plugin for ColonyPlugin {
                 .with_system(Self::next_state_playing)
                 .into(),
         );
+
+        app.add_enter_system(GameState::Playing, Self::update_lights);
         app.add_exit_system(GameState::Playing, Self::teardown_entities);
     }
 }
