@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::WorldInspectorPlugin;
 use blender_bevy_toolkit::BlendLoadPlugin;
+use iyes_loopless::prelude::AppLooplessStateExt;
 
 use constants::state::GameState;
 use constants::window;
@@ -13,7 +15,6 @@ use crate::world::colony::intractable::UseEntity;
 use crate::world::WorldPlugin;
 
 mod asset;
-mod connection;
 mod constants;
 mod gui;
 pub mod input;
@@ -38,17 +39,12 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(create_window_descriptor())
         .add_plugins(DefaultPlugins)
+        .add_loopless_state(GameState::AssetLoading)
         .add_plugin(AssetLoadingPlugin)
-        .add_state(GameState::AssetLoading)
         .add_plugin(GuiPlugin)
         .add_plugin(WorldPlugin)
         .add_plugin(BlendLoadPlugin::default())
-        .add_plugin(bevy_framepace::FramepacePlugin {
-            enabled: true,
-            framerate_limit: bevy_framepace::FramerateLimit::Auto,
-            warn_on_frame_drop: false,
-            safety_margin: std::time::Duration::from_millis(2),
-        })
+        .add_plugin(WorldInspectorPlugin::new())
         .run();
 }
 

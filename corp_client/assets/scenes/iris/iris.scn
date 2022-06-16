@@ -2039,46 +2039,55 @@
 						"value":(
 							1.0,
 							1.0,
-							1.0
-						)
-					}
-				}
-			},
-			{
-				"type":"bevy_render::view::visibility::Visibility",
-				"struct":{
-					"is_visible":{
-						"type":"bool",
-						"value":true
-					}
-				}
-			}
-		]
-	),
-	(
-		entity:20,
-		components:[
-			{
-				"type":"bevy_render::primitives::CubemapFrusta",
-				"struct":{}
-			},
-			{
-				"type":"bevy_pbr::bundle::CubemapVisibleEntities",
-				"struct":{}
-			},
-			{
-				"type":"bevy_transform::components::global_transform::GlobalTransform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							4.076244831085205,
-							5.732036590576172,
-							-1.0054540634155273
-						)
-					},
-					"rotation":{
-						"type":"glam::quat::Quat",
+1.0
+)
+}
+}
+},
+{
+"type":"bevy_render::view::visibility::Visibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+}
+]
+),
+(
+entity:20,
+components:[
+{
+"type":"bevy_render::view::visibility::ComputedVisibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+},
+{
+"type":"bevy_render::primitives::CubemapFrusta",
+"struct":{}
+},
+{
+"type":"bevy_pbr::bundle::CubemapVisibleEntities",
+"struct":{}
+},
+{
+"type":"bevy_transform::components::global_transform::GlobalTransform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
+"value":(
+4.076244831085205,
+5.732036590576172,
+-1.0054540634155273
+)
+},
+"rotation":{
+"type":"glam::quat::Quat",
 						"value":(
 							-0.357625275850296,
 							0.6113685369491577,
@@ -2112,90 +2121,108 @@
 							green:1.0,
 							blue:1.0,
 							alpha:1.0
-						)
-					},
-					"intensity":{
-						"type":"f32",
-						"value":3000.0
-					},
-					"range":{
-						"type":"f32",
-						"value":40.0
-					},
-					"radius":{
-						"type":"f32",
-						"value":0.10000000149011612
-					},
-					"shadows_enabled":{
-						"type":"bool",
-						"value":true
-					},
-					"shadow_depth_bias":{
-						"type":"f32",
-						"value":0.1
-					},
-					"shadow_normal_bias":{
-						"type":"f32",
-						"value":0.0
-					}
-				}
-			},
-			{
-				"type":"bevy_transform::components::transform::Transform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							4.076244831085205,
-							5.732036590576172,
-							-1.0054540634155273
-						)
-					},
-					"rotation":{
-						"type":"glam::quat::Quat",
-						"value":(
-							-0.357625275850296,
-							0.6113685369491577,
-							0.49426189064979553,
-							0.5040217041969299
-						)
-					},
-					"scale":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							0.9999999403953552,
-							1.0,
-							1.0
-						)
-					}
-				}
-			}
-		]
-	),
-	(
-		entity:21,
-		components:[
-			{
-				"type":"bevy_render::primitives::CubemapFrusta",
-				"struct":{}
-			},
-			{
-				"type":"bevy_pbr::bundle::CubemapVisibleEntities",
-				"struct":{}
-			},
-			{
-				"type":"bevy_transform::components::global_transform::GlobalTransform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							3.3749444484710693,
-							3.5029869079589844,
-							-18.979154586791992
-						)
-					},
-					"rotation":{
-						"type":"glam::quat::Quat",
+)
+},
+"intensity":{
+"type":"f32",
+"value":3000.0
+},
+"range":{
+"type":"f32",
+"value":40.0
+},
+"radius":{
+"type":"f32",
+"value":0.10000000149011612
+},
+"shadows_enabled":{
+"type":"bool",
+"value":true
+},
+"shadow_depth_bias":{
+"type":"f32",
+"value":1.0
+},
+"shadow_normal_bias":{
+"type":"f32",
+"value":0.6000000238418579
+}
+}
+},
+{
+"type":"bevy_transform::components::transform::Transform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
+"value":(
+4.076244831085205,
+5.732036590576172,
+-1.0054540634155273
+)
+},
+"rotation":{
+"type":"glam::quat::Quat",
+"value":(
+-0.357625275850296,
+0.6113685369491577,
+0.49426189064979553,
+0.5040217041969299
+)
+},
+"scale":{
+"type":"glam::vec3::Vec3",
+"value":(
+0.9999999403953552,
+1.0,
+1.0
+)
+}
+}
+},
+{
+"type":"bevy_render::view::visibility::Visibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+}
+]
+),
+(
+entity:21,
+components:[
+{
+"type":"bevy_render::view::visibility::ComputedVisibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+},
+{
+"type":"bevy_render::primitives::CubemapFrusta",
+"struct":{}
+},
+{
+"type":"bevy_pbr::bundle::CubemapVisibleEntities",
+"struct":{}
+},
+{
+"type":"bevy_transform::components::global_transform::GlobalTransform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
+"value":(
+3.3749444484710693,
+3.5029869079589844,
+-18.979154586791992
+)
+},
+"rotation":{
+"type":"glam::quat::Quat",
 						"value":(
 							-0.3922496438026428,
 							0.6550025939941406,
@@ -2229,90 +2256,108 @@
 							green:1.0,
 							blue:1.0,
 							alpha:1.0
-						)
-					},
-					"intensity":{
-						"type":"f32",
-						"value":3000.0
-					},
-					"range":{
-						"type":"f32",
-						"value":40.0
-					},
-					"radius":{
-						"type":"f32",
-						"value":0.10000000149011612
-					},
-					"shadows_enabled":{
-						"type":"bool",
-						"value":true
-					},
-					"shadow_depth_bias":{
-						"type":"f32",
-						"value":0.1
-					},
-					"shadow_normal_bias":{
-						"type":"f32",
-						"value":0.0
-					}
-				}
-			},
-			{
-				"type":"bevy_transform::components::transform::Transform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							3.3749444484710693,
-							3.5029869079589844,
-							-18.979154586791992
-						)
-					},
-					"rotation":{
-						"type":"glam::quat::Quat",
-						"value":(
-							-0.3922496438026428,
-							0.6550025939941406,
-							0.47373533248901367,
-							0.43896085023880005
-						)
-					},
-					"scale":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							0.9999999403953552,
-							1.0,
-							0.9999999403953552
-						)
-					}
-				}
-			}
-		]
-	),
-	(
-		entity:22,
-		components:[
-			{
-				"type":"bevy_render::primitives::CubemapFrusta",
-				"struct":{}
-			},
-			{
-				"type":"bevy_pbr::bundle::CubemapVisibleEntities",
-				"struct":{}
-			},
-			{
-				"type":"bevy_transform::components::global_transform::GlobalTransform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							-19.33846092224121,
-							4.488916397094727,
-							0.8665955066680908
-						)
-					},
-					"rotation":{
-						"type":"glam::quat::Quat",
+)
+},
+"intensity":{
+"type":"f32",
+"value":3000.0
+},
+"range":{
+"type":"f32",
+"value":40.0
+},
+"radius":{
+"type":"f32",
+"value":0.10000000149011612
+},
+"shadows_enabled":{
+"type":"bool",
+"value":true
+},
+"shadow_depth_bias":{
+"type":"f32",
+"value":1.0
+},
+"shadow_normal_bias":{
+"type":"f32",
+"value":0.6000000238418579
+}
+}
+},
+{
+"type":"bevy_transform::components::transform::Transform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
+"value":(
+3.3749444484710693,
+3.5029869079589844,
+-18.979154586791992
+)
+},
+"rotation":{
+"type":"glam::quat::Quat",
+"value":(
+-0.3922496438026428,
+0.6550025939941406,
+0.47373533248901367,
+0.43896085023880005
+)
+},
+"scale":{
+"type":"glam::vec3::Vec3",
+"value":(
+0.9999999403953552,
+1.0,
+0.9999999403953552
+)
+}
+}
+},
+{
+"type":"bevy_render::view::visibility::Visibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+}
+]
+),
+(
+entity:22,
+components:[
+{
+"type":"bevy_render::view::visibility::ComputedVisibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+},
+{
+"type":"bevy_render::primitives::CubemapFrusta",
+"struct":{}
+},
+{
+"type":"bevy_pbr::bundle::CubemapVisibleEntities",
+"struct":{}
+},
+{
+"type":"bevy_transform::components::global_transform::GlobalTransform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
+"value":(
+-19.33846092224121,
+4.488916397094727,
+0.8665955066680908
+)
+},
+"rotation":{
+"type":"glam::quat::Quat",
 						"value":(
 							-0.4972064793109894,
 							0.4074704349040985,
@@ -2346,83 +2391,92 @@
 							green:1.0,
 							blue:1.0,
 							alpha:1.0
-						)
-					},
-					"intensity":{
-						"type":"f32",
-						"value":3000.0
-					},
-					"range":{
-						"type":"f32",
-						"value":40.0
-					},
-					"radius":{
-						"type":"f32",
-						"value":0.10000000149011612
-					},
-					"shadows_enabled":{
-						"type":"bool",
-						"value":true
-					},
-					"shadow_depth_bias":{
-						"type":"f32",
-						"value":0.1
-					},
-					"shadow_normal_bias":{
-						"type":"f32",
-						"value":0.0
-					}
-				}
-			},
-			{
-				"type":"bevy_transform::components::transform::Transform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							-19.33846092224121,
-							4.488916397094727,
-							0.8665955066680908
-						)
-					},
-					"rotation":{
-						"type":"glam::quat::Quat",
-						"value":(
-							-0.4972064793109894,
-							0.4074704349040985,
-							0.6886717081069946,
-							0.33538761734962463
-						)
-					},
-					"scale":{
-						"type":"glam::vec3::Vec3",
-						"value":(
-							1.0,
-							1.0,
-							1.0
-						)
-					}
-				}
-			}
-		]
-	),
-	(
-		entity:23,
-		components:[
-			{
-				"type":"bevy_render::view::visibility::ComputedVisibility",
-				"struct":{
-					"is_visible":{
-						"type":"bool",
-						"value":true
-					}
-				}
-			},
-			{
-				"type":"bevy_transform::components::global_transform::GlobalTransform",
-				"struct":{
-					"translation":{
-						"type":"glam::vec3::Vec3",
+)
+},
+"intensity":{
+"type":"f32",
+"value":3000.0
+},
+"range":{
+"type":"f32",
+"value":40.0
+},
+"radius":{
+"type":"f32",
+"value":0.10000000149011612
+},
+"shadows_enabled":{
+"type":"bool",
+"value":true
+},
+"shadow_depth_bias":{
+"type":"f32",
+"value":1.0
+},
+"shadow_normal_bias":{
+"type":"f32",
+"value":0.6000000238418579
+}
+}
+},
+{
+"type":"bevy_transform::components::transform::Transform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
+"value":(
+-19.33846092224121,
+4.488916397094727,
+0.8665955066680908
+)
+},
+"rotation":{
+"type":"glam::quat::Quat",
+"value":(
+-0.4972064793109894,
+0.4074704349040985,
+0.6886717081069946,
+0.33538761734962463
+)
+},
+"scale":{
+"type":"glam::vec3::Vec3",
+"value":(
+1.0,
+1.0,
+1.0
+)
+}
+}
+},
+{
+"type":"bevy_render::view::visibility::Visibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+}
+]
+),
+(
+entity:23,
+components:[
+{
+"type":"bevy_render::view::visibility::ComputedVisibility",
+"struct":{
+"is_visible":{
+"type":"bool",
+"value":true
+}
+}
+},
+{
+"type":"bevy_transform::components::global_transform::GlobalTransform",
+"struct":{
+"translation":{
+"type":"glam::vec3::Vec3",
 						"value":(
 							-3.9967832565307617,
 							0.0,

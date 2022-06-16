@@ -20,6 +20,10 @@ pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(AmbientLight {
+            color: Color::ORANGE_RED,
+            brightness: 0.2,
+        });
         app.add_plugin(ColonyPlugin);
         app.add_plugin(StarMapPlugin);
         app.add_plugin(InputControlPlugin);
@@ -27,4 +31,11 @@ impl Plugin for WorldPlugin {
         app.add_plugin(PlayerPlugin);
         app.add_plugin(TopDownCameraPlugin);
     }
+}
+
+#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
+enum WorldSystem {
+    PlayerSetup,
+    CameraSetup,
+    SetupInsert,
 }

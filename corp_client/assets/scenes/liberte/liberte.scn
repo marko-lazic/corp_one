@@ -407,6 +407,15 @@
 		entity:4,
 		components:[
 			{
+				"type":"bevy_render::view::visibility::ComputedVisibility",
+				"struct":{
+					"is_visible":{
+						"type":"bool",
+						"value":true
+					}
+				}
+			},
+			{
 				"type":"bevy_render::primitives::CubemapFrusta",
 				"struct":{}
 			},
@@ -480,11 +489,11 @@
 					},
 					"shadow_depth_bias":{
 						"type":"f32",
-						"value":0.1
+						"value":1.0
 					},
 					"shadow_normal_bias":{
 						"type":"f32",
-						"value":0.0
+						"value":0.6000000238418579
 					}
 				}
 			},
@@ -511,10 +520,19 @@
 					"scale":{
 						"type":"glam::vec3::Vec3",
 						"value":(
-							1.0,
-							1.0,
-							1.0
+						1.0,
+						1.0,
+						1.0
 						)
+					}
+				}
+			},
+			{
+				"type":"bevy_render::view::visibility::Visibility",
+				"struct":{
+					"is_visible":{
+						"type":"bool",
+						"value":true
 					}
 				}
 			}
@@ -523,6 +541,15 @@
 	(
 		entity:5,
 		components:[
+			{
+				"type":"bevy_render::view::visibility::ComputedVisibility",
+				"struct":{
+					"is_visible":{
+						"type":"bool",
+						"value":true
+					}
+				}
+			},
 			{
 				"type":"bevy_render::primitives::CubemapFrusta",
 				"struct":{}
@@ -597,11 +624,11 @@
 					},
 					"shadow_depth_bias":{
 						"type":"f32",
-						"value":0.1
+						"value":1.0
 					},
 					"shadow_normal_bias":{
 						"type":"f32",
-						"value":0.0
+						"value":0.6000000238418579
 					}
 				}
 			},
@@ -628,10 +655,19 @@
 					"scale":{
 						"type":"glam::vec3::Vec3",
 						"value":(
-							1.0,
-							1.0,
-							1.0
+						1.0,
+						1.0,
+						1.0
 						)
+					}
+				}
+			},
+			{
+				"type":"bevy_render::view::visibility::Visibility",
+				"struct":{
+					"is_visible":{
+						"type":"bool",
+						"value":true
 					}
 				}
 			}
@@ -640,6 +676,15 @@
 	(
 		entity:6,
 		components:[
+			{
+				"type":"bevy_render::view::visibility::ComputedVisibility",
+				"struct":{
+					"is_visible":{
+						"type":"bool",
+						"value":true
+					}
+				}
+			},
 			{
 				"type":"bevy_render::primitives::CubemapFrusta",
 				"struct":{}
@@ -714,11 +759,11 @@
 					},
 					"shadow_depth_bias":{
 						"type":"f32",
-						"value":0.1
+						"value":1.0
 					},
 					"shadow_normal_bias":{
 						"type":"f32",
-						"value":0.0
+						"value":0.6000000238418579
 					}
 				}
 			},
@@ -745,10 +790,19 @@
 					"scale":{
 						"type":"glam::vec3::Vec3",
 						"value":(
-							1.0,
-							1.0,
-							1.0
+						1.0,
+						1.0,
+						1.0
 						)
+					}
+				}
+			},
+			{
+				"type":"bevy_render::view::visibility::Visibility",
+				"struct":{
+					"is_visible":{
+						"type":"bool",
+						"value":true
 					}
 				}
 			}

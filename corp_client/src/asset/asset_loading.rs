@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_kira_audio::AudioSource;
+use iyes_loopless::prelude::AppLooplessStateExt;
 use serde::Deserialize;
 
 use crate::asset::paths::PATHS;
@@ -15,6 +16,8 @@ pub struct SceneAssets {
     pub cloning: Handle<DynamicScene>,
     #[asset(path = "scenes/liberte/liberte.scn")]
     pub liberte: Handle<DynamicScene>,
+    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Scene0")]
+    pub mannequiny: Handle<Scene>,
 }
 
 #[derive(AssetCollection)]
@@ -47,7 +50,7 @@ pub struct MeshAssets {
     pub energy_node: Handle<Mesh>,
     #[asset(path = "mesh/cube/cube.gltf#Mesh0/Primitive0")]
     pub cube: Handle<Mesh>,
-    #[asset(path = "mesh/mannequiny/mannequiny-0.3.0.glb#Mesh0/Primitive0")]
+    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Mesh0/Primitive1")]
     pub mannequiny: Handle<Mesh>,
     #[asset(path = "mesh/vortex_node.glb#Mesh0/Primitive0")]
     pub vortex_node: Handle<Mesh>,
@@ -162,15 +165,9 @@ impl Plugin for AssetLoadingPlugin {
             .with_collection::<ColonyAssets>()
             .with_collection::<SceneAssets>()
             .build(&mut app);
-
-        app.add_system_set(
-            SystemSet::on_enter(GameState::AssetLoading)
-                .with_system(Self::print_loading_text)
-                .with_system(Self::start_loading),
-        );
-        app.add_system_set(
-            SystemSet::on_exit(GameState::AssetLoading).with_system(Self::clean_up_loading_text),
-        );
+        app.add_enter_system(GameState::AssetLoading, Self::print_loading_text);
+        app.add_enter_system(GameState::AssetLoading, Self::start_loading);
+        app.add_exit_system(GameState::AssetLoading, Self::clean_up_loading_text);
     }
 }
 

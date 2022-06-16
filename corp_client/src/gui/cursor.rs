@@ -1,8 +1,9 @@
 use bevy::app::Plugin;
 use bevy::prelude::{
-    Color, Commands, Component, HorizontalAlign, Query, Res, Style, SystemSet, Text, TextAlignment,
+    Color, Commands, Component, HorizontalAlign, Query, Res, Style, Text, TextAlignment,
     TextBundle, TextStyle, Val, With,
 };
+use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
 use crate::asset::asset_loading::FontAssets;
 use crate::input::Cursor;
@@ -18,9 +19,12 @@ pub struct CursorInfo {
 impl Plugin for CursorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CursorInfo>();
-        app.add_system_set(SystemSet::on_enter(GameState::LoadColony).with_system(Self::setup));
+        app.add_enter_system(GameState::LoadColony, Self::setup);
         app.add_system_set(
-            SystemSet::on_update(GameState::Playing).with_system(Self::cursor_text_tooltip),
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::cursor_text_tooltip)
+                .into(),
         );
     }
 }

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioChannel, AudioPlugin};
+use bevy_kira_audio::{Audio, AudioPlugin};
+use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
 use corp_shared::prelude::*;
 
@@ -9,36 +10,27 @@ use crate::constants::state::GameState;
 pub struct SoundPlugin;
 
 impl SoundPlugin {
-    fn setup_live_state(
-        audio: Res<Audio>,
-        audio_assets: Res<AudioAssets>,
-        channels: Res<SoundChannels>,
-    ) {
-        audio.set_volume_in_channel(0.1, &channels.walk);
-        audio.play_looped_in_channel(audio_assets.walk.clone(), &channels.walk);
-        audio.pause_channel(&channels.walk);
+    fn setup_live_state(audio: Res<Audio>, audio_assets: Res<AudioAssets>) {
+        audio.set_volume(0.1);
+        audio.play_looped(audio_assets.walk.clone());
+        audio.pause();
     }
 
-    fn play_music(audio: Res<Audio>, audio_assets: Res<AudioAssets>, channels: Res<SoundChannels>) {
-        audio.set_volume_in_channel(0.3, &channels.music);
-        audio.play_looped_in_channel(audio_assets.slow_travel.clone(), &channels.music);
+    fn play_music(audio: Res<Audio>, audio_assets: Res<AudioAssets>) {
+        audio.set_volume(0.3);
+        audio.play_looped(audio_assets.slow_travel.clone());
     }
 
-    fn stop_audio(audio: Res<Audio>, channels: Res<SoundChannels>) {
-        audio.stop_channel(&channels.music);
-        audio.stop_channel(&channels.walk);
+    fn stop_audio(audio: Res<Audio>) {
+        audio.stop();
     }
 
-    fn walk_sound(
-        audio: Res<Audio>,
-        channels: Res<SoundChannels>,
-        mut player_query: Query<&Player>,
-    ) {
+    fn walk_sound(audio: Res<Audio>, mut player_query: Query<&Player>) {
         if let Ok(player) = player_query.get_single_mut() {
             if player.is_moving {
-                audio.resume_channel(&channels.walk);
+                audio.resume();
             } else {
-                audio.pause_channel(&channels.walk);
+                audio.pause();
             }
         }
     }
@@ -46,22 +38,20 @@ impl SoundPlugin {
 
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SoundChannels {
-            music: AudioChannel::new("music".to_owned()),
-            walk: AudioChannel::new("walk".to_owned()),
-        });
         app.add_plugin(AudioPlugin);
         app.add_system_set(
-            SystemSet::on_enter(GameState::Playing)
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
                 .with_system(Self::setup_live_state)
-                .with_system(Self::play_music),
+                .with_system(Self::play_music)
+                .into(),
         );
-        app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(Self::walk_sound));
-        app.add_system_set(SystemSet::on_exit(GameState::Playing).with_system(Self::stop_audio));
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::walk_sound)
+                .into(),
+        );
+        app.add_exit_system(GameState::Playing, Self::stop_audio);
     }
-}
-
-struct SoundChannels {
-    music: AudioChannel,
-    walk: AudioChannel,
 }
