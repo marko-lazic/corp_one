@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_ron::RonAssetPlugin;
-use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle, PickingCameraBundle, RayCastSource};
+use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle};
 use bevy_mod_raycast::RayCastMesh;
 use heron::prelude::*;
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet, NextState};
@@ -9,7 +9,6 @@ use serde::Deserialize;
 use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
 use crate::constants::state::GameState;
 use crate::input::MyRayCastSet;
-use crate::world::camera::TopDownCamera;
 use crate::world::colony::barrier::{BarrierAccess, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
@@ -132,19 +131,6 @@ impl ColonyPlugin {
         }
     }
 
-    fn setup_camera(mut commands: Commands) {
-        info!("Setup Player");
-        commands
-            .spawn_bundle(PerspectiveCameraBundle {
-                transform: Transform::from_translation(Vec3::new(-3.0, 3.0, 5.0))
-                    .looking_at(Vec3::default(), Vec3::Y),
-                ..Default::default()
-            })
-            .insert(TopDownCamera::new(20.0))
-            .insert_bundle(PickingCameraBundle::default())
-            .insert(RayCastSource::<MyRayCastSet>::new());
-    }
-
     fn next_state_playing(mut commands: Commands) {
         info!("State: Playing");
         commands.insert_resource(NextState(GameState::Playing));
@@ -237,15 +223,6 @@ impl Plugin for ColonyPlugin {
                 .run_in_state(GameState::PostProcessing)
                 .after(WorldSystem::SetupInsert)
                 .with_system(Self::next_state_spawn_player)
-                .into(),
-        );
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::SpawnPlayer)
-                .label(WorldSystem::CameraSetup)
-                .after(WorldSystem::PlayerSetup)
-                .with_system(Self::setup_camera)
                 .into(),
         );
         app.add_system_set(

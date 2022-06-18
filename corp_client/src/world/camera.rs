@@ -2,11 +2,14 @@ use std::ops::Neg;
 
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
+use bevy_mod_picking::PickingCameraBundle;
+use bevy_mod_raycast::RayCastSource;
 use iyes_loopless::prelude::ConditionSet;
 
 use crate::constants::state::GameState;
-use crate::input::Cursor;
+use crate::input::{Cursor, MyRayCastSet};
 use crate::world::player::Player;
+use crate::world::WorldSystem;
 use crate::Game;
 
 #[derive(Component)]
@@ -27,9 +30,6 @@ impl TopDownCamera {
     }
 }
 
-#[derive(Component)]
-pub struct CameraCenter;
-
 impl Default for TopDownCamera {
     fn default() -> Self {
         TopDownCamera {
@@ -44,7 +44,49 @@ impl Default for TopDownCamera {
 
 pub struct TopDownCameraPlugin;
 
+impl Plugin for TopDownCameraPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::SpawnPlayer)
+                .label(WorldSystem::CameraSetup)
+                .after(WorldSystem::PlayerSetup)
+                .with_system(Self::setup_camera)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .label(CameraMotion)
+                .with_system(Self::input_camera_center)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .after(CameraMotion)
+                .with_system(Self::target_motion)
+                .into(),
+        );
+    }
+}
+
 impl TopDownCameraPlugin {
+    fn setup_camera(mut commands: Commands) {
+        info!("Setup Player");
+        commands
+            .spawn_bundle(PerspectiveCameraBundle {
+                transform: Transform::from_translation(Vec3::new(-3.0, 3.0, 5.0))
+                    .looking_at(Vec3::default(), Vec3::Y),
+                ..Default::default()
+            })
+            .insert(TopDownCamera::new(20.0))
+            .insert_bundle(PickingCameraBundle::default())
+            .insert(RayCastSource::<MyRayCastSet>::new());
+    }
+
     fn target_motion(
         time: Res<Time>,
         game: Res<Game>,
@@ -86,26 +128,6 @@ impl TopDownCameraPlugin {
 
 #[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
 struct CameraMotion;
-
-impl Plugin for TopDownCameraPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .label(CameraMotion)
-                .with_system(Self::input_camera_center)
-                .into(),
-        );
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .after(CameraMotion)
-                .with_system(Self::target_motion)
-                .into(),
-        );
-    }
-}
 
 #[cfg(test)]
 mod tests {

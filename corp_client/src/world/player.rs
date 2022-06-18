@@ -8,9 +8,8 @@ use corp_shared::prelude::*;
 use crate::asset::asset_loading::PlayerAssets;
 use crate::constants::state::GameState;
 use crate::input::input_command::PlayerAction;
-use crate::input::InputSystem;
+use crate::input::{Cursor, InputSystem};
 use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
-use crate::world::camera::CameraCenter;
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
 use crate::world::colony::vortex::VortexNode;
@@ -43,6 +42,7 @@ impl Plugin for PlayerPlugin {
                 .after(InputSystem::CheckInteraction)
                 .with_system(Self::move_player)
                 .with_system(Self::handle_animation_action)
+                .with_system(Self::orient_player)
                 .into(),
         );
 
@@ -70,16 +70,16 @@ impl PlayerPlugin {
             .map(|p| p.to_owned());
 
         let position = random_position.unwrap_or_else(|| Vec3::new(1.0, 1.0, 1.0));
+        let player_tr = Transform::from_translation(position);
 
         let player = commands
-            .spawn_bundle(TransformBundle::from(Transform::from_translation(position)))
+            .spawn_bundle(TransformBundle::from(player_tr))
             .with_children(|parent| {
                 parent.spawn_scene(player_assets.mannequiny.clone());
             })
             .insert(Player::default())
             .insert(Movement::default())
             .insert(game.health.clone())
-            .insert(CameraCenter)
             .insert(RigidBody::Dynamic)
             .insert(AnimationComponent::new(PlayerAnimationAction::IDLE))
             .insert(CollisionShape::Cuboid {
@@ -119,6 +119,14 @@ impl PlayerPlugin {
 
             player.is_moving = Self::is_moving(&movement.velocity);
             command.reset();
+        }
+    }
+
+    fn orient_player(mut query: Query<(&Player, &mut Transform)>, cursor: Res<Cursor>) {
+        if let Ok((_, mut transform)) = query.get_single_mut() {
+            let direction = Vec3::new(cursor.world.x, 0.0, cursor.world.z);
+            transform.look_at(direction, Vec3::Y);
+            transform.rotate(Quat::from_rotation_y(-160.0));
         }
     }
 
