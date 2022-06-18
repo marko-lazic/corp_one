@@ -1,19 +1,18 @@
 use bevy::math::Vec3;
-use bevy::prelude::Transform;
 use bevy_input_actionmap::InputMap;
 
 use crate::input::Action;
 use crate::{Input, MouseButton, Res};
 
 #[derive(Default)]
-pub struct PlayerAction {
+pub struct PlayerDirection {
     pub forward: bool,
     pub backward: bool,
     pub left: bool,
     pub right: bool,
 }
 
-impl PlayerAction {
+impl PlayerDirection {
     pub fn key_action(&mut self, input: &Res<InputMap<Action>>) {
         if input.active(Action::Forward) {
             self.forward = true;
@@ -45,21 +44,20 @@ impl PlayerAction {
     /// X is sides
     /// Y is up/down
     /// Z is front/back
-    pub fn new_direction(&self, position: &Transform) -> Vec3 {
+    pub fn new_direction(&self) -> Vec3 {
         let mut direction = Vec3::ZERO;
         if self.forward {
-            direction += position.local_z();
+            direction = direction + Vec3::Z;
         }
         if self.backward {
-            direction -= position.local_z();
+            direction = direction - Vec3::Z;
         }
         if self.left {
-            direction += position.local_x();
+            direction = direction + Vec3::X;
         }
         if self.right {
-            direction -= position.local_x();
+            direction = direction - Vec3::X;
         }
-        direction = direction.normalize_or_zero();
-        direction
+        direction.normalize_or_zero()
     }
 }

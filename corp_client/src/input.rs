@@ -6,7 +6,7 @@ use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod};
 use iyes_loopless::prelude::ConditionSet;
 
 use corp_shared::prelude::Health;
-use input_command::PlayerAction;
+use input_command::PlayerDirection;
 
 use crate::constants::state::GameState;
 use crate::input::double_tap::DoubleTap;
@@ -79,14 +79,14 @@ impl InputControlPlugin {
 
     fn player_keyboard_action(
         input: Res<InputMap<Action>>,
-        mut player_action: ResMut<PlayerAction>,
+        mut player_action: ResMut<PlayerDirection>,
     ) {
         player_action.key_action(&input);
     }
 
     fn player_mouse_action(
         buttons: Res<Input<MouseButton>>,
-        mut player_action: ResMut<PlayerAction>,
+        mut player_action: ResMut<PlayerDirection>,
     ) {
         player_action.mouse_action(&buttons);
     }
@@ -166,7 +166,7 @@ impl Plugin for InputControlPlugin {
         app.add_plugin(ActionPlugin::<Action>::default());
         app.add_startup_system(Self::setup);
         app.init_resource::<Cursor>();
-        app.init_resource::<PlayerAction>();
+        app.init_resource::<PlayerDirection>();
         app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
         app.add_system(Self::keyboard_escape_action);
 

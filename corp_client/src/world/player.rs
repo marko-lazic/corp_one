@@ -7,7 +7,7 @@ use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::PlayerAssets;
 use crate::constants::state::GameState;
-use crate::input::input_command::PlayerAction;
+use crate::input::input_command::PlayerDirection;
 use crate::input::{Cursor, InputSystem};
 use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::character::Movement;
@@ -107,18 +107,18 @@ impl PlayerPlugin {
     }
 
     fn move_player(
-        mut command: ResMut<PlayerAction>,
+        mut player_direction: ResMut<PlayerDirection>,
         time: Res<Time>,
         mut query: Query<(&mut Player, &mut Movement, &mut Transform)>,
     ) {
         if let Ok((mut player, mut movement, mut position)) = query.get_single_mut() {
-            let direction = command.new_direction(&position);
+            let direction = player_direction.new_direction();
             if movement.can_move {
                 position.translation += movement.update_velocity(direction) * time.delta_seconds();
             }
 
             player.is_moving = Self::is_moving(&movement.velocity);
-            command.reset();
+            player_direction.reset();
         }
     }
 
