@@ -2,7 +2,7 @@ use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_input_actionmap::*;
 use bevy_mod_picking::RayCastSource;
-use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod};
+use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RaycastSystem};
 use iyes_loopless::prelude::ConditionSet;
 
 use corp_shared::prelude::Health;
@@ -45,7 +45,8 @@ pub enum Action {
     ColonyLiberte,
 }
 
-pub struct MyRayCastSet;
+#[derive(Component)]
+pub struct Ground;
 
 pub struct InputControlPlugin;
 
@@ -55,7 +56,7 @@ impl Plugin for InputControlPlugin {
         app.add_startup_system(Self::setup);
         app.init_resource::<Cursor>();
         app.init_resource::<PlayerDirection>();
-        app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
+        app.add_plugin(DefaultRaycastingPlugin::<Ground>::default());
         app.add_system(Self::keyboard_escape_action);
 
         app.add_system_set(
@@ -69,12 +70,15 @@ impl Plugin for InputControlPlugin {
             ConditionSet::new()
                 .run_in_state(GameState::Playing)
                 .label(InputSystem::CheckInteraction)
-                .with_system(Self::update_cursor_position)
                 .with_system(Self::player_keyboard_action)
                 .with_system(Self::player_mouse_action)
                 .with_system(Self::use_barrier)
                 .with_system(Self::kill)
                 .into(),
+        );
+        app.add_system_to_stage(
+            CoreStage::First,
+            Self::update_cursor_and_raycast.before(RaycastSystem::BuildRays::<Ground>),
         );
     }
 }
@@ -146,18 +150,16 @@ impl InputControlPlugin {
         }
     }
 
-    pub fn update_cursor_position(
-        mut crsor_moved_events: EventReader<CursorMoved>,
-        mut ray_cast_source: Query<&mut RayCastSource<MyRayCastSet>>,
+    pub fn update_cursor_and_raycast(
+        mut cursor_event: EventReader<CursorMoved>,
+        mut query: Query<&mut RayCastSource<Ground>>,
         mut cursor: ResMut<Cursor>,
     ) {
-        for mut pick_source in &mut ray_cast_source.iter_mut() {
-            // Grab the most recent cursor event if it exists:
-            if let Some(cursor_latest) = crsor_moved_events.iter().last() {
-                cursor.screen = cursor_latest.position;
+        for mut pick_source in &mut query.iter_mut() {
+            if let Some(cursor_latest) = cursor_event.iter().last() {
+                cursor.screen = cursor_latest.position.clone();
+                pick_source.cast_method = RayCastMethod::Screenspace(cursor_latest.position);
             }
-
-            pick_source.cast_method = RayCastMethod::Screenspace(cursor.screen);
             if let Some((_entity, intersect)) = pick_source.intersect_top() {
                 cursor.world = intersect.position();
             }

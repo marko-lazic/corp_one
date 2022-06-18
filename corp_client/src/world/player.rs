@@ -126,7 +126,6 @@ impl PlayerPlugin {
         if let Ok((_, mut transform)) = query.get_single_mut() {
             let direction = Vec3::new(cursor.world.x, 0.0, cursor.world.z);
             transform.look_at(direction, Vec3::Y);
-            transform.rotate(Quat::from_rotation_y(-160.0));
         }
     }
 

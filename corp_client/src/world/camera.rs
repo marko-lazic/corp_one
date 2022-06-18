@@ -7,7 +7,7 @@ use bevy_mod_raycast::RayCastSource;
 use iyes_loopless::prelude::ConditionSet;
 
 use crate::constants::state::GameState;
-use crate::input::{Cursor, MyRayCastSet};
+use crate::input::{Cursor, Ground};
 use crate::world::player::Player;
 use crate::world::WorldSystem;
 use crate::Game;
@@ -84,7 +84,7 @@ impl TopDownCameraPlugin {
             })
             .insert(TopDownCamera::new(20.0))
             .insert_bundle(PickingCameraBundle::default())
-            .insert(RayCastSource::<MyRayCastSet>::new());
+            .insert(RayCastSource::<Ground>::new());
     }
 
     fn target_motion(

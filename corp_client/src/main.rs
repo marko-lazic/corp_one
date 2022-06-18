@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::window::PresentMode;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use blender_bevy_toolkit::BlendLoadPlugin;
 use iyes_loopless::prelude::AppLooplessStateExt;
@@ -50,6 +51,7 @@ fn main() {
 
 fn create_window_descriptor() -> WindowDescriptor {
     WindowDescriptor {
+        present_mode: PresentMode::Mailbox, // Reduces raycast mod input latency
         title: window::CORP_ONE_GAME_TITLE.to_string(),
         width: window::WIDTH,
         height: window::HEIGHT,

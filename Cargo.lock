@@ -642,7 +642,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d1be4bfb7c50e8c0dd471af3cdc0b1cbe18417cbc225b28d6724cf68e7db704"
 dependencies = [
  "bevy",
- "bevy_mod_raycast",
+ "bevy_mod_raycast 0.4.0",
+]
+
+[[package]]
+name = "bevy_mod_picking"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee28e69e9bcd2990273c0d2a976ea0d5b499d154a15c6990864f85fbb6bbee9e"
+dependencies = [
+ "bevy",
+ "bevy_mod_raycast 0.5.0",
 ]
 
 [[package]]
@@ -652,6 +662,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f197fdb27012bc41a5a0086a784aca78b35aea2a10e38a0ea0f1e5b673ca4cfc"
 dependencies = [
  "bevy",
+]
+
+[[package]]
+name = "bevy_mod_raycast"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b84a8d57fb1f20aca8c6e3d96e724e54f0ec58ba1d8e8a0989ce3e52d52e2d23"
+dependencies = [
+ "bevy",
+ "float-ord",
 ]
 
 [[package]]
@@ -886,8 +906,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff8c7998dfe3899592340e5d43c3c2160a0bc606416ee9bd82529a89b4bea0c8"
 dependencies = [
  "bevy",
- "bevy_mod_picking",
- "bevy_mod_raycast",
+ "bevy_mod_picking 0.6.1",
+ "bevy_mod_raycast 0.4.0",
  "naga",
 ]
 
@@ -1355,8 +1375,8 @@ dependencies = [
  "bevy_asset_ron",
  "bevy_input_actionmap",
  "bevy_kira_audio",
- "bevy_mod_picking",
- "bevy_mod_raycast",
+ "bevy_mod_picking 0.7.0",
+ "bevy_mod_raycast 0.5.0",
  "bevy_mouse_tracking_plugin",
  "bevy_prototype_debug_lines",
  "bevy_prototype_lyon",
@@ -1714,6 +1734,12 @@ name = "float-cmp"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75224bec9bfe1a65e2d34132933f2de7fe79900c96a0174307554244ece8150e"
+
+[[package]]
+name = "float-ord"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ce81f49ae8a0482e4c55ea62ebbd7e5a686af544c00b9d090bba3ff9be97b3d"
 
 [[package]]
 name = "float_next_after"

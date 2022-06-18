@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
 use crate::constants::state::GameState;
-use crate::input::MyRayCastSet;
+use crate::input::Ground;
 use crate::world::colony::barrier::{BarrierAccess, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
@@ -106,7 +106,7 @@ impl ColonyPlugin {
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-                transform: Transform::from_translation(Vec3::new(4., -0.2, 4.)),
+                transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
                 material: materials.add(StandardMaterial {
                     base_color: Color::WHITE,
                     perceptual_roughness: 0.0,
@@ -116,7 +116,7 @@ impl ColonyPlugin {
                 }),
                 ..Default::default()
             })
-            .insert(RayCastMesh::<MyRayCastSet>::default());
+            .insert(RayCastMesh::<Ground>::default());
     }
 
     fn setup_zones(
