@@ -10,8 +10,6 @@ use crate::world::colony::Colony;
 use crate::world::player::Player;
 use crate::Game;
 
-pub struct VortexPlugin;
-
 pub struct VortOutEvent;
 
 pub struct VortInEvent {
@@ -31,6 +29,28 @@ pub struct VortexNode;
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct VortexGate;
+
+pub struct VortexPlugin;
+
+impl Plugin for VortexPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_event::<VortInEvent>();
+        app.add_event::<VortOutEvent>();
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::StarMap)
+                .with_system(Self::vort_in_event_reader)
+                .into(),
+        );
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::vort_out_event_reader)
+                .with_system(Self::animate_nodes)
+                .into(),
+        );
+    }
+}
 
 impl VortexPlugin {
     fn vort_out_event_reader(
@@ -82,25 +102,5 @@ impl VortexPlugin {
         for mut transform in nodes.iter_mut() {
             transform.rotate(Quat::from_rotation_y(time.delta_seconds() * 0.2));
         }
-    }
-}
-
-impl Plugin for VortexPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_event::<VortInEvent>();
-        app.add_event::<VortOutEvent>();
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::StarMap)
-                .with_system(Self::vort_in_event_reader)
-                .into(),
-        );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::vort_out_event_reader)
-                .with_system(Self::animate_nodes)
-                .into(),
-        );
     }
 }

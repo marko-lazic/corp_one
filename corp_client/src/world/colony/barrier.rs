@@ -36,6 +36,20 @@ impl Default for BarrierField {
 
 pub struct BarrierPlugin;
 
+impl Plugin for BarrierPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<BarrierField>();
+        app.register_type::<BarrierAccess>();
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::open_close_barrier)
+                .into(),
+        );
+        app.add_system_to_stage(CoreStage::PostUpdate, Self::pick_barrier);
+    }
+}
+
 impl BarrierPlugin {
     fn open_close_barrier(
         mut barrier_query: Query<(&mut BarrierField, &mut Visibility)>,
@@ -74,19 +88,5 @@ impl BarrierPlugin {
                 _ => {}
             }
         }
-    }
-}
-
-impl Plugin for BarrierPlugin {
-    fn build(&self, app: &mut App) {
-        app.register_type::<BarrierField>();
-        app.register_type::<BarrierAccess>();
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::open_close_barrier)
-                .into(),
-        );
-        app.add_system_to_stage(CoreStage::PostUpdate, Self::pick_barrier);
     }
 }

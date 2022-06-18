@@ -109,6 +109,24 @@ impl MaterialAssets {
 
 pub struct AssetLoadingPlugin;
 
+impl Plugin for AssetLoadingPlugin {
+    fn build(&self, mut app: &mut App) {
+        AssetLoader::new(GameState::AssetLoading)
+            .continue_to_state(GameState::StarMap)
+            .with_collection::<PlayerAssets>()
+            .with_collection::<MeshAssets>()
+            .with_collection::<TextureAssets>()
+            .with_collection::<AudioAssets>()
+            .with_collection::<FontAssets>()
+            .with_collection::<ColonyAssets>()
+            .with_collection::<SceneAssets>()
+            .build(&mut app);
+        app.add_enter_system(GameState::AssetLoading, Self::print_loading_text);
+        app.add_enter_system(GameState::AssetLoading, Self::start_loading);
+        app.add_exit_system(GameState::AssetLoading, Self::clean_up_loading_text);
+    }
+}
+
 impl AssetLoadingPlugin {
     fn print_loading_text(mut commands: Commands, asset_server: Res<AssetServer>) {
         let loading_text_bundle_entity = commands
@@ -157,24 +175,6 @@ impl AssetLoadingPlugin {
         commands
             .entity(loading_data.loading_text_bundle_entity)
             .despawn_recursive();
-    }
-}
-
-impl Plugin for AssetLoadingPlugin {
-    fn build(&self, mut app: &mut App) {
-        AssetLoader::new(GameState::AssetLoading)
-            .continue_to_state(GameState::StarMap)
-            .with_collection::<PlayerAssets>()
-            .with_collection::<MeshAssets>()
-            .with_collection::<TextureAssets>()
-            .with_collection::<AudioAssets>()
-            .with_collection::<FontAssets>()
-            .with_collection::<ColonyAssets>()
-            .with_collection::<SceneAssets>()
-            .build(&mut app);
-        app.add_enter_system(GameState::AssetLoading, Self::print_loading_text);
-        app.add_enter_system(GameState::AssetLoading, Self::start_loading);
-        app.add_exit_system(GameState::AssetLoading, Self::clean_up_loading_text);
     }
 }
 

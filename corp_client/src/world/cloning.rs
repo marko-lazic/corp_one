@@ -13,6 +13,18 @@ use crate::Game;
 
 pub struct CloningPlugin;
 
+impl Plugin for CloningPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_enter_system(GameState::StarMap, Self::vort_in_dead_player_to_cloning);
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::check_if_dead_and_go_to_cloning)
+                .into(),
+        );
+    }
+}
+
 impl CloningPlugin {
     fn check_if_dead_and_go_to_cloning(
         colony_assets: Res<ColonyAssets>,
@@ -41,18 +53,6 @@ impl CloningPlugin {
             game.health.cloning_cooldown.reset();
             vortex_events.send(VortInEvent::vort(Colony::Cloning));
         }
-    }
-}
-
-impl Plugin for CloningPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_enter_system(GameState::StarMap, Self::vort_in_dead_player_to_cloning);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::check_if_dead_and_go_to_cloning)
-                .into(),
-        );
     }
 }
 

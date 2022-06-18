@@ -9,12 +9,12 @@ use crate::asset::asset_loading::FontAssets;
 use crate::input::Cursor;
 use crate::{App, GameState, Rect, Visibility};
 
-pub struct CursorPlugin;
-
 #[derive(Default)]
 pub struct CursorInfo {
     pub show_use: bool,
 }
+
+pub struct CursorPlugin;
 
 impl Plugin for CursorPlugin {
     fn build(&self, app: &mut App) {

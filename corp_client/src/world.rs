@@ -14,7 +14,6 @@ pub mod camera;
 pub mod character;
 mod cloning;
 pub mod colony;
-pub mod flying_cubes;
 pub mod player;
 mod star_map;
 

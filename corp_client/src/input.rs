@@ -49,6 +49,36 @@ pub struct MyRayCastSet;
 
 pub struct InputControlPlugin;
 
+impl Plugin for InputControlPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(ActionPlugin::<Action>::default());
+        app.add_startup_system(Self::setup);
+        app.init_resource::<Cursor>();
+        app.init_resource::<PlayerDirection>();
+        app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
+        app.add_system(Self::keyboard_escape_action);
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::StarMap)
+                .with_system(Self::starmap_keyboard)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .label(InputSystem::CheckInteraction)
+                .with_system(Self::update_cursor_position)
+                .with_system(Self::player_keyboard_action)
+                .with_system(Self::player_mouse_action)
+                .with_system(Self::use_barrier)
+                .with_system(Self::kill)
+                .into(),
+        );
+    }
+}
+
 impl InputControlPlugin {
     fn keyboard_escape_action(
         input: Res<InputMap<Action>>,
@@ -158,35 +188,5 @@ impl InputControlPlugin {
                 }
             }
         }
-    }
-}
-
-impl Plugin for InputControlPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugin(ActionPlugin::<Action>::default());
-        app.add_startup_system(Self::setup);
-        app.init_resource::<Cursor>();
-        app.init_resource::<PlayerDirection>();
-        app.add_plugin(DefaultRaycastingPlugin::<MyRayCastSet>::default());
-        app.add_system(Self::keyboard_escape_action);
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::StarMap)
-                .with_system(Self::starmap_keyboard)
-                .into(),
-        );
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .label(InputSystem::CheckInteraction)
-                .with_system(Self::update_cursor_position)
-                .with_system(Self::player_keyboard_action)
-                .with_system(Self::player_mouse_action)
-                .with_system(Self::use_barrier)
-                .with_system(Self::kill)
-                .into(),
-        );
     }
 }

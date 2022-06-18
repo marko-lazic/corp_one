@@ -46,6 +46,56 @@ impl Default for Colony {
 
 pub struct ColonyPlugin;
 
+impl Plugin for ColonyPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<VortexNode>();
+        app.register_type::<VortexGate>();
+        app.register_type::<BarrierField>();
+        app.register_type::<BarrierAccess>();
+        app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
+        app.add_plugin(PhysicsPlugin::default());
+        app.add_plugin(VortexPlugin);
+        app.add_plugins(DefaultPickingPlugins);
+        app.add_plugin(BarrierPlugin);
+        app.add_enter_system(GameState::LoadColony, Self::setup_colony);
+        app.add_enter_system(GameState::LoadColony, Self::setup_debug_plane);
+        app.add_enter_system(GameState::LoadColony, Self::setup_zones);
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::LoadColony)
+                .run_if(Self::is_colony_loaded)
+                .with_system(Self::next_state_post_processing)
+                .into(),
+        );
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::PostProcessing)
+                .label(WorldSystem::SetupInsert)
+                .with_system(Self::barrier_access_insert)
+                .with_system(Self::vortex_gate_insert)
+                .into(),
+        );
+
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::PostProcessing)
+                .after(WorldSystem::SetupInsert)
+                .with_system(Self::next_state_spawn_player)
+                .into(),
+        );
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::SpawnPlayer)
+                .after(WorldSystem::CameraSetup)
+                .with_system(Self::next_state_playing)
+                .into(),
+        );
+
+        app.add_enter_system(GameState::Playing, Self::update_lights);
+        app.add_exit_system(GameState::Playing, Self::teardown_entities);
+    }
+}
+
 impl ColonyPlugin {
     fn setup_debug_plane(
         mut commands: Commands,
@@ -185,55 +235,5 @@ impl ColonyPlugin {
         for mut point_light in query.iter_mut() {
             point_light.shadows_enabled = true;
         }
-    }
-}
-
-impl Plugin for ColonyPlugin {
-    fn build(&self, app: &mut App) {
-        app.register_type::<VortexNode>();
-        app.register_type::<VortexGate>();
-        app.register_type::<BarrierField>();
-        app.register_type::<BarrierAccess>();
-        app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
-        app.add_plugin(PhysicsPlugin::default());
-        app.add_plugin(VortexPlugin);
-        app.add_plugins(DefaultPickingPlugins);
-        app.add_plugin(BarrierPlugin);
-        app.add_enter_system(GameState::LoadColony, Self::setup_colony);
-        app.add_enter_system(GameState::LoadColony, Self::setup_debug_plane);
-        app.add_enter_system(GameState::LoadColony, Self::setup_zones);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::LoadColony)
-                .run_if(Self::is_colony_loaded)
-                .with_system(Self::next_state_post_processing)
-                .into(),
-        );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::PostProcessing)
-                .label(WorldSystem::SetupInsert)
-                .with_system(Self::barrier_access_insert)
-                .with_system(Self::vortex_gate_insert)
-                .into(),
-        );
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::PostProcessing)
-                .after(WorldSystem::SetupInsert)
-                .with_system(Self::next_state_spawn_player)
-                .into(),
-        );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::SpawnPlayer)
-                .after(WorldSystem::CameraSetup)
-                .with_system(Self::next_state_playing)
-                .into(),
-        );
-
-        app.add_enter_system(GameState::Playing, Self::update_lights);
-        app.add_exit_system(GameState::Playing, Self::teardown_entities);
     }
 }

@@ -32,6 +32,25 @@ struct PlayerHealth;
 
 pub struct MetricsPlugin;
 
+impl Plugin for MetricsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+        app.add_enter_system(GameState::Playing, Self::setup);
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::fps_update)
+                .with_system(Self::player_position_update)
+                .with_system(Self::mouse_screen_position_update)
+                .with_system(Self::mouse_world_position_update)
+                .with_system(Self::camera_metrics)
+                .with_system(Self::camera_debug_text)
+                .with_system(Self::player_health_metric)
+                .into(),
+        );
+    }
+}
+
 impl MetricsPlugin {
     fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         commands
@@ -136,25 +155,6 @@ impl MetricsPlugin {
                 }
             }
         }
-    }
-}
-
-impl Plugin for MetricsPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-        app.add_enter_system(GameState::Playing, Self::setup);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::fps_update)
-                .with_system(Self::player_position_update)
-                .with_system(Self::mouse_screen_position_update)
-                .with_system(Self::mouse_world_position_update)
-                .with_system(Self::camera_metrics)
-                .with_system(Self::camera_debug_text)
-                .with_system(Self::player_health_metric)
-                .into(),
-        );
     }
 }
 

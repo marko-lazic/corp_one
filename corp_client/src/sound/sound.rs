@@ -8,6 +8,26 @@ use crate::world::player::Player;
 
 pub struct SoundPlugin;
 
+impl Plugin for SoundPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(AudioPlugin);
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::setup_live_state)
+                .with_system(Self::play_music)
+                .into(),
+        );
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::walk_sound)
+                .into(),
+        );
+        app.add_exit_system(GameState::Playing, Self::stop_audio);
+    }
+}
+
 impl SoundPlugin {
     fn setup_live_state(audio: Res<Audio>, audio_assets: Res<AudioAssets>) {
         audio.set_volume(0.1);
@@ -32,25 +52,5 @@ impl SoundPlugin {
                 audio.pause();
             }
         }
-    }
-}
-
-impl Plugin for SoundPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugin(AudioPlugin);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::setup_live_state)
-                .with_system(Self::play_music)
-                .into(),
-        );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::walk_sound)
-                .into(),
-        );
-        app.add_exit_system(GameState::Playing, Self::stop_audio);
     }
 }

@@ -59,6 +59,18 @@ impl Zone {
 
 pub struct ZonePlugin;
 
+impl Plugin for ZonePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(Self::collision_events)
+                .with_system(Self::handle_health_in_zones)
+                .into(),
+        );
+    }
+}
+
 impl ZonePlugin {
     fn collision_events(
         mut collision_events: EventReader<CollisionEvent>,
@@ -130,17 +142,5 @@ impl ZonePlugin {
                 }
             }
         }
-    }
-}
-
-impl Plugin for ZonePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::collision_events)
-                .with_system(Self::handle_health_in_zones)
-                .into(),
-        );
     }
 }
