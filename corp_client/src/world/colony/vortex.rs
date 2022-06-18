@@ -2,11 +2,12 @@ use bevy::prelude::*;
 use iyes_loopless::condition::ConditionSet;
 use iyes_loopless::prelude::NextState;
 
-use corp_shared::prelude::{Health, Player};
+use corp_shared::prelude::Health;
 
 use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
 use crate::world::colony::Colony;
+use crate::world::player::Player;
 use crate::Game;
 
 pub struct VortexPlugin;

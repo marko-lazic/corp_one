@@ -3,11 +3,13 @@ use bevy::prelude::*;
 use colony::zone::ZonePlugin;
 
 use crate::input::InputControlPlugin;
+use crate::world::animator::AnimatorPlugin;
 use crate::world::camera::TopDownCameraPlugin;
 use crate::world::colony::ColonyPlugin;
 use crate::world::player::PlayerPlugin;
 use crate::world::star_map::StarMapPlugin;
 
+mod animator;
 pub mod camera;
 pub mod character;
 mod cloning;
@@ -25,6 +27,7 @@ impl Plugin for WorldPlugin {
             brightness: 0.2,
         });
         app.add_plugin(ColonyPlugin);
+        app.add_plugin(AnimatorPlugin);
         app.add_plugin(StarMapPlugin);
         app.add_plugin(InputControlPlugin);
         app.add_plugin(ZonePlugin);

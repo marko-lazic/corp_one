@@ -5,7 +5,7 @@ use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod};
 use iyes_loopless::prelude::ConditionSet;
 
-use corp_shared::prelude::{Health, Player};
+use corp_shared::prelude::Health;
 use input_command::PlayerAction;
 
 use crate::constants::state::GameState;
@@ -13,6 +13,7 @@ use crate::input::double_tap::DoubleTap;
 use crate::world::colony::barrier::{BarrierAccess, BarrierField};
 use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
+use crate::world::player::Player;
 use crate::{Game, UseEntity};
 
 mod double_tap;

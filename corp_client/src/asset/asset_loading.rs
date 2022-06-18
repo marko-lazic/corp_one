@@ -16,8 +16,6 @@ pub struct SceneAssets {
     pub cloning: Handle<DynamicScene>,
     #[asset(path = "scenes/liberte/liberte.scn")]
     pub liberte: Handle<DynamicScene>,
-    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Scene0")]
-    pub mannequiny: Handle<Scene>,
 }
 
 #[derive(AssetCollection)]
@@ -50,10 +48,18 @@ pub struct MeshAssets {
     pub energy_node: Handle<Mesh>,
     #[asset(path = "mesh/cube/cube.gltf#Mesh0/Primitive0")]
     pub cube: Handle<Mesh>,
-    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Mesh0/Primitive1")]
-    pub mannequiny: Handle<Mesh>,
     #[asset(path = "mesh/vortex_node.glb#Mesh0/Primitive0")]
     pub vortex_node: Handle<Mesh>,
+}
+
+#[derive(AssetCollection)]
+pub struct PlayerAssets {
+    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Scene0")]
+    pub mannequiny: Handle<Scene>,
+    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Animation9")]
+    pub run: Handle<AnimationClip>,
+    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Animation7")]
+    pub idle: Handle<AnimationClip>,
 }
 
 #[derive(AssetCollection)]
@@ -158,6 +164,7 @@ impl Plugin for AssetLoadingPlugin {
     fn build(&self, mut app: &mut App) {
         AssetLoader::new(GameState::AssetLoading)
             .continue_to_state(GameState::StarMap)
+            .with_collection::<PlayerAssets>()
             .with_collection::<MeshAssets>()
             .with_collection::<TextureAssets>()
             .with_collection::<AudioAssets>()

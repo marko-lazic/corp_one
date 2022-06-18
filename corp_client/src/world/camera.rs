@@ -4,10 +4,9 @@ use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use iyes_loopless::prelude::ConditionSet;
 
-use corp_shared::prelude::Player;
-
 use crate::constants::state::GameState;
 use crate::input::Cursor;
+use crate::world::player::Player;
 use crate::Game;
 
 #[derive(Component)]

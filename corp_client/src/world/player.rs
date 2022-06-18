@@ -5,10 +5,11 @@ use rand::seq::SliceRandom;
 
 use corp_shared::prelude::*;
 
-use crate::asset::asset_loading::SceneAssets;
+use crate::asset::asset_loading::PlayerAssets;
 use crate::constants::state::GameState;
 use crate::input::input_command::PlayerAction;
 use crate::input::InputSystem;
+use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::camera::CameraCenter;
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
@@ -16,6 +17,11 @@ use crate::world::colony::vortex::VortexNode;
 use crate::world::colony::Layer;
 use crate::world::WorldSystem;
 use crate::Game;
+
+#[derive(Default, bevy::ecs::component::Component)]
+pub struct Player {
+    pub is_moving: bool,
+}
 
 pub struct PlayerPlugin;
 
@@ -36,6 +42,7 @@ impl Plugin for PlayerPlugin {
                 .run_in_state(GameState::Playing)
                 .after(InputSystem::CheckInteraction)
                 .with_system(Self::move_player)
+                .with_system(Self::handle_animation_action)
                 .into(),
         );
 
@@ -52,7 +59,7 @@ impl PlayerPlugin {
     pub fn setup_player(
         mut game: ResMut<Game>,
         mut commands: Commands,
-        scene_assets: Res<SceneAssets>,
+        player_assets: Res<PlayerAssets>,
         mut vortex_nodes: Query<&mut Transform, With<VortexNode>>,
     ) {
         let random_position = vortex_nodes
@@ -67,13 +74,14 @@ impl PlayerPlugin {
         let player = commands
             .spawn_bundle(TransformBundle::from(Transform::from_translation(position)))
             .with_children(|parent| {
-                parent.spawn_scene(scene_assets.mannequiny.clone());
+                parent.spawn_scene(player_assets.mannequiny.clone());
             })
             .insert(Player::default())
             .insert(Movement::default())
             .insert(game.health.clone())
             .insert(CameraCenter)
             .insert(RigidBody::Dynamic)
+            .insert(AnimationComponent::new(PlayerAnimationAction::IDLE))
             .insert(CollisionShape::Cuboid {
                 half_extends: Vec3::new(0.5, 1.0, 0.5),
                 border_radius: None,
@@ -111,6 +119,23 @@ impl PlayerPlugin {
 
             player.is_moving = Self::is_moving(&movement.velocity);
             command.reset();
+        }
+    }
+
+    fn handle_animation_action(
+        mut query: Query<(&Player, &mut AnimationComponent)>,
+        mut last_action: Local<PlayerAnimationAction>,
+    ) {
+        if let Ok((player, mut animation_component)) = query.get_single_mut() {
+            if player.is_moving && *last_action == PlayerAnimationAction::IDLE {
+                animation_component.next = Some(PlayerAnimationAction::RUN);
+                *last_action = PlayerAnimationAction::RUN;
+            }
+
+            if !player.is_moving && *last_action == PlayerAnimationAction::RUN {
+                animation_component.next = Some(PlayerAnimationAction::IDLE);
+                *last_action = PlayerAnimationAction::IDLE;
+            }
         }
     }
 

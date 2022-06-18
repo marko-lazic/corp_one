@@ -2,10 +2,9 @@ use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioPlugin};
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
-use corp_shared::prelude::*;
-
 use crate::asset::asset_loading::AudioAssets;
 use crate::constants::state::GameState;
+use crate::world::player::Player;
 
 pub struct SoundPlugin;
 

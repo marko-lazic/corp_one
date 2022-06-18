@@ -4,11 +4,12 @@ use bevy::render::camera::Camera;
 use iyes_loopless::condition::ConditionSet;
 use iyes_loopless::prelude::AppLooplessStateExt;
 
-use corp_shared::prelude::*;
+use corp_shared::prelude::Health;
 
 use crate::constants::state::GameState;
 use crate::input::Cursor;
 use crate::world::camera::TopDownCamera;
+use crate::world::player::Player;
 use crate::Game;
 
 #[derive(Component)]
