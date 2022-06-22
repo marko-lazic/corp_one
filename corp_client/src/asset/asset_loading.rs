@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy_asset_loader::{AssetCollection, AssetLoader};
+use bevy_asset_loader::asset_collection::AssetCollection;
+use bevy_asset_loader::loading_state::{LoadingState, LoadingStateAppExt};
 use bevy_kira_audio::AudioSource;
 use iyes_loopless::prelude::AppLooplessStateExt;
 use serde::Deserialize;
@@ -110,17 +111,18 @@ impl MaterialAssets {
 pub struct AssetLoadingPlugin;
 
 impl Plugin for AssetLoadingPlugin {
-    fn build(&self, mut app: &mut App) {
-        AssetLoader::new(GameState::AssetLoading)
-            .continue_to_state(GameState::StarMap)
-            .with_collection::<PlayerAssets>()
-            .with_collection::<MeshAssets>()
-            .with_collection::<TextureAssets>()
-            .with_collection::<AudioAssets>()
-            .with_collection::<FontAssets>()
-            .with_collection::<ColonyAssets>()
-            .with_collection::<SceneAssets>()
-            .build(&mut app);
+    fn build(&self, app: &mut App) {
+        app.add_loading_state(
+            LoadingState::new(GameState::AssetLoading)
+                .continue_to_state(GameState::StarMap)
+                .with_collection::<PlayerAssets>()
+                .with_collection::<MeshAssets>()
+                .with_collection::<TextureAssets>()
+                .with_collection::<AudioAssets>()
+                .with_collection::<FontAssets>()
+                .with_collection::<ColonyAssets>()
+                .with_collection::<SceneAssets>(),
+        );
         app.add_enter_system(GameState::AssetLoading, Self::print_loading_text);
         app.add_enter_system(GameState::AssetLoading, Self::start_loading);
         app.add_exit_system(GameState::AssetLoading, Self::clean_up_loading_text);
