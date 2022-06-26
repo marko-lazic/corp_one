@@ -8,7 +8,7 @@ use corp_shared::prelude::*;
 use crate::asset::asset_loading::PlayerAssets;
 use crate::constants::state::GameState;
 use crate::input::input_command::PlayerDirection;
-use crate::input::{Cursor, InputSystem};
+use crate::input::{Cursor, InputSystem, OrientationMode};
 use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
@@ -42,9 +42,11 @@ impl Plugin for PlayerPlugin {
                 .after(InputSystem::CheckInteraction)
                 .with_system(Self::move_player)
                 .with_system(Self::handle_animation_action)
-                .with_system(Self::orient_player)
                 .into(),
         );
+
+        app.add_system_set(Self::orientation_mode_aim_system_set());
+        app.add_system_set(Self::orientation_mode_direction_system_set());
 
         app.add_system_set(
             ConditionSet::new()
@@ -109,24 +111,79 @@ impl PlayerPlugin {
     fn move_player(
         mut player_direction: ResMut<PlayerDirection>,
         time: Res<Time>,
-        mut query: Query<(&mut Player, &mut Movement, &mut Transform)>,
+        mut query: Query<(&mut Player, &mut Movement, &mut Transform, &Health)>,
     ) {
-        if let Ok((mut player, mut movement, mut position)) = query.get_single_mut() {
+        if let Ok((mut player, mut movement, mut position, health)) = query.get_single_mut() {
             let direction = player_direction.new_direction();
+            movement.update_direction(direction);
             if movement.can_move {
-                position.translation += movement.update_velocity(direction) * time.delta_seconds();
+                movement.update_velocity();
+                position.translation += movement.velocity * time.delta_seconds();
             }
 
-            player.is_moving = Self::is_moving(&movement.velocity);
+            player.is_moving = Self::is_moving(&movement.velocity) && health.is_alive();
             player_direction.reset();
         }
     }
 
-    fn orient_player(mut query: Query<(&Player, &mut Transform)>, cursor: Res<Cursor>) {
+    fn orientation_mode_aim_system_set() -> SystemSet {
+        ConditionSet::new()
+            .run_in_state(GameState::Playing)
+            .run_if_resource_equals(OrientationMode::Aim)
+            .after(InputSystem::CheckInteraction)
+            .with_system(Self::orientation_aim)
+            .into()
+    }
+
+    fn orientation_aim(mut query: Query<(&Player, &mut Transform)>, cursor: Res<Cursor>) {
         if let Ok((_, mut transform)) = query.get_single_mut() {
             let direction = Vec3::new(cursor.world.x, 0.0, cursor.world.z);
             transform.look_at(direction, Vec3::Y);
         }
+    }
+
+    fn orientation_mode_direction_system_set() -> SystemSet {
+        ConditionSet::new()
+            .run_in_state(GameState::Playing)
+            .run_if_resource_equals(OrientationMode::Direction)
+            .after(InputSystem::CheckInteraction)
+            .with_system(Self::orientation_direction)
+            .into()
+    }
+
+    fn orientation_direction(
+        mut query: Query<(&Player, &mut Movement, &mut Transform)>,
+        time: Res<Time>,
+        mut prev_dir: Local<Vec3>,
+    ) {
+        if let Ok((_, mut movement, mut transform)) = query.get_single_mut() {
+            if !movement.is_direction_zero() && *prev_dir != movement.direction {
+                movement.target_rotation =
+                    Self::look_at(&transform.translation, movement.velocity * 20.0);
+                movement.rotating = true;
+                movement.rotation_time = 0.0;
+                *prev_dir = movement.direction;
+            }
+
+            if movement.rotating == true {
+                movement.rotation_time += time.delta_seconds();
+                transform.rotation = transform
+                    .rotation
+                    .lerp(movement.target_rotation, movement.rotation_time);
+            }
+
+            if movement.rotation_time > 1.0 {
+                movement.rotating = false;
+            }
+        }
+    }
+
+    fn look_at(translation: &Vec3, target: Vec3) -> Quat {
+        let up = Vec3::Y;
+        let forward = Vec3::normalize(*translation - target);
+        let right = up.cross(forward).normalize();
+        let up = forward.cross(right);
+        Quat::from_mat3(&Mat3::from_cols(right, up, forward))
     }
 
     fn handle_animation_action(

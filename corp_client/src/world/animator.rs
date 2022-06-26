@@ -62,6 +62,7 @@ impl AnimatorPlugin {
         if let Ok(mut animation_player) = animation_player_query.get_single_mut() {
             for mut animation_component in animation_components.iter_mut() {
                 if let Some(next) = animation_component.next {
+                    animation_player.set_speed(1.2);
                     animation_player
                         .play(player_animations.get(&next).unwrap().clone_weak())
                         .repeat();

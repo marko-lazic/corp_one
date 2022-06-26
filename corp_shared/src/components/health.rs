@@ -38,6 +38,10 @@ impl Health {
         &self.hit_points <= &MIN_HEALTH
     }
 
+    pub fn is_alive(&self) -> bool {
+        !self.is_dead()
+    }
+
     pub fn set_hit_points(&mut self, hit_points: f32) {
         self.hit_points = hit_points;
     }

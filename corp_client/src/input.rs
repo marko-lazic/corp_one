@@ -19,6 +19,12 @@ use crate::{Game, UseEntity};
 mod double_tap;
 pub mod input_command;
 
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+pub enum OrientationMode {
+    Direction,
+    Aim,
+}
+
 #[derive(Default)]
 pub struct Cursor {
     pub screen: Vec2,
@@ -36,6 +42,7 @@ pub enum Action {
     Backward,
     Left,
     Right,
+    OrientationMode,
     Use,
     Shoot,
     Escape,
@@ -52,6 +59,7 @@ pub struct InputControlPlugin;
 
 impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(OrientationMode::Direction);
         app.add_plugin(ActionPlugin::<Action>::default());
         app.add_startup_system(Self::setup);
         app.init_resource::<Cursor>();
@@ -73,6 +81,7 @@ impl Plugin for InputControlPlugin {
                 .with_system(Self::player_keyboard_action)
                 .with_system(Self::player_mouse_action)
                 .with_system(Self::use_barrier)
+                .with_system(Self::switch_orientation_mode)
                 .with_system(Self::kill)
                 .into(),
         );
@@ -131,6 +140,7 @@ impl InputControlPlugin {
             .bind(Action::Backward, KeyCode::S)
             .bind(Action::Left, KeyCode::A)
             .bind(Action::Right, KeyCode::D)
+            .bind(Action::OrientationMode, KeyCode::Space)
             .bind(Action::Use, KeyCode::E)
             // .bind(Action::Shoot, MouseButton::Left)
             .bind(Action::Escape, KeyCode::Escape)
@@ -189,6 +199,23 @@ impl InputControlPlugin {
                     }
                 }
             }
+        }
+    }
+
+    fn switch_orientation_mode(
+        input: Res<InputMap<Action>>,
+        mut orientation_mode: ResMut<OrientationMode>,
+        mut change_mode: Local<bool>,
+    ) {
+        if input.just_active(Action::OrientationMode) && !*change_mode {
+            if *orientation_mode == OrientationMode::Aim {
+                *orientation_mode = OrientationMode::Direction;
+            } else {
+                *orientation_mode = OrientationMode::Aim;
+            }
+            *change_mode = true;
+        } else {
+            *change_mode = false;
         }
     }
 }
