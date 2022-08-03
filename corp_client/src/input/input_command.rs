@@ -1,8 +1,7 @@
 use bevy::math::Vec3;
-use bevy_input_actionmap::InputMap;
+use leafwing_input_manager::action_state::ActionState;
 
-use crate::input::Action;
-use crate::{Input, MouseButton, Res};
+use crate::input::CorpAction;
 
 #[derive(Default)]
 pub struct PlayerDirection {
@@ -13,23 +12,23 @@ pub struct PlayerDirection {
 }
 
 impl PlayerDirection {
-    pub fn key_action(&mut self, input: &Res<InputMap<Action>>) {
-        if input.active(Action::Forward) {
+    pub fn move_action(&mut self, action_state: &ActionState<CorpAction>) {
+        if action_state.pressed(CorpAction::Forward) {
             self.forward = true;
         }
-        if input.active(Action::Backward) {
+        if action_state.pressed(CorpAction::Backward) {
             self.backward = true;
         }
-        if input.active(Action::Left) {
+        if action_state.pressed(CorpAction::Left) {
             self.left = true;
         }
-        if input.active(Action::Right) {
+        if action_state.pressed(CorpAction::Right) {
             self.right = true;
         }
     }
 
-    pub fn mouse_action(&mut self, buttons: &Res<Input<MouseButton>>) {
-        if buttons.just_pressed(MouseButton::Left) {
+    pub fn shoot_action(&mut self, action_state: &ActionState<CorpAction>) {
+        if action_state.just_pressed(CorpAction::Shoot) {
             bevy::log::info!("Bang");
         }
     }

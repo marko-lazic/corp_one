@@ -12,6 +12,7 @@ default = [
 [dependencies]
 corp_shared = { path = "../corp_shared" }
 bevy = { version = "0.7.0", features = ["wav"] }
+leafwing-input-manager = "0.4.1"
 iyes_loopless = "0.6.1"
 bevy_mod_raycast = "0.5.0"
 bevy_mod_picking = "0.7.0"
@@ -31,7 +32,6 @@ bevy_prototype_debug_lines = { version = "0.7.2" }
 impl-tools = "0.3.2"
 
 # Should deprecate
-bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap.git", branch = "main" }
 heron = { version = "3.1.0", features = ["3d"] }
 blender_bevy_toolkit = { path = "../../blender_bevy_toolkit" }
 

@@ -1,9 +1,12 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use bevy_input_actionmap::*;
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RaycastSystem};
 use iyes_loopless::prelude::ConditionSet;
+use leafwing_input_manager::action_state::ActionState;
+use leafwing_input_manager::input_map::InputMap;
+use leafwing_input_manager::plugin::InputManagerPlugin;
+use leafwing_input_manager::Actionlike;
 
 use corp_shared::prelude::Health;
 use input_command::PlayerDirection;
@@ -36,8 +39,8 @@ pub enum InputSystem {
     CheckInteraction,
 }
 
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
-pub enum Action {
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+pub enum CorpAction {
     Forward,
     Backward,
     Left,
@@ -60,8 +63,9 @@ pub struct InputControlPlugin;
 impl Plugin for InputControlPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(OrientationMode::Direction);
-        app.add_plugin(ActionPlugin::<Action>::default());
-        app.add_startup_system(Self::setup);
+        app.add_plugin(InputManagerPlugin::<CorpAction>::default());
+        app.insert_resource(Self::default_input_map());
+        app.insert_resource(ActionState::<CorpAction>::default());
         app.init_resource::<Cursor>();
         app.init_resource::<PlayerDirection>();
         app.add_plugin(DefaultRaycastingPlugin::<Ground>::default());
@@ -93,15 +97,40 @@ impl Plugin for InputControlPlugin {
 }
 
 impl InputControlPlugin {
+    fn default_input_map() -> InputMap<CorpAction> {
+        use CorpAction::*;
+        let mut input_map = InputMap::default();
+
+        // Movement
+        input_map.insert(KeyCode::W, Forward);
+        input_map.insert(KeyCode::S, Backward);
+        input_map.insert(KeyCode::A, Left);
+        input_map.insert(KeyCode::D, Right);
+
+        // Abilities
+        input_map.insert(KeyCode::E, Use);
+        input_map.insert(KeyCode::K, Kill);
+        input_map.insert(MouseButton::Left, Shoot);
+
+        // Options
+        input_map.insert(KeyCode::Escape, Escape);
+        input_map.insert(KeyCode::Space, OrientationMode);
+        input_map.insert(KeyCode::I, ColonyIris);
+        input_map.insert(KeyCode::P, ColonyPlayground);
+        input_map.insert(KeyCode::L, ColonyLiberte);
+
+        input_map
+    }
+
     fn keyboard_escape_action(
-        input: Res<InputMap<Action>>,
+        action_state: Res<ActionState<CorpAction>>,
         time: Res<Time>,
         mut game: ResMut<Game>,
         mut windows: ResMut<Windows>,
         mut app_exit_events: EventWriter<AppExit>,
         mut double_tap: Local<DoubleTap>,
     ) {
-        if input.just_active(Action::Escape) {
+        if action_state.just_pressed(CorpAction::Escape) {
             double_tap.increment();
             let window = windows.get_primary_mut().unwrap();
             if game.cursor_locked {
@@ -121,41 +150,28 @@ impl InputControlPlugin {
     }
 
     fn player_keyboard_action(
-        input: Res<InputMap<Action>>,
+        action_state: Res<ActionState<CorpAction>>,
         mut player_action: ResMut<PlayerDirection>,
     ) {
-        player_action.key_action(&input);
+        player_action.move_action(&action_state);
     }
 
     fn player_mouse_action(
-        buttons: Res<Input<MouseButton>>,
+        action_state: Res<ActionState<CorpAction>>,
         mut player_action: ResMut<PlayerDirection>,
     ) {
-        player_action.mouse_action(&buttons);
+        player_action.shoot_action(&action_state);
     }
 
-    fn setup(mut input: ResMut<InputMap<Action>>) {
-        input
-            .bind(Action::Forward, KeyCode::W)
-            .bind(Action::Backward, KeyCode::S)
-            .bind(Action::Left, KeyCode::A)
-            .bind(Action::Right, KeyCode::D)
-            .bind(Action::OrientationMode, KeyCode::Space)
-            .bind(Action::Use, KeyCode::E)
-            // .bind(Action::Shoot, MouseButton::Left)
-            .bind(Action::Escape, KeyCode::Escape)
-            .bind(Action::Kill, KeyCode::K)
-            .bind(Action::ColonyIris, KeyCode::I)
-            .bind(Action::ColonyPlayground, KeyCode::P)
-            .bind(Action::ColonyLiberte, KeyCode::L);
-    }
-
-    fn starmap_keyboard(input: Res<InputMap<Action>>, mut vortex_events: EventWriter<VortInEvent>) {
-        if input.just_active(Action::ColonyIris) {
+    fn starmap_keyboard(
+        action_state: Res<ActionState<CorpAction>>,
+        mut vortex_events: EventWriter<VortInEvent>,
+    ) {
+        if action_state.just_pressed(CorpAction::ColonyIris) {
             vortex_events.send(VortInEvent::vort(Colony::Iris));
-        } else if input.just_active(Action::ColonyLiberte) {
+        } else if action_state.just_pressed(CorpAction::ColonyLiberte) {
             vortex_events.send(VortInEvent::vort(Colony::Liberte));
-        } else if input.just_active(Action::ColonyPlayground) {
+        } else if action_state.just_pressed(CorpAction::ColonyPlayground) {
             vortex_events.send(VortInEvent::vort(Colony::Playground));
         }
     }
@@ -176,8 +192,11 @@ impl InputControlPlugin {
         }
     }
 
-    fn kill(input: Res<InputMap<Action>>, mut healths: Query<&mut Health, With<Player>>) {
-        if input.just_active(Action::Kill) {
+    fn kill(
+        action_state: Res<ActionState<CorpAction>>,
+        mut healths: Query<&mut Health, With<Player>>,
+    ) {
+        if action_state.just_pressed(CorpAction::Kill) {
             if let Some(mut health) = healths.iter_mut().next() {
                 health.kill_mut();
             }
@@ -185,12 +204,12 @@ impl InputControlPlugin {
     }
 
     fn use_barrier(
-        input: Res<InputMap<Action>>,
+        action_state: Res<ActionState<CorpAction>>,
         mut barriers_query: Query<&mut BarrierField>,
         barrier_access_query: Query<&BarrierAccess>,
         game: Res<Game>,
     ) {
-        if input.just_active(Action::Use) {
+        if action_state.just_pressed(CorpAction::Use) {
             if let UseEntity::Barrier(entity) = game.use_entity {
                 let access = barrier_access_query.get(entity).unwrap();
                 for mut barrier in barriers_query.iter_mut() {
@@ -203,11 +222,11 @@ impl InputControlPlugin {
     }
 
     fn switch_orientation_mode(
-        input: Res<InputMap<Action>>,
+        action_state: Res<ActionState<CorpAction>>,
         mut orientation_mode: ResMut<OrientationMode>,
         mut change_mode: Local<bool>,
     ) {
-        if input.just_active(Action::OrientationMode) && !*change_mode {
+        if action_state.just_pressed(CorpAction::OrientationMode) && !*change_mode {
             if *orientation_mode == OrientationMode::Aim {
                 *orientation_mode = OrientationMode::Direction;
             } else {
