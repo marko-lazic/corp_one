@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use heron::{CollisionLayers, CollisionShape, RigidBody};
+use bevy_rapier3d::prelude::*;
 use iyes_loopless::condition::ConditionSet;
 use rand::seq::SliceRandom;
 
@@ -13,8 +13,7 @@ use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
 use crate::world::colony::vortex::VortexNode;
-use crate::world::colony::Layer;
-use crate::world::WorldSystem;
+use crate::world::{physics, WorldSystem};
 use crate::Game;
 
 #[derive(Default, bevy::ecs::component::Component)]
@@ -82,17 +81,17 @@ impl PlayerPlugin {
             .insert(Player::default())
             .insert(Movement::default())
             .insert(game.health.clone())
-            .insert(RigidBody::Dynamic)
             .insert(AnimationComponent::new(PlayerAnimationAction::IDLE))
-            .insert(CollisionShape::Cuboid {
-                half_extends: Vec3::new(0.5, 1.0, 0.5),
-                border_radius: None,
+            .insert(RigidBody::Dynamic)
+            .insert(Collider::capsule_y(0.25, 0.25))
+            .insert(LockedAxes::ROTATION_LOCKED)
+            .insert(Friction {
+                coefficient: 0.0,
+                combine_rule: CoefficientCombineRule::Min,
             })
-            .insert(
-                CollisionLayers::none()
-                    .with_group(Layer::Player)
-                    .with_masks(vec![Layer::Zone, Layer::VortexGate]),
-            )
+            .insert(ActiveEvents::COLLISION_EVENTS)
+            .insert(ContactForceEventThreshold(30.0))
+            .insert(physics::CollideGroups::player())
             .id();
 
         game.player_entity = Some(player);

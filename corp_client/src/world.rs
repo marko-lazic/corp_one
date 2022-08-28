@@ -6,6 +6,7 @@ use crate::input::InputControlPlugin;
 use crate::world::animator::AnimatorPlugin;
 use crate::world::camera::TopDownCameraPlugin;
 use crate::world::colony::ColonyPlugin;
+use crate::world::physics::PhysicsPlugin;
 use crate::world::player::PlayerPlugin;
 use crate::world::star_map::StarMapPlugin;
 
@@ -14,6 +15,7 @@ pub mod camera;
 pub mod character;
 mod cloning;
 pub mod colony;
+mod physics;
 pub mod player;
 mod star_map;
 
@@ -30,6 +32,7 @@ impl Plugin for WorldPlugin {
         app.add_plugin(StarMapPlugin);
         app.add_plugin(InputControlPlugin);
         app.add_plugin(ZonePlugin);
+        app.add_plugin(PhysicsPlugin);
         app.add_plugin(PlayerPlugin);
         app.add_plugin(TopDownCameraPlugin);
     }

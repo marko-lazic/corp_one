@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::{Collider, QueryFilter, RapierContext};
 use iyes_loopless::condition::ConditionSet;
 use iyes_loopless::prelude::NextState;
 
@@ -7,6 +8,7 @@ use corp_shared::prelude::Health;
 use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
 use crate::world::colony::Colony;
+use crate::world::physics;
 use crate::world::player::Player;
 use crate::Game;
 
@@ -47,6 +49,7 @@ impl Plugin for VortexPlugin {
                 .run_in_state(GameState::Playing)
                 .with_system(Self::vort_out_event_reader)
                 .with_system(Self::animate_nodes)
+                .with_system(Self::vortex_gate_collider)
                 .into(),
         );
     }
@@ -101,6 +104,30 @@ impl VortexPlugin {
     fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<Time>) {
         for mut transform in nodes.iter_mut() {
             transform.rotate(Quat::from_rotation_y(time.delta_seconds() * 0.2));
+        }
+    }
+
+    fn vortex_gate_collider(
+        zones: Query<(&Transform, &Collider), With<VortexGate>>,
+        rapier_context: Res<RapierContext>,
+        mut vort_out_events: EventWriter<VortOutEvent>,
+    ) {
+        let filter =
+            QueryFilter::only_dynamic().groups(physics::CollideGroups::vortex_gate().into());
+
+        for (transform, collider) in zones.iter() {
+            let shape_rot = transform.rotation;
+            let shape_pos = transform.translation;
+            rapier_context.intersections_with_shape(
+                shape_pos,
+                shape_rot,
+                collider,
+                filter,
+                |_entity| {
+                    vort_out_events.send(VortOutEvent);
+                    false
+                },
+            );
         }
     }
 }

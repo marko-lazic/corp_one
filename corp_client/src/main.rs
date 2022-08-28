@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::window::PresentMode;
-use bevy_inspector_egui::WorldInspectorPlugin;
 use blender_bevy_toolkit::BlendLoadPlugin;
 use iyes_loopless::prelude::AppLooplessStateExt;
 
@@ -45,7 +44,7 @@ fn main() {
         .add_plugin(GuiPlugin)
         .add_plugin(WorldPlugin)
         .add_plugin(BlendLoadPlugin::default())
-        .add_plugin(WorldInspectorPlugin::new())
+        //.add_plugin(WorldInspectorPlugin::new())
         .run();
 }
 

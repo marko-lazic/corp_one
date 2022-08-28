@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_asset_ron::RonAssetPlugin;
 use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle};
 use bevy_mod_raycast::RayCastMesh;
-use heron::prelude::*;
+use bevy_rapier3d::prelude::*;
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet, NextState};
 use serde::Deserialize;
 
@@ -12,8 +12,8 @@ use crate::input::Ground;
 use crate::world::colony::barrier::{BarrierAccess, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
-use crate::world::colony::zone::{Zone, ZoneEntities};
-use crate::world::WorldSystem;
+use crate::world::colony::zone::Zone;
+use crate::world::{physics, WorldSystem};
 use crate::Game;
 
 mod asset;
@@ -22,13 +22,6 @@ pub mod colony_assets;
 pub mod intractable;
 pub mod vortex;
 pub mod zone;
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, PhysicsLayer)]
-pub enum Layer {
-    VortexGate,
-    Zone,
-    Player,
-}
 
 #[derive(Debug, Deserialize, Clone)]
 pub enum Colony {
@@ -53,7 +46,6 @@ impl Plugin for ColonyPlugin {
         app.register_type::<BarrierField>();
         app.register_type::<BarrierAccess>();
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
-        app.add_plugin(PhysicsPlugin::default());
         app.add_plugin(VortexPlugin);
         app.add_plugins(DefaultPickingPlugins);
         app.add_plugin(BarrierPlugin);
@@ -116,6 +108,8 @@ impl ColonyPlugin {
                 }),
                 ..Default::default()
             })
+            .insert(RigidBody::Fixed)
+            .insert(Collider::cuboid(100.0, 0.01, 100.0))
             .insert(RayCastMesh::<Ground>::default());
     }
 
@@ -138,18 +132,10 @@ impl ColonyPlugin {
                         material: material_assets.get_material(&zone_asset.material),
                         ..Default::default()
                     })
-                    .insert(RigidBody::Sensor)
-                    .insert(CollisionShape::Cuboid {
-                        half_extends: Vec3::new(0.5, 1.0, 0.5),
-                        border_radius: None,
-                    })
-                    .insert(
-                        CollisionLayers::none()
-                            .with_group(Layer::Zone)
-                            .with_mask(Layer::Player),
-                    )
+                    .insert(Sensor)
+                    .insert(Collider::cuboid(0.5, 1.0, 0.5))
                     .insert(Zone::from(zone_asset.clone()))
-                    .insert(ZoneEntities::default());
+                    .insert(physics::CollideGroups::zone());
             }
         }
     }
@@ -159,16 +145,9 @@ impl ColonyPlugin {
         for gate in query.iter() {
             commands
                 .entity(gate)
-                .insert(RigidBody::Sensor)
-                .insert(CollisionShape::Cuboid {
-                    half_extends: Vec3::new(0.5, 1.0, 0.5),
-                    border_radius: None,
-                })
-                .insert(
-                    CollisionLayers::none()
-                        .with_group(Layer::VortexGate)
-                        .with_mask(Layer::Player),
-                );
+                .insert(Sensor)
+                .insert(Collider::cuboid(0.5, 1.0, 0.5))
+                .insert(physics::CollideGroups::vortex_gate());
         }
     }
 

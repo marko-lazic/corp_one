@@ -21,9 +21,11 @@ bevy-inspector-egui = "0.11.0"
 bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader.git", branch = "main", features = ["stageless"] }
 bevy_kira_audio = "0.10.0"
 bevy_asset_ron = "0.4.0"
+bevy_rapier3d = { version = "0.15.0", features = ["simd-stable"] }
 glam = "0.20.5"
 serde = "1.0.137"
 rand = "0.8.5"
+bitflags = "1.3.2"
 
 # Examples dependecies
 bevy_mouse_tracking_plugin = "0.2.1"
@@ -32,7 +34,6 @@ bevy_prototype_debug_lines = { version = "0.7.2" }
 impl-tools = "0.3.2"
 
 # Should deprecate
-heron = { version = "3.1.0", features = ["3d"] }
 blender_bevy_toolkit = { path = "../../blender_bevy_toolkit" }
 
 [[example]]
