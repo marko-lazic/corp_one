@@ -41,6 +41,7 @@ impl Default for Movement {
         }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

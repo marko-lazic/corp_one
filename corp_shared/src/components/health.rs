@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::core::Timer;
+use bevy::time::Timer;
 
 pub const MAX_HEALTH: f32 = 100.0;
 pub const CLONE_HEALTH_80: f32 = 80.0;

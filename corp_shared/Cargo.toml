@@ -5,4 +5,4 @@ authors = ["Marko Lazić <marko.lazic@comyno.com>"]
 edition = "2021"
 
 [dependencies]
-bevy = "0.7.0"
+bevy = "0.8.1"

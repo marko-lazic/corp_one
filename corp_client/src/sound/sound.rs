@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioPlugin};
+use bevy_kira_audio::{Audio, AudioControl, AudioPlugin};
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
 use crate::asset::asset_loading::AudioAssets;
@@ -30,14 +30,18 @@ impl Plugin for SoundPlugin {
 
 impl SoundPlugin {
     fn setup_live_state(audio: Res<Audio>, audio_assets: Res<AudioAssets>) {
-        audio.set_volume(0.1);
-        audio.play_looped(audio_assets.walk.clone());
+        audio
+            .play(audio_assets.walk.clone())
+            .looped()
+            .with_volume(0.1);
         audio.pause();
     }
 
     fn play_music(audio: Res<Audio>, audio_assets: Res<AudioAssets>) {
-        audio.set_volume(0.3);
-        audio.play_looped(audio_assets.slow_travel.clone());
+        audio
+            .play(audio_assets.slow_travel.clone())
+            .looped()
+            .with_volume(0.3);
     }
 
     fn stop_audio(audio: Res<Audio>) {

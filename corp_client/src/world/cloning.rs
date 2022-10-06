@@ -2,14 +2,14 @@ use bevy::prelude::*;
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 use iyes_loopless::state::NextState;
 
-use corp_shared::prelude::{Health, CLONE_HEALTH_80};
+use corp_shared::prelude::{CLONE_HEALTH_80, Health};
 
 use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
-use crate::world::colony::vortex::VortInEvent;
-use crate::world::colony::Colony;
-use crate::world::player::Player;
 use crate::Game;
+use crate::world::colony::Colony;
+use crate::world::colony::vortex::VortInEvent;
+use crate::world::player::Player;
 
 pub struct CloningPlugin;
 

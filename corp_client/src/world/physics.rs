@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use bitflags::bitflags;
-
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
@@ -11,33 +9,31 @@ impl Plugin for PhysicsPlugin {
     }
 }
 
-bitflags! {
-    pub struct CollideGroups: u32 {
-       const PLAYER = (1 << 30) - 1; // 1 << 0 clusterjunk
-       const ZONE = 1 << 1;
-       const VORTEX_GATE  = 1 << 2;
-    }
-}
+pub struct CollideGroups;
 
 impl CollideGroups {
+    const PLAYER: Group = Group::GROUP_1;
+    const ZONE: Group = Group::GROUP_2;
+    const VORTEX_GATE: Group = Group::GROUP_3;
+
     pub fn player() -> CollisionGroups {
         CollisionGroups {
-            memberships: Self::PLAYER.bits(),
-            filters: Self::PLAYER.bits() | Self::VORTEX_GATE.bits(),
+            memberships: Self::PLAYER,
+            filters: Self::VORTEX_GATE | Self::ZONE,
         }
     }
 
     pub fn zone() -> CollisionGroups {
         CollisionGroups {
-            memberships: Self::ZONE.bits(),
-            filters: Self::ZONE.bits() | Self::VORTEX_GATE.bits(),
+            memberships: Self::ZONE,
+            filters: Self::PLAYER,
         }
     }
 
     pub fn vortex_gate() -> CollisionGroups {
         CollisionGroups {
-            memberships: Self::VORTEX_GATE.bits(),
-            filters: Self::all().bits(),
+            memberships: Self::VORTEX_GATE,
+            filters: Self::PLAYER,
         }
     }
 }

@@ -1,5 +1,6 @@
-use bevy::prelude::Timer;
 use std::time::Duration;
+
+use bevy::prelude::Timer;
 
 pub struct DoubleTap {
     taps: u32,
@@ -18,8 +19,8 @@ impl DoubleTap {
     }
 
     pub fn on_complete<F>(&mut self, f: F)
-    where
-        F: FnOnce(),
+        where
+            F: FnOnce(),
     {
         if self.timer.finished() {
             if self.fulfilled() {

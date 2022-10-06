@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_asset_ron::RonAssetPlugin;
+use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle};
 use bevy_mod_raycast::RayCastMesh;
 use bevy_rapier3d::prelude::*;
@@ -8,13 +8,13 @@ use serde::Deserialize;
 
 use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
 use crate::constants::state::GameState;
+use crate::Game;
 use crate::input::Ground;
+use crate::world::{physics, WorldSystem};
 use crate::world::colony::barrier::{BarrierAccess, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::Zone;
-use crate::world::{physics, WorldSystem};
-use crate::Game;
 
 mod asset;
 pub mod barrier;
@@ -98,7 +98,7 @@ impl ColonyPlugin {
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-                transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
+                transform: Transform::from_translation(Vec3::new(4., 0.0, 4.)),
                 material: materials.add(StandardMaterial {
                     base_color: Color::WHITE,
                     perceptual_roughness: 0.0,

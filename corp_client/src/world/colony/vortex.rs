@@ -7,10 +7,10 @@ use corp_shared::prelude::Health;
 
 use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
+use crate::Game;
 use crate::world::colony::Colony;
 use crate::world::physics;
 use crate::world::player::Player;
-use crate::Game;
 
 pub struct VortOutEvent;
 

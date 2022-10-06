@@ -5,9 +5,9 @@ use bevy::prelude::{
 };
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
+use crate::{App, GameState, UiRect, Visibility};
 use crate::asset::asset_loading::FontAssets;
 use crate::input::Cursor;
-use crate::{App, GameState, Rect, Visibility};
 
 #[derive(Default)]
 pub struct CursorInfo {
@@ -43,7 +43,7 @@ impl CursorPlugin {
 
         commands
             .spawn_bundle(TextBundle {
-                text: Text::with_section("[E] Use", text_style, text_alignment),
+                text: Text::from_section("[E] Use", text_style).with_alignment(text_alignment),
                 ..Default::default()
             })
             .insert(CursorText);
@@ -60,7 +60,7 @@ impl CursorPlugin {
             let result = query.get_single_mut();
             if let Ok((mut style, mut visibility)) = result {
                 visibility.is_visible = true;
-                style.position = Rect {
+                style.position = UiRect {
                     top: Val::Px(-mouse_screen_y + 20.0),
                     left: Val::Px(mouse_screen_x + 15.0),
                     ..Default::default()

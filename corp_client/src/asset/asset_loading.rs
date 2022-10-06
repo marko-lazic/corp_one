@@ -11,11 +11,11 @@ use crate::world::colony::colony_assets::ColonyAsset;
 
 #[derive(AssetCollection)]
 pub struct SceneAssets {
-    #[asset(path = "scenes/iris/iris.scn")]
+    #[asset(path = "scenes/void/void.scn")]
     pub iris: Handle<DynamicScene>,
-    #[asset(path = "scenes/cloning/cloning.scn")]
+    #[asset(path = "scenes/void/void.scn")]
     pub cloning: Handle<DynamicScene>,
-    #[asset(path = "scenes/liberte/liberte.scn")]
+    #[asset(path = "scenes/void/void.scn")]
     pub liberte: Handle<DynamicScene>,
 }
 
@@ -123,24 +123,27 @@ impl Plugin for AssetLoadingPlugin {
                 .with_collection::<ColonyAssets>()
                 .with_collection::<SceneAssets>(),
         );
-        app.add_enter_system(GameState::AssetLoading, Self::print_loading_text);
+        app.add_enter_system(GameState::AssetLoading, Self::setup);
         app.add_enter_system(GameState::AssetLoading, Self::start_loading);
-        app.add_exit_system(GameState::AssetLoading, Self::clean_up_loading_text);
+        app.add_exit_system(GameState::AssetLoading, Self::cleanup);
     }
 }
 
 impl AssetLoadingPlugin {
-    fn print_loading_text(mut commands: Commands, asset_server: Res<AssetServer>) {
+    fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+        commands
+            .spawn_bundle(Camera2dBundle::default())
+            .insert(LoadingCamera);
+
         let loading_text_bundle_entity = commands
             .spawn_bundle(TextBundle {
-                text: Text::with_section(
+                text: Text::from_section(
                     "Loading",
                     TextStyle {
                         font: asset_server.load(PATHS.font_fira_sans),
                         font_size: 40.0,
                         color: Color::rgb(0.9, 0.9, 0.9),
                     },
-                    Default::default(),
                 ),
                 ..Default::default()
             })
@@ -166,10 +169,11 @@ impl AssetLoadingPlugin {
         });
     }
 
-    fn clean_up_loading_text(
+    fn cleanup(
         mut commands: Commands,
         text_query: Query<Entity, With<LoadingIndicator>>,
         loading_data: Res<LoadingData>,
+        cameras: Query<Entity, With<LoadingCamera>>,
     ) {
         for remove in text_query.iter() {
             commands.entity(remove).despawn_recursive();
@@ -177,6 +181,10 @@ impl AssetLoadingPlugin {
         commands
             .entity(loading_data.loading_text_bundle_entity)
             .despawn_recursive();
+
+        if let Ok(entity) = cameras.get_single() {
+            commands.entity(entity).despawn();
+        }
     }
 }
 
@@ -186,3 +194,6 @@ struct LoadingData {
 
 #[derive(Component)]
 struct LoadingIndicator;
+
+#[derive(Component)]
+struct LoadingCamera;

@@ -171,21 +171,21 @@ mod metrics_utils {
 
     fn default_text(asset_server: &Res<AssetServer>) -> Text {
         let font_handle = asset_server.load("fonts/FiraMono-Medium.ttf");
-        Text::with_section(
+        Text::from_section(
             "Corp One".to_string(),
             TextStyle {
                 font: font_handle,
                 font_size: 20.0,
                 color: Color::WHITE,
             },
-            TextAlignment::default(),
         )
+        .with_alignment(TextAlignment::default())
     }
 
     fn default_style(top: f32, left: f32) -> Style {
         Style {
             position_type: PositionType::Absolute,
-            position: Rect {
+            position: UiRect {
                 top: Val::Px(top),
                 left: Val::Px(left),
                 ..Default::default()

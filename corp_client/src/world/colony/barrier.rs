@@ -5,8 +5,8 @@ use bevy::prelude::*;
 use bevy_mod_picking::{HoverEvent, PickingEvent};
 use iyes_loopless::prelude::ConditionSet;
 
-use crate::gui::CursorInfo;
 use crate::{App, Game, GameState, Timer, UseEntity};
+use crate::gui::CursorInfo;
 
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]

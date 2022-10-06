@@ -7,14 +7,14 @@ use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::PlayerAssets;
 use crate::constants::state::GameState;
-use crate::input::input_command::PlayerDirection;
+use crate::Game;
 use crate::input::{Cursor, InputSystem, OrientationMode};
+use crate::input::input_command::PlayerDirection;
+use crate::world::{physics, WorldSystem};
 use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
 use crate::world::colony::vortex::VortexNode;
-use crate::world::{physics, WorldSystem};
-use crate::Game;
 
 #[derive(Default, bevy::ecs::component::Component)]
 pub struct Player {
@@ -74,9 +74,10 @@ impl PlayerPlugin {
         let player_tr = Transform::from_translation(position);
 
         let player = commands
-            .spawn_bundle(TransformBundle::from(player_tr))
-            .with_children(|parent| {
-                parent.spawn_scene(player_assets.mannequiny.clone());
+            .spawn_bundle(SceneBundle {
+                scene: player_assets.mannequiny.clone(),
+                transform: player_tr,
+                ..default()
             })
             .insert(Player::default())
             .insert(Movement::default())

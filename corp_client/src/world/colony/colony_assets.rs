@@ -5,8 +5,8 @@ use serde::Deserialize;
 
 use crate::asset::asset_loading::MaterialAsset;
 use crate::world::colony::asset::color::ColorAsset;
-use crate::world::colony::zone::ZoneType;
 use crate::world::colony::Colony;
+use crate::world::colony::zone::ZoneType;
 
 #[derive(Default, Deserialize, Debug, TypeUuid)]
 #[uuid = "962DF4C2-C221-4364-A9F7-B7340FB60437"]
