@@ -88,7 +88,7 @@ fn world_to_local(child_pt: &Transform, world_tr: &Transform) -> Vec3 {
 
 fn setup_system(mut commands: Commands) {
     commands
-        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .spawn_bundle(Camera2dBundle::default())
         .insert_bundle(bevy_mod_picking::PickingCameraBundle::default())
         .insert(bevy_transform_gizmo::GizmoPickSource::default());
 

@@ -3,18 +3,19 @@ use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle};
 use bevy_mod_raycast::RayCastMesh;
 use bevy_rapier3d::prelude::*;
+use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet, NextState};
 use serde::Deserialize;
 
 use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
 use crate::constants::state::GameState;
-use crate::Game;
 use crate::input::Ground;
-use crate::world::{physics, WorldSystem};
-use crate::world::colony::barrier::{BarrierAccess, BarrierField, BarrierPlugin};
+use crate::world::colony::barrier::{BarrierControl, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::Zone;
+use crate::world::{physics, WorldSystem};
+use crate::Game;
 
 mod asset;
 pub mod barrier;
@@ -44,11 +45,12 @@ impl Plugin for ColonyPlugin {
         app.register_type::<VortexNode>();
         app.register_type::<VortexGate>();
         app.register_type::<BarrierField>();
-        app.register_type::<BarrierAccess>();
+        app.register_type::<BarrierControl>();
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
         app.add_plugin(VortexPlugin);
         app.add_plugins(DefaultPickingPlugins);
         app.add_plugin(BarrierPlugin);
+        app.add_plugin(HookPlugin);
         app.add_enter_system(GameState::LoadColony, Self::setup_colony);
         app.add_enter_system(GameState::LoadColony, Self::setup_debug_plane);
         app.add_enter_system(GameState::LoadColony, Self::setup_zones);
@@ -56,22 +58,6 @@ impl Plugin for ColonyPlugin {
             ConditionSet::new()
                 .run_in_state(GameState::LoadColony)
                 .run_if(Self::is_colony_loaded)
-                .with_system(Self::next_state_post_processing)
-                .into(),
-        );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::PostProcessing)
-                .label(WorldSystem::SetupInsert)
-                .with_system(Self::barrier_access_insert)
-                .with_system(Self::vortex_gate_insert)
-                .into(),
-        );
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::PostProcessing)
-                .after(WorldSystem::SetupInsert)
                 .with_system(Self::next_state_spawn_player)
                 .into(),
         );
@@ -89,6 +75,55 @@ impl Plugin for ColonyPlugin {
 }
 
 impl ColonyPlugin {
+    fn setup_colony(
+        colony_assets: Res<Assets<ColonyAsset>>,
+        scene_assets: Res<SceneAssets>,
+        mut commands: Commands,
+        game: Res<Game>,
+    ) {
+        info!("Setup colony");
+        let current_colony = colony_assets.get(&game.current_colony_asset).unwrap();
+        let colony_scene = match current_colony.name {
+            Colony::Cloning => scene_assets.cloning.clone(),
+            Colony::Iris => scene_assets.iris.clone(),
+            Colony::Liberte => scene_assets.liberte.clone(),
+            _ => scene_assets.liberte.clone(),
+        };
+
+        commands.spawn_bundle(HookedSceneBundle {
+            scene: SceneBundle {
+                scene: colony_scene.clone(),
+                ..default()
+            },
+            hook: SceneHook::new(|entity, commands| {
+                match entity.get::<Name>().map(|t| t.as_str()) {
+                    Some("VortexGate") => commands.insert_bundle((
+                        VortexGate,
+                        Sensor,
+                        Collider::cuboid(0.5, 1.0, 0.5),
+                        physics::CollideGroups::vortex_gate(),
+                    )),
+                    Some("VortexNode1") | Some("VortexNode2") | Some("VortexNode3")
+                    | Some("VortexNode4") | Some("VortexNode5") | Some("VortexNode6") => {
+                        commands.insert(VortexNode)
+                    }
+                    Some("BarrierField1") => commands.insert(BarrierField::new("B1")),
+                    Some("BarrierControl11") | Some("BarrierControl12") => {
+                        info!("Barrier access {:?}", entity.get::<Transform>());
+                        commands
+                            .insert(BarrierControl::new("B1"))
+                            .insert_bundle(PickableBundle::default())
+                    }
+                    Some("BarrierField2") => commands.insert(BarrierField::new("B2")),
+                    Some("BarrierControl21") | Some("BarrierControl22") => commands
+                        .insert(BarrierControl::new("B2"))
+                        .insert_bundle(PickableBundle::default()),
+                    _ => commands,
+                };
+            }),
+        });
+    }
+
     fn setup_debug_plane(
         mut commands: Commands,
         mut meshes: ResMut<Assets<Mesh>>,
@@ -98,7 +133,7 @@ impl ColonyPlugin {
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-                transform: Transform::from_translation(Vec3::new(4., 0.0, 4.)),
+                transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
                 material: materials.add(StandardMaterial {
                     base_color: Color::WHITE,
                     perceptual_roughness: 0.0,
@@ -140,29 +175,12 @@ impl ColonyPlugin {
         }
     }
 
-    fn vortex_gate_insert(mut commands: Commands, query: Query<Entity, Added<VortexGate>>) {
-        info!("Vortex gate insert");
-        for gate in query.iter() {
-            commands
-                .entity(gate)
-                .insert(Sensor)
-                .insert(Collider::cuboid(0.5, 1.0, 0.5))
-                .insert(physics::CollideGroups::vortex_gate());
+    fn is_colony_loaded(vortex_nodes: Query<Entity, With<VortexNode>>) -> bool {
+        if vortex_nodes.iter().count() > 0 {
+            true
+        } else {
+            false
         }
-    }
-
-    fn barrier_access_insert(mut commands: Commands, query: Query<Entity, Added<BarrierAccess>>) {
-        info!("Barrier access insert");
-        for gate in query.iter() {
-            commands
-                .entity(gate)
-                .insert_bundle(PickableBundle::default());
-        }
-    }
-
-    fn next_state_playing(mut commands: Commands) {
-        info!("State: Playing");
-        commands.insert_resource(NextState(GameState::Playing));
     }
 
     fn next_state_spawn_player(mut commands: Commands) {
@@ -170,42 +188,9 @@ impl ColonyPlugin {
         commands.insert_resource(NextState(GameState::SpawnPlayer));
     }
 
-    fn next_state_post_processing(mut commands: Commands) {
-        info!("State: Post-processing");
-        commands.insert_resource(NextState(GameState::PostProcessing));
-    }
-
-    fn teardown_entities(mut commands: Commands, entities: Query<Entity>) {
-        info!("Teardown entities");
-        for entity in entities.iter() {
-            commands.entity(entity).despawn_recursive();
-        }
-    }
-
-    fn setup_colony(
-        colony_assets: Res<Assets<ColonyAsset>>,
-        scene_assets: Res<SceneAssets>,
-        mut scene_spawner: ResMut<SceneSpawner>,
-        mut game: ResMut<Game>,
-    ) {
-        info!("Setup colony");
-        let current_colony = colony_assets.get(&game.current_colony_asset).unwrap();
-        let colony_scene = match current_colony.name {
-            Colony::Cloning => scene_assets.cloning.clone(),
-            Colony::Iris => scene_assets.iris.clone(),
-            Colony::Liberte => scene_assets.liberte.clone(),
-            _ => scene_assets.liberte.clone(),
-        };
-        game.scene_handle = colony_scene.clone();
-        scene_spawner.spawn_dynamic(colony_scene);
-    }
-
-    fn is_colony_loaded(query: Query<Entity, With<VortexNode>>) -> bool {
-        if query.iter().count() > 0 {
-            true
-        } else {
-            false
-        }
+    fn next_state_playing(mut commands: Commands) {
+        info!("State: Playing");
+        commands.insert_resource(NextState(GameState::Playing));
     }
 
     // Temporary fixes the problem with shadows not working
@@ -213,6 +198,13 @@ impl ColonyPlugin {
         info!("Update lights");
         for mut point_light in query.iter_mut() {
             point_light.shadows_enabled = true;
+        }
+    }
+
+    fn teardown_entities(mut commands: Commands, entities: Query<Entity>) {
+        info!("Teardown entities");
+        for entity in entities.iter() {
+            commands.entity(entity).despawn_recursive();
         }
     }
 }

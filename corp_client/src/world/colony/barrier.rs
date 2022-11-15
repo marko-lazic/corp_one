@@ -5,13 +5,21 @@ use bevy::prelude::*;
 use bevy_mod_picking::{HoverEvent, PickingEvent};
 use iyes_loopless::prelude::ConditionSet;
 
-use crate::{App, Game, GameState, Timer, UseEntity};
 use crate::gui::CursorInfo;
+use crate::{App, Game, GameState, Timer, UseEntity};
 
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
-pub struct BarrierAccess {
+pub struct BarrierControl {
     pub barrier_field_name: String,
+}
+
+impl BarrierControl {
+    pub fn new(name: &str) -> Self {
+        Self {
+            barrier_field_name: name.to_string(),
+        }
+    }
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -22,6 +30,15 @@ pub struct BarrierField {
     close_cooldown: Timer,
     #[reflect(ignore)]
     pub open: bool,
+}
+
+impl BarrierField {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            ..default()
+        }
+    }
 }
 
 impl Default for BarrierField {
@@ -39,7 +56,7 @@ pub struct BarrierPlugin;
 impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<BarrierField>();
-        app.register_type::<BarrierAccess>();
+        app.register_type::<BarrierControl>();
         app.add_system_set(
             ConditionSet::new()
                 .run_in_state(GameState::Playing)

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy_mouse_tracking_plugin::{MousePosPlugin, MousePosWorld};
+use bevy_mouse_tracking_plugin::mouse_pos::MousePosPlugin;
+use bevy_mouse_tracking_plugin::MousePosWorld;
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 use bevy_prototype_lyon::prelude::*;
 
@@ -10,9 +11,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(DebugLinesPlugin::default())
         .insert_resource(WindowDescriptor::default())
-        .add_plugin(MousePosPlugin::SingleCamera)
+        .add_plugin(MousePosPlugin)
         .add_plugin(ShapePlugin)
-        .add_system(bevy::input::system::exit_on_esc_system)
         .add_startup_system(setup_system)
         .add_system(draw_player_to_trigger_line)
         .add_system(draw_player_to_mouse_line)
@@ -84,7 +84,7 @@ fn setup_system(mut commands: Commands, mut game: ResMut<Game>) {
         ..shapes::RegularPolygon::default()
     };
 
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(Camera2dBundle::default());
     let trigger = commands
         .spawn_bundle(GeometryBuilder::build_as(
             &octagon,

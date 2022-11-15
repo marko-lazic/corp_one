@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use blender_bevy_toolkit::BlendLoadPlugin;
+use bevy_inspector_egui::WorldInspectorPlugin;
 use iyes_loopless::prelude::AppLooplessStateExt;
 
 use constants::state::GameState;
@@ -29,7 +29,6 @@ pub struct Game {
     camera_center: Vec3,
     current_colony_asset: Handle<ColonyAsset>,
     health: Health,
-    scene_handle: Handle<DynamicScene>,
 }
 
 fn main() {
@@ -42,8 +41,7 @@ fn main() {
         .add_plugin(AssetLoadingPlugin)
         .add_plugin(GuiPlugin)
         .add_plugin(WorldPlugin)
-        .add_plugin(BlendLoadPlugin::default())
-        //.add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(WorldInspectorPlugin::new())
         .run();
 }
 

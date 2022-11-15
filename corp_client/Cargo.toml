@@ -21,11 +21,13 @@ bevy_asset_loader = { version = "0.12.1", features = ["stageless"] }
 bevy_kira_audio = "0.12.0"
 bevy_common_assets = { version = "0.3.0", features = ["ron"] }
 bevy_rapier3d = { version = "0.17.0", features = ["simd-stable"] }
+bevy-scene-hook = "4.1.0"
 glam = "0.21.3"
 serde = "1.0.145"
 rand = "0.8.5"
 bitflags = "1.3.2"
 
+[dev-dependencies]
 # Examples dependecies
 bevy_mouse_tracking_plugin = "0.4.0"
 bevy_transform_gizmo = "0.3.3"
@@ -33,8 +35,6 @@ bevy_prototype_debug_lines = { version = "0.8.1" }
 impl-tools = "0.5.2"
 bevy_prototype_lyon = "0.6.0"
 
-# Should deprecate
-blender_bevy_toolkit = { path = "../../blender_bevy_toolkit" }
 
 [[example]]
 name = "transforms"

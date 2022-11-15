@@ -59,7 +59,7 @@ fn setup(
 
     // camera
     commands
-        .spawn_bundle(PerspectiveCameraBundle {
+        .spawn_bundle(Camera3dBundle {
             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 15.0)),
             ..Default::default()
         })

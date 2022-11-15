@@ -41,7 +41,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     // Camera
-    commands.spawn_bundle(PerspectiveCameraBundle {
+    commands.spawn_bundle(Camera3dBundle {
         transform: Transform::from_xyz(5.0, 5.0, 8.0).looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
         ..Default::default()
     });

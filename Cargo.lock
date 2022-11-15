@@ -264,6 +264,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-scene-hook"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7cb18c6cd4227534ea1063606090a60e1dd4d8eb724a16e178635bfd2002502"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_animation"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -364,6 +373,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_basic_camera"
+version = "0.1.0"
+source = "git+https://github.com/DGriffin91/bevy_basic_camera#601acb78f40325352fb87901decdd005645b9bc0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_common_assets"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -371,7 +388,7 @@ checksum = "3f7be9ee39085d8319d5cd853447b0b5c4f8b4bfd647aec91e2bd996e9db67ef"
 dependencies = [
  "anyhow",
  "bevy",
- "ron 0.7.1",
+ "ron",
  "serde",
 ]
 
@@ -726,19 +743,6 @@ checksum = "9960c19e582b43cebe1894b6679520a4f50802d1cc5b6fa432f8d685ed232f09"
 
 [[package]]
 name = "bevy_rapier3d"
-version = "0.16.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9fd7a0ffc55bf7c127f9e1877481c57d42ff0f04530550cdf209dd136485ecb"
-dependencies = [
- "bevy",
- "bitflags",
- "log",
- "nalgebra",
- "rapier3d 0.14.0",
-]
-
-[[package]]
-name = "bevy_rapier3d"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e34cffd065dbb111fad1cdeac471690d1f4e17418973fd6be5a0c743497f5f72"
@@ -747,7 +751,7 @@ dependencies = [
  "bitflags",
  "log",
  "nalgebra",
- "rapier3d 0.15.0",
+ "rapier3d",
 ]
 
 [[package]]
@@ -853,7 +857,7 @@ dependencies = [
  "bevy_render",
  "bevy_transform",
  "bevy_utils",
- "ron 0.7.1",
+ "ron",
  "serde",
  "thiserror",
  "uuid",
@@ -1077,19 +1081,6 @@ name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
-
-[[package]]
-name = "blender_bevy_toolkit"
-version = "0.2.0"
-dependencies = [
- "anyhow",
- "bevy",
- "bevy_rapier3d 0.16.2",
- "glam",
- "ron 0.8.0",
- "serde",
- "smallvec",
-]
 
 [[package]]
 name = "block"
@@ -1400,7 +1391,9 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
+ "bevy-scene-hook",
  "bevy_asset_loader",
+ "bevy_basic_camera",
  "bevy_common_assets",
  "bevy_kira_audio",
  "bevy_mod_picking",
@@ -1408,10 +1401,9 @@ dependencies = [
  "bevy_mouse_tracking_plugin",
  "bevy_prototype_debug_lines",
  "bevy_prototype_lyon",
- "bevy_rapier3d 0.17.0",
+ "bevy_rapier3d",
  "bevy_transform_gizmo",
  "bitflags",
- "blender_bevy_toolkit",
  "corp_shared",
  "glam",
  "impl-tools",
@@ -3085,27 +3077,6 @@ dependencies = [
 
 [[package]]
 name = "parry3d"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89cd07f0e1e9e207662f430a4e758c357fdf89450a548ef1ce59113822fd5fa7"
-dependencies = [
- "approx",
- "arrayvec 0.7.2",
- "bitflags",
- "downcast-rs",
- "either",
- "nalgebra",
- "num-derive",
- "num-traits",
- "rustc-hash",
- "simba",
- "slab",
- "smallvec",
- "spade",
-]
-
-[[package]]
-name = "parry3d"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2420ecc938f3acf004ca7f5059aca5145324a88525879745e18ba6ea785d793"
@@ -3322,26 +3293,6 @@ checksum = "63e935c45e09cc6dcf00d2f0b2d630a58f4095320223d47fc68918722f0538b6"
 
 [[package]]
 name = "rapier3d"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32f2decdbd39b70bfb3a5dc9e725ea0465b39401052cc8b03c0f81206f4b9129"
-dependencies = [
- "approx",
- "arrayvec 0.7.2",
- "bit-vec",
- "bitflags",
- "crossbeam",
- "downcast-rs",
- "nalgebra",
- "num-derive",
- "num-traits",
- "parry3d 0.9.0",
- "rustc-hash",
- "simba",
-]
-
-[[package]]
-name = "rapier3d"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3393d49fd2b9a66cba62e45a778a59f73cbed56afff461a5dda32d3b630fd029"
@@ -3355,7 +3306,7 @@ dependencies = [
  "nalgebra",
  "num-derive",
  "num-traits",
- "parry3d 0.10.0",
+ "parry3d",
  "rustc-hash",
  "simba",
  "vec_map",
@@ -3454,17 +3405,6 @@ name = "ron"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88073939a61e5b7680558e6be56b419e208420c2adb92be54921fa6b72283f1a"
-dependencies = [
- "base64",
- "bitflags",
- "serde",
-]
-
-[[package]]
-name = "ron"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "300a51053b1cb55c80b7a9fde4120726ddf25ca241a1cbb926626f62fb136bff"
 dependencies = [
  "base64",
  "bitflags",

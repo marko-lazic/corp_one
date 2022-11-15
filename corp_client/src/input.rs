@@ -4,20 +4,20 @@ use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RaycastSystem};
 use iyes_loopless::prelude::ConditionSet;
 use leafwing_input_manager::action_state::ActionState;
-use leafwing_input_manager::Actionlike;
 use leafwing_input_manager::input_map::InputMap;
 use leafwing_input_manager::plugin::InputManagerPlugin;
+use leafwing_input_manager::Actionlike;
 
 use corp_shared::prelude::Health;
 use input_command::PlayerDirection;
 
-use crate::{Game, UseEntity};
 use crate::constants::state::GameState;
 use crate::input::double_tap::DoubleTap;
-use crate::world::colony::barrier::{BarrierAccess, BarrierField};
-use crate::world::colony::Colony;
+use crate::world::colony::barrier::{BarrierControl, BarrierField};
 use crate::world::colony::vortex::VortInEvent;
+use crate::world::colony::Colony;
 use crate::world::player::Player;
+use crate::{Game, UseEntity};
 
 mod double_tap;
 pub mod input_command;
@@ -206,7 +206,7 @@ impl InputControlPlugin {
     fn use_barrier(
         action_state: Res<ActionState<CorpAction>>,
         mut barriers_query: Query<&mut BarrierField>,
-        barrier_access_query: Query<&BarrierAccess>,
+        barrier_access_query: Query<&BarrierControl>,
         game: Res<Game>,
     ) {
         if action_state.just_pressed(CorpAction::Use) {

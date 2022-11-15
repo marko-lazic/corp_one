@@ -16,7 +16,6 @@ pub mod state {
         AssetLoading,
         StarMap,
         LoadColony,
-        PostProcessing,
         SpawnPlayer,
         Playing,
     }

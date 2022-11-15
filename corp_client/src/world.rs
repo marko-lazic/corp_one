@@ -25,7 +25,7 @@ impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(AmbientLight {
             color: Color::ORANGE_RED,
-            brightness: 0.2,
+            brightness: 0.8,
         });
         app.add_plugin(ColonyPlugin);
         app.add_plugin(AnimatorPlugin);
@@ -42,5 +42,4 @@ impl Plugin for WorldPlugin {
 enum WorldSystem {
     PlayerSetup,
     CameraSetup,
-    SetupInsert,
 }
