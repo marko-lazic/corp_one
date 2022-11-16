@@ -60,3 +60,7 @@ path = "examples/local_to_world.rs"
 [[example]]
 name = "animation"
 path = "examples/animation.rs"
+
+[[example]]
+name = "barrier"
+path = "examples/shader/barrier.rs"
