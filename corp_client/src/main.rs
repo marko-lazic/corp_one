@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::WorldInspectorPlugin;
 use iyes_loopless::prelude::AppLooplessStateExt;
 
 use constants::state::GameState;
@@ -41,7 +40,7 @@ fn main() {
         .add_plugin(AssetLoadingPlugin)
         .add_plugin(GuiPlugin)
         .add_plugin(WorldPlugin)
-        .add_plugin(WorldInspectorPlugin::new())
+        // .add_plugin(WorldInspectorPlugin::new())
         .run();
 }
 

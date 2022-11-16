@@ -373,14 +373,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_basic_camera"
-version = "0.1.0"
-source = "git+https://github.com/DGriffin91/bevy_basic_camera#601acb78f40325352fb87901decdd005645b9bc0"
-dependencies = [
- "bevy",
-]
-
-[[package]]
 name = "bevy_common_assets"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1393,7 +1385,6 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy-scene-hook",
  "bevy_asset_loader",
- "bevy_basic_camera",
  "bevy_common_assets",
  "bevy_kira_audio",
  "bevy_mod_picking",
