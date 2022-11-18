@@ -7,10 +7,10 @@ use corp_shared::prelude::Health;
 
 use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
-use crate::Game;
 use crate::world::colony::Colony;
 use crate::world::physics;
 use crate::world::player::Player;
+use crate::Game;
 
 pub struct VortOutEvent;
 
@@ -42,6 +42,7 @@ impl Plugin for VortexPlugin {
             ConditionSet::new()
                 .run_in_state(GameState::StarMap)
                 .with_system(Self::vort_in_event_reader)
+                .with_system(Self::debug_vort_in)
                 .into(),
         );
         app.add_system_set(
@@ -56,6 +57,14 @@ impl Plugin for VortexPlugin {
 }
 
 impl VortexPlugin {
+    fn debug_vort_in(mut vortex_events: EventWriter<VortInEvent>, mut run_once: Local<bool>) {
+        if *run_once == false {
+            info!("Debug vort in");
+            vortex_events.send(VortInEvent::vort(Colony::Iris));
+            *run_once = true;
+        }
+    }
+
     fn vort_out_event_reader(
         healths: Query<&Health, With<Player>>,
         mut game: ResMut<Game>,
