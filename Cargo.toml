@@ -6,6 +6,7 @@ members = [
     "corp_server",
     "corp_shared",
     "tests",
+    "tools/ci",
 ]
 default-members = [
     "corp_client",

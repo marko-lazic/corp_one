@@ -29,6 +29,7 @@ jobs:
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
         if: runner.os == 'linux'
       - name: Build & run tests
+        # See tools/ci/src/main.rs for the commands this runs
         run: cargo run -p ci -- test
         env:
           CARGO_INCREMENTAL: 0
