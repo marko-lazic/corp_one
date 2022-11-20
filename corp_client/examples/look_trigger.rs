@@ -10,7 +10,6 @@ fn main() {
         .insert_resource(Game::default())
         .add_plugins(DefaultPlugins)
         .add_plugin(DebugLinesPlugin::default())
-        .insert_resource(WindowDescriptor::default())
         .add_plugin(MousePosPlugin)
         .add_plugin(ShapePlugin)
         .add_startup_system(setup_system)
@@ -78,15 +77,15 @@ fn draw_player_to_trigger_line(
 }
 
 fn setup_system(mut commands: Commands, mut game: ResMut<Game>) {
-    let octagon = shapes::RegularPolygon {
+    let octagon = RegularPolygon {
         sides: 6,
-        feature: shapes::RegularPolygonFeature::Radius(40.0),
-        ..shapes::RegularPolygon::default()
+        feature: RegularPolygonFeature::Radius(40.0),
+        ..RegularPolygon::default()
     };
 
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
     let trigger = commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &octagon,
             DrawMode::Outlined {
                 fill_mode: FillMode::color(Color::CYAN),
@@ -105,7 +104,7 @@ fn setup_system(mut commands: Commands, mut game: ResMut<Game>) {
     };
 
     let player = commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &circle,
             DrawMode::Outlined {
                 fill_mode: FillMode::color(Color::YELLOW),
@@ -139,7 +138,7 @@ impl Default for Player {
     }
 }
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 struct Game {
     trigger: Option<Entity>,
     player: Option<Entity>,

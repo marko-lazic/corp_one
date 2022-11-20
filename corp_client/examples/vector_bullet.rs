@@ -47,14 +47,14 @@ fn setup(
     mut game: ResMut<GameData>,
 ) {
     // camera
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 0.0, 15.0)),
         ..Default::default()
     });
 
     // sphere
     let sphere_id = commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
                 radius: 0.1,
                 ..Default::default()
@@ -75,12 +75,12 @@ fn setup(
 #[derive(Component)]
 struct Movable;
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 struct GameData {
     sphere: Option<Entity>,
 }
 
-#[derive(Inspectable, Default)]
+#[derive(Resource, Inspectable, Default)]
 struct InspectorData {
     #[inspectable(min = 0.0, max = 100.0)]
     offset: f32,

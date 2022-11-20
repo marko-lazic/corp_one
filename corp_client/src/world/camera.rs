@@ -3,14 +3,14 @@ use std::ops::Neg;
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use bevy_mod_picking::PickingCameraBundle;
-use bevy_mod_raycast::RayCastSource;
+use bevy_mod_raycast::RaycastSource;
 use iyes_loopless::prelude::ConditionSet;
 
 use crate::constants::state::GameState;
-use crate::Game;
 use crate::input::{Cursor, Ground};
 use crate::world::player::Player;
 use crate::world::WorldSystem;
+use crate::Game;
 
 #[derive(Component)]
 pub struct TopDownCamera {
@@ -77,14 +77,16 @@ impl TopDownCameraPlugin {
     fn setup_camera(mut commands: Commands) {
         info!("Setup Player");
         commands
-            .spawn_bundle(Camera3dBundle {
+            .spawn(Camera3dBundle {
                 transform: Transform::from_translation(Vec3::new(-3.0, 3.0, 5.0))
                     .looking_at(Vec3::default(), Vec3::Y),
                 ..Default::default()
             })
-            .insert(TopDownCamera::new(20.0))
-            .insert_bundle(PickingCameraBundle::default())
-            .insert(RayCastSource::<Ground>::new());
+            .insert((
+                TopDownCamera::new(20.0),
+                PickingCameraBundle::default(),
+                RaycastSource::<Ground>::new(),
+            ));
     }
 
     fn target_motion(

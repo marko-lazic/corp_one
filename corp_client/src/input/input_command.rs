@@ -1,9 +1,10 @@
 use bevy::math::Vec3;
+use bevy::prelude::Resource;
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::input::CorpAction;
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct PlayerDirection {
     pub forward: bool,
     pub backward: bool,

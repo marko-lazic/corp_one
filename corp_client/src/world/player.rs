@@ -7,14 +7,14 @@ use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::PlayerAssets;
 use crate::constants::state::GameState;
-use crate::Game;
-use crate::input::{Cursor, InputSystem, OrientationMode};
 use crate::input::input_command::PlayerDirection;
-use crate::world::{physics, WorldSystem};
+use crate::input::{Cursor, InputSystem, OrientationMode};
 use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
 use crate::world::colony::vortex::VortexNode;
+use crate::world::{physics, WorldSystem};
+use crate::Game;
 
 #[derive(Default, bevy::ecs::component::Component)]
 pub struct Player {
@@ -74,25 +74,27 @@ impl PlayerPlugin {
         let player_tr = Transform::from_translation(position);
 
         let player = commands
-            .spawn_bundle(SceneBundle {
+            .spawn(SceneBundle {
                 scene: player_assets.mannequiny.clone(),
                 transform: player_tr,
                 ..default()
             })
-            .insert(Player::default())
-            .insert(Movement::default())
-            .insert(game.health.clone())
-            .insert(AnimationComponent::new(PlayerAnimationAction::IDLE))
-            .insert(RigidBody::Dynamic)
-            .insert(Collider::capsule_y(0.25, 0.25))
-            .insert(LockedAxes::ROTATION_LOCKED)
-            .insert(Friction {
-                coefficient: 0.0,
-                combine_rule: CoefficientCombineRule::Min,
-            })
-            .insert(ActiveEvents::COLLISION_EVENTS)
-            .insert(ContactForceEventThreshold(30.0))
-            .insert(physics::CollideGroups::player())
+            .insert((
+                Player::default(),
+                Movement::default(),
+                game.health.clone(),
+                AnimationComponent::new(PlayerAnimationAction::IDLE),
+                RigidBody::Dynamic,
+                Collider::capsule_y(0.25, 0.25),
+                LockedAxes::ROTATION_LOCKED,
+                Friction {
+                    coefficient: 0.0,
+                    combine_rule: CoefficientCombineRule::Min,
+                },
+                ActiveEvents::COLLISION_EVENTS,
+                ContactForceEventThreshold(30.0),
+                physics::CollideGroups::player(),
+            ))
             .id();
 
         game.player_entity = Some(player);

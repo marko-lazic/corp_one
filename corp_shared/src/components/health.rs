@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::time::Timer;
+use bevy::time::{Timer, TimerMode};
 
 pub const MAX_HEALTH: f32 = 100.0;
 pub const CLONE_HEALTH_80: f32 = 80.0;
@@ -15,7 +15,7 @@ pub struct Health {
 impl Default for Health {
     fn default() -> Self {
         Health {
-            cloning_cooldown: Timer::new(Duration::from_secs(1), false),
+            cloning_cooldown: Timer::new(Duration::from_secs(1), TimerMode::Once),
             hit_points: MAX_HEALTH,
         }
     }

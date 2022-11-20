@@ -2,14 +2,14 @@ use bevy::prelude::*;
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 use iyes_loopless::state::NextState;
 
-use corp_shared::prelude::{CLONE_HEALTH_80, Health};
+use corp_shared::prelude::{Health, CLONE_HEALTH_80};
 
 use crate::asset::asset_loading::ColonyAssets;
 use crate::constants::state::GameState;
-use crate::Game;
-use crate::world::colony::Colony;
 use crate::world::colony::vortex::VortInEvent;
+use crate::world::colony::Colony;
 use crate::world::player::Player;
+use crate::Game;
 
 pub struct CloningPlugin;
 
@@ -84,11 +84,7 @@ mod tests {
         let mut world = World::default();
 
         // Setup test entities
-        let player_entity = world
-            .spawn()
-            .insert(Player::default())
-            .insert(Health::default())
-            .id();
+        let player_entity = world.spawn((Player::default(), Health::default())).id();
 
         world.insert_resource(create_colony_assets());
         world.insert_resource(Time::default());
@@ -124,11 +120,7 @@ mod tests {
         // Setup world
         let mut world = World::default();
         // Setup test entities
-        let _player_entity = world
-            .spawn()
-            .insert(Player::default())
-            .insert(Health::default())
-            .id();
+        let _player_entity = world.spawn((Player::default(), Health::default())).id();
 
         let mut game = Game::default();
         game.health.kill_mut();

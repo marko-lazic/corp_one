@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use bevy::app::ScheduleRunnerSettings;
-use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
 fn main() {
@@ -9,6 +8,5 @@ fn main() {
     App::new()
         .insert_resource(ScheduleRunnerSettings::run_loop(frames_per_second))
         .add_plugins(MinimalPlugins)
-        .add_plugin(LogPlugin)
         .run();
 }

@@ -87,18 +87,19 @@ fn world_to_local(child_pt: &Transform, world_tr: &Transform) -> Vec3 {
 }
 
 fn setup_system(mut commands: Commands) {
-    commands
-        .spawn_bundle(Camera2dBundle::default())
-        .insert_bundle(bevy_mod_picking::PickingCameraBundle::default())
-        .insert(bevy_transform_gizmo::GizmoPickSource::default());
+    commands.spawn((
+        Camera2dBundle::default(),
+        bevy_mod_picking::PickingCameraBundle::default(),
+        bevy_transform_gizmo::GizmoPickSource::default(),
+    ));
 
-    let point = shapes::RegularPolygon {
+    let point = RegularPolygon {
         sides: 6,
-        feature: shapes::RegularPolygonFeature::Radius(10.0),
-        ..shapes::RegularPolygon::default()
+        feature: RegularPolygonFeature::Radius(10.0),
+        ..RegularPolygon::default()
     };
     commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &point,
             DrawMode::Outlined {
                 fill_mode: FillMode::color(Color::CYAN),
@@ -108,14 +109,14 @@ fn setup_system(mut commands: Commands) {
         ))
         .insert(ParentPoint);
 
-    let sphere = shapes::RegularPolygon {
+    let sphere = RegularPolygon {
         sides: 12,
-        feature: shapes::RegularPolygonFeature::Radius(10.0),
-        ..shapes::RegularPolygon::default()
+        feature: RegularPolygonFeature::Radius(10.0),
+        ..RegularPolygon::default()
     };
 
     commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &sphere,
             DrawMode::Outlined {
                 fill_mode: FillMode::color(Color::YELLOW),
@@ -125,14 +126,14 @@ fn setup_system(mut commands: Commands) {
         ))
         .insert(ChildPoint);
 
-    let square = shapes::RegularPolygon {
+    let square = RegularPolygon {
         sides: 4,
-        feature: shapes::RegularPolygonFeature::Radius(10.0),
-        ..shapes::RegularPolygon::default()
+        feature: RegularPolygonFeature::Radius(10.0),
+        ..RegularPolygon::default()
     };
 
     commands
-        .spawn_bundle(GeometryBuilder::build_as(
+        .spawn(GeometryBuilder::build_as(
             &square,
             DrawMode::Outlined {
                 fill_mode: FillMode::color(Color::RED),
@@ -143,7 +144,7 @@ fn setup_system(mut commands: Commands) {
         .insert(WorldPoint);
 }
 
-#[derive(Inspectable)]
+#[derive(Resource, Inspectable)]
 struct InspectorData {
     parent: Vec2,
     child: Vec2,

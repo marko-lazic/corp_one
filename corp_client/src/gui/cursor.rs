@@ -1,15 +1,12 @@
 use bevy::app::Plugin;
-use bevy::prelude::{
-    Color, Commands, Component, HorizontalAlign, Query, Res, Style, Text, TextAlignment,
-    TextBundle, TextStyle, Val, With,
-};
+use bevy::prelude::{Color, Commands, Component, HorizontalAlign, Query, Res, Resource, Style, Text, TextAlignment, TextBundle, TextStyle, Val, With};
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
 use crate::{App, GameState, UiRect, Visibility};
 use crate::asset::asset_loading::FontAssets;
 use crate::input::Cursor;
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct CursorInfo {
     pub show_use: bool,
 }
@@ -42,7 +39,7 @@ impl CursorPlugin {
         };
 
         commands
-            .spawn_bundle(TextBundle {
+            .spawn(TextBundle {
                 text: Text::from_section("[E] Use", text_style).with_alignment(text_alignment),
                 ..Default::default()
             })

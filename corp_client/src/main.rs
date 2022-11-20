@@ -19,7 +19,7 @@ pub mod input;
 mod sound;
 mod world;
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct Game {
     use_entity: UseEntity,
     cursor_locked: bool,
@@ -34,8 +34,17 @@ fn main() {
     App::new()
         .init_resource::<Game>()
         .insert_resource(Msaa { samples: 4 })
-        .insert_resource(create_window_descriptor())
-        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            DefaultPlugins
+                .set(AssetPlugin {
+                    watch_for_changes: true,
+                    ..default()
+                })
+                .set(WindowPlugin {
+                    window: create_window_descriptor(),
+                    ..default()
+                }),
+        )
         .add_loopless_state(GameState::AssetLoading)
         .add_plugin(AssetLoadingPlugin)
         .add_plugin(GuiPlugin)

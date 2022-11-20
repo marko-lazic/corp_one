@@ -1,7 +1,0 @@
-{
-    "id": "barrier_field",
-    "name": "Barrier Field",
-    "description": "Access control field/",
-    "struct": "corp_client::world::colony::barrier::BarrierField",
-    "fields": []
-}

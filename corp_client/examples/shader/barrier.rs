@@ -24,7 +24,7 @@ fn setup(
     mut barrier_materials: ResMut<Assets<BarrierMaterial>>,
 ) {
     // sphere
-    commands.spawn().insert_bundle(MaterialMeshBundle {
+    commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(shape::UVSphere {
             radius: 1.0,
             ..default()
@@ -36,7 +36,7 @@ fn setup(
         ..default()
     });
 
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(5.0, 2.0, 5.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
         ..default()
     });

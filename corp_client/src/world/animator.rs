@@ -74,5 +74,5 @@ impl AnimatorPlugin {
     }
 }
 
-#[derive(Deref, DerefMut)]
+#[derive(Resource, Deref, DerefMut)]
 struct PlayerAnimations(pub HashMap<PlayerAnimationAction, Handle<AnimationClip>>);

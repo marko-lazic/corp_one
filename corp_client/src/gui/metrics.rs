@@ -54,22 +54,22 @@ impl Plugin for MetricsPlugin {
 impl MetricsPlugin {
     fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         commands
-            .spawn_bundle(metrics_utils::label(5.0, 10.0, &asset_server))
+            .spawn(metrics_utils::label(5.0, 10.0, &asset_server))
             .insert(FpsText);
         commands
-            .spawn_bundle(metrics_utils::label(25.0, 10.0, &asset_server))
+            .spawn(metrics_utils::label(25.0, 10.0, &asset_server))
             .insert(PlayerPositionText);
         commands
-            .spawn_bundle(metrics_utils::label(45.0, 10.0, &asset_server))
+            .spawn(metrics_utils::label(45.0, 10.0, &asset_server))
             .insert(MouseScreenPositionText);
         commands
-            .spawn_bundle(metrics_utils::label(65.0, 10.0, &asset_server))
+            .spawn(metrics_utils::label(65.0, 10.0, &asset_server))
             .insert(MouseWorldPositionText);
         commands
-            .spawn_bundle(metrics_utils::label(85.0, 10.0, &asset_server))
+            .spawn(metrics_utils::label(85.0, 10.0, &asset_server))
             .insert(CameraDebugText);
         commands
-            .spawn_bundle(metrics_utils::label(105.0, 10.0, &asset_server))
+            .spawn(metrics_utils::label(105.0, 10.0, &asset_server))
             .insert(PlayerHealth);
     }
 

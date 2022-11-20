@@ -46,7 +46,7 @@ fn failing_more_gracefuly_closures() {
             File::create("hello.txt")
                 .unwrap_or_else(|error| panic!("Problem creating the file {:?}", error))
         } else {
-            panic!("Problem openig the file {:?}", error)
+            panic!("Problem opening the file {:?}", error)
         }
     });
     assert!(Path::new("hello.txt").exists());

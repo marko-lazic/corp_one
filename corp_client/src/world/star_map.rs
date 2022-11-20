@@ -19,9 +19,9 @@ impl Plugin for StarMapPlugin {
 impl StarMapPlugin {
     fn setup_starmap(mut commands: Commands, texture_assets: Res<TextureAssets>) {
         // Orthographic camera is needed for showing SpriteBundle image
-        commands.spawn_bundle(Camera2dBundle::default());
+        commands.spawn(Camera2dBundle::default());
         commands
-            .spawn_bundle(SpriteBundle {
+            .spawn(SpriteBundle {
                 texture: texture_assets.nebula.clone().into(),
                 ..Default::default()
             })

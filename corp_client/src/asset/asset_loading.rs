@@ -9,7 +9,7 @@ use crate::asset::paths::PATHS;
 use crate::constants::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
 
-#[derive(AssetCollection)]
+#[derive(Resource, AssetCollection)]
 pub struct SceneAssets {
     #[asset(path = "scenes/iris/iris.glb#Scene0")]
     pub iris: Handle<Scene>,
@@ -19,7 +19,7 @@ pub struct SceneAssets {
     pub liberte: Handle<Scene>,
 }
 
-#[derive(AssetCollection)]
+#[derive(Resource, AssetCollection)]
 pub struct ColonyAssets {
     #[asset(path = "data/colony/iris.colony")]
     pub iris: Handle<ColonyAsset>,
@@ -29,13 +29,13 @@ pub struct ColonyAssets {
     pub cloning: Handle<ColonyAsset>,
 }
 
-#[derive(AssetCollection)]
+#[derive(Resource, AssetCollection)]
 pub struct FontAssets {
     #[asset(path = "fonts/FiraMono-Medium.ttf")]
     pub fira_sans: Handle<Font>,
 }
 
-#[derive(AssetCollection)]
+#[derive(Resource, AssetCollection)]
 pub struct AudioAssets {
     #[asset(path = "sound/slow-travel.wav")]
     pub slow_travel: Handle<AudioSource>,
@@ -43,7 +43,7 @@ pub struct AudioAssets {
     pub walk: Handle<AudioSource>,
 }
 
-#[derive(AssetCollection)]
+#[derive(Resource, AssetCollection)]
 pub struct MeshAssets {
     #[asset(path = "mesh/node/node_template.gltf#Mesh0/Primitive0")]
     pub energy_node: Handle<Mesh>,
@@ -53,7 +53,7 @@ pub struct MeshAssets {
     pub vortex_node: Handle<Mesh>,
 }
 
-#[derive(AssetCollection)]
+#[derive(Resource, AssetCollection)]
 pub struct PlayerAssets {
     #[asset(path = "mesh/mannequiny/mannequiny.gltf#Scene0")]
     pub mannequiny: Handle<Scene>,
@@ -63,7 +63,7 @@ pub struct PlayerAssets {
     pub idle: Handle<AnimationClip>,
 }
 
-#[derive(AssetCollection)]
+#[derive(Resource, AssetCollection)]
 pub struct TextureAssets {
     #[asset(path = "starmap/nebula.png")]
     pub nebula: Handle<Image>,
@@ -85,6 +85,7 @@ impl Default for MaterialAsset {
     }
 }
 
+#[derive(Resource)]
 pub struct MaterialAssets {
     pub cube: Handle<StandardMaterial>,
     pub green_material: Handle<StandardMaterial>,
@@ -132,11 +133,11 @@ impl Plugin for AssetLoadingPlugin {
 impl AssetLoadingPlugin {
     fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         commands
-            .spawn_bundle(Camera2dBundle::default())
+            .spawn(Camera2dBundle::default())
             .insert(LoadingCamera);
 
         let loading_text_bundle_entity = commands
-            .spawn_bundle(TextBundle {
+            .spawn(TextBundle {
                 text: Text::from_section(
                     "Loading",
                     TextStyle {
@@ -188,6 +189,7 @@ impl AssetLoadingPlugin {
     }
 }
 
+#[derive(Resource)]
 struct LoadingData {
     loading_text_bundle_entity: Entity,
 }

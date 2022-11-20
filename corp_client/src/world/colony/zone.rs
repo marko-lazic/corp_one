@@ -36,7 +36,7 @@ impl Zone {
         Zone {
             zone_type: asset.zone_type,
             value: asset.value,
-            timer: Timer::from_seconds(asset.second, true),
+            timer: Timer::from_seconds(asset.second, TimerMode::Repeating),
             entities: HashSet::new(),
         }
     }

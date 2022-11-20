@@ -17,14 +17,15 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // plane
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..Default::default()
     });
+
     // cube
     commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
             material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
@@ -34,7 +35,7 @@ fn setup(
 
     // sphere
     commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
                 radius: 0.45,
                 subdivisions: 32,
@@ -48,7 +49,7 @@ fn setup(
         })
         .insert(SphereRotator)
         .with_children(|parent| {
-            parent.spawn_bundle(PbrBundle {
+            parent.spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                     radius: 0.10,
                     subdivisions: 6,
@@ -60,7 +61,7 @@ fn setup(
         });
 
     // light
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             color: Color::rgb(1.0, 1.0, 1.0),
             intensity: 200.0,
@@ -71,7 +72,7 @@ fn setup(
         ..Default::default()
     });
     // camera
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
@@ -86,7 +87,7 @@ fn rotate_cubes(time: Res<Time>, mut cubes: Query<&mut Transform, With<CubeRotat
 fn rotate_spheres(time: Res<Time>, mut spheres: Query<&mut Transform, With<SphereRotator>>) {
     for mut transform in spheres.iter_mut() {
         transform.look_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y);
-        transform.translation = transform.mul_vec3(Vec3::new(-0.1, 0.0, 0.0));
+        transform.translation = transform.transform_point(Vec3::new(-0.1, 0.0, 0.0));
         transform.rotate(Quat::from_rotation_y(3.0 * time.delta_seconds()));
     }
 }

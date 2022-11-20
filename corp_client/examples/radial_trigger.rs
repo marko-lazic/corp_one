@@ -46,7 +46,7 @@ fn setup(
     inspector: Res<InspectorData>,
 ) {
     // light
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             color: Color::rgb(1.0, 1.0, 1.0),
             intensity: 200.0,
@@ -59,12 +59,14 @@ fn setup(
 
     // camera
     commands
-        .spawn_bundle(Camera3dBundle {
+        .spawn(Camera3dBundle {
             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 15.0)),
             ..Default::default()
         })
-        .insert_bundle(bevy_mod_picking::PickingCameraBundle::default())
-        .insert(bevy_transform_gizmo::GizmoPickSource::default());
+        .insert((
+            bevy_mod_picking::PickingCameraBundle::default(),
+            bevy_transform_gizmo::GizmoPickSource::default(),
+        ));
 
     // radial
     let material = materials.add(Color::rgb(0.1, 0.4, 0.8).into());
@@ -74,14 +76,16 @@ fn setup(
     }));
 
     let radial_id = commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh,
             material,
             ..Default::default()
         })
-        .insert_bundle(bevy_mod_picking::PickableBundle::default())
-        .insert(bevy_transform_gizmo::GizmoTransformable)
-        .insert(Radial)
+        .insert((
+            bevy_mod_picking::PickableBundle::default(),
+            bevy_transform_gizmo::GizmoTransformable,
+            Radial,
+        ))
         .id();
 
     game.radial = Some(radial_id);
@@ -94,15 +98,17 @@ fn setup(
     }));
 
     let player_id = commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh,
             material,
             transform: Transform::from_translation(Vec3::new(4.0, 0.0, 0.0)),
             ..Default::default()
         })
-        .insert_bundle(bevy_mod_picking::PickableBundle::default())
-        .insert(bevy_transform_gizmo::GizmoTransformable)
-        .insert(Player)
+        .insert((
+            bevy_mod_picking::PickableBundle::default(),
+            bevy_transform_gizmo::GizmoTransformable,
+            Player,
+        ))
         .id();
 
     game.player = Some(player_id);
@@ -114,13 +120,13 @@ struct Radial;
 #[derive(Component)]
 struct Player;
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 struct GameData {
     radial: Option<Entity>,
     player: Option<Entity>,
 }
 
-#[derive(Inspectable)]
+#[derive(Resource, Inspectable)]
 struct InspectorData {
     #[inspectable(min = 0.0, max = 4.0)]
     radius: f32,

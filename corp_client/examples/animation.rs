@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use impl_tools::impl_default;
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 struct Game {
     current_action: Action,
 }
@@ -30,7 +30,7 @@ enum Action {
     RUN = 1,
 }
 
-#[derive(Deref, DerefMut)]
+#[derive(Resource, Deref, DerefMut)]
 struct Animations(HashMap<Action, Handle<AnimationClip>>);
 
 fn setup(
@@ -41,20 +41,20 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     // Camera
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(5.0, 5.0, 8.0).looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
         ..Default::default()
     });
 
     // Plane
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane { size: 500000.0 })),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..default()
     });
 
     // Light
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         transform: Transform::from_rotation(Quat::from_euler(
             EulerRot::ZYX,
             0.0,

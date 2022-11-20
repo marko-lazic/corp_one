@@ -1,7 +1,0 @@
-{
-    "id": "vortex_node",
-    "name": "Vortex Node",
-    "description": "Player spawn colony spawner.",
-    "struct": "corp_client::world::colony::vortex::VortexNode",
-    "fields": []
-}

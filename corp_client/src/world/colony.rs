@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle};
-use bevy_mod_raycast::RayCastMesh;
+use bevy_mod_raycast::RaycastMesh;
 use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet, NextState};
@@ -90,14 +90,14 @@ impl ColonyPlugin {
             _ => scene_assets.liberte.clone(),
         };
 
-        commands.spawn_bundle(HookedSceneBundle {
+        commands.spawn(HookedSceneBundle {
             scene: SceneBundle {
                 scene: colony_scene.clone(),
                 ..default()
             },
             hook: SceneHook::new(|entity, commands| {
                 match entity.get::<Name>().map(|t| t.as_str()) {
-                    Some("VortexGate") => commands.insert_bundle((
+                    Some("VortexGate") => commands.insert((
                         VortexGate,
                         Sensor,
                         Collider::cuboid(0.5, 1.0, 0.5),
@@ -110,14 +110,12 @@ impl ColonyPlugin {
                     Some("BarrierField1") => commands.insert(BarrierField::new("B1")),
                     Some("BarrierControl11") | Some("BarrierControl12") => {
                         info!("Barrier access {:?}", entity.get::<Transform>());
-                        commands
-                            .insert(BarrierControl::new("B1"))
-                            .insert_bundle(PickableBundle::default())
+                        commands.insert((BarrierControl::new("B1"), PickableBundle::default()))
                     }
                     Some("BarrierField2") => commands.insert(BarrierField::new("B2")),
-                    Some("BarrierControl21") | Some("BarrierControl22") => commands
-                        .insert(BarrierControl::new("B2"))
-                        .insert_bundle(PickableBundle::default()),
+                    Some("BarrierControl21") | Some("BarrierControl22") => {
+                        commands.insert((BarrierControl::new("B2"), PickableBundle::default()))
+                    }
                     _ => commands,
                 };
             }),
@@ -131,7 +129,7 @@ impl ColonyPlugin {
     ) {
         info!("Setup debug plane");
         commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
                 transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
                 material: materials.add(StandardMaterial {
@@ -143,9 +141,11 @@ impl ColonyPlugin {
                 }),
                 ..Default::default()
             })
-            .insert(RigidBody::Fixed)
-            .insert(Collider::cuboid(100.0, 0.01, 100.0))
-            .insert(RayCastMesh::<Ground>::default());
+            .insert((
+                RigidBody::Fixed,
+                Collider::cuboid(100.0, 0.01, 100.0),
+                RaycastMesh::<Ground>::default(),
+            ));
     }
 
     fn setup_zones(
@@ -159,7 +159,7 @@ impl ColonyPlugin {
         if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             for zone_asset in &colony_asset.zones {
                 commands
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Plane {
                             size: zone_asset.size.clone(),
                         })),
@@ -167,10 +167,12 @@ impl ColonyPlugin {
                         material: material_assets.get_material(&zone_asset.material),
                         ..Default::default()
                     })
-                    .insert(Sensor)
-                    .insert(Collider::cuboid(0.5, 1.0, 0.5))
-                    .insert(Zone::from(zone_asset.clone()))
-                    .insert(physics::CollideGroups::zone());
+                    .insert((
+                        Sensor,
+                        Collider::cuboid(0.5, 1.0, 0.5),
+                        Zone::from(zone_asset.clone()),
+                        physics::CollideGroups::zone(),
+                    ));
             }
         }
     }

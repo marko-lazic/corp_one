@@ -45,7 +45,7 @@ impl Default for BarrierField {
     fn default() -> Self {
         Self {
             name: "".to_string(),
-            close_cooldown: Timer::new(Duration::from_secs(5), false),
+            close_cooldown: Timer::new(Duration::from_secs(5), TimerMode::Once),
             open: false,
         }
     }

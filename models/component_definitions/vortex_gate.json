@@ -1,7 +1,0 @@
-{
-    "id": "vortex_gate",
-    "name": "Vortex Gate",
-    "description": "Vorts out player out of the colony",
-    "struct": "corp_client::world::colony::vortex::VortexGate",
-    "fields": []
-}

@@ -1,7 +1,7 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use bevy_mod_picking::RayCastSource;
-use bevy_mod_raycast::{DefaultRaycastingPlugin, RayCastMethod, RaycastSystem};
+use bevy::window::CursorGrabMode;
+use bevy_mod_raycast::{DefaultRaycastingPlugin, RaycastSource, RaycastSystem};
 use iyes_loopless::prelude::ConditionSet;
 use leafwing_input_manager::action_state::ActionState;
 use leafwing_input_manager::input_map::InputMap;
@@ -22,13 +22,13 @@ use crate::{Game, UseEntity};
 mod double_tap;
 pub mod input_command;
 
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+#[derive(Resource, Hash, PartialEq, Eq, Clone, Debug)]
 pub enum OrientationMode {
     Direction,
     Aim,
 }
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct Cursor {
     pub screen: Vec2,
     pub world: Vec3,
@@ -134,11 +134,11 @@ impl InputControlPlugin {
             double_tap.increment();
             let window = windows.get_primary_mut().unwrap();
             if game.cursor_locked {
-                window.set_cursor_lock_mode(false);
+                window.set_cursor_grab_mode(CursorGrabMode::None);
                 window.set_cursor_visibility(true);
                 game.cursor_locked = false;
             } else {
-                window.set_cursor_lock_mode(true);
+                window.set_cursor_grab_mode(CursorGrabMode::Locked);
                 window.set_cursor_visibility(false);
                 game.cursor_locked = true;
             }
@@ -178,15 +178,17 @@ impl InputControlPlugin {
 
     pub fn update_cursor_and_raycast(
         mut cursor_event: EventReader<CursorMoved>,
-        mut query: Query<&mut RayCastSource<Ground>>,
+        mut query: Query<&mut RaycastSource<Ground>>,
         mut cursor: ResMut<Cursor>,
     ) {
         for mut pick_source in &mut query.iter_mut() {
             if let Some(cursor_latest) = cursor_event.iter().last() {
                 cursor.screen = cursor_latest.position.clone();
-                pick_source.cast_method = RayCastMethod::Screenspace(cursor_latest.position);
+                pick_source.cast_method =
+                    bevy_mod_raycast::RaycastMethod::Screenspace(cursor_latest.position);
             }
-            if let Some((_entity, intersect)) = pick_source.intersect_top() {
+
+            if let Some((_entity, intersect)) = pick_source.intersections().first() {
                 cursor.world = intersect.position();
             }
         }
