@@ -138,7 +138,7 @@ impl InputControlPlugin {
                 window.set_cursor_visibility(true);
                 game.cursor_locked = false;
             } else {
-                window.set_cursor_grab_mode(CursorGrabMode::Locked);
+                window.set_cursor_grab_mode(CursorGrabMode::Confined);
                 window.set_cursor_visibility(false);
                 game.cursor_locked = true;
             }
