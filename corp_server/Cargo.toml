@@ -6,4 +6,4 @@ edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-bevy = { version = "0.9.0" }
+bevy = { version = "0.9.1" }
