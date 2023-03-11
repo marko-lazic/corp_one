@@ -1,8 +1,6 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use bevy::window::CursorGrabMode;
-use bevy_mod_raycast::{DefaultRaycastingPlugin, RaycastSource, RaycastSystem};
-use iyes_loopless::prelude::ConditionSet;
+use bevy_mod_raycast::{DefaultRaycastingPlugin, RaycastMethod, RaycastSource, RaycastSystem};
 use leafwing_input_manager::action_state::ActionState;
 use leafwing_input_manager::input_map::InputMap;
 use leafwing_input_manager::plugin::InputManagerPlugin;
@@ -11,12 +9,12 @@ use leafwing_input_manager::Actionlike;
 use corp_shared::prelude::Health;
 use input_command::PlayerDirection;
 
-use crate::constants::state::GameState;
 use crate::input::double_tap::DoubleTap;
 use crate::world::colony::barrier::{BarrierControl, BarrierField};
 use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
 use crate::world::player::Player;
+use crate::GameState;
 use crate::{Game, UseEntity};
 
 mod double_tap;
@@ -34,10 +32,8 @@ pub struct Cursor {
     pub world: Vec3,
 }
 
-#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum InputSystem {
-    CheckInteraction,
-}
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub struct InputSystemSet;
 
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
 pub enum CorpAction {
@@ -71,27 +67,24 @@ impl Plugin for InputControlPlugin {
         app.add_plugin(DefaultRaycastingPlugin::<Ground>::default());
         app.add_system(Self::keyboard_escape_action);
 
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::StarMap)
-                .with_system(Self::starmap_keyboard)
-                .into(),
-        );
+        app.add_system(Self::starmap_keyboard.in_set(OnUpdate(GameState::StarMap)));
 
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .label(InputSystem::CheckInteraction)
-                .with_system(Self::player_keyboard_action)
-                .with_system(Self::player_mouse_action)
-                .with_system(Self::use_barrier)
-                .with_system(Self::switch_orientation_mode)
-                .with_system(Self::kill)
-                .into(),
+        app.add_systems(
+            (
+                Self::player_keyboard_action,
+                Self::player_mouse_action,
+                Self::use_barrier,
+                Self::switch_orientation_mode,
+                Self::kill,
+            )
+                .chain()
+                .in_set(InputSystemSet)
+                .in_set(OnUpdate(GameState::Playing)),
         );
-        app.add_system_to_stage(
-            CoreStage::First,
-            Self::update_cursor_and_raycast.before(RaycastSystem::BuildRays::<Ground>),
+        app.add_system(
+            Self::update_raycast_with_cursor
+                .before(RaycastSystem::BuildRays::<Ground>)
+                .in_base_set(CoreSet::First),
         );
     }
 }
@@ -126,20 +119,19 @@ impl InputControlPlugin {
         action_state: Res<ActionState<CorpAction>>,
         time: Res<Time>,
         mut game: ResMut<Game>,
-        mut windows: ResMut<Windows>,
+        mut windows: Query<&mut Window>,
         mut app_exit_events: EventWriter<AppExit>,
         mut double_tap: Local<DoubleTap>,
     ) {
         if action_state.just_pressed(CorpAction::Escape) {
             double_tap.increment();
-            let window = windows.get_primary_mut().unwrap();
+            let mut window = windows.single_mut();
+
             if game.cursor_locked {
-                window.set_cursor_grab_mode(CursorGrabMode::None);
-                window.set_cursor_visibility(true);
+                window.cursor.visible = true;
                 game.cursor_locked = false;
             } else {
-                window.set_cursor_grab_mode(CursorGrabMode::Confined);
-                window.set_cursor_visibility(false);
+                window.cursor.visible = false;
                 game.cursor_locked = true;
             }
         }
@@ -176,18 +168,15 @@ impl InputControlPlugin {
         }
     }
 
-    pub fn update_cursor_and_raycast(
+    fn update_raycast_with_cursor(
         mut cursor_event: EventReader<CursorMoved>,
         mut query: Query<&mut RaycastSource<Ground>>,
         mut cursor: ResMut<Cursor>,
     ) {
-        for mut pick_source in &mut query.iter_mut() {
+        for mut pick_source in &mut query {
             if let Some(cursor_latest) = cursor_event.iter().last() {
-                cursor.screen = cursor_latest.position.clone();
-                pick_source.cast_method =
-                    bevy_mod_raycast::RaycastMethod::Screenspace(cursor_latest.position);
+                pick_source.cast_method = RaycastMethod::Screenspace(cursor_latest.position);
             }
-
             if let Some((_entity, intersect)) = pick_source.intersections().first() {
                 cursor.world = intersect.position();
             }

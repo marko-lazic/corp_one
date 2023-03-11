@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::constants::tick;
+const ONE_SECOND: f64 = 1.0;
+const FRAME_RATE: f64 = 60.0;
+const TIME_STEP: f32 = (ONE_SECOND / FRAME_RATE) as f32;
 
 #[derive(Debug, Component)]
 pub struct Movement {
@@ -19,7 +21,7 @@ impl Movement {
         self.direction = direction;
     }
     pub fn update_velocity(&mut self) {
-        self.velocity = self.direction * self.speed * tick::TIME_STEP;
+        self.velocity = self.direction * self.speed * TIME_STEP;
     }
 
     pub fn is_direction_zero(&self) -> bool {

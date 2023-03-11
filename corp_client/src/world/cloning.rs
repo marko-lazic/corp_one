@@ -1,27 +1,22 @@
 use bevy::prelude::*;
-use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
-use iyes_loopless::state::NextState;
 
 use corp_shared::prelude::{Health, CLONE_HEALTH_80};
 
 use crate::asset::asset_loading::ColonyAssets;
-use crate::constants::state::GameState;
 use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
 use crate::world::player::Player;
 use crate::Game;
+use crate::GameState;
 
 pub struct CloningPlugin;
 
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut App) {
-        app.add_enter_system(GameState::StarMap, Self::vort_in_dead_player_to_cloning);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::check_if_dead_and_go_to_cloning)
-                .into(),
+        app.add_system(
+            Self::vort_in_dead_player_to_cloning.in_schedule(OnEnter(GameState::StarMap)),
         );
+        app.add_system(Self::check_if_dead_and_go_to_cloning.in_set(OnUpdate(GameState::Playing)));
     }
 }
 
@@ -31,14 +26,14 @@ impl CloningPlugin {
         time: Res<Time>,
         mut game: ResMut<Game>,
         mut query: Query<&mut Health, With<Player>>,
-        mut commands: Commands,
+        mut next_state: ResMut<NextState<GameState>>,
     ) {
         if let Some(mut health) = query.iter_mut().next() {
             if health.is_dead() {
                 health.cloning_cooldown.tick(time.delta());
                 if health.cloning_cooldown.finished() {
                     game.current_colony_asset = colony_assets.cloning.clone();
-                    commands.insert_resource(NextState(GameState::LoadColony));
+                    next_state.set(GameState::LoadColony);
                 }
             }
         }
@@ -75,10 +70,9 @@ mod tests {
     #[test]
     fn test_vort_out_dead_player() {
         // Setup stage
-        let mut stage = SystemStage::parallel()
-            .with_system_set(State::<GameState>::get_driver())
-            .with_system(kill_player.label(KILLING_LABEL))
-            .with_system(CloningPlugin::check_if_dead_and_go_to_cloning.after(KILLING_LABEL));
+        let mut schedule = Schedule::default();
+        schedule.add_system(kill_player);
+        schedule.add_system(CloningPlugin::check_if_dead_and_go_to_cloning);
 
         // Setup world
         let mut world = World::default();
@@ -92,7 +86,7 @@ mod tests {
         world.insert_resource(State::new(GameState::Playing));
 
         // Run systems
-        stage.run(&mut world);
+        schedule.run(&mut world);
 
         // Check resulting changes
         assert!(world.get::<Player>(player_entity).is_some());
@@ -113,9 +107,8 @@ mod tests {
     #[test]
     fn test_vort_in_dead_player() {
         // Setup stage
-        let mut stage = SystemStage::parallel()
-            .with_system_set(State::<GameState>::get_driver())
-            .with_system(CloningPlugin::vort_in_dead_player_to_cloning);
+        let mut schedule = Schedule::default();
+        schedule.add_system(CloningPlugin::vort_in_dead_player_to_cloning);
 
         // Setup world
         let mut world = World::default();
@@ -130,7 +123,7 @@ mod tests {
         world.insert_resource(State::new(GameState::Playing));
 
         // Run systems
-        stage.run(&mut world);
+        schedule.run(&mut world);
 
         assert_eq!(
             world.resource::<Game>().health.get_health(),

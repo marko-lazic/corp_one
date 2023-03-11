@@ -1,13 +1,14 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable, InspectorPlugin};
+use bevy_inspector_egui::prelude::*;
+use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_prototype_lyon::prelude::*;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .add_plugins(DefaultPlugins)
         .add_plugin(ShapePlugin)
-        .add_plugin(InspectorPlugin::<InspectorData>::new())
+        .add_plugin(ResourceInspectorPlugin::<InspectorData>::default())
         .add_startup_system(setup_system)
         .add_system(move_parent)
         .add_system(move_child)
@@ -15,6 +16,37 @@ fn main() {
         .add_system(update_world_to_local)
         .run();
 }
+
+#[derive(Reflect, Resource, InspectorOptions)]
+#[reflect(Resource, InspectorOptions)]
+struct InspectorData {
+    parent: Vec2,
+    child: Vec2,
+    child_dir: Vec3,
+    world: Vec2,
+    world_to_local: Vec3,
+}
+
+impl Default for InspectorData {
+    fn default() -> InspectorData {
+        InspectorData {
+            parent: Default::default(),
+            child: Vec2::new(100.0, 50.0),
+            child_dir: Vec3::default(),
+            world: Vec2::new(100.0, -150.0),
+            world_to_local: Vec3::new(100.0, -150.0, 0.0),
+        }
+    }
+}
+
+#[derive(Component)]
+struct ParentPoint;
+
+#[derive(Component)]
+struct ChildPoint;
+
+#[derive(Component)]
+struct WorldPoint;
 
 fn move_parent(
     mut parent_query: Query<&mut Transform, With<ParentPoint>>,
@@ -90,7 +122,7 @@ fn setup_system(mut commands: Commands) {
     commands.spawn((
         Camera2dBundle::default(),
         bevy_mod_picking::PickingCameraBundle::default(),
-        bevy_transform_gizmo::GizmoPickSource::default(),
+        // bevy_transform_gizmo::GizmoPickSource::default(),
     ));
 
     let point = RegularPolygon {
@@ -99,12 +131,13 @@ fn setup_system(mut commands: Commands) {
         ..RegularPolygon::default()
     };
     commands
-        .spawn(GeometryBuilder::build_as(
-            &point,
-            DrawMode::Outlined {
-                fill_mode: FillMode::color(Color::CYAN),
-                outline_mode: StrokeMode::new(Color::BLACK, 2.0),
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&point),
+                ..default()
             },
+            Fill::color(Color::CYAN),
+            Stroke::new(Color::BLACK, 2.0),
             Transform::default(),
         ))
         .insert(ParentPoint);
@@ -116,12 +149,13 @@ fn setup_system(mut commands: Commands) {
     };
 
     commands
-        .spawn(GeometryBuilder::build_as(
-            &sphere,
-            DrawMode::Outlined {
-                fill_mode: FillMode::color(Color::YELLOW),
-                outline_mode: StrokeMode::new(Color::BLACK, 1.0),
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&sphere),
+                ..default()
             },
+            Stroke::new(Color::BLACK, 1.0),
+            Fill::color(Color::YELLOW),
             Transform::from_xyz(100.0, 50.0, 0.0),
         ))
         .insert(ChildPoint);
@@ -133,43 +167,14 @@ fn setup_system(mut commands: Commands) {
     };
 
     commands
-        .spawn(GeometryBuilder::build_as(
-            &square,
-            DrawMode::Outlined {
-                fill_mode: FillMode::color(Color::RED),
-                outline_mode: StrokeMode::new(Color::BLACK, 1.0),
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&square),
+                ..default()
             },
+            Fill::color(Color::RED),
+            Stroke::new(Color::BLACK, 1.0),
             Transform::from_xyz(100.0, -150.0, 0.0),
         ))
         .insert(WorldPoint);
-}
-
-#[derive(Resource, Inspectable)]
-struct InspectorData {
-    parent: Vec2,
-    child: Vec2,
-    child_dir: Vec3,
-    world: Vec2,
-    world_to_local: Vec3,
-}
-
-#[derive(Component)]
-struct ParentPoint;
-
-#[derive(Component)]
-struct ChildPoint;
-
-#[derive(Component)]
-struct WorldPoint;
-
-impl Default for InspectorData {
-    fn default() -> InspectorData {
-        InspectorData {
-            parent: Default::default(),
-            child: Vec2::new(100.0, 50.0),
-            child_dir: Vec3::default(),
-            world: Vec2::new(100.0, -150.0),
-            world_to_local: Vec3::new(100.0, -150.0, 0.0),
-        }
-    }
 }

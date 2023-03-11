@@ -2,12 +2,11 @@ use bevy::prelude::*;
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_asset_loader::loading_state::{LoadingState, LoadingStateAppExt};
 use bevy_kira_audio::AudioSource;
-use iyes_loopless::prelude::AppLooplessStateExt;
 use serde::Deserialize;
 
 use crate::asset::paths::PATHS;
-use crate::constants::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
+use crate::GameState;
 
 #[derive(Resource, AssetCollection)]
 pub struct SceneAssets {
@@ -114,19 +113,26 @@ pub struct AssetLoadingPlugin;
 impl Plugin for AssetLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(GameState::AssetLoading)
-                .continue_to_state(GameState::StarMap)
-                .with_collection::<PlayerAssets>()
-                .with_collection::<MeshAssets>()
-                .with_collection::<TextureAssets>()
-                .with_collection::<AudioAssets>()
-                .with_collection::<FontAssets>()
-                .with_collection::<ColonyAssets>()
-                .with_collection::<SceneAssets>(),
+            LoadingState::new(GameState::Loading).continue_to_state(GameState::StarMap),
         );
-        app.add_enter_system(GameState::AssetLoading, Self::setup);
-        app.add_enter_system(GameState::AssetLoading, Self::start_loading);
-        app.add_exit_system(GameState::AssetLoading, Self::cleanup);
+        app.add_collection_to_loading_state::<_, PlayerAssets>(GameState::Loading);
+        app.add_collection_to_loading_state::<_, MeshAssets>(GameState::Loading);
+        app.add_collection_to_loading_state::<_, TextureAssets>(GameState::Loading);
+        app.add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading);
+        app.add_collection_to_loading_state::<_, FontAssets>(GameState::Loading);
+        app.add_collection_to_loading_state::<_, ColonyAssets>(GameState::Loading);
+        app.add_collection_to_loading_state::<_, SceneAssets>(GameState::Loading);
+        app.add_systems(
+            (Self::setup, Self::start_loading)
+                .chain()
+                .in_schedule(OnEnter(GameState::Loading)),
+        );
+        app.add_systems(
+            (Self::setup, Self::start_loading)
+                .chain()
+                .in_schedule(OnEnter(GameState::Loading)),
+        );
+        app.add_system(Self::cleanup.in_schedule(OnExit(GameState::Loading)));
     }
 }
 

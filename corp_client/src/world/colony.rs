@@ -4,18 +4,17 @@ use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle};
 use bevy_mod_raycast::RaycastMesh;
 use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
-use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet, NextState};
 use serde::Deserialize;
 
 use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
-use crate::constants::state::GameState;
 use crate::input::Ground;
 use crate::world::colony::barrier::{BarrierControl, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::Zone;
-use crate::world::{physics, WorldSystem};
+use crate::world::{physics, WorldSystemSet};
 use crate::Game;
+use crate::GameState;
 
 mod asset;
 pub mod barrier;
@@ -51,26 +50,28 @@ impl Plugin for ColonyPlugin {
         app.add_plugins(DefaultPickingPlugins);
         app.add_plugin(BarrierPlugin);
         app.add_plugin(HookPlugin);
-        app.add_enter_system(GameState::LoadColony, Self::setup_colony);
-        app.add_enter_system(GameState::LoadColony, Self::setup_debug_plane);
-        app.add_enter_system(GameState::LoadColony, Self::setup_zones);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::LoadColony)
-                .run_if(Self::is_colony_loaded)
-                .with_system(Self::next_state_spawn_player)
-                .into(),
+        app.add_systems(
+            (
+                Self::setup_colony,
+                Self::setup_debug_plane,
+                Self::setup_zones,
+            )
+                .chain()
+                .in_schedule(OnEnter(GameState::LoadColony)),
         );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::SpawnPlayer)
-                .after(WorldSystem::CameraSetup)
-                .with_system(Self::next_state_playing)
-                .into(),
+        app.add_system(
+            Self::next_state_spawn_player
+                .in_set(OnUpdate(GameState::LoadColony))
+                .run_if(Self::is_colony_loaded),
+        );
+        app.add_system(
+            Self::next_state_playing
+                .in_set(OnUpdate(GameState::SpawnPlayer))
+                .after(WorldSystemSet::CameraSetup),
         );
 
-        app.add_enter_system(GameState::Playing, Self::update_lights);
-        app.add_exit_system(GameState::Playing, Self::teardown_entities);
+        app.add_system(Self::update_lights.in_schedule(OnEnter(GameState::Playing)));
+        app.add_system(Self::teardown_entities.in_schedule(OnExit(GameState::Playing)));
     }
 }
 
@@ -130,7 +131,10 @@ impl ColonyPlugin {
         info!("Setup debug plane");
         commands
             .spawn(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
+                mesh: meshes.add(Mesh::from(shape::Plane {
+                    size: 100.0,
+                    ..default()
+                })),
                 transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
                 material: materials.add(StandardMaterial {
                     base_color: Color::WHITE,
@@ -162,6 +166,7 @@ impl ColonyPlugin {
                     .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Plane {
                             size: zone_asset.size.clone(),
+                            ..default()
                         })),
                         transform: Transform::from_translation(zone_asset.position),
                         material: material_assets.get_material(&zone_asset.material),
@@ -185,14 +190,14 @@ impl ColonyPlugin {
         }
     }
 
-    fn next_state_spawn_player(mut commands: Commands) {
+    fn next_state_spawn_player(mut next_state: ResMut<NextState<GameState>>) {
         info!("State: Spawn Player");
-        commands.insert_resource(NextState(GameState::SpawnPlayer));
+        next_state.set(GameState::SpawnPlayer);
     }
 
-    fn next_state_playing(mut commands: Commands) {
+    fn next_state_playing(mut next_state: ResMut<NextState<GameState>>) {
         info!("State: Playing");
-        commands.insert_resource(NextState(GameState::Playing));
+        next_state.set(GameState::Playing);
     }
 
     // Temporary fixes the problem with shadows not working
@@ -203,10 +208,10 @@ impl ColonyPlugin {
         }
     }
 
-    fn teardown_entities(mut commands: Commands, entities: Query<Entity>) {
+    fn teardown_entities(mut commands: Commands, entities: Query<Entity, Without<Window>>) {
         info!("Teardown entities");
         for entity in entities.iter() {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

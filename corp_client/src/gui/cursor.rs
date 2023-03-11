@@ -1,10 +1,12 @@
 use bevy::app::Plugin;
-use bevy::prelude::{Color, Commands, Component, HorizontalAlign, Query, Res, Resource, Style, Text, TextAlignment, TextBundle, TextStyle, Val, With};
-use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
+use bevy::prelude::*;
 
-use crate::{App, GameState, UiRect, Visibility};
 use crate::asset::asset_loading::FontAssets;
 use crate::input::Cursor;
+use crate::{App, GameState, UiRect, Visibility};
+
+#[derive(Component)]
+struct CursorText;
 
 #[derive(Resource, Default)]
 pub struct CursorInfo {
@@ -16,13 +18,8 @@ pub struct CursorPlugin;
 impl Plugin for CursorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CursorInfo>();
-        app.add_enter_system(GameState::LoadColony, Self::setup);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::cursor_text_tooltip)
-                .into(),
-        );
+        app.add_system(Self::setup.in_schedule(OnEnter(GameState::LoadColony)));
+        app.add_system(Self::cursor_text_tooltip.in_set(OnUpdate(GameState::Playing)));
     }
 }
 
@@ -33,14 +30,11 @@ impl CursorPlugin {
             font_size: 20.0,
             color: Color::WHITE,
         };
-        let text_alignment = TextAlignment {
-            horizontal: HorizontalAlign::Center,
-            ..Default::default()
-        };
 
         commands
             .spawn(TextBundle {
-                text: Text::from_section("[E] Use", text_style).with_alignment(text_alignment),
+                text: Text::from_section("[E] Use", text_style)
+                    .with_alignment(TextAlignment::Center),
                 ..Default::default()
             })
             .insert(CursorText);
@@ -56,7 +50,7 @@ impl CursorPlugin {
             let mouse_screen_y = cursor.screen.y;
             let result = query.get_single_mut();
             if let Ok((mut style, mut visibility)) = result {
-                visibility.is_visible = true;
+                *visibility = Visibility::Visible;
                 style.position = UiRect {
                     top: Val::Px(-mouse_screen_y + 20.0),
                     left: Val::Px(mouse_screen_x + 15.0),
@@ -66,11 +60,8 @@ impl CursorPlugin {
         } else {
             let result = query.get_single_mut();
             if let Ok((_, mut visibility)) = result {
-                visibility.is_visible = false;
+                *visibility = Visibility::Hidden;
             }
         }
     }
 }
-
-#[derive(Component)]
-struct CursorText;

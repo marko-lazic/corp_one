@@ -4,13 +4,12 @@ use bevy::prelude::*;
 use bevy::render::camera::Camera;
 use bevy_mod_picking::PickingCameraBundle;
 use bevy_mod_raycast::RaycastSource;
-use iyes_loopless::prelude::ConditionSet;
 
-use crate::constants::state::GameState;
 use crate::input::{Cursor, Ground};
 use crate::world::player::Player;
-use crate::world::WorldSystem;
+use crate::world::WorldSystemSet;
 use crate::Game;
+use crate::GameState;
 
 #[derive(Component)]
 pub struct TopDownCamera {
@@ -46,29 +45,16 @@ pub struct TopDownCameraPlugin;
 
 impl Plugin for TopDownCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::SpawnPlayer)
-                .label(WorldSystem::CameraSetup)
-                .after(WorldSystem::PlayerSetup)
-                .with_system(Self::setup_camera)
-                .into(),
+        app.add_system(
+            Self::setup_camera
+                .in_set(WorldSystemSet::CameraSetup)
+                .in_schedule(OnEnter(GameState::SpawnPlayer)),
         );
 
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .label(CameraMotion)
-                .with_system(Self::input_camera_center)
-                .into(),
-        );
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .after(CameraMotion)
-                .with_system(Self::target_motion)
-                .into(),
+        app.add_systems(
+            (Self::input_camera_center, Self::target_motion)
+                .chain()
+                .in_set(OnUpdate(GameState::Playing)),
         );
     }
 }
@@ -127,9 +113,6 @@ impl TopDownCameraPlugin {
         }
     }
 }
-
-#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
-struct CameraMotion;
 
 #[cfg(test)]
 mod tests {

@@ -7,11 +7,11 @@ pub enum ColorAsset {
     SeaGreen,
     LimeGreen,
     Red,
-    Unknwon,
+    None,
 }
 
 impl Default for ColorAsset {
     fn default() -> Self {
-        Self::Unknwon
+        Self::None
     }
 }

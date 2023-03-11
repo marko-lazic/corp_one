@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use iyes_loopless::prelude::*;
 
 use crate::asset::asset_loading::PlayerAssets;
 use crate::GameState;
@@ -37,13 +36,8 @@ pub struct AnimatorPlugin;
 impl Plugin for AnimatorPlugin {
     fn build(&self, app: &mut App) {
         // Warning: Re-insertion happens every time game enters playing state
-        app.add_enter_system(GameState::Playing, Self::insert_animation_resources);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::play_animations)
-                .into(),
-        );
+        app.add_system(Self::insert_animation_resources.in_schedule(OnEnter(GameState::Playing)));
+        app.add_system(Self::play_animations.in_set(OnUpdate(GameState::Playing)));
     }
 }
 

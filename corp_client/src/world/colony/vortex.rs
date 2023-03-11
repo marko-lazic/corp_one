@@ -1,16 +1,14 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{Collider, QueryFilter, RapierContext};
-use iyes_loopless::condition::ConditionSet;
-use iyes_loopless::prelude::NextState;
 
 use corp_shared::prelude::Health;
 
 use crate::asset::asset_loading::ColonyAssets;
-use crate::constants::state::GameState;
 use crate::world::colony::Colony;
 use crate::world::physics;
 use crate::world::player::Player;
 use crate::Game;
+use crate::GameState;
 
 pub struct VortOutEvent;
 
@@ -38,20 +36,19 @@ impl Plugin for VortexPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<VortInEvent>();
         app.add_event::<VortOutEvent>();
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::StarMap)
-                .with_system(Self::vort_in_event_reader)
-                .with_system(Self::debug_vort_in)
-                .into(),
+        app.add_systems(
+            (Self::vort_in_event_reader, Self::debug_vort_in)
+                .chain()
+                .in_set(OnUpdate(GameState::StarMap)),
         );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::vort_out_event_reader)
-                .with_system(Self::animate_nodes)
-                .with_system(Self::vortex_gate_collider)
-                .into(),
+        app.add_systems(
+            (
+                Self::vort_out_event_reader,
+                Self::animate_nodes,
+                Self::vortex_gate_collider,
+            )
+                .chain()
+                .in_set(OnUpdate(GameState::Playing)),
         );
     }
 }
@@ -68,13 +65,13 @@ impl VortexPlugin {
     fn vort_out_event_reader(
         healths: Query<&Health, With<Player>>,
         mut game: ResMut<Game>,
-        mut commands: Commands,
+        mut next_state: ResMut<NextState<GameState>>,
         mut vort_out_events: EventReader<VortOutEvent>,
     ) {
         if let Some(_) = vort_out_events.iter().last() {
             let health = healths.get(game.player_entity.unwrap()).unwrap();
             game.health = health.clone();
-            commands.insert_resource(NextState(GameState::StarMap));
+            next_state.set(GameState::StarMap);
         }
     }
 
@@ -82,29 +79,29 @@ impl VortexPlugin {
         colony_assets: Res<ColonyAssets>,
         mut vort_in_events: EventReader<VortInEvent>,
         mut game: ResMut<Game>,
-        mut commands: Commands,
+        mut next_state: ResMut<NextState<GameState>>,
     ) {
         for vort_in in vort_in_events.iter() {
             match vort_in.colony {
                 Colony::Cloning => {
                     info!("Cloning Facility");
                     game.current_colony_asset = colony_assets.cloning.clone();
-                    commands.insert_resource(NextState(GameState::LoadColony));
+                    next_state.set(GameState::LoadColony);
                 }
                 Colony::Iris => {
                     info!("Moonbase: Station Iris");
                     game.current_colony_asset = colony_assets.iris.clone();
-                    commands.insert_resource(NextState(GameState::LoadColony));
+                    next_state.set(GameState::LoadColony);
                 }
                 Colony::Liberte => {
                     info!("Mars: Colony Liberte");
                     game.current_colony_asset = colony_assets.liberte.clone();
-                    commands.insert_resource(NextState(GameState::LoadColony));
+                    next_state.set(GameState::LoadColony);
                 }
                 Colony::Playground => {
                     info!("Alien Planet");
                     game.current_colony_asset = Handle::default();
-                    commands.insert_resource(NextState(GameState::LoadColony));
+                    next_state.set(GameState::LoadColony);
                 }
             }
         }

@@ -1,24 +1,26 @@
 use bevy::app::App;
 use bevy::prelude::*;
 use bevy::DefaultPlugins;
-use bevy_inspector_egui::{Inspectable, InspectorPlugin};
+use bevy_inspector_egui::prelude::*;
+use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_prototype_lyon::prelude::*;
 
 use crate::shape::Icosphere;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .init_resource::<Entities>()
         .add_plugins(DefaultPlugins)
         .add_plugin(ShapePlugin)
-        .add_plugin(InspectorPlugin::<InspectorData>::new())
+        .add_plugin(ResourceInspectorPlugin::<InspectorData>::new())
         .add_startup_system(setup)
         .add_system(update_p)
         .run();
 }
 
-#[derive(Resource, Inspectable)]
+#[derive(Reflect, Resource, Default, InspectorOptions)]
+#[reflect(Resource, InspectorOptions)]
 struct InspectorData {
     t: f32,
 }
@@ -37,12 +39,6 @@ struct Entities {
     a: Option<Entity>,
     b: Option<Entity>,
     p: Option<Entity>,
-}
-
-impl Default for InspectorData {
-    fn default() -> Self {
-        InspectorData { t: 0.0 }
-    }
 }
 
 fn setup(
@@ -70,10 +66,13 @@ fn setup(
     });
 
     // PBRs
-    let mesh_abc = meshes.add(Mesh::from(Icosphere {
-        radius: 0.45,
-        subdivisions: 32,
-    }));
+    let mesh_abc = meshes.add(
+        Mesh::try_from(Icosphere {
+            radius: 0.45,
+            subdivisions: 32,
+        })
+        .unwrap(),
+    );
 
     let a = commands
         .spawn(PbrBundle {
@@ -119,10 +118,9 @@ fn update_p(
     let t = data.t;
     let a = transforms.get(entities.a.unwrap()).unwrap().translation;
     let b = transforms.get(entities.b.unwrap()).unwrap().translation;
-    let mut p = transforms.get_mut(entities.p.unwrap()).unwrap().translation;
 
     // t = 0.0 start, t = 1.0 end
-    p = a + t * (b - a);
+    let p = a + t * (b - a);
 
     // This is just an interesting rising spiral formula
     // p = Vec3::from((t, t * t.cos(), t * t.sin()));

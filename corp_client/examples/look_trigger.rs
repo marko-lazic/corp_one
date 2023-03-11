@@ -1,22 +1,84 @@
 use bevy::prelude::*;
-use bevy_mouse_tracking_plugin::mouse_pos::MousePosPlugin;
-use bevy_mouse_tracking_plugin::MousePosWorld;
+use bevy::window::PrimaryWindow;
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 use bevy_prototype_lyon::prelude::*;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .insert_resource(Game::default())
         .add_plugins(DefaultPlugins)
         .add_plugin(DebugLinesPlugin::default())
-        .add_plugin(MousePosPlugin)
         .add_plugin(ShapePlugin)
+        .add_system(my_cursor_system)
         .add_startup_system(setup_system)
         .add_system(draw_player_to_trigger_line)
         .add_system(draw_player_to_mouse_line)
         .add_system(player_look_trigger)
         .run();
+}
+
+#[derive(Component)]
+struct MainCamera;
+
+#[derive(Resource, Default)]
+struct MousePosWorld {
+    x: f32,
+    y: f32,
+}
+
+#[derive(Component, Default)]
+struct Trigger {
+    player_to_trigger_dir: Vec3,
+}
+
+#[derive(Component)]
+struct Player {
+    preciceness: f32,
+    look_dir: Vec3,
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        Self {
+            preciceness: 0.8,
+            look_dir: Vec3::X,
+        }
+    }
+}
+
+#[derive(Resource, Default)]
+struct Game {
+    trigger: Option<Entity>,
+    player: Option<Entity>,
+}
+
+fn my_cursor_system(
+    // need to get window dimensions
+    primary_windows: Query<&Window, With<PrimaryWindow>>,
+    // query to get camera transform
+    camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    // store to resource
+    mut mouse_pos_world: ResMut<MousePosWorld>,
+) {
+    // get the camera info and transform
+    // assuming there is exactly one main camera entity, so query::single() is OK
+    let (camera, camera_transform) = camera_q.single();
+
+    // get the window that the camera is displaying to (or the primary window)
+    let Ok(primary) = primary_windows.get_single() else {
+        return;
+    };
+    // check if the cursor is inside the window and get its position
+    // then, ask bevy to convert into world coordinates, and truncate to discard Z
+    if let Some(world_position) = primary
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .map(|ray| ray.origin.truncate())
+    {
+        mouse_pos_world.x = world_position.x;
+        mouse_pos_world.y = world_position.y;
+    }
 }
 
 fn player_look_trigger(
@@ -47,11 +109,11 @@ fn draw_player_to_mouse_line(
     mut query: Query<(&Transform, &mut Player)>,
     game: ResMut<Game>,
     mut lines: ResMut<DebugLines>,
-    mouse_world_pos: Res<MousePosWorld>,
+    mouse_pos_world: Res<MousePosWorld>,
 ) {
     let (player_tf, mut player_com) = query.get_mut(game.player.unwrap()).unwrap();
     let player_pos = player_tf.translation;
-    let mouse_world = Vec3::new(mouse_world_pos.x, mouse_world_pos.y, 0.0);
+    let mouse_world = Vec3::new(mouse_pos_world.x, mouse_pos_world.y, 0.0);
     let look_dir = (mouse_world - player_pos).normalize();
     player_com.look_dir = look_dir;
     lines.line_colored(player_pos, player_pos + look_dir * 200.0, 0., Color::RED);
@@ -83,14 +145,15 @@ fn setup_system(mut commands: Commands, mut game: ResMut<Game>) {
         ..RegularPolygon::default()
     };
 
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn((Camera2dBundle::default(), MainCamera));
     let trigger = commands
-        .spawn(GeometryBuilder::build_as(
-            &octagon,
-            DrawMode::Outlined {
-                fill_mode: FillMode::color(Color::CYAN),
-                outline_mode: StrokeMode::new(Color::BLACK, 4.0),
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&octagon),
+                ..default()
             },
+            Fill::color(Color::CYAN),
+            Stroke::new(Color::BLACK, 4.0),
             Transform::default(),
         ))
         .insert(Trigger::default())
@@ -104,42 +167,17 @@ fn setup_system(mut commands: Commands, mut game: ResMut<Game>) {
     };
 
     let player = commands
-        .spawn(GeometryBuilder::build_as(
-            &circle,
-            DrawMode::Outlined {
-                fill_mode: FillMode::color(Color::YELLOW),
-                outline_mode: StrokeMode::new(Color::ORANGE, 4.0),
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&circle),
+                ..default()
             },
+            Fill::color(Color::YELLOW),
+            Stroke::new(Color::ORANGE, 4.0),
             Transform::from_xyz(300.0, 200.0, 0.0),
         ))
         .insert(Player::default())
         .id();
 
     game.player = Some(player);
-}
-
-#[derive(Component, Default)]
-struct Trigger {
-    player_to_trigger_dir: Vec3,
-}
-
-#[derive(Component)]
-struct Player {
-    preciceness: f32,
-    look_dir: Vec3,
-}
-
-impl Default for Player {
-    fn default() -> Self {
-        Self {
-            preciceness: 0.8,
-            look_dir: Vec3::X,
-        }
-    }
-}
-
-#[derive(Resource, Default)]
-struct Game {
-    trigger: Option<Entity>,
-    player: Option<Entity>,
 }

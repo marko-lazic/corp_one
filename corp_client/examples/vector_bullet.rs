@@ -1,10 +1,10 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable, InspectorPlugin};
+use bevy_inspector_egui::prelude::*;
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .init_resource::<GameData>()
         .add_plugins(DefaultPlugins)
         .add_plugin(InspectorPlugin::<InspectorData>::new())
@@ -80,8 +80,9 @@ struct GameData {
     sphere: Option<Entity>,
 }
 
-#[derive(Resource, Inspectable, Default)]
+#[derive(Reflect, Resource, Default, InspectorOptions)]
+#[reflect(Resource, InspectorOptions)]
 struct InspectorData {
-    #[inspectable(min = 0.0, max = 100.0)]
+    #[inspector(min = 0.0, max = 100.0)]
     offset: f32,
 }

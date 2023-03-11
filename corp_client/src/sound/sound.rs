@@ -1,30 +1,22 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioControl, AudioPlugin};
-use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
 use crate::asset::asset_loading::AudioAssets;
-use crate::constants::state::GameState;
 use crate::world::player::Player;
+use crate::GameState;
 
 pub struct SoundPlugin;
 
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(AudioPlugin);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::setup_live_state)
-                .with_system(Self::play_music)
-                .into(),
+        app.add_systems(
+            (Self::setup_live_state, Self::play_music)
+                .chain()
+                .in_set(OnUpdate(GameState::Playing)),
         );
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::walk_sound)
-                .into(),
-        );
-        app.add_exit_system(GameState::Playing, Self::stop_audio);
+        app.add_system(Self::walk_sound.in_set(OnUpdate(GameState::Playing)));
+        app.add_system(Self::stop_audio.in_schedule(OnExit(GameState::Playing)));
     }
 }
 

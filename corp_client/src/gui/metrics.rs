@@ -1,16 +1,13 @@
 use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
-use bevy::render::camera::Camera;
-use iyes_loopless::condition::ConditionSet;
-use iyes_loopless::prelude::AppLooplessStateExt;
 
 use corp_shared::prelude::Health;
 
-use crate::constants::state::GameState;
 use crate::input::Cursor;
 use crate::world::camera::TopDownCamera;
 use crate::world::player::Player;
 use crate::Game;
+use crate::GameState;
 
 #[derive(Component)]
 struct FpsText;
@@ -35,18 +32,19 @@ pub struct MetricsPlugin;
 impl Plugin for MetricsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-        app.add_enter_system(GameState::Playing, Self::setup);
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::fps_update)
-                .with_system(Self::player_position_update)
-                .with_system(Self::mouse_screen_position_update)
-                .with_system(Self::mouse_world_position_update)
-                .with_system(Self::camera_metrics)
-                .with_system(Self::camera_debug_text)
-                .with_system(Self::player_health_metric)
-                .into(),
+        app.add_system(Self::setup.in_schedule(OnEnter(GameState::Playing)));
+        app.add_systems(
+            (
+                Self::fps_update,
+                Self::player_position_update,
+                Self::mouse_screen_position_update,
+                Self::mouse_world_position_update,
+                Self::camera_metrics,
+                Self::camera_debug_text,
+                Self::player_health_metric,
+            )
+                .chain()
+                .in_set(OnUpdate(GameState::Playing)),
         );
     }
 }
@@ -179,7 +177,7 @@ mod metrics_utils {
                 color: Color::WHITE,
             },
         )
-        .with_alignment(TextAlignment::default())
+        .with_alignment(TextAlignment::Left)
     }
 
     fn default_style(top: f32, left: f32) -> Style {

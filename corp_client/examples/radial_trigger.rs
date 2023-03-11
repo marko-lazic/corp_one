@@ -1,17 +1,17 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable, InspectorPlugin};
+use bevy_inspector_egui::prelude::*;
+use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_prototype_debug_lines::DebugLinesPlugin;
-use bevy_transform_gizmo::TransformGizmoPlugin;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .init_resource::<GameData>()
         .add_plugins(DefaultPlugins)
-        .add_plugin(InspectorPlugin::<InspectorData>::new())
+        .add_plugin(ResourceInspectorPlugin::<InspectorData>::new())
         .add_plugin(DebugLinesPlugin::default())
         .add_plugins(bevy_mod_picking::DefaultPickingPlugins)
-        .add_plugin(TransformGizmoPlugin::default())
+        // .add_plugin(TransformGizmoPlugin::default())
         .add_startup_system(setup)
         .add_system(change_color)
         .run();
@@ -65,15 +65,18 @@ fn setup(
         })
         .insert((
             bevy_mod_picking::PickingCameraBundle::default(),
-            bevy_transform_gizmo::GizmoPickSource::default(),
+            // bevy_transform_gizmo::GizmoPickSource::default(),
         ));
 
     // radial
     let material = materials.add(Color::rgb(0.1, 0.4, 0.8).into());
-    let mesh = meshes.add(Mesh::from(shape::Icosphere {
-        subdivisions: 4,
-        radius: inspector.radius,
-    }));
+    let mesh = meshes.add(
+        Mesh::try_from(shape::Icosphere {
+            subdivisions: 4,
+            radius: inspector.radius,
+        })
+        .unwrap(),
+    );
 
     let radial_id = commands
         .spawn(PbrBundle {
@@ -83,7 +86,7 @@ fn setup(
         })
         .insert((
             bevy_mod_picking::PickableBundle::default(),
-            bevy_transform_gizmo::GizmoTransformable,
+            // bevy_transform_gizmo::GizmoTransformable,
             Radial,
         ))
         .id();
@@ -92,10 +95,13 @@ fn setup(
 
     // player
     let material = materials.add(Color::AZURE.into());
-    let mesh = meshes.add(Mesh::from(shape::Icosphere {
-        subdivisions: 4,
-        radius: inspector.radius,
-    }));
+    let mesh = meshes.add(
+        Mesh::try_from(shape::Icosphere {
+            subdivisions: 4,
+            radius: inspector.radius,
+        })
+        .unwrap(),
+    );
 
     let player_id = commands
         .spawn(PbrBundle {
@@ -106,7 +112,7 @@ fn setup(
         })
         .insert((
             bevy_mod_picking::PickableBundle::default(),
-            bevy_transform_gizmo::GizmoTransformable,
+            // bevy_transform_gizmo::GizmoTransformable,
             Player,
         ))
         .id();
@@ -126,9 +132,10 @@ struct GameData {
     player: Option<Entity>,
 }
 
-#[derive(Resource, Inspectable)]
+#[derive(Reflect, Resource, InspectorOptions)]
+#[reflect(Resource, InspectorOptions)]
 struct InspectorData {
-    #[inspectable(min = 0.0, max = 4.0)]
+    #[inspector(min = 0.0, max = 4.0)]
     radius: f32,
 }
 

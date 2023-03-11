@@ -1,8 +1,7 @@
+use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
-use iyes_loopless::prelude::AppLooplessStateExt;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-use constants::state::GameState;
-use constants::window;
 use corp_shared::prelude::Health;
 use gui::metrics::MetricsPlugin;
 
@@ -13,11 +12,24 @@ use crate::world::colony::intractable::UseEntity;
 use crate::world::WorldPlugin;
 
 mod asset;
-mod constants;
 mod gui;
 pub mod input;
 mod sound;
 mod world;
+
+const CORP_ONE_GAME_TITLE: &str = "Corp One";
+const WIDTH: f32 = 1200.0;
+const HEIGHT: f32 = 720.0;
+
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum GameState {
+    #[default]
+    Loading,
+    StarMap,
+    LoadColony,
+    SpawnPlayer,
+    Playing,
+}
 
 #[derive(Resource, Default)]
 pub struct Game {
@@ -33,7 +45,8 @@ pub struct Game {
 fn main() {
     App::new()
         .init_resource::<Game>()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
+        .add_state::<GameState>()
         .add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {
@@ -41,23 +54,23 @@ fn main() {
                     ..default()
                 })
                 .set(WindowPlugin {
-                    window: create_window_descriptor(),
+                    primary_window: Some(new_window()),
                     ..default()
                 }),
         )
-        .add_loopless_state(GameState::AssetLoading)
         .add_plugin(AssetLoadingPlugin)
         .add_plugin(GuiPlugin)
         .add_plugin(WorldPlugin)
-        // .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(
+            WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Grave)),
+        )
         .run();
 }
 
-fn create_window_descriptor() -> WindowDescriptor {
-    WindowDescriptor {
-        title: window::CORP_ONE_GAME_TITLE.to_string(),
-        width: window::WIDTH,
-        height: window::HEIGHT,
+fn new_window() -> Window {
+    Window {
+        title: CORP_ONE_GAME_TITLE.to_string(),
+        resolution: (WIDTH, HEIGHT).into(),
         ..Default::default()
     }
 }

@@ -1,20 +1,19 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use iyes_loopless::condition::ConditionSet;
 use rand::seq::SliceRandom;
 
 use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::PlayerAssets;
-use crate::constants::state::GameState;
 use crate::input::input_command::PlayerDirection;
-use crate::input::{Cursor, InputSystem, OrientationMode};
+use crate::input::{Cursor, InputSystemSet, OrientationMode};
 use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
 use crate::world::colony::vortex::VortexNode;
-use crate::world::{physics, WorldSystem};
+use crate::world::{physics, WorldSystemSet};
 use crate::Game;
+use crate::GameState;
 
 #[derive(Default, bevy::ecs::component::Component)]
 pub struct Player {
@@ -26,33 +25,44 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(CloningPlugin);
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::SpawnPlayer)
-                .label(WorldSystem::PlayerSetup)
-                .with_system(PlayerPlugin::setup_player)
-                .into(),
+        app.add_system(
+            PlayerPlugin::setup_player
+                .in_set(WorldSystemSet::PlayerSetup)
+                .in_schedule(OnEnter(GameState::SpawnPlayer)),
         );
 
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .after(InputSystem::CheckInteraction)
-                .with_system(Self::move_player)
-                .with_system(Self::handle_animation_action)
-                .into(),
+        app.add_systems(
+            (Self::move_player, Self::handle_animation_action)
+                .after(InputSystemSet)
+                .in_set(OnUpdate(GameState::Playing)),
         );
 
-        app.add_system_set(Self::orientation_mode_aim_system_set());
-        app.add_system_set(Self::orientation_mode_direction_system_set());
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::handle_dead)
-                .into(),
+        app.add_system(
+            Self::orientation_aim
+                .in_set(OnUpdate(GameState::Playing))
+                .after(InputSystemSet)
+                .run_if(move |res: Option<Res<OrientationMode>>| {
+                    if let Some(res) = res {
+                        *res == OrientationMode::Aim
+                    } else {
+                        false
+                    }
+                }),
         );
+        app.add_system(
+            Self::orientation_direction
+                .in_set(OnUpdate(GameState::Playing))
+                .after(InputSystemSet)
+                .run_if(move |res: Option<Res<OrientationMode>>| {
+                    if let Some(res) = res {
+                        *res == OrientationMode::Direction
+                    } else {
+                        false
+                    }
+                }),
+        );
+
+        app.add_system(Self::handle_dead.in_set(OnUpdate(GameState::Playing)));
     }
 }
 
@@ -128,29 +138,11 @@ impl PlayerPlugin {
         }
     }
 
-    fn orientation_mode_aim_system_set() -> SystemSet {
-        ConditionSet::new()
-            .run_in_state(GameState::Playing)
-            .run_if_resource_equals(OrientationMode::Aim)
-            .after(InputSystem::CheckInteraction)
-            .with_system(Self::orientation_aim)
-            .into()
-    }
-
     fn orientation_aim(mut query: Query<(&Player, &mut Transform)>, cursor: Res<Cursor>) {
         if let Ok((_, mut transform)) = query.get_single_mut() {
             let direction = Vec3::new(cursor.world.x, 0.0, cursor.world.z);
             transform.look_at(direction, Vec3::Y);
         }
-    }
-
-    fn orientation_mode_direction_system_set() -> SystemSet {
-        ConditionSet::new()
-            .run_in_state(GameState::Playing)
-            .run_if_resource_equals(OrientationMode::Direction)
-            .after(InputSystem::CheckInteraction)
-            .with_system(Self::orientation_direction)
-            .into()
     }
 
     fn orientation_direction(

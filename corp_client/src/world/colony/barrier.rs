@@ -3,7 +3,6 @@ use std::time::Duration;
 use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy_mod_picking::{HoverEvent, PickingEvent};
-use iyes_loopless::prelude::ConditionSet;
 
 use crate::gui::CursorInfo;
 use crate::{App, Game, GameState, Timer, UseEntity};
@@ -57,13 +56,8 @@ impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<BarrierField>();
         app.register_type::<BarrierControl>();
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::open_close_barrier)
-                .into(),
-        );
-        app.add_system_to_stage(CoreStage::PostUpdate, Self::pick_barrier);
+        app.add_system(Self::open_close_barrier.in_set(OnUpdate(GameState::Playing)));
+        app.add_system(Self::pick_barrier.in_base_set(CoreSet::PostUpdate));
     }
 }
 
@@ -74,12 +68,12 @@ impl BarrierPlugin {
     ) {
         for (mut barrier, mut visible) in barrier_query.iter_mut() {
             if barrier.open {
-                visible.is_visible = false;
+                *visible = Visibility::Hidden;
                 barrier.close_cooldown.tick(time.delta());
                 if barrier.close_cooldown.just_finished() {
                     barrier.open = false;
                     barrier.close_cooldown.reset();
-                    visible.is_visible = true;
+                    *visible = Visibility::Visible;
                 }
             }
         }

@@ -9,6 +9,7 @@ use crate::world::colony::ColonyPlugin;
 use crate::world::physics::PhysicsPlugin;
 use crate::world::player::PlayerPlugin;
 use crate::world::star_map::StarMapPlugin;
+use crate::world::WorldSystemSet::{CameraSetup, PlayerSetup};
 
 mod animator;
 pub mod camera;
@@ -19,10 +20,17 @@ mod physics;
 pub mod player;
 mod star_map;
 
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+enum WorldSystemSet {
+    PlayerSetup,
+    CameraSetup,
+}
+
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
+        app.configure_set(CameraSetup.after(PlayerSetup));
         app.insert_resource(AmbientLight {
             color: Color::ORANGE_RED,
             brightness: 0.8,
@@ -36,10 +44,4 @@ impl Plugin for WorldPlugin {
         app.add_plugin(PlayerPlugin);
         app.add_plugin(TopDownCameraPlugin);
     }
-}
-
-#[derive(SystemLabel, Debug, Hash, PartialEq, Eq, Clone)]
-enum WorldSystem {
-    PlayerSetup,
-    CameraSetup,
 }

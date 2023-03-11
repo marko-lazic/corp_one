@@ -1,8 +1,7 @@
 use bevy::prelude::*;
-use iyes_loopless::prelude::AppLooplessStateExt;
 
 use crate::asset::asset_loading::TextureAssets;
-use crate::constants::state::GameState;
+use crate::GameState;
 
 #[derive(Component)]
 struct StarmapBackground;
@@ -11,8 +10,8 @@ pub struct StarMapPlugin;
 
 impl Plugin for StarMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_enter_system(GameState::StarMap, Self::setup_starmap);
-        app.add_exit_system(GameState::StarMap, Self::teardown);
+        app.add_system(Self::setup_starmap.in_schedule(OnEnter(GameState::StarMap)));
+        app.add_system(Self::teardown.in_schedule(OnExit(GameState::StarMap)));
     }
 }
 
@@ -28,7 +27,7 @@ impl StarMapPlugin {
             .insert(StarmapBackground);
     }
 
-    fn teardown(mut commands: Commands, entities: Query<Entity>) {
+    fn teardown(mut commands: Commands, entities: Query<Entity, Without<Window>>) {
         for entity in entities.iter() {
             commands.entity(entity).despawn_recursive();
         }

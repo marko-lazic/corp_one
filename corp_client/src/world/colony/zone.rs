@@ -1,14 +1,13 @@
 use bevy::prelude::*;
 use bevy::utils::hashbrown::HashSet;
 use bevy_rapier3d::prelude::*;
-use iyes_loopless::condition::ConditionSet;
 use serde::Deserialize;
 
 use corp_shared::prelude::*;
 
-use crate::constants::state::GameState;
 use crate::world::colony::colony_assets::ZoneAsset;
 use crate::world::physics;
+use crate::GameState;
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 pub enum ZoneType {
@@ -50,12 +49,10 @@ pub struct ZonePlugin;
 
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::Playing)
-                .with_system(Self::handle_health_in_zones)
-                .with_system(Self::zone_collider)
-                .into(),
+        app.add_systems(
+            (Self::handle_health_in_zones, Self::zone_collider)
+                .chain()
+                .in_set(OnUpdate(GameState::Playing)),
         );
     }
 }
