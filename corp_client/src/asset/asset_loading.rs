@@ -8,6 +8,11 @@ use crate::asset::paths::PATHS;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::GameState;
 
+/// Exported using Blender export glTF 2.0 with settings enabled
+///
+/// Punctual Lights
+///
+/// Data/Lighting Lighting Mode Unitless
 #[derive(Resource, AssetCollection)]
 pub struct SceneAssets {
     #[asset(path = "scenes/iris/iris.glb#Scene0")]

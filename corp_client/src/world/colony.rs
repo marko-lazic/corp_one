@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle};
+use bevy_mod_picking::*;
 use bevy_mod_raycast::RaycastMesh;
 use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
@@ -20,6 +20,7 @@ mod asset;
 pub mod barrier;
 pub mod colony_assets;
 pub mod intractable;
+mod scene_hook;
 pub mod vortex;
 pub mod zone;
 
@@ -59,6 +60,7 @@ impl Plugin for ColonyPlugin {
                 .chain()
                 .in_schedule(OnEnter(GameState::LoadColony)),
         );
+
         app.add_system(
             Self::next_state_spawn_player
                 .in_set(OnUpdate(GameState::LoadColony))
@@ -97,28 +99,9 @@ impl ColonyPlugin {
                 ..default()
             },
             hook: SceneHook::new(|entity, commands| {
-                match entity.get::<Name>().map(|t| t.as_str()) {
-                    Some("VortexGate") => commands.insert((
-                        VortexGate,
-                        Sensor,
-                        Collider::cuboid(0.5, 1.0, 0.5),
-                        physics::CollideGroups::vortex_gate(),
-                    )),
-                    Some("VortexNode1") | Some("VortexNode2") | Some("VortexNode3")
-                    | Some("VortexNode4") | Some("VortexNode5") | Some("VortexNode6") => {
-                        commands.insert(VortexNode)
-                    }
-                    Some("BarrierField1") => commands.insert(BarrierField::new("B1")),
-                    Some("BarrierControl11") | Some("BarrierControl12") => {
-                        info!("Barrier access {:?}", entity.get::<Transform>());
-                        commands.insert((BarrierControl::new("B1"), PickableBundle::default()))
-                    }
-                    Some("BarrierField2") => commands.insert(BarrierField::new("B2")),
-                    Some("BarrierControl21") | Some("BarrierControl22") => {
-                        commands.insert((BarrierControl::new("B2"), PickableBundle::default()))
-                    }
-                    _ => commands,
-                };
+                if let Some(name) = entity.get::<Name>().map(|t| t.as_str()) {
+                    scene_hook::scene_hook_insert_components(&name, commands)
+                }
             }),
         });
     }

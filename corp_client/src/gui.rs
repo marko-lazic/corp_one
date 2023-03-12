@@ -1,11 +1,11 @@
 use bevy::app::Plugin;
 
-pub use gui::cursor::CursorInfo;
+pub use gui::cursor_ui::CursorVisibility;
 
-use crate::{App, gui, MetricsPlugin};
-use crate::gui::cursor::CursorPlugin;
+use crate::gui::cursor_ui::CursorPlugin;
+use crate::{gui, App, MetricsPlugin};
 
-mod cursor;
+mod cursor_ui;
 pub mod metrics;
 
 pub struct GuiPlugin;

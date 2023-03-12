@@ -103,8 +103,8 @@ impl MetricsPlugin {
         cursor: Res<Cursor>,
         mut screen_text: Query<&mut Text, With<MouseScreenPositionText>>,
     ) {
-        let cs_x = &cursor.screen.x;
-        let cs_y = &cursor.screen.y;
+        let cs_x = &cursor.screen_ui.x;
+        let cs_y = &cursor.screen_ui.y;
         for mut text in screen_text.iter_mut() {
             text.sections[0].value = format!("MS Screen {:.0} {:.0}", cs_x, cs_y);
         }

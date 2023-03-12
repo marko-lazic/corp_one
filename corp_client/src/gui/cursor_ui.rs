@@ -1,23 +1,24 @@
 use bevy::app::Plugin;
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 
 use crate::asset::asset_loading::FontAssets;
 use crate::input::Cursor;
-use crate::{App, GameState, UiRect, Visibility};
+use crate::{App, GameState, Visibility};
 
 #[derive(Component)]
-struct CursorText;
+struct UseMarker;
 
 #[derive(Resource, Default)]
-pub struct CursorInfo {
-    pub show_use: bool,
+pub struct CursorVisibility {
+    pub visible: bool,
 }
 
 pub struct CursorPlugin;
 
 impl Plugin for CursorPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<CursorInfo>();
+        app.init_resource::<CursorVisibility>();
         app.add_system(Self::setup.in_schedule(OnEnter(GameState::LoadColony)));
         app.add_system(Self::cursor_text_tooltip.in_set(OnUpdate(GameState::Playing)));
     }
@@ -31,31 +32,36 @@ impl CursorPlugin {
             color: Color::WHITE,
         };
 
-        commands
-            .spawn(TextBundle {
+        commands.spawn((
+            TextBundle {
                 text: Text::from_section("[E] Use", text_style)
                     .with_alignment(TextAlignment::Center),
-                ..Default::default()
-            })
-            .insert(CursorText);
+                ..default()
+            },
+            UseMarker,
+        ));
     }
 
     fn cursor_text_tooltip(
         cursor: Res<Cursor>,
-        cursor_info: Res<CursorInfo>,
-        mut query: Query<(&mut Style, &mut Visibility), (With<Text>, With<CursorText>)>,
+        cursor_visibility: Res<CursorVisibility>,
+        primary_query: Query<&Window, With<PrimaryWindow>>,
+        mut query: Query<(&mut Style, &mut Visibility), (With<Text>, With<UseMarker>)>,
     ) {
-        if cursor_info.show_use {
-            let mouse_screen_x = cursor.screen.x;
-            let mouse_screen_y = cursor.screen.y;
-            let result = query.get_single_mut();
-            if let Ok((mut style, mut visibility)) = result {
+        if cursor_visibility.visible {
+            for (mut style, mut visibility) in &mut query {
+                let Ok(primary) = primary_query.get_single() else {
+                    return;
+                };
                 *visibility = Visibility::Visible;
+                // flip the height to accommodate y going from top to bottom in UI
+                let text_top = (primary.resolution.height() - cursor.screen_ui.y) + 15.0;
+                let text_left = cursor.screen_ui.x + 20.0;
                 style.position = UiRect {
-                    top: Val::Px(-mouse_screen_y + 20.0),
-                    left: Val::Px(mouse_screen_x + 15.0),
+                    top: Val::Px(text_top),
+                    left: Val::Px(text_left),
                     ..Default::default()
-                }
+                };
             }
         } else {
             let result = query.get_single_mut();

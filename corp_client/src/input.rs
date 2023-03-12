@@ -1,5 +1,6 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RaycastMethod, RaycastSource, RaycastSystem};
 use leafwing_input_manager::action_state::ActionState;
 use leafwing_input_manager::input_map::InputMap;
@@ -28,7 +29,7 @@ pub enum OrientationMode {
 
 #[derive(Resource, Default)]
 pub struct Cursor {
-    pub screen: Vec2,
+    pub screen_ui: Vec2,
     pub world: Vec3,
 }
 
@@ -81,8 +82,11 @@ impl Plugin for InputControlPlugin {
                 .in_set(InputSystemSet)
                 .in_set(OnUpdate(GameState::Playing)),
         );
-        app.add_system(
-            Self::update_raycast_with_cursor
+        app.add_systems(
+            (
+                Self::update_raycast_with_cursor,
+                Self::update_screen_cursor_position,
+            )
                 .before(RaycastSystem::BuildRays::<Ground>)
                 .in_base_set(CoreSet::First),
         );
@@ -183,6 +187,21 @@ impl InputControlPlugin {
         }
     }
 
+    fn update_screen_cursor_position(
+        primary_query: Query<&Window, With<PrimaryWindow>>,
+        mut cursor: ResMut<Cursor>,
+    ) {
+        let Ok(primary) = primary_query.get_single() else {
+            return;
+        };
+        if let Some(position) = primary.cursor_position() {
+            cursor.screen_ui.x = position.x;
+            cursor.screen_ui.y = position.y;
+        } else {
+            warn!("Unable to find cursor position");
+        }
+    }
+
     fn kill(
         action_state: Res<ActionState<CorpAction>>,
         mut healths: Query<&mut Health, With<Player>>,
@@ -202,11 +221,14 @@ impl InputControlPlugin {
     ) {
         if action_state.just_pressed(CorpAction::Use) {
             if let UseEntity::Barrier(entity) = game.use_entity {
-                let access = barrier_access_query.get(entity).unwrap();
-                for mut barrier in barriers_query.iter_mut() {
-                    if barrier.name == access.barrier_field_name {
-                        barrier.open = true;
+                if let Ok(access) = barrier_access_query.get(entity) {
+                    for mut barrier in barriers_query.iter_mut() {
+                        if barrier.name == access.barrier_field_name {
+                            barrier.open = true;
+                        }
                     }
+                } else {
+                    info!("Unimplemented");
                 }
             }
         }

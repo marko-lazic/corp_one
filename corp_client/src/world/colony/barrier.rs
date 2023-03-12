@@ -4,7 +4,7 @@ use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy_mod_picking::{HoverEvent, PickingEvent};
 
-use crate::gui::CursorInfo;
+use crate::gui::CursorVisibility;
 use crate::{App, Game, GameState, Timer, UseEntity};
 
 #[derive(Component, Reflect, Default, Debug)]
@@ -81,18 +81,18 @@ impl BarrierPlugin {
 
     pub fn pick_barrier(
         mut events: EventReader<PickingEvent>,
-        mut cursor_info: ResMut<CursorInfo>,
+        mut cursor_info: ResMut<CursorVisibility>,
         mut game: ResMut<Game>,
     ) {
         for event in events.iter() {
             match event {
                 PickingEvent::Hover(hover_event) => match hover_event {
                     HoverEvent::JustEntered(entity) => {
-                        cursor_info.show_use = true;
+                        cursor_info.visible = true;
                         game.use_entity = UseEntity::Barrier(entity.clone());
                     }
                     HoverEvent::JustLeft(_) => {
-                        cursor_info.show_use = false;
+                        cursor_info.visible = false;
                         game.use_entity = UseEntity::None;
                     }
                 },
