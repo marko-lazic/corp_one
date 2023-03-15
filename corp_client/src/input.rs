@@ -197,8 +197,6 @@ impl InputControlPlugin {
         if let Some(position) = primary.cursor_position() {
             cursor.screen_ui.x = position.x;
             cursor.screen_ui.y = position.y;
-        } else {
-            warn!("Unable to find cursor position");
         }
     }
 
