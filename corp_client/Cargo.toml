@@ -68,4 +68,4 @@ path = "examples/transform/clamp.rs"
 
 [[example]]
 name = "state_door"
-path = "examples/state/state_door.rs"
+path = "examples/state/door.rs"
