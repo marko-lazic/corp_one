@@ -10,7 +10,7 @@ struct Game {
 fn main() {
     App::new()
         .init_resource::<Game>()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .add_plugins(DefaultPlugins)
         .insert_resource(AmbientLight {
             color: Color::WHITE,
