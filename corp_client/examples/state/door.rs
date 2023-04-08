@@ -2,7 +2,10 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
+use crate::interactive::*;
+
 mod test_utils;
+mod interactive;
 
 fn main() {
     App::new()
@@ -15,6 +18,8 @@ fn main() {
         .add_startup_system(setup)
         .add_system(check_input)
         .add_system(print_door_state)
+        .add_system(door_cooldown_system)
+        .add_system(interaction_system)
         .run();
 }
 
@@ -104,6 +109,13 @@ impl Default for Door {
     }
 }
 
+impl Interactive for Door {
+    fn interact(&mut self, entity: Entity) {
+        info!("Interacting with door {:#?}", entity);
+        self.toggle();
+    }
+}
+
 #[derive(Component, Default, Debug, Eq, PartialEq)]
 enum DoorState {
     Open,
@@ -111,29 +123,8 @@ enum DoorState {
     Closed,
 }
 
-#[derive(Component, Default)]
-struct Player {
-    interact: Option<Entity>,
-}
-
-impl Player {
-    pub fn interact(&mut self, entity: Entity) {
-        self.interact = Some(entity);
-    }
-}
-
-fn player_door_interaction_system(
-    player_query: Query<&Player>,
-    mut door_query: Query<&mut Door>,
-) {
-    for player in &player_query {
-        if let Some(door_entity) = player.interact {
-            if let Ok(mut door) = door_query.get_mut(door_entity) {
-                door.toggle();
-            }
-        }
-    }
-}
+#[derive(Component)]
+struct Player;
 
 fn door_cooldown_system(mut door_query: Query<&mut Door>, time: Res<Time>) {
     for mut door in &mut door_query {
@@ -154,6 +145,7 @@ mod tests {
     use std::time::Duration;
 
     use bevy::prelude::*;
+    use bevy_trait_query::RegisterExt;
 
     use crate::*;
     use crate::test_utils::TestUtils;
@@ -164,35 +156,6 @@ mod tests {
         let (mut app, door_entity, _) = setup();
 
         // when
-        app.update();
-
-        // then
-        let result = app.get::<Door>(door_entity);
-        assert_eq!(result.state, DoorState::Closed);
-    }
-
-    #[test]
-    fn player_open_door() {
-        // given
-        let (mut app, door_entity, player_entity) = setup();
-
-        // when
-        app.get_mut::<Player>(player_entity).interact(door_entity);
-        app.update();
-
-        // then
-        let result = app.get::<Door>(door_entity);
-        assert_eq!(result.state, DoorState::Open);
-    }
-
-    #[test]
-    fn player_close_open_door() {
-        // given
-        let (mut app, door_entity, player_entity) = setup();
-        app.get_mut::<Door>(door_entity).state = DoorState::Open;
-
-        // when
-        app.get_mut::<Player>(player_entity).interact(door_entity);
         app.update();
 
         // then
@@ -214,15 +177,46 @@ mod tests {
         assert_eq!(result.state, DoorState::Closed);
     }
 
+
+    #[test]
+    fn player_open_door() {
+        // given
+        let (mut app, door_entity, player_entity) = setup();
+
+        // when
+        app.get_mut::<Door>(door_entity).interact(player_entity);
+        app.update();
+
+        // then
+        let result = app.get::<Door>(door_entity);
+        assert_eq!(result.state, DoorState::Open);
+    }
+
+    #[test]
+    fn player_close_open_door() {
+        // given
+        let (mut app, door_entity, player_entity) = setup();
+        app.get_mut::<Door>(door_entity).state = DoorState::Open;
+
+        // when
+        app.get_mut::<Door>(door_entity).interact(player_entity);
+        app.update();
+
+        // then
+        let result = app.get::<Door>(door_entity);
+        assert_eq!(result.state, DoorState::Closed);
+    }
+
+
     #[test]
     fn player_open_door_wait_3_seconds_and_close_door() {
         // given
         let (mut app, door_entity, player_entity) = setup();
 
         // when
-        app.get_mut::<Player>(player_entity).interact(door_entity);
+        app.get_mut::<Door>(door_entity).interact(player_entity);
         app.update_after(Duration::from_secs_f32(3.0));
-        app.get_mut::<Player>(player_entity).interact(door_entity);
+        app.get_mut::<Door>(door_entity).interact(player_entity);
         app.update();
 
         // then
@@ -236,9 +230,9 @@ mod tests {
         let (mut app, door_entity, player_entity) = setup();
 
         // when
-        app.get_mut::<Player>(player_entity).interact(door_entity);
+        app.get_mut::<Door>(door_entity).interact(player_entity);
         app.update_after(Duration::from_secs_f32(0.5));
-        app.get_mut::<Player>(player_entity).interact(door_entity);
+        app.get_mut::<Door>(door_entity).interact(player_entity);
         app.update_after(Duration::from_secs_f32(0.1));
 
         // then
@@ -250,9 +244,10 @@ mod tests {
     fn setup() -> (App, Entity, Entity) {
         let mut app = App::new();
         app.init_time();
-        app.add_systems((door_cooldown_system, player_door_interaction_system));
+        app.add_systems((door_cooldown_system, interaction_system));
+        app.register_component_as::<dyn Interactive, Door>();
         let door_entity = app.world.spawn(Door::default()).id();
-        let player_entity = app.world.spawn(Player::default()).id();
+        let player_entity = app.world.spawn(Player).id();
         (app, door_entity, player_entity)
     }
 }

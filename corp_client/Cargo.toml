@@ -21,7 +21,7 @@ bevy_kira_audio = "0.15.0"
 bevy_common_assets = { version = "0.6.0", features = ["ron"] }
 bevy_rapier3d = { version = "0.21.0", features = ["simd-stable"] }
 bevy-scene-hook = "6.0.0"
-bevy-trait-query = "0.2.0"
+bevy-trait-query = "0.2.1"
 glam = "0.23.0"
 serde = "1.0.145"
 rand = "0.8.5"
