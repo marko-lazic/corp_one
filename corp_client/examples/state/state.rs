@@ -10,6 +10,7 @@ mod backpack;
 mod player;
 mod inventory;
 mod item;
+mod faction;
 
 fn main() {
     App::new()

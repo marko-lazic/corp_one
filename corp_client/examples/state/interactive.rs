@@ -1,5 +1,12 @@
 use bevy::prelude::*;
 
+use crate::door::DoorInteractionEvent;
+
+pub enum InteractionType {
+    Door,
+    Backpack,
+}
+
 #[derive(Component, Default)]
 pub struct Interactor {
     pub interacted: bool,
@@ -15,21 +22,30 @@ impl Interactor {
 
 #[bevy_trait_query::queryable]
 pub trait Interactive {
-    fn interact(&mut self, entity: Entity);
+    fn interaction_type(&self) -> InteractionType;
 }
 
-// Define a system that iterates over entities with the Interactive component and calls their
-// InteractiveHandler implementation when the entity is interacted with.
 pub fn interaction_system(
     mut interactor_query: Query<(Entity, &mut Interactor)>,
-    mut interactive_query: Query<&mut dyn Interactive>,
+    interactive_query: Query<&mut dyn Interactive>,
+    mut door_interaction_event_writer: EventWriter<DoorInteractionEvent>,
 ) {
     for (the_interactor, mut interactor_component) in &mut interactor_query {
         if interactor_component.interacted {
             if let Some(target_entity) = interactor_component.target_entity {
-                if let Ok(mut interactives) = interactive_query.get_mut(target_entity) {
-                    for mut interactive in &mut interactives {
-                        interactive.interact(the_interactor);
+                if let Ok(interactives) = interactive_query.get(target_entity) {
+                    for interactive in &interactives {
+                        match interactive.interaction_type() {
+                            InteractionType::Door => {
+                                door_interaction_event_writer.send(DoorInteractionEvent {
+                                    door_entity: target_entity,
+                                    interactor_entity: the_interactor,
+                                });
+                            }
+                            InteractionType::Backpack => {
+                                info!("Interacting with backpack {:#?}", target_entity);
+                            }
+                        }
                     }
                 }
             }

@@ -2,7 +2,20 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::interactive::*;
+use crate::faction::{MemberOf, OwnedBy};
+use crate::interactive::{InteractionType, Interactive};
+use crate::inventory::Inventory;
+use crate::item::Item;
+
+pub struct DoorInteractionEvent {
+    pub door_entity: Entity,
+    pub interactor_entity: Entity,
+}
+
+pub struct DoorHackEvent {
+    pub door_entity: Entity,
+    pub interactor_entity: Entity,
+}
 
 #[derive(Component, Default, Debug, Eq, PartialEq)]
 pub enum DoorState {
@@ -55,9 +68,8 @@ impl Default for Door {
 }
 
 impl Interactive for Door {
-    fn interact(&mut self, entity: Entity) {
-        info!("Interacting with door {:#?}", entity);
-        self.toggle();
+    fn interaction_type(&self) -> InteractionType {
+        InteractionType::Door
     }
 }
 
@@ -75,6 +87,51 @@ pub fn door_cooldown_system(mut door_query: Query<&mut Door>, time: Res<Time>) {
     }
 }
 
+pub fn door_interaction_event_system(
+    mut door_interaction_event_reader: EventReader<DoorInteractionEvent>,
+    mut door_hack_event_writer: EventWriter<DoorHackEvent>,
+    interactor_query: Query<&MemberOf>,
+    mut door_query: Query<(&mut Door, &OwnedBy)>,
+) {
+    for event in door_interaction_event_reader.iter() {
+        if let Ok(member_of) = interactor_query.get(event.interactor_entity) {
+            if let Ok((mut door, owned_by)) = door_query.get_mut(event.door_entity) {
+                if member_of.faction == owned_by.faction {
+                    door.toggle();
+                } else {
+                    door_hack_event_writer.send(DoorHackEvent {
+                        door_entity: event.door_entity,
+                        interactor_entity: event.interactor_entity,
+                    });
+                }
+            }
+        }
+    }
+}
+
+pub fn door_hack_event_system(
+    mut door_hack_event_reader: EventReader<DoorHackEvent>,
+    mut door_query: Query<&mut Door>,
+    mut inventory_query: Query<&mut Inventory>,
+    item_query: Query<(Entity, &Item)>,
+    mut commands: Commands,
+) {
+    for event in door_hack_event_reader.iter() {
+        if let Ok(mut door) = door_query.get_mut(event.door_entity) {
+            if let Ok(mut inventory) = inventory_query.get_mut(event.interactor_entity) {
+                if let Some((hacking_tool_entity, _hacking_tool_item)) = item_query
+                    .iter_many(&inventory.items)
+                    .find(|item| item.1.name == "Hacking tool")
+                {
+                    inventory.remove_item(hacking_tool_entity);
+                    commands.entity(hacking_tool_entity).despawn_recursive();
+                    door.toggle();
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
@@ -82,8 +139,14 @@ mod tests {
     use bevy::prelude::*;
     use bevy_trait_query::RegisterExt;
 
-    use crate::door::{Door, door_cooldown_system, DoorState};
-    use crate::interactive::{interaction_system, Interactive};
+    use crate::door::{
+        door_cooldown_system, door_hack_event_system, door_interaction_event_system, Door,
+        DoorHackEvent, DoorInteractionEvent, DoorState,
+    };
+    use crate::faction::{Faction, MemberOf, OwnedBy};
+    use crate::interactive::{interaction_system, Interactive, Interactor};
+    use crate::inventory::Inventory;
+    use crate::item::Item;
     use crate::player::Player;
     use crate::test_utils::TestUtils;
 
@@ -114,14 +177,14 @@ mod tests {
         assert_eq!(result.state, DoorState::Closed);
     }
 
-
     #[test]
     fn player_open_door() {
         // given
         let (mut app, door_entity, player_entity) = setup();
 
         // when
-        app.get_mut::<Door>(door_entity).interact(player_entity);
+        app.get_mut::<Interactor>(player_entity)
+            .interact(door_entity);
         app.update();
 
         // then
@@ -136,7 +199,8 @@ mod tests {
         app.get_mut::<Door>(door_entity).state = DoorState::Open;
 
         // when
-        app.get_mut::<Door>(door_entity).interact(player_entity);
+        app.get_mut::<Interactor>(player_entity)
+            .interact(door_entity);
         app.update();
 
         // then
@@ -144,16 +208,17 @@ mod tests {
         assert_eq!(result.state, DoorState::Closed);
     }
 
-
     #[test]
     fn player_open_door_wait_3_seconds_and_close_door() {
         // given
         let (mut app, door_entity, player_entity) = setup();
 
         // when
-        app.get_mut::<Door>(door_entity).interact(player_entity);
+        app.get_mut::<Interactor>(player_entity)
+            .interact(door_entity);
         app.update_after(Duration::from_secs_f32(3.0));
-        app.get_mut::<Door>(door_entity).interact(player_entity);
+        app.get_mut::<Interactor>(player_entity)
+            .interact(door_entity);
         app.update();
 
         // then
@@ -167,9 +232,11 @@ mod tests {
         let (mut app, door_entity, player_entity) = setup();
 
         // when
-        app.get_mut::<Door>(door_entity).interact(player_entity);
+        app.get_mut::<Interactor>(player_entity)
+            .interact(door_entity);
         app.update_after(Duration::from_secs_f32(0.5));
-        app.get_mut::<Door>(door_entity).interact(player_entity);
+        app.get_mut::<Interactor>(player_entity)
+            .interact(door_entity);
         app.update_after(Duration::from_secs_f32(0.1));
 
         // then
@@ -181,10 +248,32 @@ mod tests {
     fn setup() -> (App, Entity, Entity) {
         let mut app = App::new();
         app.init_time();
-        app.add_systems((door_cooldown_system, interaction_system));
+        app.add_event::<DoorInteractionEvent>();
+        app.add_event::<DoorHackEvent>();
         app.register_component_as::<dyn Interactive, Door>();
-        let door_entity = app.world.spawn(Door::default()).id();
-        let player_entity = app.world.spawn(Player).id();
+        app.add_systems(
+            (
+                door_cooldown_system,
+                interaction_system,
+                door_interaction_event_system,
+                door_hack_event_system,
+            )
+                .chain(),
+        );
+        let door_entity = app
+            .world
+            .spawn((Door::default(), OwnedBy::new(Faction::EC)))
+            .id();
+        let item_entity = app.world.spawn(Item::new("Hacking tool".to_string())).id();
+        let player_entity = app
+            .world
+            .spawn((
+                Player,
+                Interactor::default(),
+                Inventory::new(vec![item_entity]),
+                MemberOf::new(Faction::EC),
+            ))
+            .id();
         (app, door_entity, player_entity)
     }
 }
