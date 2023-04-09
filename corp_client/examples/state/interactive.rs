@@ -6,6 +6,13 @@ pub struct Interactor {
     pub target_entity: Option<Entity>,
 }
 
+impl Interactor {
+    pub fn interact(&mut self, target_entity: Entity) {
+        self.interacted = true;
+        self.target_entity = Some(target_entity);
+    }
+}
+
 #[bevy_trait_query::queryable]
 pub trait Interactive {
     fn interact(&mut self, entity: Entity);
@@ -17,7 +24,7 @@ pub fn interaction_system(
     mut interactor_query: Query<(Entity, &mut Interactor)>,
     mut interactive_query: Query<&mut dyn Interactive>,
 ) {
-    for (the_interactor, mut interactor_component) in interactor_query.iter_mut() {
+    for (the_interactor, mut interactor_component) in &mut interactor_query {
         if interactor_component.interacted {
             if let Some(target_entity) = interactor_component.target_entity {
                 if let Ok(mut interactives) = interactive_query.get_mut(target_entity) {

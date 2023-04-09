@@ -6,7 +6,10 @@ use crate::interactive::interaction_system;
 mod test_utils;
 mod interactive;
 mod door;
+mod backpack;
 mod player;
+mod inventory;
+mod item;
 
 fn main() {
     App::new()
