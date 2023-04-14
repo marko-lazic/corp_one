@@ -1,72 +1,74 @@
 use bevy::prelude::*;
 
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-#[allow(dead_code)]
+#[derive(Eq, PartialEq, Copy, Clone)]
 pub enum Faction {
     EC,
     CMG,
     VI,
 }
 
-#[derive(Component, Eq, PartialEq, Hash, Clone, Copy, Debug)]
+#[derive(Default, Eq, PartialEq, Ord, PartialOrd)]
+pub enum Rank {
+    #[default]
+    R0,
+    R1,
+    R2,
+    R3,
+    R4,
+    R5,
+    R6,
+    R7,
+}
+
+#[derive(Component, Eq, PartialEq)]
 pub struct MemberOf {
     pub faction: Faction,
+    pub rank: Rank,
 }
 
-impl MemberOf {
-    pub fn new(faction_type: Faction) -> Self {
-        Self {
-            faction: faction_type,
-        }
-    }
-}
-
-pub enum FactionControl {
+pub enum ControlType {
     Permanent(Faction),
-    Temporary(Faction, Timer),
+    Hacked(Faction, Timer),
 }
 
-impl FactionControl {
-    pub fn faction(&self) -> Faction {
+impl ControlType {
+    pub fn faction(&self) -> &Faction {
         match self {
-            Self::Permanent(faction) => *faction,
-            Self::Temporary(faction, _) => *faction,
+            Self::Permanent(faction) => faction,
+            Self::Hacked(faction, _) => faction,
         }
     }
 }
 
 #[derive(Component, Default)]
-pub struct FactionOwnershipRegistry {
-    pub factions: Vec<FactionControl>,
+pub struct ControlRegistry {
+    pub factions: Vec<ControlType>,
 }
 
-impl FactionOwnershipRegistry {
-    pub fn new_permanent(faction: Faction) -> Self {
-        Self {
-            factions: vec![FactionControl::Permanent(faction)],
-        }
+impl ControlRegistry {
+    pub fn add_permanent(&mut self, faction: Faction) {
+        self.factions.push(ControlType::Permanent(faction));
     }
 
     pub fn add_temporary(&mut self, faction: Faction, timer: Timer) {
-        self.factions
-            .push(FactionControl::Temporary(faction, timer));
+        self.factions.push(ControlType::Hacked(faction, timer));
     }
 
-    pub fn is_member(&self, faction: Faction) -> bool {
-        self.factions.iter().any(|f| f.faction() == faction)
+    pub fn get_control_type(&self, faction: &Faction) -> Option<&ControlType> {
+        self.factions.iter().find(|f| f.faction() == faction)
     }
 
     pub fn process_temporary_factions(&mut self, time: &Time) {
         // Update temporary factions
         for faction in self.factions.iter_mut() {
-            if let FactionControl::Temporary(_, timer) = faction {
+            if let ControlType::Hacked(_, timer) = faction {
                 timer.tick(time.delta());
             }
         }
 
         // Remove finished temporary factions
         self.factions.retain(|faction| {
-            if let FactionControl::Temporary(_, timer) = faction {
+            if let ControlType::Hacked(_, timer) = faction {
                 !timer.finished()
             } else {
                 true
@@ -76,7 +78,7 @@ impl FactionOwnershipRegistry {
 }
 
 pub fn process_temporary_faction_ownership_timers_system(
-    mut query: Query<&mut FactionOwnershipRegistry>,
+    mut query: Query<&mut ControlRegistry>,
     time: Res<Time>,
 ) {
     for mut faction_ownership_registry in &mut query {
