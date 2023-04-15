@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use crate::faction::{ControlRegistry, ControlType, MemberOf, Rank};
 use crate::interactive::{InteractionType, Interactive};
 use crate::inventory::Inventory;
-use crate::item::Item;
+use crate::item::HackingTool;
 
 const FIVE_MINUTES: f32 = 5.0 * 60.0;
 
@@ -158,7 +158,7 @@ pub fn door_hack_event_system(
     mut door_hack_event_reader: EventReader<DoorHackEvent>,
     mut door_query: Query<(&mut Door, &mut ControlRegistry)>,
     mut interactor_query: Query<(&mut Inventory, &MemberOf)>,
-    item_query: Query<(Entity, &Item)>,
+    hacking_tool_query: Query<&HackingTool>,
     mut commands: Commands,
 ) {
     for event in door_hack_event_reader.iter() {
@@ -168,9 +168,11 @@ pub fn door_hack_event_system(
             if let Ok((mut inventory, member_of)) =
                 interactor_query.get_mut(event.interactor_entity)
             {
-                if let Some((hacking_tool_entity, _hacking_tool_item)) = item_query
-                    .iter_many(&inventory.items)
-                    .find(|item| item.1.name == "Hacking tool")
+                if let Some(hacking_tool_entity) = inventory
+                    .items
+                    .iter()
+                    .find(|&&item_entity| hacking_tool_query.get(item_entity).is_ok())
+                    .copied()
                 {
                     inventory.remove_item(hacking_tool_entity);
                     commands.entity(hacking_tool_entity).despawn_recursive();
@@ -201,7 +203,7 @@ mod tests {
     };
     use crate::interactive::{interaction_system, Interactive, Interactor};
     use crate::inventory::Inventory;
-    use crate::item::Item;
+    use crate::item::HackingToolBundle;
     use crate::player::Player;
     use crate::test_utils::TestUtils;
 
@@ -330,6 +332,26 @@ mod tests {
         let result = app.get::<Door>(door_entity);
         assert_eq!(result.state, DoorState::Open);
         assert_eq!(app.get::<Inventory>(player_entity).items.len(), 0);
+    }
+
+    #[test]
+    fn cmg_player_loses_hacking_tool_and_vi_keeps_it() {
+        // given
+        let mut app = setup();
+        let ht_1 = setup_hacking_tool(&mut app);
+        let ht_2 = setup_hacking_tool(&mut app);
+        let vi_player_entity = setup_player(&mut app, vec![ht_1], Faction::VI, Rank::R0);
+        let cmg_player_entity = setup_player(&mut app, vec![ht_2], Faction::CMG, Rank::R0);
+        let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
+
+        // when
+        app.get_mut::<Interactor>(cmg_player_entity)
+            .interact(door_entity);
+        app.update();
+
+        // then
+        assert_eq!(app.get::<Inventory>(cmg_player_entity).items.len(), 0);
+        assert_eq!(app.get::<Inventory>(vi_player_entity).items.len(), 1);
     }
 
     #[test]
@@ -488,7 +510,7 @@ mod tests {
     }
 
     fn setup_hacking_tool(app: &mut App) -> Entity {
-        let item_entity = app.world.spawn(Item::new("Hacking tool".to_string())).id();
+        let item_entity = app.world.spawn(HackingToolBundle::default()).id();
         item_entity
     }
 
