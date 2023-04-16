@@ -8,6 +8,7 @@ pub trait TestUtils {
     fn update_after(&mut self, duration: Duration) -> &mut Self;
     fn get<T: Component>(&self, entity: Entity) -> &T;
     fn get_mut<T: Component>(&mut self, entity: Entity) -> Mut<T>;
+    fn has_component<T: Component>(&self, entity: Entity) -> bool;
 }
 
 impl TestUtils for App {
@@ -28,10 +29,26 @@ impl TestUtils for App {
     }
 
     fn get<T: Component>(&self, entity: Entity) -> &T {
-        self.world.get::<T>(entity).unwrap()
+        self.world.get::<T>(entity).expect(&format!(
+            "Component {} not found on entity {}",
+            std::any::type_name::<T>().to_string(),
+            entity.index()
+        ))
     }
 
     fn get_mut<T: Component>(&mut self, entity: Entity) -> Mut<T> {
-        self.world.get_mut::<T>(entity).unwrap()
+        self.world.get_mut::<T>(entity).expect(&format!(
+            "Component {} not found on entity {}",
+            std::any::type_name::<T>().to_string(),
+            entity.index()
+        ))
+    }
+
+    fn has_component<T: Component>(&self, entity: Entity) -> bool {
+        if let Some(_) = self.world.get::<T>(entity) {
+            true
+        } else {
+            false
+        }
     }
 }

@@ -203,7 +203,7 @@ mod tests {
     };
     use crate::interactive::{interaction_system, Interactive, Interactor};
     use crate::inventory::Inventory;
-    use crate::item::HackingToolBundle;
+    use crate::item::{HackingTool, HackingToolBundle};
     use crate::player::Player;
     use crate::test_utils::TestUtils;
 
@@ -332,6 +332,7 @@ mod tests {
         let result = app.get::<Door>(door_entity);
         assert_eq!(result.state, DoorState::Open);
         assert_eq!(app.get::<Inventory>(player_entity).items.len(), 0);
+        assert!(!app.has_component::<HackingTool>(hacking_tool_entity));
     }
 
     #[test]

@@ -27,14 +27,16 @@ impl Backpack {
 // A player can chose to take one item or to take all items
 // either system should do the action and remove sparse set component
 pub fn take_all_system(
+    mut commands: Commands,
     mut interactor_query: Query<(&mut Interactor, &mut Inventory)>,
     mut query: Query<&mut Backpack>,
 ) {
-    for (mut interactor_component, mut inventory) in interactor_query.iter_mut() {
+    for (mut interactor_component, mut inventory) in &mut interactor_query {
         if interactor_component.interacted {
             if let Some(target_entity) = interactor_component.target_entity {
                 if let Ok(mut backpack) = query.get_mut(target_entity) {
                     inventory.add_all(backpack.take_all());
+                    commands.entity(target_entity).despawn_recursive();
                 }
             }
             interactor_component.interacted = false;
@@ -42,20 +44,31 @@ pub fn take_all_system(
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use crate::inventory::Inventory;
-    use crate::item::Item;
+    use crate::item::{HackingTool, HackingToolBundle};
     use crate::player::Player;
     use crate::test_utils::TestUtils;
 
     use super::*;
 
     #[test]
+    fn one_item_is_in_backpack() {
+        // given
+        let (mut app, backpack_entity, _, _) = setup();
+
+        // when
+        app.update();
+
+        // then
+        assert_eq!(app.get::<Backpack>(backpack_entity).items().len(), 1);
+    }
+
+    #[test]
     fn player_take_all_items_from_backpack() {
         // given
-        let (mut app, backpack_entity, player_entity) = setup();
+        let (mut app, backpack_entity, player_entity, item_entity) = setup();
         let mut interactor = app.get_mut::<Interactor>(player_entity);
 
         // when
@@ -63,17 +76,21 @@ mod tests {
         app.update();
 
         // then
-        assert_eq!(app.get::<Backpack>(backpack_entity).items().len(), 0);
+        assert!(!app.has_component::<Backpack>(backpack_entity));
+        assert!(app.has_component::<HackingTool>(item_entity));
         assert_eq!(app.get::<Inventory>(player_entity).items().len(), 1);
     }
 
-    fn setup() -> (App, Entity, Entity) {
+    fn setup() -> (App, Entity, Entity, Entity) {
         let mut app = App::new();
         app.init_time();
         app.add_system(take_all_system);
-        let item_entity = app.world.spawn(Item::new("Hacking tool".to_string())).id();
+        let item_entity = app.world.spawn(HackingToolBundle::default()).id();
         let backpack_entity = app.world.spawn(Backpack::new(vec![item_entity])).id();
-        let player_entity = app.world.spawn((Player, Interactor::default(), Inventory::default())).id();
-        (app, backpack_entity, player_entity)
+        let player_entity = app
+            .world
+            .spawn((Player, Interactor::default(), Inventory::default()))
+            .id();
+        (app, backpack_entity, player_entity, item_entity)
     }
 }
