@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::interactive::Interactor;
+use crate::interactive::{InteractionType, Interactive, Interactor};
 use crate::inventory::Inventory;
 
 #[derive(Component)]
@@ -22,30 +22,39 @@ impl Backpack {
     }
 }
 
-// On interaction we should give player a sparse set component
-// Which is a control over the backpack
-// A player can chose to take one item or to take all items
-// either system should do the action and remove sparse set component
-pub fn take_all_system(
+impl Interactive for Backpack {
+    fn interaction_type(&self) -> InteractionType {
+        InteractionType::Backpack
+    }
+}
+
+pub struct BackpackInteractionEvent {
+    pub backpack_entity: Entity,
+    pub interactor_entity: Entity,
+}
+
+pub fn backpack_interaction_event_system(
     mut commands: Commands,
-    mut interactor_query: Query<(&mut Interactor, &mut Inventory)>,
-    mut query: Query<&mut Backpack>,
+    mut event_reader: EventReader<BackpackInteractionEvent>,
+    mut inventory_query: Query<&mut Inventory, With<Interactor>>,
+    mut backpack_query: Query<&mut Backpack>,
 ) {
-    for (mut interactor_component, mut inventory) in &mut interactor_query {
-        if interactor_component.interacted {
-            if let Some(target_entity) = interactor_component.target_entity {
-                if let Ok(mut backpack) = query.get_mut(target_entity) {
-                    inventory.add_all(backpack.take_all());
-                    commands.entity(target_entity).despawn_recursive();
-                }
+    for event in &mut event_reader {
+        if let Ok(mut inventory) = inventory_query.get_mut(event.interactor_entity) {
+            if let Ok(mut backpack) = backpack_query.get_mut(event.backpack_entity) {
+                inventory.add_all(backpack.take_all());
+                commands.entity(event.backpack_entity).despawn_recursive();
             }
-            interactor_component.interacted = false;
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use bevy_trait_query::RegisterExt;
+
+    use crate::door::DoorInteractionEvent;
+    use crate::interactive::interaction_system;
     use crate::inventory::Inventory;
     use crate::item::{HackingTool, HackingToolBundle};
     use crate::player::Player;
@@ -84,7 +93,10 @@ mod tests {
     fn setup() -> (App, Entity, Entity, Entity) {
         let mut app = App::new();
         app.init_time();
-        app.add_system(take_all_system);
+        app.add_event::<BackpackInteractionEvent>();
+        app.add_event::<DoorInteractionEvent>();
+        app.register_component_as::<dyn Interactive, Backpack>();
+        app.add_systems((interaction_system, backpack_interaction_event_system).chain());
         let item_entity = app.world.spawn(HackingToolBundle::default()).id();
         let backpack_entity = app.world.spawn(Backpack::new(vec![item_entity])).id();
         let player_entity = app

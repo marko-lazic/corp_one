@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use lazy_static::lazy_static;
 
 use crate::faction::{ControlRegistry, ControlType, MemberOf, Rank};
-use crate::interactive::{InteractionType, Interactive};
+use crate::interactive::{InteractionType, Interactive, Interactor};
 use crate::inventory::Inventory;
 use crate::item::HackingTool;
 
@@ -157,7 +157,7 @@ pub fn door_interaction_event_system(
 pub fn door_hack_event_system(
     mut door_hack_event_reader: EventReader<DoorHackEvent>,
     mut door_query: Query<(&mut Door, &mut ControlRegistry)>,
-    mut interactor_query: Query<(&mut Inventory, &MemberOf)>,
+    mut interactor_query: Query<(&mut Inventory, &MemberOf), With<Interactor>>,
     hacking_tool_query: Query<&HackingTool>,
     mut commands: Commands,
 ) {
@@ -194,6 +194,7 @@ mod tests {
     use bevy::prelude::*;
     use bevy_trait_query::RegisterExt;
 
+    use crate::backpack::BackpackInteractionEvent;
     use crate::door::{
         door_cooldown_system, door_hack_event_system, door_interaction_event_system, Door,
         DoorHackEvent, DoorInteractionEvent, DoorState, Security, FIVE_MINUTES,
@@ -253,6 +254,26 @@ mod tests {
         // then
         let result = app.get::<Door>(door_entity);
         assert_eq!(result.state, DoorState::Open);
+    }
+
+    #[test]
+    fn two_doors_one_open_other_closed() {
+        // given
+        let mut app = setup();
+        let player_entity = setup_player(&mut app, vec![], Faction::EC, Rank::R5);
+        let door_entity_1 = setup_door(&mut app, Faction::EC, Security::Low);
+        let door_entity_2 = setup_door(&mut app, Faction::EC, Security::Low);
+
+        // when
+        app.get_mut::<Interactor>(player_entity)
+            .interact(door_entity_1);
+        app.update();
+
+        // then
+        let result_1 = app.get::<Door>(door_entity_1);
+        assert_eq!(result_1.state, DoorState::Open);
+        let result_2 = app.get::<Door>(door_entity_2);
+        assert_eq!(result_2.state, DoorState::Closed);
     }
 
     #[test]
@@ -482,6 +503,7 @@ mod tests {
         let mut app = App::new();
         app.init_time();
         app.add_event::<DoorInteractionEvent>();
+        app.add_event::<BackpackInteractionEvent>();
         app.add_event::<DoorHackEvent>();
         app.register_component_as::<dyn Interactive, Door>();
         app.add_systems(

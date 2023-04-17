@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::backpack::BackpackInteractionEvent;
 use crate::door::DoorInteractionEvent;
 
 pub enum InteractionType {
@@ -29,6 +30,7 @@ pub fn interaction_system(
     mut interactor_query: Query<(Entity, &mut Interactor)>,
     interactive_query: Query<&mut dyn Interactive>,
     mut door_interaction_event_writer: EventWriter<DoorInteractionEvent>,
+    mut backpack_interaction_event_writer: EventWriter<BackpackInteractionEvent>,
 ) {
     for (the_interactor, mut interactor_component) in &mut interactor_query {
         if interactor_component.interacted {
@@ -43,7 +45,10 @@ pub fn interaction_system(
                                 });
                             }
                             InteractionType::Backpack => {
-                                info!("Interacting with backpack {:#?}", target_entity);
+                                backpack_interaction_event_writer.send(BackpackInteractionEvent {
+                                    backpack_entity: target_entity,
+                                    interactor_entity: the_interactor,
+                                });
                             }
                         }
                     }
