@@ -47,16 +47,16 @@ impl PlayerDirection {
     pub fn new_direction(&self) -> Vec3 {
         let mut direction = Vec3::ZERO;
         if self.forward {
-            direction = direction + Vec3::Z;
+            direction += Vec3::Z;
         }
         if self.backward {
-            direction = direction - Vec3::Z;
+            direction -= Vec3::Z;
         }
         if self.left {
-            direction = direction + Vec3::X;
+            direction += Vec3::X;
         }
         if self.right {
-            direction = direction - Vec3::X;
+            direction -= Vec3::X;
         }
         direction.normalize_or_zero()
     }

@@ -95,12 +95,12 @@ impl ColonyPlugin {
 
         commands.spawn(HookedSceneBundle {
             scene: SceneBundle {
-                scene: colony_scene.clone(),
+                scene: colony_scene,
                 ..default()
             },
             hook: SceneHook::new(|entity, commands| {
                 if let Some(name) = entity.get::<Name>().map(|t| t.as_str()) {
-                    scene_hook::scene_hook_insert_components(&name, commands)
+                    scene_hook::scene_hook_insert_components(name, commands)
                 }
             }),
         });
@@ -148,7 +148,7 @@ impl ColonyPlugin {
                 commands
                     .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Plane {
-                            size: zone_asset.size.clone(),
+                            size: zone_asset.size,
                             ..default()
                         })),
                         transform: Transform::from_translation(zone_asset.position),
@@ -158,7 +158,7 @@ impl ColonyPlugin {
                     .insert((
                         Sensor,
                         Collider::cuboid(0.5, 1.0, 0.5),
-                        Zone::from(zone_asset.clone()),
+                        Zone::from(*zone_asset),
                         physics::CollideGroups::zone(),
                     ));
             }
@@ -166,11 +166,7 @@ impl ColonyPlugin {
     }
 
     fn is_colony_loaded(vortex_nodes: Query<Entity, With<VortexNode>>) -> bool {
-        if vortex_nodes.iter().count() > 0 {
-            true
-        } else {
-            false
-        }
+        vortex_nodes.iter().count() > 0
     }
 
     fn next_state_spawn_player(mut next_state: ResMut<NextState<GameState>>) {

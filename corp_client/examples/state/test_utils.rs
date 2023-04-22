@@ -29,26 +29,26 @@ impl TestUtils for App {
     }
 
     fn get<T: Component>(&self, entity: Entity) -> &T {
-        self.world.get::<T>(entity).expect(&format!(
-            "Component {} not found on entity {}",
-            std::any::type_name::<T>().to_string(),
-            entity.index()
-        ))
+        self.world.get::<T>(entity).unwrap_or_else(|| {
+            panic!(
+                "Component {} not found on entity {}",
+                std::any::type_name::<T>(),
+                entity.index()
+            )
+        })
     }
 
     fn get_mut<T: Component>(&mut self, entity: Entity) -> Mut<T> {
-        self.world.get_mut::<T>(entity).expect(&format!(
-            "Component {} not found on entity {}",
-            std::any::type_name::<T>().to_string(),
-            entity.index()
-        ))
+        self.world.get_mut::<T>(entity).unwrap_or_else(|| {
+            panic!(
+                "Component {} not found on entity {}",
+                std::any::type_name::<T>(),
+                entity.index()
+            )
+        })
     }
 
     fn has_component<T: Component>(&self, entity: Entity) -> bool {
-        if let Some(_) = self.world.get::<T>(entity) {
-            true
-        } else {
-            false
-        }
+        self.world.get::<T>(entity).is_some()
     }
 }

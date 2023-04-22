@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
+#[derive(Default)]
 pub struct Inventory {
     pub items: Vec<Entity>,
 }
@@ -32,8 +33,4 @@ impl Inventory {
     }
 }
 
-impl Default for Inventory {
-    fn default() -> Self {
-        Self { items: Vec::new() }
-    }
-}
+

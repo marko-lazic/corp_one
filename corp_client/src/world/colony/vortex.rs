@@ -55,7 +55,7 @@ impl Plugin for VortexPlugin {
 
 impl VortexPlugin {
     fn debug_vort_in(mut vortex_events: EventWriter<VortInEvent>, mut run_once: Local<bool>) {
-        if *run_once == false {
+        if !(*run_once) {
             info!("Debug vort in");
             vortex_events.send(VortInEvent::vort(Colony::Iris));
             *run_once = true;
@@ -68,7 +68,7 @@ impl VortexPlugin {
         mut next_state: ResMut<NextState<GameState>>,
         mut vort_out_events: EventReader<VortOutEvent>,
     ) {
-        if let Some(_) = vort_out_events.iter().last() {
+        if vort_out_events.iter().last().is_some() {
             let health = healths.get(game.player_entity.unwrap()).unwrap();
             game.health = health.clone();
             next_state.set(GameState::StarMap);
@@ -118,8 +118,7 @@ impl VortexPlugin {
         rapier_context: Res<RapierContext>,
         mut vort_out_events: EventWriter<VortOutEvent>,
     ) {
-        let filter =
-            QueryFilter::only_dynamic().groups(physics::CollideGroups::vortex_gate().into());
+        let filter = QueryFilter::only_dynamic().groups(physics::CollideGroups::vortex_gate());
 
         for (transform, collider) in zones.iter() {
             let shape_rot = transform.rotation;

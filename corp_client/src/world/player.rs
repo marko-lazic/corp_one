@@ -93,7 +93,7 @@ impl PlayerPlugin {
                 Player::default(),
                 Movement::default(),
                 game.health.clone(),
-                AnimationComponent::new(PlayerAnimationAction::IDLE),
+                AnimationComponent::new(PlayerAnimationAction::Idle),
                 RigidBody::Dynamic,
                 Collider::capsule_y(0.25, 0.25),
                 LockedAxes::ROTATION_LOCKED,
@@ -159,7 +159,7 @@ impl PlayerPlugin {
                 *prev_dir = movement.direction;
             }
 
-            if movement.rotating == true {
+            if movement.rotating {
                 movement.rotation_time += time.delta_seconds();
                 transform.rotation = transform
                     .rotation
@@ -185,14 +185,14 @@ impl PlayerPlugin {
         mut last_action: Local<PlayerAnimationAction>,
     ) {
         if let Ok((player, mut animation_component)) = query.get_single_mut() {
-            if player.is_moving && *last_action == PlayerAnimationAction::IDLE {
-                animation_component.next = Some(PlayerAnimationAction::RUN);
-                *last_action = PlayerAnimationAction::RUN;
+            if player.is_moving && *last_action == PlayerAnimationAction::Idle {
+                animation_component.next = Some(PlayerAnimationAction::Run);
+                *last_action = PlayerAnimationAction::Run;
             }
 
-            if !player.is_moving && *last_action == PlayerAnimationAction::RUN {
-                animation_component.next = Some(PlayerAnimationAction::IDLE);
-                *last_action = PlayerAnimationAction::IDLE;
+            if !player.is_moving && *last_action == PlayerAnimationAction::Run {
+                animation_component.next = Some(PlayerAnimationAction::Idle);
+                *last_action = PlayerAnimationAction::Idle;
             }
         }
     }

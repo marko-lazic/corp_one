@@ -134,7 +134,7 @@ pub fn door_interaction_event_system(
                     match control_type {
                         ControlType::Permanent(_) => {
                             if Some(&member_of.rank)
-                                >= REQUIRED_RANK_BY_DOOR_SECURITY.get(&door.security())
+                                >= REQUIRED_RANK_BY_DOOR_SECURITY.get(door.security())
                             {
                                 door.toggle();
                             }

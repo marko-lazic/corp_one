@@ -23,11 +23,11 @@ impl Default for Health {
 
 impl Health {
     pub fn take_damage(&mut self, damage: f32) {
-        self.hit_points = (&self.hit_points - damage).max(MIN_HEALTH);
+        self.hit_points = (self.hit_points - damage).max(MIN_HEALTH);
     }
 
     pub fn heal(&mut self, heal: f32) {
-        self.hit_points = (&self.hit_points + heal).min(MAX_HEALTH);
+        self.hit_points = (self.hit_points + heal).min(MAX_HEALTH);
     }
 
     pub fn get_health(&self) -> &f32 {
@@ -35,7 +35,7 @@ impl Health {
     }
 
     pub fn is_dead(&self) -> bool {
-        &self.hit_points <= &MIN_HEALTH
+        self.hit_points <= MIN_HEALTH
     }
 
     pub fn is_alive(&self) -> bool {

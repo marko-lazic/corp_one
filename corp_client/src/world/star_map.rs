@@ -21,7 +21,7 @@ impl StarMapPlugin {
         commands.spawn(Camera2dBundle::default());
         commands
             .spawn(SpriteBundle {
-                texture: texture_assets.nebula.clone().into(),
+                texture: texture_assets.nebula.clone(),
                 ..Default::default()
             })
             .insert(StarmapBackground);

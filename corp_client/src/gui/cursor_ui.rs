@@ -46,7 +46,7 @@ impl CursorPlugin {
         cursor: Res<Cursor>,
         cursor_visibility: Res<CursorVisibility>,
         primary_query: Query<&Window, With<PrimaryWindow>>,
-        mut query: Query<(&mut Style, &mut Visibility), (With<Text>, With<UseMarker>)>,
+        mut query: Query<(&mut Style, &mut Visibility), With<UseMarker>>,
     ) {
         if cursor_visibility.visible {
             for (mut style, mut visibility) in &mut query {

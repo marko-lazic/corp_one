@@ -85,18 +85,17 @@ impl BarrierPlugin {
         mut game: ResMut<Game>,
     ) {
         for event in events.iter() {
-            match event {
-                PickingEvent::Hover(hover_event) => match hover_event {
+            if let PickingEvent::Hover(hover_event) = event {
+                match hover_event {
                     HoverEvent::JustEntered(entity) => {
                         cursor_info.visible = true;
-                        game.use_entity = UseEntity::Barrier(entity.clone());
+                        game.use_entity = UseEntity::Barrier(*entity);
                     }
                     HoverEvent::JustLeft(_) => {
                         cursor_info.visible = false;
                         game.use_entity = UseEntity::None;
                     }
-                },
-                _ => {}
+                }
             }
         }
     }

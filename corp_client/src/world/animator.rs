@@ -6,13 +6,13 @@ use crate::GameState;
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub enum PlayerAnimationAction {
-    RUN = 0,
-    IDLE = 1,
+    Run = 0,
+    Idle = 1,
 }
 
 impl Default for PlayerAnimationAction {
     fn default() -> Self {
-        Self::IDLE
+        Self::Idle
     }
 }
 
@@ -44,8 +44,8 @@ impl Plugin for AnimatorPlugin {
 impl AnimatorPlugin {
     fn insert_animation_resources(mut commands: Commands, player_assets: Res<PlayerAssets>) {
         let mut hm: HashMap<PlayerAnimationAction, Handle<AnimationClip>> = HashMap::new();
-        hm.insert(PlayerAnimationAction::RUN, player_assets.run.clone());
-        hm.insert(PlayerAnimationAction::IDLE, player_assets.idle.clone());
+        hm.insert(PlayerAnimationAction::Run, player_assets.run.clone());
+        hm.insert(PlayerAnimationAction::Idle, player_assets.idle.clone());
         commands.insert_resource(PlayerAnimations(hm));
     }
     fn play_animations(

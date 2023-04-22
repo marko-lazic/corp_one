@@ -55,7 +55,7 @@ impl Interactor {
     }
 
     pub fn event(&self) -> InteractionEvent {
-        self.action.clone()
+        self.action
     }
 }
 

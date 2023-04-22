@@ -65,9 +65,9 @@ fn move_child(
     let mut child_tr = Option::unwrap(child_query.iter_mut().last());
     let parent_tr = Option::unwrap(parent_query.iter().last());
 
-    let world_space_point = local_to_world(data.child, &parent_tr);
+    let world_space_point = local_to_world(data.child, parent_tr);
     child_tr.translation = Vec3::new(world_space_point.x, world_space_point.y, 0.0);
-    data.child_dir = local_to_world_dir(data.child, &parent_tr);
+    data.child_dir = local_to_world_dir(data.child, parent_tr);
 }
 
 fn move_world(mut world_query: Query<&mut Transform, With<WorldPoint>>, data: Res<InspectorData>) {

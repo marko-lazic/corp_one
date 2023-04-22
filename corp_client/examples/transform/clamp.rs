@@ -98,7 +98,7 @@ fn setup(
 
     let p = commands
         .spawn(PbrBundle {
-            mesh: mesh_abc.clone(),
+            mesh: mesh_abc,
             material: materials.add(Color::BLUE.into()),
             transform: Transform::from_xyz(5.0, -15.0, 0.0),
             ..Default::default()

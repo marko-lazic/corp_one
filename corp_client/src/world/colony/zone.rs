@@ -82,7 +82,7 @@ impl ZonePlugin {
         mut zones: Query<(&mut Zone, &Transform, &Collider)>,
         rapier_context: Res<RapierContext>,
     ) {
-        let filter = QueryFilter::only_dynamic().groups(physics::CollideGroups::zone().into());
+        let filter = QueryFilter::only_dynamic().groups(physics::CollideGroups::zone());
 
         for (mut zone, transform, collider) in zones.iter_mut() {
             zone.entities.clear();

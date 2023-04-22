@@ -127,7 +127,7 @@ impl MetricsPlugin {
         mut query: Query<(&mut Transform, &mut TopDownCamera, &mut Camera)>,
     ) {
         for (transform, _, _) in query.iter_mut() {
-            game.camera_transform = Some(transform.clone());
+            game.camera_transform = Some(*transform);
         }
     }
 
@@ -162,7 +162,7 @@ mod metrics_utils {
     pub fn label(top: f32, left: f32, asset_server: &Res<AssetServer>) -> TextBundle {
         TextBundle {
             style: default_style(top, left),
-            text: default_text(&asset_server),
+            text: default_text(asset_server),
             ..Default::default()
         }
     }

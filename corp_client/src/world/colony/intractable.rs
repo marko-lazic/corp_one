@@ -1,12 +1,10 @@
 use bevy::prelude::Entity;
 
+#[derive(Default)]
 pub enum UseEntity {
     Barrier(Entity),
+    #[default]
     None,
 }
 
-impl Default for UseEntity {
-    fn default() -> Self {
-        UseEntity::None
-    }
-}
+
