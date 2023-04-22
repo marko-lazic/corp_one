@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::prelude::*;
+use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 
 fn main() {
@@ -7,7 +8,7 @@ fn main() {
         .insert_resource(Msaa::Sample4)
         .init_resource::<GameData>()
         .add_plugins(DefaultPlugins)
-        .add_plugin(InspectorPlugin::<InspectorData>::new())
+        .add_plugin(ResourceInspectorPlugin::<InspectorData>::new())
         .add_plugin(DebugLinesPlugin::default())
         .add_startup_system(setup)
         .add_system(draw_distance_vec)

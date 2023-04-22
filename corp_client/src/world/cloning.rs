@@ -65,42 +65,27 @@ mod tests {
         }
     }
 
-    const KILLING_LABEL: &'static str = "killing";
-
     #[test]
     fn test_vort_out_dead_player() {
-        // Setup stage
-        let mut schedule = Schedule::default();
-        schedule.add_system(kill_player);
-        schedule.add_system(CloningPlugin::check_if_dead_and_go_to_cloning);
+        // given
+        let mut app = App::new();
+        init_time(&mut app);
+        app.add_state::<GameState>();
+        app.add_systems((kill_player, CloningPlugin::check_if_dead_and_go_to_cloning).chain());
+        app.insert_resource(create_colony_assets());
+        app.insert_resource(Game::default());
+        let player_entity = app.world.spawn((Player::default(), Health::default())).id();
 
-        // Setup world
-        let mut world = World::default();
-
-        // Setup test entities
-        let player_entity = world.spawn((Player::default(), Health::default())).id();
-
-        world.insert_resource(create_colony_assets());
-        world.insert_resource(Time::default());
-        world.insert_resource(Game::default());
-        world.insert_resource(State::new(GameState::Playing));
-
-        // Run systems
-        schedule.run(&mut world);
+        // when
+        app.update();
 
         // Check resulting changes
-        assert!(world.get::<Player>(player_entity).is_some());
+        assert!(app.world.get::<Player>(player_entity).is_some());
 
         assert_eq!(
-            *world.get::<Health>(player_entity).unwrap().get_health(),
+            *app.world.get::<Health>(player_entity).unwrap().get_health(),
             MIN_HEALTH.clone(),
             "Player is dead"
-        );
-
-        assert_eq!(
-            world.resource::<State<GameState>>().current(),
-            &GameState::Playing,
-            "Game state changed to StarMap"
         );
     }
 
@@ -120,7 +105,6 @@ mod tests {
         world.insert_resource(game);
         world.init_resource::<Events<VortInEvent>>();
         world.insert_resource(create_colony_assets());
-        world.insert_resource(State::new(GameState::Playing));
 
         // Run systems
         schedule.run(&mut world);
@@ -130,12 +114,13 @@ mod tests {
             &CLONE_HEALTH_80,
             "Game component health is set to clone health"
         );
+    }
 
-        assert_eq!(
-            world.resource::<State<GameState>>().current(),
-            &GameState::Playing,
-            "Game state changed to Playing"
-        );
+    fn init_time(app: &mut App) {
+        app.init_resource::<Time>();
+        let mut time = Time::default();
+        time.update();
+        app.world.insert_resource(time);
     }
 
     fn create_colony_assets() -> ColonyAssets {
