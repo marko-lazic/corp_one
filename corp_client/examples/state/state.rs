@@ -1,16 +1,17 @@
 use bevy::prelude::*;
 
-use crate::door::{Door, door_cooldown_system, DoorState};
+use crate::door::{door_cooldown_system, Door, DoorState};
 use crate::interactive::interaction_system;
 
-mod test_utils;
-mod interactive;
-mod door;
 mod backpack;
-mod player;
+mod door;
+mod faction;
+mod gui;
+mod interactive;
 mod inventory;
 mod item;
-mod faction;
+mod player;
+mod test_utils;
 
 fn main() {
     App::new()
@@ -74,4 +75,3 @@ fn print_door_state(mut query: Query<(&mut Text, &Door)>) {
         }
     }
 }
-
