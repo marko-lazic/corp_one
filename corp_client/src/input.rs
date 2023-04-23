@@ -52,7 +52,7 @@ pub enum CorpAction {
     ColonyLiberte,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Clone)]
 pub struct Ground;
 
 pub struct InputControlPlugin;
