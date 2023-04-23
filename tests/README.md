@@ -1,17 +1,28 @@
-# Run all tests
+## Run tests
 
+### All tests in tests folder
+
+```shell
 cargo test
+```
 
-# Run only unit tests
+### Unit tests only in corp_shared project
 
+```shell
+cd ../
 cargo test --lib
+```
 
-# Run only integration tests
+### Run only integration tests multithreaded
 
+```shell
+cd ../
 cargo test --test integration
+```
 
-# Run only integration tests, single threaded
+### Run only integration tests, single threaded
 
-# (you’ll probably want this one)
-
+```shell
+cd ../
 cargo test --test integration -- --test-threads=1
+```

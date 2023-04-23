@@ -1,0 +1,20 @@
+[package]
+name = "benches"
+version = "0.1.0"
+edition = "2021"
+description = "Benchmarks for Corp One"
+publish = false
+
+[dev-dependencies]
+criterion = { version = "0.3", features = ["html_reports"] }
+corp_shared = { path = "../corp_shared" }
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[[bench]]
+name = "which_to_use"
+path = "benches/which/which_to_use.rs"
+harness = false
+

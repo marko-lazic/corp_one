@@ -1,11 +1,26 @@
-# Run client
+## Run the project
 
+### Run client
+
+```shell
 cargo run --bin corp_client
+```
 
-# Run server
+### Run server
 
 cargo run --bin server_server
 
-# Run tests
+### Run tests
 
-check tests/README.md
+```shell
+cargo test
+```
+
+For more info check [tests/README.md](tests/README.md)
+
+# Run benchmarks
+
+```shell
+cd benches
+cargo bench
+```

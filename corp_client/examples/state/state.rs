@@ -1,35 +1,81 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
+use bevy_trait_query::RegisterExt;
 
-use crate::door::{door_cooldown_system, Door, DoorState};
-use crate::interactive::interaction_system;
+use crate::backpack::{
+    backpack_interaction_event_system, despawn_backpack_system, Backpack, BackpackInteractionEvent,
+};
+use crate::door::{
+    door_cooldown_system, door_hack_event_system, door_interaction_event_system, Door,
+    DoorHackEvent, DoorInteractionEvent, DoorState, Security,
+};
+use crate::faction::{
+    process_temporary_faction_ownership_timers_system, ControlRegistry, Faction, MemberOf, Rank,
+};
+use crate::gui::UiBundle;
+use crate::interactive::{interaction_system, Interactive, Interactor};
+use crate::inventory::Inventory;
+use crate::item::{HackingToolBundle, Item};
+use crate::player::Player;
+use crate::ray::cast_ray_system;
 
 mod backpack;
 mod door;
+mod endesga;
 mod faction;
 mod gui;
 mod interactive;
 mod inventory;
 mod item;
 mod player;
+mod ray;
 mod test_utils;
+
+#[derive(Component)]
+struct InventoryText(Entity);
 
 fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
         .add_plugins(DefaultPlugins)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(RapierDebugRenderPlugin::default())
         .insert_resource(AmbientLight {
             color: Color::WHITE,
             brightness: 1.0,
         })
+        .add_event::<BackpackInteractionEvent>()
+        .add_event::<DoorInteractionEvent>()
+        .register_component_as::<dyn Interactive, Backpack>()
+        .add_event::<DoorInteractionEvent>()
+        .add_event::<BackpackInteractionEvent>()
+        .add_event::<DoorHackEvent>()
+        .register_component_as::<dyn Interactive, Door>()
         .add_startup_system(setup)
-        .add_system(check_input)
-        .add_system(print_door_state)
-        .add_system(door_cooldown_system)
-        .add_system(interaction_system)
+        .add_systems(
+            (
+                door_cooldown_system,
+                process_temporary_faction_ownership_timers_system,
+                cast_ray_system,
+                interaction_system,
+                door_interaction_event_system,
+                backpack_interaction_event_system,
+                despawn_backpack_system,
+                door_hack_event_system,
+                show_inventory_system,
+                door_color_change_state_system,
+            )
+                .chain(),
+        )
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(5.0, 5.0, 8.0).looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
         ..Default::default()
@@ -41,14 +87,61 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..default()
     };
 
+    // spawn door
+    let _ec_door = setup_door(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Transform::from_xyz(0.0, 0.5, 0.0),
+        Faction::EC,
+        Security::High,
+    );
+
+    let _vi_door = setup_door(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Transform::from_xyz(-10.0, 0.5, 0.0),
+        Faction::VI,
+        Security::Low,
+    );
+
+    let _cmg_door = setup_door(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Transform::from_xyz(5.0, 0.5, -5.0),
+        Faction::CMG,
+        Security::Medium,
+    );
+
+    let hacking_tool_entity = commands.spawn(HackingToolBundle::default()).id();
+
+    // spawn player
+    let player_entity = commands
+        .spawn((
+            Transform::from_xyz(0.0, 0.0, 0.0),
+            GlobalTransform::default(),
+            Player,
+            Interactor::default(),
+            Inventory::new(vec![hacking_tool_entity]),
+            UiBundle::default(),
+            MemberOf {
+                faction: Faction::EC,
+                rank: Rank::R7,
+            },
+        ))
+        .id();
+
+    // print inventory
     commands.spawn((
         TextBundle {
             text: Text::from_section(
                 "null",
                 TextStyle {
                     font: asset_server.load("fonts/FiraMono-Medium.ttf"),
-                    font_size: 40.0,
-                    color: Color::rgb(0.9, 0.9, 0.9),
+                    font_size: 30.0,
+                    color: endesga::AQUA,
                 },
             ),
             style: Style {
@@ -57,21 +150,65 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             },
             ..Default::default()
         },
-        Door::default(),
+        InventoryText(player_entity),
     ));
 }
 
-fn check_input(keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.just_pressed(KeyCode::Space) {
-        info!("Pressed space");
+fn setup_door(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    door_position: Transform,
+    faction: Faction,
+    security: Security,
+) -> Entity {
+    let door_size = 1.0;
+    let door_hs = door_size / 2.0;
+    let ec_door = commands
+        .spawn((
+            PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: door_size })),
+                material: materials.add(endesga::SKY.into()).into(),
+                transform: door_position,
+                ..default()
+            },
+            Door::new(security),
+            ControlRegistry::new_permanent(faction),
+            RigidBody::Fixed,
+            Collider::cuboid(door_hs, door_hs, door_hs),
+        ))
+        .id();
+    ec_door
+}
+
+fn show_inventory_system(
+    mut inventory_text_query: Query<(&mut Text, &InventoryText)>,
+    mut inventories: Query<&mut Inventory, Changed<Inventory>>,
+    item_query: Query<&Item>,
+) {
+    for (mut text, inventory_text) in &mut inventory_text_query {
+        if let Ok(inventory) = inventories.get_mut(inventory_text.0) {
+            let mut items: Vec<String> = Vec::new();
+            for inventory_item in inventory.items() {
+                items.push(item_query.get(*inventory_item).unwrap().name.clone());
+            }
+            text.sections[0].value = format!("Inventory {:?}", items);
+        }
     }
 }
 
-fn print_door_state(mut query: Query<(&mut Text, &Door)>) {
-    for (mut text, door) in &mut query {
+fn door_color_change_state_system(
+    mut doors: Query<(&Door, &Handle<StandardMaterial>)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for (mut door, material) in &mut doors {
         match &door.state() {
-            DoorState::Open => text.sections[0].value = "Open".to_string(),
-            DoorState::Closed => text.sections[0].value = "Closed".to_string(),
+            DoorState::Open => {
+                materials.get_mut(material).unwrap().base_color = endesga::FOG.into()
+            }
+            DoorState::Closed => {
+                materials.get_mut(material).unwrap().base_color = endesga::SKY.into()
+            }
         }
     }
 }

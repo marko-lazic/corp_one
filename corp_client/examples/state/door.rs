@@ -102,6 +102,7 @@ pub fn door_cooldown_system(mut door_query: Query<&mut Door>, time: Res<Time>) {
         // If the door is currently open and the cooldown timer has expired, set the state to Closed
         if door.state == DoorState::Open && door.open_cooldown.tick(time.delta()).just_finished() {
             door.state = DoorState::Closed;
+            door.open_cooldown.reset();
         }
 
         // If the door toggle cooldown timer has expired, allow the player to interact with the door again
@@ -237,6 +238,8 @@ mod tests {
         // then
         let result = app.get::<Door>(door_entity);
         assert_eq!(result.state, DoorState::Closed);
+        assert!(!result.open_cooldown.finished());
+        assert_eq!(result.open_cooldown.remaining_secs(), 10.0);
     }
 
     #[test]

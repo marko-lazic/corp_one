@@ -46,6 +46,11 @@ pub struct ControlRegistry {
 }
 
 impl ControlRegistry {
+    pub fn new_permanent(faction: Faction) -> Self {
+        Self {
+            factions: vec![ControlType::Permanent(faction)],
+        }
+    }
     pub fn add_permanent(&mut self, faction: Faction) {
         self.factions.push(ControlType::Permanent(faction));
     }
