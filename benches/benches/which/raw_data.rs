@@ -22,7 +22,7 @@ impl RawData {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::raw_data::RawData;
 
     #[test]
     fn test_regular() {
