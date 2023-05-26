@@ -11,11 +11,11 @@ use corp_shared::prelude::Health;
 use input_command::PlayerDirection;
 
 use crate::input::double_tap::DoubleTap;
+use crate::state::GameState;
 use crate::world::colony::barrier::{BarrierControl, BarrierField};
 use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
 use crate::world::player::Player;
-use crate::GameState;
 use crate::{Game, UseEntity};
 
 mod double_tap;

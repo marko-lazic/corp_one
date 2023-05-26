@@ -4,11 +4,11 @@ use bevy_rapier3d::prelude::{Collider, QueryFilter, RapierContext};
 use corp_shared::prelude::Health;
 
 use crate::asset::asset_loading::ColonyAssets;
+use crate::state::GameState;
 use crate::world::colony::Colony;
 use crate::world::physics;
 use crate::world::player::Player;
 use crate::Game;
-use crate::GameState;
 
 pub struct VortOutEvent;
 

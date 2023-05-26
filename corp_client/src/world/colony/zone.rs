@@ -5,9 +5,9 @@ use serde::Deserialize;
 
 use corp_shared::prelude::*;
 
+use crate::state::GameState;
 use crate::world::colony::colony_assets::ZoneAsset;
 use crate::world::physics;
-use crate::GameState;
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 pub enum ZoneType {

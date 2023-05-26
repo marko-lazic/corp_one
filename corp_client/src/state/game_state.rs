@@ -1,7 +1,15 @@
 use bevy::log::info;
 use bevy::prelude::*;
 
-use crate::GameState;
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum GameState {
+    #[default]
+    Loading,
+    StarMap,
+    LoadColony,
+    SpawnPlayer,
+    Playing,
+}
 
 #[derive(Component)]
 pub struct Despawn;

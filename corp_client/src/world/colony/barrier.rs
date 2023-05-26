@@ -6,7 +6,8 @@ use bevy_mod_picking::events::{Out, Over};
 use bevy_mod_picking::prelude::ListenedEvent;
 
 use crate::gui::CursorVisibility;
-use crate::{App, Game, GameState, Timer, UseEntity};
+use crate::state::GameState;
+use crate::{App, Game, Timer, UseEntity};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Hover {

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::asset::asset_loading::TextureAssets;
 use crate::state::Despawn;
-use crate::GameState;
+use crate::state::GameState;
 
 pub struct StarMapPlugin;
 

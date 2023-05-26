@@ -10,13 +10,13 @@ use serde::Deserialize;
 use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
 use crate::input::Ground;
 use crate::state::Despawn;
+use crate::state::GameState;
 use crate::world::colony::barrier::{BarrierControl, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
 use crate::world::colony::zone::Zone;
 use crate::world::{physics, WorldSystemSet};
 use crate::Game;
-use crate::GameState;
 
 mod asset;
 pub mod barrier;

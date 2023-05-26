@@ -5,10 +5,10 @@ use corp_shared::prelude::Health;
 
 use crate::input::Cursor;
 use crate::state::Despawn;
+use crate::state::GameState;
 use crate::world::camera::TopDownCamera;
 use crate::world::player::Player;
 use crate::Game;
-use crate::GameState;
 
 #[derive(Component)]
 struct FpsText;

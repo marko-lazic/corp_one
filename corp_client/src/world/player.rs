@@ -8,13 +8,13 @@ use crate::asset::asset_loading::PlayerAssets;
 use crate::input::input_command::PlayerDirection;
 use crate::input::{Cursor, InputSystemSet, OrientationMode};
 use crate::state::Despawn;
+use crate::state::GameState;
 use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
 use crate::world::colony::vortex::VortexNode;
 use crate::world::{physics, WorldSystemSet};
 use crate::Game;
-use crate::GameState;
 
 #[derive(Default, bevy::ecs::component::Component)]
 pub struct Player {

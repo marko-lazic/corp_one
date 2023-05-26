@@ -6,8 +6,8 @@ use serde::Deserialize;
 
 use crate::asset::paths::PATHS;
 use crate::state::Despawn;
+use crate::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
-use crate::GameState;
 
 /// Exported using Blender export glTF 2.0 with settings enabled
 ///

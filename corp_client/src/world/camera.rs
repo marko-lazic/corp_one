@@ -7,10 +7,10 @@ use bevy_mod_raycast::RaycastSource;
 
 use crate::input::{Cursor, Ground};
 use crate::state::Despawn;
+use crate::state::GameState;
 use crate::world::player::Player;
 use crate::world::WorldSystemSet;
 use crate::Game;
-use crate::GameState;
 
 #[derive(Component)]
 pub struct TopDownCamera {

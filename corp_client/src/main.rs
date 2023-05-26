@@ -24,16 +24,6 @@ const CORP_ONE_GAME_TITLE: &str = "Corp One";
 const WIDTH: f32 = 1200.0;
 const HEIGHT: f32 = 720.0;
 
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-pub enum GameState {
-    #[default]
-    Loading,
-    StarMap,
-    LoadColony,
-    SpawnPlayer,
-    Playing,
-}
-
 #[derive(Resource, Default)]
 pub struct Game {
     use_entity: UseEntity,

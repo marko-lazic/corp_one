@@ -4,8 +4,8 @@ use bevy::window::PrimaryWindow;
 
 use crate::asset::asset_loading::FontAssets;
 use crate::input::Cursor;
-use crate::state::Despawn;
-use crate::{App, GameState, Visibility};
+use crate::state::{Despawn, GameState};
+use crate::{App, Visibility};
 
 #[derive(Component)]
 struct UseMarker;
