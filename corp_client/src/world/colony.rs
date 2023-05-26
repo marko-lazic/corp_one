@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use bevy_mod_picking::*;
+use bevy_mod_picking::backends::rapier::RapierPickTarget;
+use bevy_mod_picking::prelude::*;
 use bevy_mod_raycast::RaycastMesh;
 use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
@@ -8,6 +9,7 @@ use serde::Deserialize;
 
 use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
 use crate::input::Ground;
+use crate::state::Despawn;
 use crate::world::colony::barrier::{BarrierControl, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
@@ -73,7 +75,6 @@ impl Plugin for ColonyPlugin {
         );
 
         app.add_system(Self::update_lights.in_schedule(OnEnter(GameState::Playing)));
-        app.add_system(Self::teardown_entities.in_schedule(OnExit(GameState::Playing)));
     }
 }
 
@@ -93,17 +94,20 @@ impl ColonyPlugin {
             _ => scene_assets.liberte.clone(),
         };
 
-        commands.spawn(HookedSceneBundle {
-            scene: SceneBundle {
-                scene: colony_scene,
-                ..default()
+        commands.spawn((
+            HookedSceneBundle {
+                scene: SceneBundle {
+                    scene: colony_scene,
+                    ..default()
+                },
+                hook: SceneHook::new(|entity, commands| {
+                    if let Some(name) = entity.get::<Name>().map(|t| t.as_str()) {
+                        scene_hook::scene_hook_insert_components(name, commands)
+                    }
+                }),
             },
-            hook: SceneHook::new(|entity, commands| {
-                if let Some(name) = entity.get::<Name>().map(|t| t.as_str()) {
-                    scene_hook::scene_hook_insert_components(name, commands)
-                }
-            }),
-        });
+            Despawn,
+        ));
     }
 
     fn setup_debug_plane(
@@ -111,9 +115,27 @@ impl ColonyPlugin {
         mut meshes: ResMut<Assets<Mesh>>,
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
+        // spawn cube
+        commands.spawn((
+            PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: 5.0 })),
+                material: materials.add(Color::WHITE.into()),
+                transform: Transform::from_xyz(10., 0., 0.),
+                ..Default::default()
+            },
+            Collider::cuboid(2.6, 2.6, 2.6),
+            PickableBundle::default(),
+            RapierPickTarget::default(),
+            OnPointer::<Click>::run_callback(|In(event): In<ListenedEvent<Click>>| {
+                info!("Clicked on entity {:?}", event.target);
+                Bubble::Up
+            }),
+            Despawn,
+        ));
+
         info!("Setup debug plane");
-        commands
-            .spawn(PbrBundle {
+        commands.spawn((
+            PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane {
                     size: 100.0,
                     ..default()
@@ -127,12 +149,12 @@ impl ColonyPlugin {
                     ..Default::default()
                 }),
                 ..Default::default()
-            })
-            .insert((
-                RigidBody::Fixed,
-                Collider::cuboid(100.0, 0.01, 100.0),
-                RaycastMesh::<Ground>::default(),
-            ));
+            },
+            RigidBody::Fixed,
+            Collider::cuboid(100.0, 0.01, 100.0),
+            RaycastMesh::<Ground>::default(),
+            Despawn,
+        ));
     }
 
     fn setup_zones(
@@ -145,8 +167,8 @@ impl ColonyPlugin {
         info!("Setup zones");
         if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
             for zone_asset in &colony_asset.zones {
-                commands
-                    .spawn(PbrBundle {
+                commands.spawn((
+                    PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Plane {
                             size: zone_asset.size,
                             ..default()
@@ -154,13 +176,13 @@ impl ColonyPlugin {
                         transform: Transform::from_translation(zone_asset.position),
                         material: material_assets.get_material(&zone_asset.material),
                         ..Default::default()
-                    })
-                    .insert((
-                        Sensor,
-                        Collider::cuboid(0.5, 1.0, 0.5),
-                        Zone::from(*zone_asset),
-                        physics::CollideGroups::zone(),
-                    ));
+                    },
+                    Sensor,
+                    Collider::cuboid(0.5, 1.0, 0.5),
+                    Zone::from(*zone_asset),
+                    physics::CollideGroups::zone(),
+                    Despawn,
+                ));
             }
         }
     }
@@ -184,13 +206,6 @@ impl ColonyPlugin {
         info!("Update lights");
         for mut point_light in query.iter_mut() {
             point_light.shadows_enabled = true;
-        }
-    }
-
-    fn teardown_entities(mut commands: Commands, entities: Query<Entity, Without<Window>>) {
-        info!("Teardown entities");
-        for entity in entities.iter() {
-            commands.entity(entity).despawn();
         }
     }
 }

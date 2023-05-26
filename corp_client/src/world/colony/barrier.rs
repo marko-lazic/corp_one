@@ -2,10 +2,31 @@ use std::time::Duration;
 
 use bevy::app::Plugin;
 use bevy::prelude::*;
-use bevy_mod_picking::{HoverEvent, PickingEvent};
+use bevy_mod_picking::events::{Out, Over};
+use bevy_mod_picking::prelude::ListenedEvent;
 
 use crate::gui::CursorVisibility;
 use crate::{App, Game, GameState, Timer, UseEntity};
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum Hover {
+    Over,
+    Out,
+}
+
+pub struct BarrierPickingEvent(Entity, Hover);
+
+impl From<ListenedEvent<Over>> for BarrierPickingEvent {
+    fn from(event: ListenedEvent<Over>) -> Self {
+        BarrierPickingEvent(event.target, Hover::Over)
+    }
+}
+
+impl From<ListenedEvent<Out>> for BarrierPickingEvent {
+    fn from(event: ListenedEvent<Out>) -> Self {
+        BarrierPickingEvent(event.target, Hover::Out)
+    }
+}
 
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
@@ -56,8 +77,9 @@ impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<BarrierField>();
         app.register_type::<BarrierControl>();
+        app.add_event::<BarrierPickingEvent>();
+        app.add_system(Self::receive_barrier_pickings.run_if(on_event::<BarrierPickingEvent>()));
         app.add_system(Self::open_close_barrier.in_set(OnUpdate(GameState::Playing)));
-        app.add_system(Self::pick_barrier.in_base_set(CoreSet::PostUpdate));
     }
 }
 
@@ -79,23 +101,18 @@ impl BarrierPlugin {
         }
     }
 
-    pub fn pick_barrier(
-        mut events: EventReader<PickingEvent>,
+    pub fn receive_barrier_pickings(
+        mut pickings: EventReader<BarrierPickingEvent>,
         mut cursor_info: ResMut<CursorVisibility>,
         mut game: ResMut<Game>,
     ) {
-        for event in events.iter() {
-            if let PickingEvent::Hover(hover_event) = event {
-                match hover_event {
-                    HoverEvent::JustEntered(entity) => {
-                        cursor_info.visible = true;
-                        game.use_entity = UseEntity::Barrier(*entity);
-                    }
-                    HoverEvent::JustLeft(_) => {
-                        cursor_info.visible = false;
-                        game.use_entity = UseEntity::None;
-                    }
-                }
+        for event in pickings.iter() {
+            if event.1 == Hover::Over {
+                cursor_info.visible = true;
+                game.use_entity = UseEntity::Barrier(event.0);
+            } else if event.1 == Hover::Out {
+                cursor_info.visible = false;
+                game.use_entity = UseEntity::None;
             }
         }
     }

@@ -5,6 +5,7 @@ use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
 use crate::asset::paths::PATHS;
+use crate::state::Despawn;
 use crate::world::colony::colony_assets::ColonyAsset;
 use crate::GameState;
 
@@ -132,23 +133,15 @@ impl Plugin for AssetLoadingPlugin {
                 .chain()
                 .in_schedule(OnEnter(GameState::Loading)),
         );
-        app.add_systems(
-            (Self::setup, Self::start_loading)
-                .chain()
-                .in_schedule(OnEnter(GameState::Loading)),
-        );
-        app.add_system(Self::cleanup.in_schedule(OnExit(GameState::Loading)));
     }
 }
 
 impl AssetLoadingPlugin {
     fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-        commands
-            .spawn(Camera2dBundle::default())
-            .insert(LoadingCamera);
+        commands.spawn((Camera2dBundle::default(), Despawn));
 
-        let loading_text_bundle_entity = commands
-            .spawn(TextBundle {
+        commands.spawn((
+            TextBundle {
                 text: Text::from_section(
                     "Loading",
                     TextStyle {
@@ -158,12 +151,9 @@ impl AssetLoadingPlugin {
                     },
                 ),
                 ..Default::default()
-            })
-            .id();
-
-        commands.insert_resource(LoadingData {
-            loading_text_bundle_entity,
-        });
+            },
+            Despawn,
+        ));
     }
 
     fn start_loading(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
@@ -180,33 +170,4 @@ impl AssetLoadingPlugin {
             sea_green_material: materials.add(Color::SEA_GREEN.into()),
         });
     }
-
-    fn cleanup(
-        mut commands: Commands,
-        text_query: Query<Entity, With<LoadingIndicator>>,
-        loading_data: Res<LoadingData>,
-        cameras: Query<Entity, With<LoadingCamera>>,
-    ) {
-        for remove in text_query.iter() {
-            commands.entity(remove).despawn_recursive();
-        }
-        commands
-            .entity(loading_data.loading_text_bundle_entity)
-            .despawn_recursive();
-
-        if let Ok(entity) = cameras.get_single() {
-            commands.entity(entity).despawn();
-        }
-    }
 }
-
-#[derive(Resource)]
-struct LoadingData {
-    loading_text_bundle_entity: Entity,
-}
-
-#[derive(Component)]
-struct LoadingIndicator;
-
-#[derive(Component)]
-struct LoadingCamera;

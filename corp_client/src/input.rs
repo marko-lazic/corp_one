@@ -173,16 +173,20 @@ impl InputControlPlugin {
     }
 
     fn update_raycast_with_cursor(
-        mut cursor_event: EventReader<CursorMoved>,
+        mut cursor: EventReader<CursorMoved>,
         mut query: Query<&mut RaycastSource<Ground>>,
-        mut cursor: ResMut<Cursor>,
+        mut corp_cursor: ResMut<Cursor>,
     ) {
+        // Grab the most recent cursor event if it exists:
+        let cursor_position = match cursor.iter().last() {
+            Some(cursor_moved) => cursor_moved.position,
+            None => return,
+        };
+
         for mut pick_source in &mut query {
-            if let Some(cursor_latest) = cursor_event.iter().last() {
-                pick_source.cast_method = RaycastMethod::Screenspace(cursor_latest.position);
-            }
+            pick_source.cast_method = RaycastMethod::Screenspace(cursor_position);
             if let Some((_entity, intersect)) = pick_source.intersections().first() {
-                cursor.world = intersect.position();
+                corp_cursor.world = intersect.position();
             }
         }
     }

@@ -5,7 +5,9 @@ pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
+        info!("Physics Plugin");
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+        app.add_plugin(RapierDebugRenderPlugin::default());
     }
 }
 

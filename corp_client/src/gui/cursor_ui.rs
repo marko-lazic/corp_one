@@ -4,6 +4,7 @@ use bevy::window::PrimaryWindow;
 
 use crate::asset::asset_loading::FontAssets;
 use crate::input::Cursor;
+use crate::state::Despawn;
 use crate::{App, GameState, Visibility};
 
 #[derive(Component)]
@@ -39,6 +40,7 @@ impl CursorPlugin {
                 ..default()
             },
             UseMarker,
+            Despawn,
         ));
     }
 

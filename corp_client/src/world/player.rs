@@ -7,6 +7,7 @@ use corp_shared::prelude::*;
 use crate::asset::asset_loading::PlayerAssets;
 use crate::input::input_command::PlayerDirection;
 use crate::input::{Cursor, InputSystemSet, OrientationMode};
+use crate::state::Despawn;
 use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
 use crate::world::character::Movement;
 use crate::world::cloning::CloningPlugin;
@@ -84,12 +85,12 @@ impl PlayerPlugin {
         let player_tr = Transform::from_translation(position);
 
         let player = commands
-            .spawn(SceneBundle {
-                scene: player_assets.mannequiny.clone(),
-                transform: player_tr,
-                ..default()
-            })
-            .insert((
+            .spawn((
+                SceneBundle {
+                    scene: player_assets.mannequiny.clone(),
+                    transform: player_tr,
+                    ..default()
+                },
                 Player::default(),
                 Movement::default(),
                 game.health.clone(),
@@ -104,6 +105,7 @@ impl PlayerPlugin {
                 ActiveEvents::COLLISION_EVENTS,
                 ContactForceEventThreshold(30.0),
                 physics::CollideGroups::player(),
+                Despawn,
             ))
             .id();
 

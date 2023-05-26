@@ -2,10 +2,11 @@ use std::ops::Neg;
 
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
-use bevy_mod_picking::PickingCameraBundle;
+use bevy_mod_picking::prelude::*;
 use bevy_mod_raycast::RaycastSource;
 
 use crate::input::{Cursor, Ground};
+use crate::state::Despawn;
 use crate::world::player::Player;
 use crate::world::WorldSystemSet;
 use crate::Game;
@@ -62,17 +63,17 @@ impl Plugin for TopDownCameraPlugin {
 impl TopDownCameraPlugin {
     fn setup_camera(mut commands: Commands) {
         info!("Setup Player");
-        commands
-            .spawn(Camera3dBundle {
+        commands.spawn((
+            Camera3dBundle {
                 transform: Transform::from_translation(Vec3::new(-3.0, 3.0, 5.0))
                     .looking_at(Vec3::default(), Vec3::Y),
-                ..Default::default()
-            })
-            .insert((
-                TopDownCamera::new(20.0),
-                PickingCameraBundle::default(),
-                RaycastSource::<Ground>::new(),
-            ));
+                ..default()
+            },
+            TopDownCamera::new(20.0),
+            RapierPickCamera::default(),
+            RaycastSource::<Ground>::new(),
+            Despawn,
+        ));
     }
 
     fn target_motion(

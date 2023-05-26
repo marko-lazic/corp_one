@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 
-use colony::zone::ZonePlugin;
-
 use crate::input::InputControlPlugin;
 use crate::world::animator::AnimatorPlugin;
 use crate::world::camera::TopDownCameraPlugin;
+use crate::world::colony::zone::ZonePlugin;
 use crate::world::colony::ColonyPlugin;
 use crate::world::physics::PhysicsPlugin;
 use crate::world::player::PlayerPlugin;
@@ -35,12 +34,12 @@ impl Plugin for WorldPlugin {
             color: Color::ORANGE_RED,
             brightness: 0.8,
         });
+        app.add_plugin(PhysicsPlugin);
         app.add_plugin(ColonyPlugin);
         app.add_plugin(AnimatorPlugin);
         app.add_plugin(StarMapPlugin);
         app.add_plugin(InputControlPlugin);
         app.add_plugin(ZonePlugin);
-        app.add_plugin(PhysicsPlugin);
         app.add_plugin(PlayerPlugin);
         app.add_plugin(TopDownCameraPlugin);
     }

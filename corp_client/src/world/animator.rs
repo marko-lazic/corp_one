@@ -36,13 +36,13 @@ pub struct AnimatorPlugin;
 impl Plugin for AnimatorPlugin {
     fn build(&self, app: &mut App) {
         // Warning: Re-insertion happens every time game enters playing state
-        app.add_system(Self::insert_animation_resources.in_schedule(OnEnter(GameState::Playing)));
+        app.add_system(Self::setup_animation_resources.in_schedule(OnExit(GameState::Loading)));
         app.add_system(Self::play_animations.in_set(OnUpdate(GameState::Playing)));
     }
 }
 
 impl AnimatorPlugin {
-    fn insert_animation_resources(mut commands: Commands, player_assets: Res<PlayerAssets>) {
+    fn setup_animation_resources(mut commands: Commands, player_assets: Res<PlayerAssets>) {
         let mut hm: HashMap<PlayerAnimationAction, Handle<AnimationClip>> = HashMap::new();
         hm.insert(PlayerAnimationAction::Run, player_assets.run.clone());
         hm.insert(PlayerAnimationAction::Idle, player_assets.idle.clone());

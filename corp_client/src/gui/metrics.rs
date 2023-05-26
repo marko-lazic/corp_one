@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use corp_shared::prelude::Health;
 
 use crate::input::Cursor;
+use crate::state::Despawn;
 use crate::world::camera::TopDownCamera;
 use crate::world::player::Player;
 use crate::Game;
@@ -25,7 +26,7 @@ struct MouseWorldPositionText;
 struct CameraDebugText;
 
 #[derive(Component)]
-struct PlayerHealth;
+struct PlayerHealthText;
 
 pub struct MetricsPlugin;
 
@@ -51,24 +52,36 @@ impl Plugin for MetricsPlugin {
 
 impl MetricsPlugin {
     fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-        commands
-            .spawn(metrics_utils::label(5.0, 10.0, &asset_server))
-            .insert(FpsText);
-        commands
-            .spawn(metrics_utils::label(25.0, 10.0, &asset_server))
-            .insert(PlayerPositionText);
-        commands
-            .spawn(metrics_utils::label(45.0, 10.0, &asset_server))
-            .insert(MouseScreenPositionText);
-        commands
-            .spawn(metrics_utils::label(65.0, 10.0, &asset_server))
-            .insert(MouseWorldPositionText);
-        commands
-            .spawn(metrics_utils::label(85.0, 10.0, &asset_server))
-            .insert(CameraDebugText);
-        commands
-            .spawn(metrics_utils::label(105.0, 10.0, &asset_server))
-            .insert(PlayerHealth);
+        commands.spawn((
+            metrics_utils::label(5.0, 10.0, &asset_server),
+            FpsText,
+            Despawn,
+        ));
+        commands.spawn((
+            metrics_utils::label(25.0, 10.0, &asset_server),
+            PlayerPositionText,
+            Despawn,
+        ));
+        commands.spawn((
+            metrics_utils::label(45.0, 10.0, &asset_server),
+            MouseScreenPositionText,
+            Despawn,
+        ));
+        commands.spawn((
+            metrics_utils::label(65.0, 10.0, &asset_server),
+            MouseWorldPositionText,
+            Despawn,
+        ));
+        commands.spawn((
+            metrics_utils::label(85.0, 10.0, &asset_server),
+            CameraDebugText,
+            Despawn,
+        ));
+        commands.spawn((
+            metrics_utils::label(105.0, 10.0, &asset_server),
+            PlayerHealthText,
+            Despawn,
+        ));
     }
 
     fn fps_update(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
@@ -144,7 +157,7 @@ impl MetricsPlugin {
     fn player_health_metric(
         game: Res<Game>,
         healths: Query<&Health>,
-        mut query: Query<&mut Text, With<PlayerHealth>>,
+        mut query: Query<&mut Text, With<PlayerHealthText>>,
     ) {
         if let Some(entity) = game.player_entity {
             if let Ok(health) = healths.get(entity) {
