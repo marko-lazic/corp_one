@@ -100,8 +100,8 @@ impl ColonyPlugin {
                     scene: colony_scene,
                     ..default()
                 },
-                hook: SceneHook::new(|entity, commands| {
-                    if let Some(name) = entity.get::<Name>().map(|t| t.as_str()) {
+                hook: SceneHook::new(|entity_ref, commands| {
+                    if let Some(name) = entity_ref.get::<Name>().map(|t| t.as_str()) {
                         scene_hook::scene_hook_insert_components(name, commands)
                     }
                 }),

@@ -18,6 +18,7 @@ mod gui;
 pub mod input;
 mod sound;
 pub mod state;
+pub mod util;
 mod world;
 
 const CORP_ONE_GAME_TITLE: &str = "Corp One";
