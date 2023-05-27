@@ -16,11 +16,6 @@ use crate::world::colony::vortex::VortexNode;
 use crate::world::{physics, WorldSystemSet};
 use crate::Game;
 
-#[derive(Default, bevy::ecs::component::Component)]
-pub struct Player {
-    pub is_moving: bool,
-}
-
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -91,7 +86,7 @@ impl PlayerPlugin {
                     transform: player_tr,
                     ..default()
                 },
-                Player::default(),
+                Player,
                 Movement::default(),
                 game.health.clone(),
                 AnimationComponent::new(PlayerAnimationAction::Idle),
@@ -125,9 +120,9 @@ impl PlayerPlugin {
     fn move_player(
         mut player_direction: ResMut<PlayerDirection>,
         time: Res<Time>,
-        mut query: Query<(&mut Player, &mut Movement, &mut Transform, &Health)>,
+        mut query: Query<(&mut Movement, &mut Transform, &Health), With<Player>>,
     ) {
-        if let Ok((mut player, mut movement, mut position, health)) = query.get_single_mut() {
+        if let Ok((mut movement, mut position, health)) = query.get_single_mut() {
             let direction = player_direction.new_direction();
             movement.update_direction(direction);
             if movement.can_move {
@@ -135,7 +130,7 @@ impl PlayerPlugin {
                 position.translation += movement.velocity * time.delta_seconds();
             }
 
-            player.is_moving = Self::is_moving(&movement.velocity) && health.is_alive();
+            movement.is_moving = Self::is_moving(&movement.velocity) && health.is_alive();
             player_direction.reset();
         }
     }
@@ -183,16 +178,16 @@ impl PlayerPlugin {
     }
 
     fn handle_animation_action(
-        mut query: Query<(&Player, &mut AnimationComponent)>,
+        mut query: Query<(&Movement, &mut AnimationComponent), With<Player>>,
         mut last_action: Local<PlayerAnimationAction>,
     ) {
-        if let Ok((player, mut animation_component)) = query.get_single_mut() {
-            if player.is_moving && *last_action == PlayerAnimationAction::Idle {
+        if let Ok((player_movement, mut animation_component)) = query.get_single_mut() {
+            if player_movement.is_moving && *last_action == PlayerAnimationAction::Idle {
                 animation_component.next = Some(PlayerAnimationAction::Run);
                 *last_action = PlayerAnimationAction::Run;
             }
 
-            if !player.is_moving && *last_action == PlayerAnimationAction::Run {
+            if !player_movement.is_moving && *last_action == PlayerAnimationAction::Run {
                 animation_component.next = Some(PlayerAnimationAction::Idle);
                 *last_action = PlayerAnimationAction::Idle;
             }

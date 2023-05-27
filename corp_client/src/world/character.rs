@@ -14,6 +14,7 @@ pub struct Movement {
     pub rotation_time: f32,
     pub rotating: bool,
     pub target_rotation: Quat,
+    pub is_moving: bool,
 }
 
 impl Movement {
@@ -40,6 +41,7 @@ impl Default for Movement {
             rotation_time: 0.0,
             rotating: false,
             target_rotation: Quat::IDENTITY,
+            is_moving: false,
         }
     }
 }

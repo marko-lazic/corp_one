@@ -2,12 +2,12 @@ use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 
 use corp_shared::prelude::Health;
+use corp_shared::prelude::*;
 
 use crate::input::Cursor;
 use crate::state::Despawn;
 use crate::state::GameState;
 use crate::world::camera::TopDownCamera;
-use crate::world::player::Player;
 use crate::Game;
 
 #[derive(Component)]

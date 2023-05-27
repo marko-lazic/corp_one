@@ -21,12 +21,12 @@ glam = "0.24.0"
 serde = "1.0.145"
 rand = "0.8.5"
 bitflags = "2.2.1"
-lazy_static = "1.4.0"
 
 [dev-dependencies]
 bevy_prototype_debug_lines = { version = "0.10.0" }
 impl-tools = "0.8.0"
 bevy_prototype_lyon = "0.8.0"
+lazy_static = "1.4.0"
 
 [[example]]
 name = "transforms"

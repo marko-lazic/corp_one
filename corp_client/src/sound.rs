@@ -1,9 +1,11 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioControl, AudioPlugin};
 
+use corp_shared::prelude::*;
+
 use crate::asset::asset_loading::AudioAssets;
 use crate::state::GameState;
-use crate::world::player::Player;
+use crate::world::character::Movement;
 
 pub struct SoundPlugin;
 
@@ -40,7 +42,7 @@ impl SoundPlugin {
         audio.stop();
     }
 
-    fn walk_sound(audio: Res<Audio>, mut player_query: Query<&Player>) {
+    fn walk_sound(audio: Res<Audio>, mut player_query: Query<&Movement, With<Player>>) {
         if let Ok(player) = player_query.get_single_mut() {
             if player.is_moving {
                 audio.resume();

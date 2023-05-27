@@ -5,10 +5,11 @@ use bevy::render::camera::Camera;
 use bevy_mod_picking::prelude::*;
 use bevy_mod_raycast::RaycastSource;
 
+use corp_shared::prelude::*;
+
 use crate::input::{Cursor, Ground};
 use crate::state::Despawn;
 use crate::state::GameState;
-use crate::world::player::Player;
 use crate::world::WorldSystemSet;
 use crate::Game;
 
