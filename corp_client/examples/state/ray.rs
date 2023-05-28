@@ -2,8 +2,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_rapier3d::prelude::*;
 
-use crate::interactive::Interactor;
-use crate::player::Player;
+use corp_shared::prelude::{Interactor, Player};
 
 pub fn cast_ray_system(
     windows: Query<&Window, With<PrimaryWindow>>,
@@ -43,7 +42,7 @@ mod tests {
     use bevy::scene::ScenePlugin;
     use bevy::time::TimePlugin;
 
-    use crate::test_utils::TestUtils;
+    use corp_shared::prelude::TestUtils;
 
     use super::*;
 

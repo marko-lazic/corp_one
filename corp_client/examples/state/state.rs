@@ -2,34 +2,12 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_trait_query::RegisterExt;
 
-use crate::backpack::{
-    backpack_interaction_event_system, despawn_backpack_system, Backpack, BackpackInteractionEvent,
-};
-use crate::door::{
-    door_cooldown_system, door_hack_event_system, door_interaction_event_system, Door,
-    DoorHackEvent, DoorInteractionEvent, DoorState, Security,
-};
-use crate::faction::{
-    process_temporary_faction_ownership_timers_system, ControlRegistry, Faction, MemberOf, Rank,
-};
-use crate::gui::UiBundle;
-use crate::interactive::{interaction_system, Interactive, Interactor};
-use crate::inventory::Inventory;
-use crate::item::{HackingToolBundle, Item};
-use crate::player::Player;
+use corp_shared::prelude::*;
+
 use crate::ray::cast_ray_system;
 
-mod backpack;
-mod door;
 mod endesga;
-mod faction;
-mod gui;
-mod interactive;
-mod inventory;
-mod item;
-mod player;
 mod ray;
-mod test_utils;
 
 #[derive(Component)]
 struct InventoryText(Entity);
@@ -44,6 +22,7 @@ fn main() {
             color: Color::WHITE,
             brightness: 1.0,
         })
+        .add_event::<DoorStateEvent>()
         .add_event::<BackpackInteractionEvent>()
         .add_event::<DoorInteractionEvent>()
         .register_component_as::<dyn Interactive, Backpack>()
@@ -125,7 +104,6 @@ fn setup(
             Player,
             Interactor::default(),
             Inventory::new(vec![hacking_tool_entity]),
-            UiBundle::default(),
             MemberOf {
                 faction: Faction::EC,
                 rank: Rank::R7,
@@ -201,8 +179,8 @@ fn door_color_change_state_system(
     mut doors: Query<(&Door, &Handle<StandardMaterial>)>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (mut door, material) in &mut doors {
-        match &door.state() {
+    for (door, material) in &mut doors {
+        match door.state() {
             DoorState::Open => {
                 materials.get_mut(material).unwrap().base_color = endesga::FOG.into()
             }
