@@ -32,7 +32,9 @@ impl PhysicsPlugin {
                         Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
                             .expect("Failed to initialize a collider with a Mesh.");
 
-                    commands.entity(collider_entity).insert(rapier_collider);
+                    commands
+                        .entity(collider_entity)
+                        .insert((RigidBody::KinematicPositionBased, rapier_collider));
                 }
             }
         }
