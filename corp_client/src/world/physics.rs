@@ -24,7 +24,19 @@ impl PhysicsPlugin {
         mesh_handles: Query<&Handle<Mesh>>,
     ) {
         for (entity, name) in &added_name {
-            if name.to_lowercase().contains("wall") || name.to_lowercase().contains("barrier") {
+            if name.to_lowercase().contains("wall") || name.to_lowercase().contains("tree") {
+                for (collider_entity, collider_mesh) in
+                    Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
+                {
+                    let rapier_collider =
+                        Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
+                            .expect("Failed to initialize a collider with a Mesh.");
+
+                    commands
+                        .entity(collider_entity)
+                        .insert((RigidBody::Fixed, rapier_collider));
+                }
+            } else if name.to_lowercase().contains("barrier") {
                 for (collider_entity, collider_mesh) in
                     Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
                 {
