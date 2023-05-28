@@ -21,6 +21,7 @@ pub mod prelude {
     pub use crate::util::test_utils::*;
     pub use crate::world::faction::*;
     pub use crate::world::interactive::*;
-    pub use crate::world::objects::*;
+    pub use crate::world::objects::backpack::*;
+    pub use crate::world::objects::door::*;
     pub use crate::world::player::*;
 }

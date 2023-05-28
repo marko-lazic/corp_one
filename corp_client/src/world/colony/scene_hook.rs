@@ -4,12 +4,14 @@ use bevy_mod_picking::backends::rapier::RapierPickTarget;
 use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use corp_shared::prelude::{ControlRegistry, Door, Faction, Security};
+
 use crate::state::Despawn;
 use crate::world::colony::barrier::{BarrierControl, BarrierField, BarrierPickingEvent};
 use crate::world::colony::vortex::{VortexGate, VortexNode};
 use crate::world::physics;
 
-pub(crate) fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
+pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
     match name {
         n if n.starts_with("VortexGate") => commands.insert((
             VortexGate,
@@ -22,7 +24,11 @@ pub(crate) fn scene_hook_insert_components(name: &str, commands: &mut EntityComm
             info!("Insert vortex node");
             commands.insert((VortexNode, Despawn))
         }
-        "BarrierField1" => commands.insert(BarrierField::new("B1")),
+        "BarrierField1" => {
+            let mut registry = ControlRegistry::default();
+            registry.add_permanent(Faction::EC);
+            commands.insert((BarrierField::new("B1"), Door::new(Security::Low), registry))
+        }
         "BarrierControl11" | "BarrierControl12" => commands.insert((
             BarrierControl::new("B1"),
             PickableBundle::default(),
@@ -32,7 +38,11 @@ pub(crate) fn scene_hook_insert_components(name: &str, commands: &mut EntityComm
             Despawn,
         )),
 
-        "BarrierField2" => commands.insert(BarrierField::new("B2")),
+        "BarrierField2" => {
+            let mut registry = ControlRegistry::default();
+            registry.add_permanent(Faction::EC);
+            commands.insert((BarrierField::new("B2"), Door::new(Security::Low), registry))
+        }
         "BarrierControl21" | "BarrierControl22" => commands.insert((
             BarrierControl::new("B2"),
             PickableBundle::default(),

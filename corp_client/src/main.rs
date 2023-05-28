@@ -10,7 +10,6 @@ use crate::asset::asset_loading::AssetLoadingPlugin;
 use crate::gui::GuiPlugin;
 use crate::state::GameStatePlugin;
 use crate::world::colony::colony_assets::ColonyAsset;
-use crate::world::colony::intractable::UseEntity;
 use crate::world::WorldPlugin;
 
 mod asset;
@@ -27,7 +26,7 @@ const HEIGHT: f32 = 720.0;
 
 #[derive(Resource, Default)]
 pub struct Game {
-    use_entity: UseEntity,
+    use_entity: Option<Entity>,
     cursor_locked: bool,
     player_entity: Option<Entity>,
     camera_transform: Option<Transform>,

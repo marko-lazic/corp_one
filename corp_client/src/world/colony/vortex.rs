@@ -22,12 +22,10 @@ impl VortInEvent {
     }
 }
 
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[derive(Component, Default)]
 pub struct VortexNode;
 
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[derive(Component, Default)]
 pub struct VortexGate;
 
 pub struct VortexPlugin;

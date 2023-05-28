@@ -18,7 +18,7 @@ lazy_static! {
     };
 }
 
-#[derive(Default, Eq, PartialEq, Debug)]
+#[derive(Default, Eq, PartialEq, Debug, Copy, Clone)]
 pub enum DoorState {
     Open,
     #[default]
@@ -51,22 +51,19 @@ impl Door {
         }
     }
 
-    pub fn state(&self) -> &DoorState {
-        &self.state
+    pub fn state(&self) -> DoorState {
+        self.state
     }
 
     pub fn toggle(&mut self) {
         if self.toggle_cooldown.finished() {
             self.toggle_cooldown.reset();
-            self.toggle_state();
-        }
-    }
-
-    fn toggle_state(&mut self) {
-        if self.state == DoorState::Open {
-            self.state = DoorState::Closed;
-        } else {
-            self.state = DoorState::Open;
+            self.open_cooldown.reset();
+            if self.state == DoorState::Open {
+                self.state = DoorState::Closed;
+            } else {
+                self.state = DoorState::Open;
+            }
         }
     }
 
@@ -94,21 +91,6 @@ impl Interactive for Door {
     }
 }
 
-pub fn door_cooldown_system(mut door_query: Query<&mut Door>, time: Res<Time>) {
-    for mut door in &mut door_query {
-        // If the door is currently open and the cooldown timer has expired, set the state to Closed
-        if door.state == DoorState::Open && door.open_cooldown.tick(time.delta()).just_finished() {
-            door.state = DoorState::Closed;
-            door.open_cooldown.reset();
-        }
-
-        // If the door toggle cooldown timer has expired, allow the player to interact with the door again
-        if !door.toggle_cooldown.finished() {
-            door.toggle_cooldown.tick(time.delta());
-        }
-    }
-}
-
 pub struct DoorInteractionEvent {
     pub door_entity: Entity,
     pub interactor_entity: Entity,
@@ -119,9 +101,43 @@ pub struct DoorHackEvent {
     pub interactor_entity: Entity,
 }
 
+#[derive(Debug)]
+pub struct DoorStateEvent(Entity, DoorState);
+
+impl DoorStateEvent {
+    pub fn entity(&self) -> Entity {
+        self.0
+    }
+
+    pub fn state(&self) -> DoorState {
+        self.1
+    }
+}
+
+pub fn door_cooldown_system(
+    mut door_state_event_writer: EventWriter<DoorStateEvent>,
+    mut door_query: Query<(Entity, &mut Door)>,
+    time: Res<Time>,
+) {
+    for (entity, mut door) in &mut door_query {
+        // If the door is currently open and the cooldown timer has expired, set the state to Closed
+        if door.state == DoorState::Open && door.open_cooldown.tick(time.delta()).just_finished() {
+            door.state = DoorState::Closed;
+            door_state_event_writer.send(DoorStateEvent(entity, DoorState::Closed));
+            door.open_cooldown.reset();
+        }
+
+        // If the door toggle cooldown timer has expired, allow the player to interact with the door again
+        if !door.toggle_cooldown.finished() {
+            door.toggle_cooldown.tick(time.delta());
+        }
+    }
+}
+
 pub fn door_interaction_event_system(
     mut door_interaction_event_reader: EventReader<DoorInteractionEvent>,
     mut door_hack_event_writer: EventWriter<DoorHackEvent>,
+    mut door_state_event_writer: EventWriter<DoorStateEvent>,
     interactor_query: Query<&MemberOf>,
     mut door_query: Query<(&mut Door, &ControlRegistry)>,
 ) {
@@ -135,10 +151,14 @@ pub fn door_interaction_event_system(
                                 >= REQUIRED_RANK_BY_DOOR_SECURITY.get(door.security())
                             {
                                 door.toggle();
+                                door_state_event_writer
+                                    .send(DoorStateEvent(event.door_entity, door.state()));
                             }
                         }
                         ControlType::Hacked(_, _) => {
                             door.toggle();
+                            door_state_event_writer
+                                .send(DoorStateEvent(event.door_entity, door.state()));
                         }
                     }
                 } else {
@@ -154,6 +174,7 @@ pub fn door_interaction_event_system(
 
 pub fn door_hack_event_system(
     mut door_hack_event_reader: EventReader<DoorHackEvent>,
+    mut door_state_event_writer: EventWriter<DoorStateEvent>,
     mut door_query: Query<(&mut Door, &mut ControlRegistry)>,
     mut interactor_query: Query<(&mut Inventory, &MemberOf), With<Interactor>>,
     hacking_tool_query: Query<&HackingTool>,
@@ -182,6 +203,7 @@ pub fn door_hack_event_system(
                         ),
                     );
                     door.toggle();
+                    door_state_event_writer.send(DoorStateEvent(event.door_entity, door.state()));
                 }
             }
         }
@@ -324,6 +346,26 @@ mod tests {
         let result = app.get::<Door>(door_entity);
         assert_eq!(result.state, DoorState::Open);
         assert!(!result.toggle_cooldown.finished());
+    }
+
+    #[test]
+    fn player_open_door_two_times_open_cooldown_resets() {
+        // given
+        let mut app = setup();
+        let door_entity = setup_door(&mut app, Faction::EC, Security::High);
+        let player_entity = setup_player(&mut app, vec![], Faction::EC, Rank::R6);
+
+        // when
+        for _ in 0..3 {
+            app.get_mut::<Interactor>(player_entity)
+                .interact(door_entity);
+            app.update_after(Duration::from_secs_f32(2.0));
+        }
+
+        // then
+        let result = app.get::<Door>(door_entity);
+        assert_eq!(result.state, DoorState::Open);
+        assert_eq!(result.open_cooldown.remaining_secs(), 10.0);
     }
 
     #[test]
@@ -496,6 +538,7 @@ mod tests {
         app.add_event::<DoorInteractionEvent>();
         app.add_event::<BackpackInteractionEvent>();
         app.add_event::<DoorHackEvent>();
+        app.add_event::<DoorStateEvent>();
         app.register_component_as::<dyn Interactive, Door>();
         app.add_systems(
             (

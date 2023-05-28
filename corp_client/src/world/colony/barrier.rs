@@ -1,13 +1,14 @@
-use std::time::Duration;
-
 use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy_mod_picking::events::{Out, Over};
 use bevy_mod_picking::prelude::ListenedEvent;
+use bevy_rapier3d::prelude::ColliderDisabled;
+
+use corp_shared::prelude::*;
 
 use crate::gui::CursorVisibility;
 use crate::state::GameState;
-use crate::{App, Game, Timer, UseEntity};
+use crate::{App, Game};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Hover {
@@ -29,8 +30,7 @@ impl From<ListenedEvent<Out>> for BarrierPickingEvent {
     }
 }
 
-#[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
+#[derive(Component, Default, Debug)]
 pub struct BarrierControl {
     pub barrier_field_name: String,
 }
@@ -43,31 +43,15 @@ impl BarrierControl {
     }
 }
 
-#[derive(Component, Reflect, Debug)]
-#[reflect(Component)]
+#[derive(Component, Default, Debug)]
 pub struct BarrierField {
     pub name: String,
-    #[reflect(ignore)]
-    close_cooldown: Timer,
-    #[reflect(ignore)]
-    pub open: bool,
 }
 
 impl BarrierField {
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
-            ..default()
-        }
-    }
-}
-
-impl Default for BarrierField {
-    fn default() -> Self {
-        Self {
-            name: "".to_string(),
-            close_cooldown: Timer::new(Duration::from_secs(5), TimerMode::Once),
-            open: false,
         }
     }
 }
@@ -76,27 +60,48 @@ pub struct BarrierPlugin;
 
 impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<BarrierField>();
-        app.register_type::<BarrierControl>();
         app.add_event::<BarrierPickingEvent>();
-        app.add_system(Self::receive_barrier_pickings.run_if(on_event::<BarrierPickingEvent>()));
-        app.add_system(Self::open_close_barrier.in_set(OnUpdate(GameState::Playing)));
+        app.add_event::<DoorInteractionEvent>();
+        app.add_event::<DoorHackEvent>();
+        app.add_event::<DoorStateEvent>();
+        app.add_systems(
+            (
+                Self::receive_barrier_pickings.run_if(on_event::<BarrierPickingEvent>()),
+                Self::open_close_barrier,
+            )
+                .in_set(OnUpdate(GameState::Playing)),
+        );
+        app.add_systems(
+            (
+                door_cooldown_system,
+                process_temporary_faction_ownership_timers_system,
+                door_interaction_event_system,
+                door_hack_event_system,
+            )
+                .chain()
+                .in_set(OnUpdate(GameState::Playing)),
+        );
     }
 }
 
 impl BarrierPlugin {
     fn open_close_barrier(
-        mut barrier_query: Query<(&mut BarrierField, &mut Visibility)>,
-        time: Res<Time>,
+        mut commands: Commands,
+        mut barrier_query: Query<&mut Visibility, With<Door>>,
+        mut door_state_reader: EventReader<DoorStateEvent>,
     ) {
-        for (mut barrier, mut visible) in barrier_query.iter_mut() {
-            if barrier.open {
-                *visible = Visibility::Hidden;
-                barrier.close_cooldown.tick(time.delta());
-                if barrier.close_cooldown.just_finished() {
-                    barrier.open = false;
-                    barrier.close_cooldown.reset();
+        for door_event in door_state_reader.iter() {
+            if let Ok(mut visible) = barrier_query.get_mut(door_event.entity()) {
+                if door_event.state() == DoorState::Open {
+                    *visible = Visibility::Hidden;
+                    commands
+                        .entity(door_event.entity())
+                        .insert(ColliderDisabled);
+                } else if door_event.state() == DoorState::Closed {
                     *visible = Visibility::Visible;
+                    commands
+                        .entity(door_event.entity())
+                        .remove::<ColliderDisabled>();
                 }
             }
         }
@@ -110,10 +115,10 @@ impl BarrierPlugin {
         for event in pickings.iter() {
             if event.1 == Hover::Over {
                 cursor_info.visible = true;
-                game.use_entity = UseEntity::Barrier(event.0);
+                game.use_entity = Some(event.0);
             } else if event.1 == Hover::Out {
                 cursor_info.visible = false;
-                game.use_entity = UseEntity::None;
+                game.use_entity = None;
             }
         }
     }

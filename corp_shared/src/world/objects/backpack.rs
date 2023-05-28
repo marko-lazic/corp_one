@@ -78,8 +78,6 @@ pub fn despawn_backpack_system(
 mod tests {
     use bevy_trait_query::RegisterExt;
 
-    use crate::prelude::*;
-
     use super::*;
 
     #[test]

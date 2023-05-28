@@ -16,7 +16,7 @@ use crate::state::GameState;
 use crate::world::colony::barrier::{BarrierControl, BarrierField};
 use crate::world::colony::vortex::VortInEvent;
 use crate::world::colony::Colony;
-use crate::{Game, UseEntity};
+use crate::Game;
 
 mod double_tap;
 pub mod input_command;
@@ -217,22 +217,29 @@ impl InputControlPlugin {
 
     fn use_barrier(
         action_state: Res<ActionState<CorpAction>>,
-        mut barriers_query: Query<&mut BarrierField>,
-        barrier_access_query: Query<&BarrierControl>,
+        barrier_control_query: Query<&BarrierControl>,
+        barrier_field_query: Query<(Entity, &BarrierField)>,
+        mut interactor_query: Query<&mut Interactor>,
         game: Res<Game>,
     ) {
         if action_state.just_pressed(CorpAction::Use) {
-            if let UseEntity::Barrier(entity) = game.use_entity {
-                if let Ok(access) = barrier_access_query.get(entity) {
-                    for mut barrier in barriers_query.iter_mut() {
-                        if barrier.name == access.barrier_field_name {
-                            barrier.open = true;
-                        }
-                    }
-                } else {
-                    info!("Unimplemented");
-                }
-            }
+            let Some(target_entity) = game.use_entity else {
+                return;
+            };
+
+            let Ok(barrier_control) = barrier_control_query.get(target_entity) else {
+                return;
+            };
+
+            let Some((target_barrier, _)) = barrier_field_query.iter()
+                .find(|(_e, b)| b.name == barrier_control.barrier_field_name) else {
+                return;
+            };
+
+            let Ok(mut interactor) = interactor_query.get_single_mut() else {
+                return;
+            };
+            interactor.interact(target_barrier);
         }
     }
 

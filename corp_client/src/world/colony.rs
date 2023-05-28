@@ -11,9 +11,9 @@ use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
 use crate::input::Ground;
 use crate::state::Despawn;
 use crate::state::GameState;
-use crate::world::colony::barrier::{BarrierControl, BarrierField, BarrierPlugin};
 use crate::world::colony::colony_assets::ColonyAsset;
-use crate::world::colony::vortex::{VortexGate, VortexNode, VortexPlugin};
+use crate::world::colony::colony_interaction::ColonyInteractionPlugin;
+use crate::world::colony::vortex::{VortexNode, VortexPlugin};
 use crate::world::colony::zone::Zone;
 use crate::world::{physics, WorldSystemSet};
 use crate::Game;
@@ -21,7 +21,7 @@ use crate::Game;
 mod asset;
 pub mod barrier;
 pub mod colony_assets;
-pub mod intractable;
+mod colony_interaction;
 mod scene_hook;
 pub mod vortex;
 pub mod zone;
@@ -44,14 +44,10 @@ pub struct ColonyPlugin;
 
 impl Plugin for ColonyPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<VortexNode>();
-        app.register_type::<VortexGate>();
-        app.register_type::<BarrierField>();
-        app.register_type::<BarrierControl>();
         app.add_plugin(RonAssetPlugin::<ColonyAsset>::new(&["colony"]));
         app.add_plugin(VortexPlugin);
         app.add_plugins(DefaultPickingPlugins);
-        app.add_plugin(BarrierPlugin);
+        app.add_plugin(ColonyInteractionPlugin);
         app.add_plugin(HookPlugin);
         app.add_systems(
             (

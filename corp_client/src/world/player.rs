@@ -87,6 +87,11 @@ impl PlayerPlugin {
                     ..default()
                 },
                 Player,
+                Interactor::default(),
+                MemberOf {
+                    faction: Faction::EC,
+                    rank: Rank::R6,
+                },
                 Movement::default(),
                 game.health.clone(),
                 AnimationComponent::new(PlayerAnimationAction::Idle),
