@@ -15,6 +15,7 @@ bevy_asset_loader = { version = "0.16.0" }
 bevy_kira_audio = "0.15.0"
 bevy_common_assets = { version = "0.6.0", features = ["ron"] }
 bevy_rapier3d = "0.21.0"
+bevy_panorbit_camera = { path = "../../bevy_panorbit_camera" }
 bevy-scene-hook = "6.0.0"
 bevy-trait-query = "0.2.1"
 glam = "0.24.0"
@@ -27,6 +28,8 @@ bevy_prototype_debug_lines = { version = "0.10.0" }
 impl-tools = "0.8.0"
 bevy_prototype_lyon = "0.8.0"
 lazy_static = "1.4.0"
+derive_more = "0.99.17"
+float_eq = "1.0.1"
 
 [[example]]
 name = "transforms"
@@ -67,3 +70,7 @@ path = "examples/state/state.rs"
 [[example]]
 name = "pick"
 path = "examples/pick.rs"
+
+[[example]]
+name = "ccc"
+path = "examples/ccc/ccc.rs"

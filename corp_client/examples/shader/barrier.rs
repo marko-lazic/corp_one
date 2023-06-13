@@ -1,12 +1,11 @@
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::pbr::{AlphaMode, Material, MaterialMeshBundle, MaterialPlugin};
-use bevy::prelude::{shape, Camera3dBundle, ClearColor, Color, Commands, Mesh, ResMut, Transform};
+use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 use bevy::utils::default;
 use bevy::DefaultPlugins;
-use glam::Vec3;
 
 fn main() {
     App::new()
