@@ -16,6 +16,7 @@ bevy_kira_audio = "0.15.0"
 bevy_common_assets = { version = "0.6.0", features = ["ron"] }
 bevy_rapier3d = "0.21.0"
 bevy_panorbit_camera = { path = "../../bevy_panorbit_camera" }
+bevy_dolly = { path = "../../bevy_dolly" }
 bevy-scene-hook = "6.0.0"
 bevy-trait-query = "0.2.1"
 glam = "0.24.0"
