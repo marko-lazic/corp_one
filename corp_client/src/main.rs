@@ -1,6 +1,6 @@
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
-use bevy::window::PresentMode;
+use bevy::window::{PresentMode, WindowMode};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use corp_shared::prelude::Health;
@@ -64,7 +64,8 @@ fn new_window() -> Window {
     Window {
         title: CORP_ONE_GAME_TITLE.to_string(),
         resolution: (WIDTH, HEIGHT).into(),
+        mode: WindowMode::BorderlessFullscreen,
         present_mode: PresentMode::AutoNoVsync, // Reduces input latency
-        ..Default::default()
+        ..default()
     }
 }

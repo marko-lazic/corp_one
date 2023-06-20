@@ -3,6 +3,7 @@
 
 use bevy::app::AppExit;
 use bevy::prelude::*;
+use bevy::window::{PresentMode, WindowMode};
 use bevy_dolly::prelude::*;
 
 use corp_shared::prelude::Player;
@@ -15,10 +16,21 @@ mod camera;
 mod character;
 mod control;
 
+fn new_window() -> Window {
+    Window {
+        mode: WindowMode::BorderlessFullscreen,
+        present_mode: PresentMode::AutoNoVsync, // Reduces input latency
+        ..default()
+    }
+}
+
 fn main() {
     App::new()
         .insert_resource(Msaa::default())
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(new_window()),
+            ..default()
+        }))
         .add_plugin(MainCameraPlugin)
         .add_plugin(ControlPlugin)
         .add_plugin(CharacterPlugin)

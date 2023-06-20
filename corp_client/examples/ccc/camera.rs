@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
 use bevy_dolly::system::DollyUpdateSet;
+use leafwing_input_manager::action_state::ActionState;
+
+use crate::control::ControlAction;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CameraSet {
@@ -48,7 +51,7 @@ impl Plugin for MainCameraPlugin {
 }
 
 fn update_camera(
-    keys: Res<Input<KeyCode>>,
+    action_state: Res<ActionState<ControlAction>>,
     mut rig_q: Query<&mut Rig>,
     follow_trans_q: Query<&Transform, With<MainCameraFollow>>,
 ) {
@@ -56,27 +59,25 @@ fn update_camera(
     let camera_yp = rig.driver_mut::<YawPitch>();
 
     // Rotate 90 degrees
-    if keys.just_pressed(KeyCode::Z) {
-        camera_yp.rotate_yaw_pitch(-90.0, 0.0);
+    if action_state.just_pressed(ControlAction::CameraRotateClockwise) {
+        camera_yp.rotate_yaw_pitch(-45.0, 0.0);
     }
-    if keys.just_pressed(KeyCode::X) {
-        camera_yp.rotate_yaw_pitch(90.0, 0.0);
+    if action_state.just_pressed(ControlAction::CameraRotateCounterClockwise) {
+        camera_yp.rotate_yaw_pitch(45.0, 0.0);
     }
 
-    if keys.pressed(KeyCode::Equals) {
-        // Zoom in
+    if action_state.pressed(ControlAction::CameraZoomIn) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
-            xz.z = (xz.z - 1.0 * 0.5).abs();
+            xz.z = (xz.z - 0.01).abs();
             arm.offset = xz;
         }
     }
 
-    if keys.pressed(KeyCode::Minus) {
-        // Zoom out
+    if action_state.pressed(ControlAction::CameraZoomOut) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
-            xz.z = (xz.z + 1.0 * 0.5).abs();
+            xz.z = (xz.z + 0.01).abs();
             arm.offset = xz;
         }
     }

@@ -14,6 +14,10 @@ pub enum ControlAction {
     Use,
     Shoot,
     Escape,
+    CameraZoomIn,
+    CameraZoomOut,
+    CameraRotateClockwise,
+    CameraRotateCounterClockwise,
     Kill,
     ColonyIris,
     ColonyPlayground,
@@ -50,6 +54,10 @@ impl Default for ControlSettings {
             // Options
             .insert(KeyCode::Escape, ControlAction::Escape)
             .insert(KeyCode::Space, ControlAction::OrientationMode)
+            .insert(KeyCode::Equals, ControlAction::CameraZoomIn)
+            .insert(KeyCode::Minus, ControlAction::CameraZoomOut)
+            .insert(KeyCode::Z, ControlAction::CameraRotateClockwise)
+            .insert(KeyCode::X, ControlAction::CameraRotateCounterClockwise)
             .insert(KeyCode::I, ControlAction::ColonyIris)
             .insert(KeyCode::P, ControlAction::ColonyPlayground)
             .insert(KeyCode::L, ControlAction::ColonyLiberte);
