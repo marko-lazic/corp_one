@@ -57,7 +57,7 @@ impl Default for ControlSettings {
             .insert(KeyCode::Equals, ControlAction::CameraZoomIn)
             .insert(KeyCode::Minus, ControlAction::CameraZoomOut)
             .insert(KeyCode::Z, ControlAction::CameraRotateClockwise)
-            .insert(KeyCode::X, ControlAction::CameraRotateCounterClockwise)
+            .insert(KeyCode::C, ControlAction::CameraRotateCounterClockwise)
             .insert(KeyCode::I, ControlAction::ColonyIris)
             .insert(KeyCode::P, ControlAction::ColonyPlayground)
             .insert(KeyCode::L, ControlAction::ColonyLiberte);

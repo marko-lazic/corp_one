@@ -33,7 +33,7 @@ impl Default for MainCameraBundle {
             main_camera: MainCamera,
             rig: Rig::builder()
                 .with(Position::new(Vec3::ZERO))
-                .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-60.0))
+                .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-65.0))
                 .with(Smooth::new_position(0.3))
                 .with(Smooth::new_rotation(0.3))
                 .with(Arm::new(Vec3::Z * 4.0))
@@ -53,7 +53,9 @@ impl Plugin for MainCameraPlugin {
 fn update_camera(
     action_state: Res<ActionState<ControlAction>>,
     mut rig_q: Query<&mut Rig>,
-    follow_trans_q: Query<&Transform, With<MainCameraFollow>>,
+    q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
+    windows: Query<&Window>,
+    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
     let mut rig = rig_q.single_mut();
     let camera_yp = rig.driver_mut::<YawPitch>();
@@ -82,10 +84,31 @@ fn update_camera(
         }
     }
 
+    let (camera, camera_transform) = q_camera.single();
+    let ground = Transform::from_xyz(0.0, 0.0, 0.0);
+    let Ok(follow_pos) = q_follow_cam.get_single() else {
+        return;
+    };
+
+    let Some(ray) = windows.single()
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor)) else { return; };
+
+    // Calculate if and where the ray is hitting the ground plane.
+    let Some(distance) = ray.intersect_plane(ground.translation, ground.up()) else { return; };
+    let mouse_ground_pos = ray.get_point(distance);
+
+    // Calculate the direction from the player to the mouse ground position
+    let direction = mouse_ground_pos - follow_pos.translation;
+    let sensitivity = 0.2; // Adjust this value to control camera movement speed
+
+    // Calculate the new camera position by offsetting from the player position
+    let new_camera_pos =
+        follow_pos.translation + direction * sensitivity + Vec3::new(0.0, 0.0, 0.0);
+
     // Update camera position
     if let Some(camera_pos) = rig.try_driver_mut::<Position>() {
-        for pos in follow_trans_q.iter() {
-            camera_pos.position = pos.translation + Vec3::new(0., 1., 0.);
-        }
+        camera_pos.position.x = new_camera_pos.x;
+        camera_pos.position.z = new_camera_pos.z;
     }
 }
