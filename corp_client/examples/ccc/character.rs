@@ -3,6 +3,7 @@ use leafwing_input_manager::prelude::*;
 
 use corp_shared::prelude::Player;
 
+use crate::camera::MainCamera;
 use crate::control::ControlAction;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
@@ -49,20 +50,38 @@ impl Plugin for CharacterPlugin {
 
 fn calculate_character_movement(
     action_state: Res<ActionState<ControlAction>>,
+    mut q_camera: Query<&Transform, With<MainCamera>>,
     mut query: Query<&mut CharacterMovement, With<Player>>,
 ) {
+    let Ok(cam) = q_camera.get_single_mut() else {
+        return;
+    };
+
+    let cam_forward = Vec3::new(
+        cam.rotation.mul_vec3(Vec3::Z).x,
+        0.0,
+        cam.rotation.mul_vec3(Vec3::Z).z,
+    )
+    .normalize_or_zero();
+    let cam_right = Vec3::new(
+        cam.rotation.mul_vec3(Vec3::X).x,
+        0.0,
+        cam.rotation.mul_vec3(Vec3::X).z,
+    )
+    .normalize_or_zero();
+
     let mut direction = Vec3::ZERO;
     if action_state.pressed(ControlAction::Forward) {
-        direction -= Vec3::Z;
+        direction -= cam_forward;
     }
     if action_state.pressed(ControlAction::Backward) {
-        direction += Vec3::Z;
+        direction += cam_forward;
     }
     if action_state.pressed(ControlAction::Left) {
-        direction -= Vec3::X;
+        direction -= cam_right;
     }
     if action_state.pressed(ControlAction::Right) {
-        direction += Vec3::X;
+        direction += cam_right;
     }
 
     for mut character_movement in &mut query {

@@ -4,7 +4,6 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowMode};
-use bevy_dolly::prelude::*;
 
 use corp_shared::prelude::Player;
 
@@ -51,6 +50,25 @@ fn setup(
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..default()
     });
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 0.2 })),
+        material: materials.add(Color::rgb(0.8, 0.1, 0.1).into()),
+        transform: Transform::from_xyz(2.0, 0.5, 0.0),
+        ..default()
+    });
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 0.2 })),
+        material: materials.add(Color::rgb(0.1, 0.1, 0.8).into()),
+        transform: Transform::from_xyz(0.0, 0.5, 2.0),
+        ..default()
+    });
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 0.2 })),
+        material: materials.add(Color::rgb(0.1, 0.8, 0.1).into()),
+        transform: Transform::from_xyz(0.0, 2.0, 0.0),
+        ..default()
+    });
+
     // Player
     commands.spawn((
         PbrBundle {
