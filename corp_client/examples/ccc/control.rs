@@ -10,6 +10,7 @@ pub enum ControlAction {
     Backward,
     Left,
     Right,
+    Aim,
     OrientationMode,
     Use,
     Shoot,
@@ -47,6 +48,8 @@ impl Default for ControlSettings {
             .insert(KeyCode::S, ControlAction::Backward)
             .insert(KeyCode::A, ControlAction::Left)
             .insert(KeyCode::D, ControlAction::Right)
+            // Weapon
+            .insert(MouseButton::Right, ControlAction::Aim)
             // Abilities
             .insert(KeyCode::E, ControlAction::Use)
             .insert(KeyCode::K, ControlAction::Kill)

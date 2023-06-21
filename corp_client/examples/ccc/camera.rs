@@ -84,6 +84,11 @@ fn update_camera(
         }
     }
 
+    let mut target_zoom_factor: f32 = 1.0;
+    if action_state.pressed(ControlAction::Aim) {
+        target_zoom_factor = 1.8;
+    }
+
     let (camera, camera_transform) = q_camera.single();
     let ground = Transform::from_xyz(0.0, 0.0, 0.0);
     let Ok(follow_pos) = q_follow_cam.get_single() else {
@@ -103,8 +108,7 @@ fn update_camera(
     let sensitivity = 0.2; // Adjust this value to control camera movement speed
 
     // Calculate the new camera position by offsetting from the player position
-    let new_camera_pos =
-        follow_pos.translation + direction * sensitivity + Vec3::new(0.0, 0.0, 0.0);
+    let new_camera_pos = follow_pos.translation + direction * sensitivity * target_zoom_factor;
 
     // Smoothly move the camera towards the new position
     let max_distance = 10.0;
