@@ -36,7 +36,7 @@ impl Default for MainCameraBundle {
                 .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-65.0))
                 .with(Smooth::new_position(0.3))
                 .with(Smooth::new_rotation(0.3))
-                .with(Arm::new(Vec3::Z * 4.0))
+                .with(Arm::new(Vec3::Z * 6.0))
                 .build(),
         }
     }
@@ -106,9 +106,15 @@ fn update_camera(
     let new_camera_pos =
         follow_pos.translation + direction * sensitivity + Vec3::new(0.0, 0.0, 0.0);
 
+    // Smoothly move the camera towards the new position
+    let max_distance = 10.0;
+    let distance = follow_pos.translation.distance(mouse_ground_pos);
+    let scale_factor = (distance / max_distance).clamp(0.0, 1.0) * 0.1;
+
     // Update camera position
     if let Some(camera_pos) = rig.try_driver_mut::<Position>() {
-        camera_pos.position.x = new_camera_pos.x;
-        camera_pos.position.z = new_camera_pos.z;
+        let camera_pos_diff = (new_camera_pos - camera_pos.position) * scale_factor;
+        camera_pos.position.x += camera_pos_diff.x;
+        camera_pos.position.z += camera_pos_diff.z;
     }
 }
