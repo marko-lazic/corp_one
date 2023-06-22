@@ -113,6 +113,7 @@ mod tests {
 
     use corp_shared::prelude::TestUtils;
 
+    use crate::camera::{MainCameraBundle, MainCameraPlugin};
     use crate::control::ControlPlugin;
 
     use super::*;
@@ -188,6 +189,8 @@ mod tests {
         app.add_plugin(InputPlugin);
         app.add_plugin(ControlPlugin);
         app.add_plugin(CharacterPlugin);
+        app.add_plugin(MainCameraPlugin);
+        app.world.spawn(MainCameraBundle::default());
         app
     }
 

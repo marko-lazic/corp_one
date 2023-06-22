@@ -57,7 +57,10 @@ fn update_camera(
     windows: Query<&Window>,
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
-    let mut rig = rig_q.single_mut();
+    let Ok(mut rig) = rig_q.get_single_mut() else {
+        eprintln!("No camera rig found");
+        return;
+    };
     let camera_yp = rig.driver_mut::<YawPitch>();
 
     // Rotate 90 degrees
