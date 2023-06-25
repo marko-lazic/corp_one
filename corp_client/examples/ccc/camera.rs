@@ -113,15 +113,19 @@ fn update_camera(
     // Calculate the new camera position by offsetting from the player position
     let new_camera_pos = follow_pos.translation + direction * sensitivity * target_zoom_factor;
 
-    // Smoothly move the camera towards the new position
-    let max_distance = 10.0;
-    let distance = follow_pos.translation.distance(mouse_ground_pos);
-    let scale_factor = (distance / max_distance).clamp(0.0, 1.0) * 0.1;
-
     // Update camera position
     if let Some(camera_pos) = rig.try_driver_mut::<Position>() {
-        let camera_pos_diff = (new_camera_pos - camera_pos.position) * scale_factor;
-        camera_pos.position.x += camera_pos_diff.x;
-        camera_pos.position.z += camera_pos_diff.z;
+        // Calculate the distance between the player and the new camera position
+        let max_distance = (new_camera_pos - follow_pos.translation).length();
+
+        // Limit the distance to ensure the player is always visible
+        let distance = distance.min(max_distance);
+
+        // Calculate the new camera position
+        let camera_pos_diff = (new_camera_pos - follow_pos.translation).normalize() * distance;
+
+        let player_and_camera_pos_diff = follow_pos.translation + camera_pos_diff;
+        camera_pos.position.x = player_and_camera_pos_diff.x;
+        camera_pos.position.z = player_and_camera_pos_diff.z;
     }
 }

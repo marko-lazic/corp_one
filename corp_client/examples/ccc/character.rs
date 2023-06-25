@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 
-use corp_shared::prelude::Player;
+use corp_shared::prelude::{Health, Player};
 
 use crate::camera::MainCamera;
 use crate::control::ControlAction;
@@ -41,10 +41,20 @@ impl Default for CharacterMovement {
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            (calculate_character_movement, move_player)
+            (
+                is_movement_enabled,
+                calculate_character_movement,
+                move_player,
+            )
                 .chain()
                 .in_set(CharacterSet::Movement),
         );
+    }
+}
+
+fn is_movement_enabled(mut query: Query<(&mut CharacterMovement, &Health), Changed<Health>>) {
+    for (mut character_movement, health) in &mut query {
+        character_movement.enabled = health.is_alive();
     }
 }
 
@@ -109,11 +119,12 @@ mod tests {
     use std::time::Duration;
 
     use bevy::input::InputPlugin;
+    use bevy_dolly::prelude::{Rig, YawPitch};
     use float_eq::assert_float_eq;
 
-    use corp_shared::prelude::TestUtils;
+    use corp_shared::prelude::{Health, TestUtils};
 
-    use crate::camera::{MainCameraBundle, MainCameraPlugin};
+    use crate::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
     use crate::control::ControlPlugin;
 
     use super::*;
@@ -123,6 +134,10 @@ mod tests {
         // given
         let mut app = setup();
         let player = setup_player(&mut app);
+        let camera = setup_camera(&mut app);
+        app.get_mut::<Rig>(camera)
+            .driver_mut::<YawPitch>()
+            .rotate_yaw_pitch(-45.0, 0.0);
 
         // when
         app.send_input(KeyCode::W);
@@ -138,6 +153,7 @@ mod tests {
     fn direction_up_left() {
         // given
         let mut app = setup();
+        setup_camera(&mut app);
         let player = setup_player(&mut app);
 
         // when
@@ -171,6 +187,7 @@ mod tests {
     fn move_north_1_second() {
         // given
         let mut app = setup();
+        setup_camera(&mut app);
         let player = setup_player(&mut app);
 
         // when
@@ -183,14 +200,33 @@ mod tests {
         assert_float_eq!(translation_result.z, expected_translation.z, abs <= 0.01);
     }
 
+    #[test]
+    fn dead_player_cannot_move() {
+        // given
+        let mut app = setup();
+        setup_camera(&mut app);
+        let player = setup_player(&mut app);
+
+        // when
+        app.get_mut::<Health>(player).kill_mut();
+        app.send_input(KeyCode::W);
+        app.update();
+
+        // then
+        let character_movement = app.get::<CharacterMovement>(player);
+        assert!(!character_movement.enabled);
+        assert_eq!(character_movement.direction, Vec3::ZERO);
+        assert_eq!(character_movement.velocity, Vec3::ZERO);
+    }
+
     fn setup() -> App {
         let mut app = App::new();
-        app.init_time();
-        app.add_plugin(InputPlugin);
-        app.add_plugin(ControlPlugin);
-        app.add_plugin(CharacterPlugin);
-        app.add_plugin(MainCameraPlugin);
-        app.world.spawn(MainCameraBundle::default());
+        app.init_time()
+            .add_plugin(InputPlugin)
+            .add_plugin(ControlPlugin)
+            .add_plugin(CharacterPlugin)
+            .add_plugin(MainCameraPlugin)
+            .configure_set(CameraSet::Update.after(CharacterSet::Movement));
         app
     }
 
@@ -199,8 +235,13 @@ mod tests {
             .spawn((
                 TransformBundle::default(),
                 Player,
+                Health::default(),
                 CharacterMovement::default(),
             ))
             .id()
+    }
+
+    fn setup_camera(app: &mut App) -> Entity {
+        app.world.spawn(MainCameraBundle::default()).id()
     }
 }
