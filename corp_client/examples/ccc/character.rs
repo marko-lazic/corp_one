@@ -135,9 +135,6 @@ mod tests {
         let mut app = setup();
         let player = setup_player(&mut app);
         let camera = setup_camera(&mut app);
-        app.get_mut::<Rig>(camera)
-            .driver_mut::<YawPitch>()
-            .rotate_yaw_pitch(-45.0, 0.0);
 
         // when
         app.send_input(KeyCode::W);
@@ -153,8 +150,8 @@ mod tests {
     fn direction_up_left() {
         // given
         let mut app = setup();
-        setup_camera(&mut app);
         let player = setup_player(&mut app);
+        let camera = setup_camera(&mut app);
 
         // when
         app.send_input(KeyCode::W);
@@ -192,7 +189,7 @@ mod tests {
 
         // when
         app.send_input(KeyCode::W);
-        app.update_after(Duration::from_secs_f32(1.0));
+        app.update();
 
         // then
         let expected_translation = Vec3::new(0.0, 0.0, -1.42);
@@ -242,6 +239,11 @@ mod tests {
     }
 
     fn setup_camera(app: &mut App) -> Entity {
-        app.world.spawn(MainCameraBundle::default()).id()
+        let camera = app.world.spawn(MainCameraBundle::default()).id();
+        app.get_mut::<Rig>(camera)
+            .driver_mut::<YawPitch>()
+            .rotate_yaw_pitch(-45.0, 0.0);
+        app.update_after(Duration::from_secs_f32(1.0));
+        camera
     }
 }
