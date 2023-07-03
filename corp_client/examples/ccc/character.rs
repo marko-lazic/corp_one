@@ -1,7 +1,6 @@
 use bevy::prelude::*;
-use leafwing_input_manager::prelude::*;
-
 use corp_shared::prelude::{Health, Player};
+use leafwing_input_manager::prelude::*;
 
 use crate::camera::MainCamera;
 use crate::control::ControlAction;
@@ -44,7 +43,7 @@ impl Plugin for CharacterPlugin {
             (
                 is_movement_enabled,
                 calculate_character_movement,
-                move_player,
+                move_character,
             )
                 .chain()
                 .in_set(CharacterSet::Movement),
@@ -95,17 +94,18 @@ fn calculate_character_movement(
     }
 
     for mut character_movement in &mut query {
-        if !character_movement.enabled {
+        if !character_movement.enabled || direction == Vec3::ZERO {
             continue;
         }
+
         character_movement.direction = direction.normalize_or_zero().clamp_length_max(1.0);
         character_movement.velocity = character_movement.direction * character_movement.speed;
     }
 }
 
-fn move_player(
+fn move_character(
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &CharacterMovement), With<Player>>,
+    mut query: Query<(&mut Transform, &CharacterMovement), Changed<CharacterMovement>>,
 ) {
     let delta_seconds = time.delta_seconds();
     for (mut transform, character_movement) in &mut query {
@@ -116,13 +116,11 @@ fn move_player(
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
-
     use bevy::input::InputPlugin;
     use bevy_dolly::prelude::{Rig, YawPitch};
-    use float_eq::assert_float_eq;
-
     use corp_shared::prelude::{Health, TestUtils};
+    use float_eq::assert_float_eq;
+    use std::time::Duration;
 
     use crate::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
     use crate::control::ControlPlugin;
@@ -134,7 +132,7 @@ mod tests {
         // given
         let mut app = setup();
         let player = setup_player(&mut app);
-        let camera = setup_camera(&mut app);
+        setup_camera(&mut app);
 
         // when
         app.send_input(KeyCode::W);
@@ -151,7 +149,7 @@ mod tests {
         // given
         let mut app = setup();
         let player = setup_player(&mut app);
-        let camera = setup_camera(&mut app);
+        setup_camera(&mut app);
 
         // when
         app.send_input(KeyCode::W);

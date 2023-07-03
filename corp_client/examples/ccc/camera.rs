@@ -98,12 +98,19 @@ fn update_camera(
         return;
     };
 
-    let Some(ray) = windows.single()
+    let ray = windows
+        .single()
         .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor)) else { return; };
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .unwrap_or_else(|| Ray {
+            origin: follow_pos.translation,
+            direction: follow_pos.down(),
+        });
 
     // Calculate if and where the ray is hitting the ground plane.
-    let Some(distance) = ray.intersect_plane(ground.translation, ground.up()) else { return; };
+    let Some(distance) = ray.intersect_plane(ground.translation, ground.up()) else {
+        return;
+    };
     let mouse_ground_pos = ray.get_point(distance);
 
     // Calculate the direction from the player to the mouse ground position
@@ -127,5 +134,72 @@ fn update_camera(
         let player_and_camera_pos_diff = follow_pos.translation + camera_pos_diff;
         camera_pos.position.x = player_and_camera_pos_diff.x;
         camera_pos.position.z = player_and_camera_pos_diff.z;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bevy::input::InputPlugin;
+    use corp_shared::prelude::{Health, Player, TestUtils};
+    use leafwing_input_manager::input_mocking::MockInput;
+    use std::time::Duration;
+
+    use crate::character::{CharacterMovement, CharacterPlugin, CharacterSet};
+    use crate::control::ControlPlugin;
+
+    use super::*;
+
+    #[test]
+    fn camera_follows_the_character() {
+        // given
+        let mut app = setup();
+        let player = setup_player(&mut app);
+        let camera = setup_camera(&mut app);
+        let cam_y_before = app.get::<Transform>(camera).translation.y;
+        println!("cam_y before: {}", cam_y_before);
+
+        // when
+        app.get_mut::<Transform>(player).translation.y = 10.0;
+        app.send_input(KeyCode::D);
+        app.update_after(Duration::from_secs_f32(1.0));
+
+        // then
+        let cam_y_after = app.get::<Transform>(camera).translation.y;
+        println!("cam_y after: {}", cam_y_after);
+
+        assert_ne!(cam_y_before, cam_y_after);
+    }
+
+    fn setup() -> App {
+        let mut app = App::new();
+        app.init_time()
+            .add_plugin(InputPlugin)
+            .add_plugin(ControlPlugin)
+            .add_plugin(CharacterPlugin)
+            .add_plugin(MainCameraPlugin)
+            .configure_set(CameraSet::Update.after(CharacterSet::Movement));
+        app.world.spawn(Window::default());
+        app
+    }
+
+    fn setup_player(app: &mut App) -> Entity {
+        app.world
+            .spawn((
+                TransformBundle::default(),
+                Player,
+                MainCameraFollow,
+                Health::default(),
+                CharacterMovement::default(),
+            ))
+            .id()
+    }
+
+    fn setup_camera(app: &mut App) -> Entity {
+        let camera = app.world.spawn(MainCameraBundle::default()).id();
+        app.get_mut::<Rig>(camera)
+            .driver_mut::<YawPitch>()
+            .rotate_yaw_pitch(-45.0, 0.0);
+        app.update_after(Duration::from_secs_f32(1.0));
+        camera
     }
 }
