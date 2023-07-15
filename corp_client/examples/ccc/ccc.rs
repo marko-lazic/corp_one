@@ -8,12 +8,14 @@ use bevy::window::{PresentMode, WindowMode};
 use corp_shared::prelude::Player;
 
 use crate::camera::{CameraSet, MainCameraBundle, MainCameraFollow, MainCameraPlugin};
-use crate::character::{CharacterMovement, CharacterPlugin, CharacterSet};
-use crate::control::ControlPlugin;
+use crate::character::{CharacterPlugin, CharacterSet};
+use crate::control::{ControlPlugin, ControlSet};
+use crate::movement::MovementBundle;
 
 mod camera;
 mod character;
 mod control;
+mod movement;
 
 fn new_window() -> Window {
     Window {
@@ -34,6 +36,7 @@ fn main() {
         .add_plugin(ControlPlugin)
         .add_plugin(CharacterPlugin)
         .add_startup_system(setup)
+        .configure_set(ControlSet::Input.before(CharacterSet::Movement))
         .configure_set(CameraSet::Update.after(CharacterSet::Movement))
         .add_system(exit_game)
         .run();
@@ -80,7 +83,7 @@ fn setup(
         },
         Player,
         MainCameraFollow,
-        CharacterMovement::default(),
+        MovementBundle::default(),
     ));
 
     // Camera

@@ -3,8 +3,7 @@ use leafwing_input_manager::prelude::*;
 
 use corp_shared::prelude::{Health, Player};
 
-use crate::camera::MainCamera;
-use crate::control::ControlAction;
+use crate::movement::{CharacterMovement, ControlMovement};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CharacterSet {
@@ -12,31 +11,6 @@ pub enum CharacterSet {
 }
 
 pub struct CharacterPlugin;
-
-#[derive(Component)]
-pub struct CharacterMovement {
-    pub enabled: bool,
-    pub direction: Vec3,
-    pub velocity: Vec3,
-    pub speed: f32,
-}
-
-impl CharacterMovement {
-    pub fn is_moving(&self) -> bool {
-        self.direction != Vec3::ZERO
-    }
-}
-
-impl Default for CharacterMovement {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            direction: Vec3::ZERO,
-            velocity: Vec3::ZERO,
-            speed: 1.42,
-        }
-    }
-}
 
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
@@ -54,48 +28,16 @@ impl Plugin for CharacterPlugin {
 
 fn is_movement_enabled(mut query: Query<(&mut CharacterMovement, &Health), Changed<Health>>) {
     for (mut character_movement, health) in &mut query {
-        character_movement.enabled = health.is_alive();
+        character_movement.can_move = health.is_alive();
     }
 }
 
 fn calculate_character_movement(
-    action_state: Res<ActionState<ControlAction>>,
-    mut q_camera: Query<&Transform, With<MainCamera>>,
-    mut query: Query<&mut CharacterMovement, With<Player>>,
+    mut q_movement: Query<(&mut CharacterMovement, &ControlMovement), Changed<ControlMovement>>,
 ) {
-    let Ok(cam) = q_camera.get_single_mut() else {
-        return;
-    };
-
-    let cam_forward = Vec3::new(
-        cam.rotation.mul_vec3(Vec3::Z).x,
-        0.0,
-        cam.rotation.mul_vec3(Vec3::Z).z,
-    )
-        .normalize_or_zero();
-    let cam_right = Vec3::new(
-        cam.rotation.mul_vec3(Vec3::X).x,
-        0.0,
-        cam.rotation.mul_vec3(Vec3::X).z,
-    )
-        .normalize_or_zero();
-
-    let mut direction = Vec3::ZERO;
-    if action_state.pressed(ControlAction::Forward) {
-        direction -= cam_forward;
-    }
-    if action_state.pressed(ControlAction::Backward) {
-        direction += cam_forward;
-    }
-    if action_state.pressed(ControlAction::Left) {
-        direction -= cam_right;
-    }
-    if action_state.pressed(ControlAction::Right) {
-        direction += cam_right;
-    }
-
-    for mut character_movement in &mut query {
-        if !character_movement.enabled || direction == Vec3::ZERO {
+    for (mut character_movement, control_movement) in &mut q_movement {
+        let direction = control_movement.direction;
+        if !character_movement.can_move || direction == Vec3::ZERO {
             continue;
         }
 
@@ -126,7 +68,8 @@ mod tests {
     use corp_shared::prelude::{Health, TestUtils};
 
     use crate::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
-    use crate::control::ControlPlugin;
+    use crate::control::{ControlPlugin, ControlSet};
+    use crate::movement::MovementBundle;
 
     use super::*;
 
@@ -144,7 +87,6 @@ mod tests {
         // then
         let character_movement = app.get::<CharacterMovement>(player);
         assert_eq!(character_movement.direction, -Vec3::Z);
-        assert!(character_movement.is_moving());
     }
 
     #[test]
@@ -179,7 +121,11 @@ mod tests {
         // then
         let expected_translation = Vec3::new(0.0, 0.0, -1.42);
         let translation_result = app.get::<Transform>(player).translation;
-        assert_relative_eq!(translation_result.z, expected_translation.z, epsilon = 0.00001);
+        assert_relative_eq!(
+            translation_result.z,
+            expected_translation.z,
+            epsilon = 0.00001
+        );
         assert_eq!(translation_result.z, expected_translation.z);
     }
 
@@ -214,7 +160,7 @@ mod tests {
 
         // then
         let character_movement = app.get::<CharacterMovement>(player);
-        assert!(!character_movement.enabled);
+        assert!(!character_movement.can_move);
         assert_eq!(character_movement.direction, Vec3::ZERO);
         assert_eq!(character_movement.velocity, Vec3::ZERO);
     }
@@ -226,6 +172,7 @@ mod tests {
             .add_plugin(ControlPlugin)
             .add_plugin(CharacterPlugin)
             .add_plugin(MainCameraPlugin)
+            .configure_set(ControlSet::Input.before(CharacterSet::Movement))
             .configure_set(CameraSet::Update.after(CharacterSet::Movement));
         app
     }
@@ -236,7 +183,7 @@ mod tests {
                 TransformBundle::default(),
                 Player,
                 Health::default(),
-                CharacterMovement::default(),
+                MovementBundle::default(),
             ))
             .id()
     }

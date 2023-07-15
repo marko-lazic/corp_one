@@ -2,6 +2,16 @@ use bevy::prelude::*;
 use derive_more::Display;
 use leafwing_input_manager::prelude::*;
 
+use corp_shared::prelude::Player;
+
+use crate::camera::MainCamera;
+use crate::movement::ControlMovement;
+
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum ControlSet {
+    Input,
+}
+
 pub struct ControlPlugin;
 
 #[derive(Actionlike, Debug, PartialEq, Clone, Copy, Display)]
@@ -28,15 +38,6 @@ pub enum ControlAction {
 #[derive(Resource)]
 pub struct ControlSettings {
     input: InputMap<ControlAction>,
-}
-
-impl Plugin for ControlPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugin(InputManagerPlugin::<ControlAction>::default());
-        app.init_resource::<ActionState<ControlAction>>();
-        let control_settings = ControlSettings::default();
-        app.insert_resource(control_settings.input);
-    }
 }
 
 impl Default for ControlSettings {
@@ -67,6 +68,62 @@ impl Default for ControlSettings {
 
         Self { input }
     }
+}
+
+impl Plugin for ControlPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(InputManagerPlugin::<ControlAction>::default());
+        app.init_resource::<ActionState<ControlAction>>();
+        let control_settings = ControlSettings::default();
+        app.insert_resource(control_settings.input);
+        app.add_system(
+            player_control_movement
+                .in_set(ControlSet::Input)
+                .run_if(resource_changed::<ActionState<ControlAction>>()),
+        );
+    }
+}
+
+fn player_control_movement(
+    action_state: Res<ActionState<ControlAction>>,
+    q_camera: Query<&Transform, With<MainCamera>>,
+    mut q_movement: Query<&mut ControlMovement, With<Player>>,
+) {
+    let Ok(cam) = q_camera.get_single() else {
+        return;
+    };
+
+    let cam_forward = Vec3::new(
+        cam.rotation.mul_vec3(Vec3::Z).x,
+        0.0,
+        cam.rotation.mul_vec3(Vec3::Z).z,
+    )
+    .normalize_or_zero();
+    let cam_right = Vec3::new(
+        cam.rotation.mul_vec3(Vec3::X).x,
+        0.0,
+        cam.rotation.mul_vec3(Vec3::X).z,
+    )
+    .normalize_or_zero();
+
+    let Ok(mut movement) = q_movement.get_single_mut() else {
+        return;
+    };
+    let mut direction = Vec3::ZERO;
+    if action_state.pressed(ControlAction::Forward) {
+        direction -= cam_forward;
+    }
+    if action_state.pressed(ControlAction::Backward) {
+        direction += cam_forward;
+    }
+    if action_state.pressed(ControlAction::Left) {
+        direction -= cam_right;
+    }
+    if action_state.pressed(ControlAction::Right) {
+        direction += cam_right;
+    }
+
+    movement.direction = direction;
 }
 
 #[cfg(test)]

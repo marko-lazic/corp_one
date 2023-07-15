@@ -148,8 +148,9 @@ mod tests {
 
     use corp_shared::prelude::{Health, Player, TestUtils};
 
-    use crate::character::{CharacterMovement, CharacterPlugin, CharacterSet};
-    use crate::control::ControlPlugin;
+    use crate::character::{CharacterPlugin, CharacterSet};
+    use crate::control::{ControlPlugin, ControlSet};
+    use crate::movement::MovementBundle;
 
     use super::*;
 
@@ -158,7 +159,7 @@ mod tests {
         // given
         let mut app = setup();
         let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
-        let player = setup_player(&mut app, player_pos);
+        setup_player(&mut app, player_pos);
         let camera = setup_camera(&mut app, player_pos.translation);
 
         // when
@@ -176,7 +177,7 @@ mod tests {
         // given
         let mut app = setup();
         let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
-        let player = setup_player(&mut app, player_pos);
+        setup_player(&mut app, player_pos);
         let camera = setup_camera(&mut app, player_pos.translation);
 
         // when
@@ -193,7 +194,7 @@ mod tests {
         // given
         let mut app = setup();
         let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
-        let player = setup_player(&mut app, player_pos);
+        setup_player(&mut app, player_pos);
         let camera = setup_camera(&mut app, player_pos.translation);
 
         // when
@@ -212,6 +213,7 @@ mod tests {
             .add_plugin(ControlPlugin)
             .add_plugin(CharacterPlugin)
             .add_plugin(MainCameraPlugin)
+            .configure_set(ControlSet::Input.before(CharacterSet::Movement))
             .configure_set(CameraSet::Update.after(CharacterSet::Movement));
         app.world.spawn(Window::default());
         app
@@ -224,7 +226,7 @@ mod tests {
                 Player,
                 MainCameraFollow,
                 Health::default(),
-                CharacterMovement::default(),
+                MovementBundle::default(),
             ))
             .id()
     }
