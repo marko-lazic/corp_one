@@ -52,6 +52,7 @@ impl Plugin for MainCameraPlugin {
 
 fn update_camera(
     action_state: Res<ActionState<ControlAction>>,
+    time: Res<Time>,
     mut rig_q: Query<&mut Rig>,
     q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
     windows: Query<&Window>,
@@ -74,16 +75,16 @@ fn update_camera(
     if action_state.pressed(ControlAction::CameraZoomIn) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
-            xz.z = (xz.z - 0.01).abs();
-            arm.offset = xz;
+            xz.z = (xz.z - 4.0 * time.delta_seconds()).abs();
+            arm.offset = xz.clamp_length_min(2.0);
         }
     }
 
     if action_state.pressed(ControlAction::CameraZoomOut) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
-            xz.z = (xz.z + 0.01).abs();
-            arm.offset = xz;
+            xz.z = (xz.z + 4.0 * time.delta_seconds()).abs();
+            arm.offset = xz.clamp_length_max(6.0);
         }
     }
 
@@ -168,6 +169,40 @@ mod tests {
         // then
         let camp_pos_result = app.get::<Transform>(camera).translation;
         assert_relative_eq!(camp_pos_result.x, 1.42);
+    }
+
+    #[test]
+    fn camera_zoom_out_limit() {
+        // given
+        let mut app = setup();
+        let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
+        let player = setup_player(&mut app, player_pos);
+        let camera = setup_camera(&mut app, player_pos.translation);
+
+        // when
+        app.send_input(KeyCode::Minus);
+        app.update_after(Duration::from_secs_f32(10.0));
+
+        // then
+        let arm = app.get::<Rig>(camera).try_driver::<Arm>().unwrap();
+        assert_relative_eq!(arm.offset.z, 6.0);
+    }
+
+    #[test]
+    fn camera_zoom_in_limit() {
+        // given
+        let mut app = setup();
+        let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
+        let player = setup_player(&mut app, player_pos);
+        let camera = setup_camera(&mut app, player_pos.translation);
+
+        // when
+        app.send_input(KeyCode::Equals);
+        app.update_after(Duration::from_secs_f32(1.6));
+
+        // then
+        let arm = app.get::<Rig>(camera).try_driver::<Arm>().unwrap();
+        assert_relative_eq!(arm.offset.z, 2.0);
     }
 
     fn setup() -> App {

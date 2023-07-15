@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 
 use corp_shared::prelude::*;
-use corp_shared::prelude::{Health, CLONE_HEALTH_80};
+use corp_shared::prelude::{CLONE_HEALTH_80, Health};
 
 use crate::asset::asset_loading::ColonyAssets;
-use crate::state::GameState;
-use crate::world::colony::vortex::VortInEvent;
-use crate::world::colony::Colony;
 use crate::Game;
+use crate::state::GameState;
+use crate::world::colony::Colony;
+use crate::world::colony::vortex::VortInEvent;
 
 pub struct CloningPlugin;
 
@@ -74,7 +74,7 @@ mod tests {
         app.add_systems((kill_player, CloningPlugin::check_if_dead_and_go_to_cloning).chain());
         app.insert_resource(create_colony_assets());
         app.insert_resource(Game::default());
-        let player_entity = app.world.spawn((Player::default(), Health::default())).id();
+        let player_entity = app.world.spawn((Player, Health::default())).id();
 
         // when
         app.update();
@@ -98,7 +98,7 @@ mod tests {
         // Setup world
         let mut world = World::default();
         // Setup test entities
-        let _player_entity = world.spawn((Player::default(), Health::default())).id();
+        let _player_entity = world.spawn((Player, Health::default())).id();
 
         let mut game = Game::default();
         game.health.kill_mut();
