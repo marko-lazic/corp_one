@@ -70,17 +70,22 @@ fn setup(
     });
 
     // Player
+    let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Box::new(0.2, 1.0, 0.2))),
             material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-            transform: Transform::from_xyz(0.0, 0.5, 0.0),
+            transform: player_pos,
             ..default()
         },
         Player,
         MainCameraFollow,
         CharacterMovement::default(),
     ));
+
+    // Camera
+    commands.spawn(MainCameraBundle::new(player_pos.translation));
+
     // Light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
@@ -91,8 +96,6 @@ fn setup(
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..default()
     });
-    // Camera
-    commands.spawn(MainCameraBundle::default());
 }
 
 fn exit_game(keyboard_input: Res<Input<KeyCode>>, mut app_exit_events: EventWriter<AppExit>) {

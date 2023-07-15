@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use corp_shared::prelude::{Health, Player};
 use leafwing_input_manager::prelude::*;
+
+use corp_shared::prelude::{Health, Player};
 
 use crate::camera::MainCamera;
 use crate::control::ControlAction;
@@ -71,13 +72,13 @@ fn calculate_character_movement(
         0.0,
         cam.rotation.mul_vec3(Vec3::Z).z,
     )
-    .normalize_or_zero();
+        .normalize_or_zero();
     let cam_right = Vec3::new(
         cam.rotation.mul_vec3(Vec3::X).x,
         0.0,
         cam.rotation.mul_vec3(Vec3::X).z,
     )
-    .normalize_or_zero();
+        .normalize_or_zero();
 
     let mut direction = Vec3::ZERO;
     if action_state.pressed(ControlAction::Forward) {
@@ -116,11 +117,13 @@ fn move_character(
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
+    use approx::assert_relative_eq;
     use bevy::input::InputPlugin;
     use bevy_dolly::prelude::{Rig, YawPitch};
+
     use corp_shared::prelude::{Health, TestUtils};
-    use float_eq::assert_float_eq;
-    use std::time::Duration;
 
     use crate::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
     use crate::control::ControlPlugin;
@@ -167,15 +170,17 @@ mod tests {
         // given
         let mut app = setup();
         let player = setup_player(&mut app);
+        setup_camera(&mut app);
 
         // when
         app.send_input(KeyCode::W);
         app.update();
 
         // then
-        let expected_translation = Vec3::new(0.0, 0.0, -0.0017810349);
+        let expected_translation = Vec3::new(0.0, 0.0, -1.42);
         let translation_result = app.get::<Transform>(player).translation;
-        assert_float_eq!(translation_result.z, expected_translation.z, abs <= 0.01);
+        assert_relative_eq!(translation_result.z, expected_translation.z, epsilon = 0.00001);
+        assert_eq!(translation_result.z, expected_translation.z);
     }
 
     #[test]
@@ -192,7 +197,7 @@ mod tests {
         // then
         let expected_translation = Vec3::new(0.0, 0.0, -1.42);
         let translation_result = app.get::<Transform>(player).translation;
-        assert_float_eq!(translation_result.z, expected_translation.z, abs <= 0.01);
+        assert_relative_eq!(translation_result.z, expected_translation.z, epsilon = 0.01);
     }
 
     #[test]
@@ -237,7 +242,7 @@ mod tests {
     }
 
     fn setup_camera(app: &mut App) -> Entity {
-        let camera = app.world.spawn(MainCameraBundle::default()).id();
+        let camera = app.world.spawn(MainCameraBundle::new(Vec3::ZERO)).id();
         app.get_mut::<Rig>(camera)
             .driver_mut::<YawPitch>()
             .rotate_yaw_pitch(-45.0, 0.0);

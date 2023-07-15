@@ -26,13 +26,13 @@ pub struct MainCameraBundle {
     rig: Rig,
 }
 
-impl Default for MainCameraBundle {
-    fn default() -> Self {
+impl MainCameraBundle {
+    pub fn new(position: Vec3) -> Self {
         Self {
             camera: Camera3dBundle::default(),
             main_camera: MainCamera,
             rig: Rig::builder()
-                .with(Position::new(Vec3::ZERO))
+                .with(Position::new(position))
                 .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-65.0))
                 .with(Smooth::new_position(0.3))
                 .with(Smooth::new_rotation(0.3))
@@ -139,10 +139,13 @@ fn update_camera(
 
 #[cfg(test)]
 mod tests {
-    use bevy::input::InputPlugin;
-    use corp_shared::prelude::{Health, Player, TestUtils};
-    use leafwing_input_manager::input_mocking::MockInput;
     use std::time::Duration;
+
+    use approx::assert_relative_eq;
+    use bevy::input::InputPlugin;
+    use leafwing_input_manager::input_mocking::MockInput;
+
+    use corp_shared::prelude::{Health, Player, TestUtils};
 
     use crate::character::{CharacterMovement, CharacterPlugin, CharacterSet};
     use crate::control::ControlPlugin;
@@ -153,21 +156,18 @@ mod tests {
     fn camera_follows_the_character() {
         // given
         let mut app = setup();
-        let player = setup_player(&mut app);
-        let camera = setup_camera(&mut app);
-        let cam_y_before = app.get::<Transform>(camera).translation.y;
-        println!("cam_y before: {}", cam_y_before);
+        let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
+        let player = setup_player(&mut app, player_pos);
+        let camera = setup_camera(&mut app, player_pos.translation);
 
         // when
-        app.get_mut::<Transform>(player).translation.y = 10.0;
         app.send_input(KeyCode::D);
-        app.update_after(Duration::from_secs_f32(1.0));
+        app.update();
+        app.update();
 
         // then
-        let cam_y_after = app.get::<Transform>(camera).translation.y;
-        println!("cam_y after: {}", cam_y_after);
-
-        assert_ne!(cam_y_before, cam_y_after);
+        let camp_pos_result = app.get::<Transform>(camera).translation;
+        assert_relative_eq!(camp_pos_result.x, 1.42);
     }
 
     fn setup() -> App {
@@ -182,10 +182,10 @@ mod tests {
         app
     }
 
-    fn setup_player(app: &mut App) -> Entity {
+    fn setup_player(app: &mut App, transform: Transform) -> Entity {
         app.world
             .spawn((
-                TransformBundle::default(),
+                TransformBundle::from_transform(transform),
                 Player,
                 MainCameraFollow,
                 Health::default(),
@@ -194,8 +194,8 @@ mod tests {
             .id()
     }
 
-    fn setup_camera(app: &mut App) -> Entity {
-        let camera = app.world.spawn(MainCameraBundle::default()).id();
+    fn setup_camera(app: &mut App, position: Vec3) -> Entity {
+        let camera = app.world.spawn(MainCameraBundle::new(position)).id();
         app.get_mut::<Rig>(camera)
             .driver_mut::<YawPitch>()
             .rotate_yaw_pitch(-45.0, 0.0);
