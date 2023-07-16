@@ -310,10 +310,12 @@ mod tests {
 
     fn setup() -> App {
         let mut app = App::new();
-        app.init_time();
-        app.add_plugins(MinimalPlugins);
-        app.add_plugin(InputPlugin);
-        app.add_plugin(ControlPlugin);
+        app.init_time()
+            .add_event::<VortInEvent>()
+            .init_resource::<Game>()
+            .add_plugins(MinimalPlugins)
+            .add_plugin(InputPlugin)
+            .add_plugin(ControlPlugin);
         app
     }
 }

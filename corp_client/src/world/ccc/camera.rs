@@ -1,9 +1,10 @@
-use crate::state::Despawn;
 use bevy::prelude::*;
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
 use bevy_dolly::system::DollyUpdateSet;
+use bevy_mod_picking::prelude::RapierPickCamera;
 use leafwing_input_manager::action_state::ActionState;
 
+use crate::state::Despawn;
 use crate::world::ccc::control::ControlAction;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
@@ -25,6 +26,7 @@ pub struct MainCameraBundle {
     camera: Camera3dBundle,
     main_camera: MainCamera,
     rig: Rig,
+    pick_camera: RapierPickCamera,
     despawn: Despawn,
 }
 
@@ -40,6 +42,7 @@ impl MainCameraBundle {
                 .with(Smooth::new_rotation(0.3))
                 .with(Arm::new(Vec3::Z * 18.0))
                 .build(),
+            pick_camera: RapierPickCamera::default(),
             despawn: Despawn,
         }
     }
@@ -78,7 +81,7 @@ fn update_camera(
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
             xz.z = (xz.z - 4.0 * time.delta_seconds()).abs();
-            arm.offset = xz.clamp_length_min(2.0);
+            arm.offset = xz.clamp_length_min(6.0);
         }
     }
 
@@ -153,6 +156,8 @@ mod tests {
     use crate::world::ccc::character::{CharacterPlugin, CharacterSet};
     use crate::world::ccc::control::{ControlPlugin, ControlSet};
     use crate::world::ccc::movement::MovementBundle;
+    use crate::world::colony::vortex::VortInEvent;
+    use crate::Game;
 
     use super::*;
 
@@ -171,7 +176,7 @@ mod tests {
 
         // then
         let camp_pos_result = app.get::<Transform>(camera).translation;
-        assert_relative_eq!(camp_pos_result.x, 1.42);
+        assert_relative_eq!(camp_pos_result.x, 1.42 * 3.0);
     }
 
     #[test]
@@ -201,16 +206,18 @@ mod tests {
 
         // when
         app.send_input(KeyCode::Equals);
-        app.update_after(Duration::from_secs_f32(1.6));
+        app.update_after(Duration::from_secs_f32(4.0));
 
         // then
         let arm = app.get::<Rig>(camera).try_driver::<Arm>().unwrap();
-        assert_relative_eq!(arm.offset.z, 2.0);
+        assert_relative_eq!(arm.offset.z, 6.0);
     }
 
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
+            .add_event::<VortInEvent>()
+            .init_resource::<Game>()
             .add_plugin(InputPlugin)
             .add_plugin(ControlPlugin)
             .add_plugin(CharacterPlugin)

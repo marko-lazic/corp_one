@@ -74,7 +74,7 @@ fn rotate_character(
                     character_movement.direction.x,
                     character_movement.direction.z,
                 );
-                let rotation_angle = direction_2d.angle_between(Vec2::Y);
+                let rotation_angle = std::f32::consts::PI + direction_2d.angle_between(Vec2::Y);
 
                 let current_rotation = transform.rotation;
                 let target_rotation = Quat::from_rotation_y(rotation_angle);
@@ -85,7 +85,7 @@ fn rotate_character(
             OrientationMode::Location(location_2d) => {
                 let target_position =
                     Vec3::new(location_2d.x, transform.translation.y, location_2d.y);
-                let look_direction = target_position - transform.translation;
+                let look_direction = transform.translation - target_position; // Reverse direction vector
 
                 if look_direction.length_squared() > 0.0 {
                     let rotation_angle = look_direction.x.atan2(look_direction.z);
@@ -115,6 +115,8 @@ mod tests {
     use crate::world::ccc::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
     use crate::world::ccc::control::{ControlPlugin, ControlSet};
     use crate::world::ccc::movement::MovementBundle;
+    use crate::world::colony::vortex::VortInEvent;
+    use crate::Game;
 
     use super::*;
 
@@ -213,6 +215,8 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
+            .add_event::<VortInEvent>()
+            .init_resource::<Game>()
             .add_plugin(InputPlugin)
             .add_plugin(ControlPlugin)
             .add_plugin(CharacterPlugin)
