@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use leafwing_input_manager::prelude::*;
 
-use corp_shared::prelude::{Health, Player};
+use corp_shared::prelude::Health;
 
-use crate::movement::{CharacterMovement, ControlMovement};
+use crate::movement::{CharacterMovement, ControlMovement, OrientationMode};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CharacterSet {
@@ -19,6 +18,7 @@ impl Plugin for CharacterPlugin {
                 is_movement_enabled,
                 calculate_character_movement,
                 move_character,
+                orient_character,
             )
                 .chain()
                 .in_set(CharacterSet::Movement),
@@ -54,6 +54,49 @@ fn move_character(
     for (mut transform, character_movement) in &mut query {
         let new_position = transform.translation + character_movement.velocity * delta_seconds;
         transform.translation = new_position;
+    }
+}
+
+fn orient_character(
+    mut query: Query<
+        (&mut Transform, &CharacterMovement, &OrientationMode),
+        Or<(Changed<OrientationMode>, Changed<CharacterMovement>)>,
+    >,
+) {
+    for (mut transform, character_movement, orientation) in &mut query {
+        match orientation {
+            OrientationMode::Direction => {
+                if character_movement.direction == Vec3::ZERO {
+                    continue;
+                }
+                let direction_2d = Vec2::new(
+                    character_movement.direction.x,
+                    character_movement.direction.z,
+                );
+                let rotation_angle = direction_2d.angle_between(Vec2::Y);
+
+                let current_rotation = transform.rotation;
+                let target_rotation = Quat::from_rotation_y(rotation_angle);
+                let interpolated_rotation = current_rotation.lerp(target_rotation, 0.1);
+
+                transform.rotation = interpolated_rotation;
+            }
+            OrientationMode::Location(location_2d) => {
+                let target_position =
+                    Vec3::new(location_2d.x, transform.translation.y, location_2d.y);
+                let look_direction = target_position - transform.translation;
+
+                if look_direction.length_squared() > 0.0 {
+                    let rotation_angle = look_direction.x.atan2(look_direction.z);
+
+                    let current_rotation = transform.rotation;
+                    let target_rotation = Quat::from_rotation_y(rotation_angle);
+                    let interpolated_rotation = current_rotation.lerp(target_rotation, 0.1);
+
+                    transform.rotation = interpolated_rotation;
+                }
+            }
+        }
     }
 }
 

@@ -76,7 +76,7 @@ fn setup(
     let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(0.2, 1.0, 0.2))),
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.3, 1.0, 0.2))),
             material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
             transform: player_pos,
             ..default()

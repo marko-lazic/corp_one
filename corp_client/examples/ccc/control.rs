@@ -4,8 +4,8 @@ use leafwing_input_manager::prelude::*;
 
 use corp_shared::prelude::Player;
 
-use crate::camera::MainCamera;
-use crate::movement::ControlMovement;
+use crate::camera::{MainCamera, MainCameraFollow};
+use crate::movement::{ControlMovement, OrientationMode};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ControlSet {
@@ -13,6 +13,9 @@ pub enum ControlSet {
 }
 
 pub struct ControlPlugin;
+
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct CursorWorld(Vec3);
 
 #[derive(Actionlike, Debug, PartialEq, Clone, Copy, Display)]
 pub enum ControlAction {
@@ -72,15 +75,21 @@ impl Default for ControlSettings {
 
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(InputManagerPlugin::<ControlAction>::default());
-        app.init_resource::<ActionState<ControlAction>>();
-        let control_settings = ControlSettings::default();
-        app.insert_resource(control_settings.input);
-        app.add_system(
-            player_control_movement
-                .in_set(ControlSet::Input)
-                .run_if(resource_changed::<ActionState<ControlAction>>()),
-        );
+        app.add_plugin(InputManagerPlugin::<ControlAction>::default())
+            .init_resource::<ActionState<ControlAction>>()
+            .init_resource::<CursorWorld>()
+            .insert_resource(ControlSettings::default().input)
+            .add_systems(
+                (
+                    player_control_movement
+                        .run_if(resource_changed::<ActionState<ControlAction>>()),
+                    update_cursor_world,
+                    player_control_orientation
+                        .run_if(resource_changed::<ActionState<ControlAction>>()),
+                )
+                    .chain()
+                    .in_set(ControlSet::Input),
+            );
     }
 }
 
@@ -124,6 +133,60 @@ fn player_control_movement(
     }
 
     movement.direction = direction;
+}
+
+fn player_control_orientation(
+    cursor_world: Res<CursorWorld>,
+    action_state: Res<ActionState<ControlAction>>,
+    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
+) {
+    if action_state.just_pressed(ControlAction::OrientationMode) {
+        for mut orientation_mode in &mut q_orientation {
+            *orientation_mode = match *orientation_mode {
+                OrientationMode::Direction => {
+                    OrientationMode::Location(Vec2::new(cursor_world.x, cursor_world.z))
+                }
+                OrientationMode::Location(_) => OrientationMode::Direction,
+            }
+        }
+    }
+}
+
+fn update_cursor_world(
+    windows: Query<&Window>,
+    mut cursor_world: ResMut<CursorWorld>,
+    q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
+    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
+) {
+    let (camera, camera_transform) = q_camera.single();
+    let ground = Transform::from_xyz(0.0, 0.0, 0.0);
+    let Ok(follow_pos) = q_follow_cam.get_single() else {
+        return;
+    };
+
+    let ray = windows
+        .single()
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .unwrap_or_else(|| Ray {
+            origin: follow_pos.translation,
+            direction: follow_pos.down(),
+        });
+
+    // Calculate if and where the ray is hitting the ground plane.
+    let Some(distance) = ray.intersect_plane(ground.translation, ground.up()) else {
+        return;
+    };
+    let mouse_ground_pos = ray.get_point(distance);
+    cursor_world.0 = mouse_ground_pos;
+
+    for mut orientation_mode in &mut q_orientation {
+        if let OrientationMode::Location(_) = *orientation_mode {
+            *orientation_mode =
+                OrientationMode::Location(Vec2::new(mouse_ground_pos.x, mouse_ground_pos.z));
+        }
+    }
 }
 
 #[cfg(test)]

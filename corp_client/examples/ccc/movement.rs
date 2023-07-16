@@ -5,6 +5,13 @@ pub struct ControlMovement {
     pub direction: Vec3,
 }
 
+#[derive(Component, Default, PartialEq)]
+pub enum OrientationMode {
+    #[default]
+    Direction,
+    Location(Vec2),
+}
+
 #[derive(Component)]
 pub struct CharacterMovement {
     pub can_move: bool,
@@ -28,4 +35,5 @@ impl Default for CharacterMovement {
 pub struct MovementBundle {
     pub character_movement: CharacterMovement,
     pub control_movement: ControlMovement,
+    pub control_orientation: OrientationMode,
 }
