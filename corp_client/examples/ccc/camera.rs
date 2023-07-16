@@ -64,7 +64,6 @@ fn update_camera(
     };
     let camera_yp = rig.driver_mut::<YawPitch>();
 
-    // Rotate 90 degrees
     if action_state.just_pressed(ControlAction::CameraRotateClockwise) {
         camera_yp.rotate_yaw_pitch(-45.0, 0.0);
     }

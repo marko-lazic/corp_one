@@ -18,7 +18,7 @@ impl Plugin for CharacterPlugin {
                 is_movement_enabled,
                 calculate_character_movement,
                 move_character,
-                orient_character,
+                rotate_character,
             )
                 .chain()
                 .in_set(CharacterSet::Movement),
@@ -57,7 +57,7 @@ fn move_character(
     }
 }
 
-fn orient_character(
+fn rotate_character(
     mut query: Query<
         (&mut Transform, &CharacterMovement, &OrientationMode),
         Or<(Changed<OrientationMode>, Changed<CharacterMovement>)>,
