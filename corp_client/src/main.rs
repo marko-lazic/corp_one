@@ -14,7 +14,6 @@ use crate::world::WorldPlugin;
 
 mod asset;
 mod gui;
-pub mod input;
 mod sound;
 pub mod state;
 pub mod util;
@@ -30,7 +29,6 @@ pub struct Game {
     cursor_locked: bool,
     player_entity: Option<Entity>,
     camera_transform: Option<Transform>,
-    camera_center: Vec3,
     current_colony_asset: Handle<ColonyAsset>,
     health: Health,
 }

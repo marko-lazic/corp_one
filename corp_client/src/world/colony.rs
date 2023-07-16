@@ -2,13 +2,11 @@ use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_mod_picking::backends::rapier::RapierPickTarget;
 use bevy_mod_picking::prelude::*;
-use bevy_mod_raycast::RaycastMesh;
 use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 use serde::Deserialize;
 
 use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
-use crate::input::Ground;
 use crate::state::Despawn;
 use crate::state::GameState;
 use crate::world::colony::colony_assets::ColonyAsset;
@@ -148,7 +146,6 @@ impl ColonyPlugin {
             },
             RigidBody::Fixed,
             Collider::cuboid(100.0, 0.01, 100.0),
-            RaycastMesh::<Ground>::default(),
             Despawn,
         ));
     }

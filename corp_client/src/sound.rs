@@ -5,7 +5,7 @@ use corp_shared::prelude::*;
 
 use crate::asset::asset_loading::AudioAssets;
 use crate::state::GameState;
-use crate::world::character::Movement;
+use crate::world::prelude::CharacterMovement;
 
 pub struct SoundPlugin;
 
@@ -42,9 +42,9 @@ impl SoundPlugin {
         audio.stop();
     }
 
-    fn walk_sound(audio: Res<Audio>, mut player_query: Query<&Movement, With<Player>>) {
+    fn walk_sound(audio: Res<Audio>, mut player_query: Query<&CharacterMovement, With<Player>>) {
         if let Ok(player) = player_query.get_single_mut() {
-            if player.is_moving {
+            if player.is_moving() {
                 audio.resume();
             } else {
                 audio.pause();

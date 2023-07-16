@@ -4,10 +4,10 @@ use bevy::prelude::*;
 use corp_shared::prelude::Health;
 use corp_shared::prelude::*;
 
-use crate::input::Cursor;
+use crate::gui::cursor_ui::CursorUi;
 use crate::state::Despawn;
 use crate::state::GameState;
-use crate::world::camera::TopDownCamera;
+use crate::world::prelude::CursorWorld;
 use crate::Game;
 
 #[derive(Component)]
@@ -113,33 +113,30 @@ impl MetricsPlugin {
     }
 
     fn mouse_screen_position_update(
-        cursor: Res<Cursor>,
+        cursor: Res<CursorUi>,
         mut screen_text: Query<&mut Text, With<MouseScreenPositionText>>,
     ) {
-        let cs_x = &cursor.screen_ui.x;
-        let cs_y = &cursor.screen_ui.y;
+        let cs_x = &cursor.x;
+        let cs_y = &cursor.y;
         for mut text in screen_text.iter_mut() {
             text.sections[0].value = format!("MS Screen {:.0} {:.0}", cs_x, cs_y);
         }
     }
 
     fn mouse_world_position_update(
-        cursor: Res<Cursor>,
+        cursor: Res<CursorWorld>,
         mut world_text: Query<&mut Text, With<MouseWorldPositionText>>,
     ) {
-        let ws_x = &cursor.world.x;
-        let ws_y = &cursor.world.y;
-        let ws_z = &cursor.world.z;
+        let ws_x = &cursor.x;
+        let ws_y = &cursor.y;
+        let ws_z = &cursor.z;
         for mut text in world_text.iter_mut() {
             text.sections[0].value = format!("MS World {:.0} {:.0} {:.0}", ws_x, ws_y, ws_z);
         }
     }
 
-    fn camera_metrics(
-        mut game: ResMut<Game>,
-        mut query: Query<(&mut Transform, &mut TopDownCamera, &mut Camera)>,
-    ) {
-        for (transform, _, _) in query.iter_mut() {
+    fn camera_metrics(mut game: ResMut<Game>, mut query: Query<&mut Transform, With<Camera>>) {
+        for transform in query.iter_mut() {
             game.camera_transform = Some(*transform);
         }
     }
