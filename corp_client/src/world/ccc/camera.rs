@@ -1,3 +1,4 @@
+use crate::state::Despawn;
 use bevy::prelude::*;
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
 use bevy_dolly::system::DollyUpdateSet;
@@ -24,6 +25,7 @@ pub struct MainCameraBundle {
     camera: Camera3dBundle,
     main_camera: MainCamera,
     rig: Rig,
+    despawn: Despawn,
 }
 
 impl MainCameraBundle {
@@ -36,8 +38,9 @@ impl MainCameraBundle {
                 .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-65.0))
                 .with(Smooth::new_position(0.3))
                 .with(Smooth::new_rotation(0.3))
-                .with(Arm::new(Vec3::Z * 6.0))
+                .with(Arm::new(Vec3::Z * 18.0))
                 .build(),
+            despawn: Despawn,
         }
     }
 }
@@ -83,7 +86,7 @@ fn update_camera(
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
             xz.z = (xz.z + 4.0 * time.delta_seconds()).abs();
-            arm.offset = xz.clamp_length_max(6.0);
+            arm.offset = xz.clamp_length_max(18.0);
         }
     }
 
@@ -185,7 +188,7 @@ mod tests {
 
         // then
         let arm = app.get::<Rig>(camera).try_driver::<Arm>().unwrap();
-        assert_relative_eq!(arm.offset.z, 6.0);
+        assert_relative_eq!(arm.offset.z, 18.0);
     }
 
     #[test]

@@ -22,7 +22,7 @@ pub struct CharacterMovement {
 
 impl CharacterMovement {
     pub fn is_moving(&self) -> bool {
-        self.direction != Vec3::ZERO
+        self.velocity != Vec3::ZERO
     }
 }
 
@@ -32,7 +32,7 @@ impl Default for CharacterMovement {
             can_move: true,
             direction: Vec3::ZERO,
             velocity: Vec3::ZERO,
-            speed: 1.42,
+            speed: 1.42 * 3.0,
         }
     }
 }

@@ -38,6 +38,7 @@ fn calculate_character_movement(
     for (mut character_movement, control_movement) in &mut q_movement {
         let direction = control_movement.direction;
         if !character_movement.can_move || direction == Vec3::ZERO {
+            character_movement.velocity = Vec3::ZERO;
             continue;
         }
 
@@ -109,10 +110,11 @@ mod tests {
     use bevy_dolly::prelude::{Rig, YawPitch};
     use leafwing_input_manager::prelude::MockInput;
 
+    use corp_shared::prelude::{Health, Player, TestUtils};
+
     use crate::world::ccc::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
     use crate::world::ccc::control::{ControlPlugin, ControlSet};
     use crate::world::ccc::movement::MovementBundle;
-    use corp_shared::prelude::{Health, Player, TestUtils};
 
     use super::*;
 
