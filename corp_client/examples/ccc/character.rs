@@ -107,8 +107,9 @@ mod tests {
     use approx::assert_relative_eq;
     use bevy::input::InputPlugin;
     use bevy_dolly::prelude::{Rig, YawPitch};
+    use leafwing_input_manager::prelude::MockInput;
 
-    use corp_shared::prelude::{Health, TestUtils};
+    use corp_shared::prelude::{Health, Player, TestUtils};
 
     use crate::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
     use crate::control::{ControlPlugin, ControlSet};
