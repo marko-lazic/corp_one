@@ -11,11 +11,13 @@ fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
         .init_resource::<Entities>()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(ShapePlugin)
-        .add_plugin(ResourceInspectorPlugin::<InspectorData>::new())
-        .add_startup_system(setup)
-        .add_system(update_p)
+        .add_plugins((
+            DefaultPlugins,
+            ShapePlugin,
+            ResourceInspectorPlugin::<InspectorData>::new(),
+        ))
+        .add_systems(Startup, setup)
+        .add_systems(Update, update_p)
         .run();
 }
 

@@ -6,29 +6,28 @@ edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-bevy = { version = "0.10.1", features = ["wav"] }
-leafwing-input-manager = "0.9.2"
-bevy_mod_picking = { version = "0.13.0", default-features = false, features = ["backend_rapier"] }
-bevy-inspector-egui = "0.18.3"
-bevy_asset_loader = { version = "0.16.0" }
-bevy_kira_audio = "0.15.0"
-bevy_common_assets = { version = "0.6.0", features = ["ron"] }
-bevy_rapier3d = "0.21.0"
-bevy_dolly = { git = "https://github.com/BlackPhlox/bevy_dolly.git", rev = "05c0eef" }
-bevy-scene-hook = "6.0.0"
-bevy-trait-query = "0.2.1"
-serde = "1.0.145"
+bevy = { version = "0.11.0", features = ["wav"] }
+leafwing-input-manager = "0.10.0"
+#bevy_mod_picking = { git = "https://github.com/Vrixyz/bevy_mod_picking.git", rev = "e2d1a93", default-features = false, features = ["backend_rapier"] }
+bevy-inspector-egui = "0.19.0"
+bevy_asset_loader = { version = "0.17.0" }
+bevy_kira_audio = "0.16.0"
+bevy_common_assets = { version = "0.7.0", features = ["ron"] }
+bevy_rapier3d = "0.22.0"
+bevy_dolly = "0.0.1"
+bevy-scene-hook = "7.0.0"
+bevy-trait-query = "0.3.0"
+serde = "1.0.174"
 rand = "0.8.5"
-bitflags = "2.2.1"
+bitflags = "2.3.3"
 
 [dev-dependencies]
-bevy_prototype_debug_lines = { version = "0.10.0" }
-impl-tools = "0.8.0"
-bevy_prototype_lyon = "0.8.0"
+bevy_prototype_debug_lines = { version = "0.11.0" }
+bevy_prototype_lyon = "0.9.0"
 lazy_static = "1.4.0"
 derive_more = "0.99.17"
 approx = "0.5"
-glam = { version = "0.24.0", features = ["approx"] }
+glam = { version = "0.24", features = ["approx"] }
 
 
 [[example]]

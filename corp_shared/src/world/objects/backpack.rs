@@ -27,6 +27,7 @@ impl Interactive for Backpack {
     }
 }
 
+#[derive(Event)]
 pub struct BackpackInteractionEvent {
     pub action: BackpackAction,
     pub backpack_entity: Entity,
@@ -187,6 +188,7 @@ mod tests {
         app.add_event::<DoorInteractionEvent>();
         app.register_component_as::<dyn Interactive, Backpack>();
         app.add_systems(
+            Update,
             (
                 interaction_system,
                 backpack_interaction_event_system,

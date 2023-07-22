@@ -14,6 +14,7 @@ pub struct CharacterPlugin;
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
+            Update,
             (
                 is_movement_enabled,
                 calculate_character_movement,
@@ -212,12 +213,14 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .add_plugin(InputPlugin)
-            .add_plugin(ControlPlugin)
-            .add_plugin(CharacterPlugin)
-            .add_plugin(MainCameraPlugin)
-            .configure_set(ControlSet::Input.before(CharacterSet::Movement))
-            .configure_set(CameraSet::Update.after(CharacterSet::Movement));
+            .add_plugins((
+                InputPlugin,
+                ControlPlugin,
+                CharacterPlugin,
+                MainCameraPlugin,
+            ))
+            .configure_set(Update, ControlSet::Input.before(CharacterSet::Movement))
+            .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
         app
     }
 

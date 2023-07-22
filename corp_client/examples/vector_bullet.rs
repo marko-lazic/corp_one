@@ -8,10 +8,12 @@ fn main() {
         .insert_resource(Msaa::Sample4)
         .init_resource::<GameData>()
         .add_plugins(DefaultPlugins)
-        .add_plugin(ResourceInspectorPlugin::<InspectorData>::new())
-        .add_plugin(DebugLinesPlugin::default())
-        .add_startup_system(setup)
-        .add_system(draw_distance_vec)
+        .add_plugins((
+            ResourceInspectorPlugin::<InspectorData>::new(),
+            DebugLinesPlugin::default(),
+        ))
+        .add_systems(Startup, setup)
+        .add_systems(Update, draw_distance_vec)
         .run();
 }
 

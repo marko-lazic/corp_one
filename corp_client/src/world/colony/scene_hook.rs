@@ -1,13 +1,13 @@
 use bevy::ecs::system::EntityCommands;
 use bevy::log::info;
-use bevy_mod_picking::backends::rapier::RapierPickTarget;
-use bevy_mod_picking::prelude::*;
+// use bevy_mod_picking::backends::rapier::RapierPickTarget;
+// use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use corp_shared::prelude::{ControlRegistry, Door, Faction, Security};
 
 use crate::state::Despawn;
-use crate::world::colony::barrier::{BarrierControl, BarrierField, BarrierPickingEvent};
+use crate::world::colony::barrier::{BarrierControl, BarrierField};
 use crate::world::colony::vortex::{VortexGate, VortexNode};
 use crate::world::physics;
 
@@ -31,10 +31,10 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
         }
         "BarrierControl11" | "BarrierControl12" => commands.insert((
             BarrierControl::new("B1"),
-            PickableBundle::default(),
-            RapierPickTarget::default(),
-            OnPointer::<Over>::send_event::<BarrierPickingEvent>(),
-            OnPointer::<Out>::send_event::<BarrierPickingEvent>(),
+            // PickableBundle::default(),
+            // RapierPickTarget::default(),
+            // OnPointer::<Over>::send_event::<BarrierPickingEvent>(),
+            // OnPointer::<Out>::send_event::<BarrierPickingEvent>(),
             Despawn,
         )),
 
@@ -45,10 +45,10 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
         }
         "BarrierControl21" | "BarrierControl22" => commands.insert((
             BarrierControl::new("B2"),
-            PickableBundle::default(),
-            RapierPickTarget::default(),
-            OnPointer::<Over>::send_event::<BarrierPickingEvent>(),
-            OnPointer::<Out>::send_event::<BarrierPickingEvent>(),
+            // PickableBundle::default(),
+            // RapierPickTarget::default(),
+            // OnPointer::<Over>::send_event::<BarrierPickingEvent>(),
+            // OnPointer::<Out>::send_event::<BarrierPickingEvent>(),
             Despawn,
         )),
         "Plant Tree" => commands.insert(Despawn),

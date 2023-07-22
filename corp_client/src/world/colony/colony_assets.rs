@@ -1,5 +1,6 @@
 use std::ops::Deref;
 
+use bevy::reflect::TypePath;
 use bevy::{prelude::*, reflect::TypeUuid};
 use serde::Deserialize;
 
@@ -8,7 +9,7 @@ use crate::world::colony::asset::color::ColorAsset;
 use crate::world::colony::zone::ZoneType;
 use crate::world::colony::Colony;
 
-#[derive(Default, Deserialize, Debug, TypeUuid)]
+#[derive(Default, Deserialize, Debug, TypeUuid, TypePath)]
 #[uuid = "962DF4C2-C221-4364-A9F7-B7340FB60437"]
 pub struct ColonyAsset {
     pub name: Colony,

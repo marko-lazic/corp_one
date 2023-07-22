@@ -91,17 +91,19 @@ impl Interactive for Door {
     }
 }
 
+#[derive(Event)]
 pub struct DoorInteractionEvent {
     pub door_entity: Entity,
     pub interactor_entity: Entity,
 }
 
+#[derive(Event)]
 pub struct DoorHackEvent {
     pub door_entity: Entity,
     pub interactor_entity: Entity,
 }
 
-#[derive(Debug)]
+#[derive(Event, Debug)]
 pub struct DoorStateEvent(Entity, DoorState);
 
 impl DoorStateEvent {
@@ -541,6 +543,7 @@ mod tests {
         app.add_event::<DoorStateEvent>();
         app.register_component_as::<dyn Interactive, Door>();
         app.add_systems(
+            Update,
             (
                 door_cooldown_system,
                 process_temporary_faction_ownership_timers_system,

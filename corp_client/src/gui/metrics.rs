@@ -1,4 +1,4 @@
-use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
+use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 
 use corp_shared::prelude::Health;
@@ -32,135 +32,132 @@ pub struct MetricsPlugin;
 
 impl Plugin for MetricsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-        app.add_system(Self::setup.in_schedule(OnEnter(GameState::Playing)));
-        app.add_systems(
-            (
-                Self::fps_update,
-                Self::player_position_update,
-                Self::mouse_screen_position_update,
-                Self::mouse_world_position_update,
-                Self::camera_metrics,
-                Self::camera_debug_text,
-                Self::player_health_metric,
-            )
-                .chain()
-                .in_set(OnUpdate(GameState::Playing)),
-        );
+        app.add_plugins(FrameTimeDiagnosticsPlugin)
+            .add_systems(OnEnter(GameState::Playing), setup)
+            .add_systems(
+                Update,
+                (
+                    fps_update,
+                    player_position_update,
+                    mouse_screen_position_update,
+                    mouse_world_position_update,
+                    camera_metrics,
+                    camera_debug_text,
+                    player_health_metric,
+                )
+                    .chain()
+                    .run_if(in_state(GameState::Playing)),
+            );
     }
 }
 
-impl MetricsPlugin {
-    fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-        commands.spawn((
-            metrics_utils::label(5.0, 10.0, &asset_server),
-            FpsText,
-            Despawn,
-        ));
-        commands.spawn((
-            metrics_utils::label(25.0, 10.0, &asset_server),
-            PlayerPositionText,
-            Despawn,
-        ));
-        commands.spawn((
-            metrics_utils::label(45.0, 10.0, &asset_server),
-            MouseScreenPositionText,
-            Despawn,
-        ));
-        commands.spawn((
-            metrics_utils::label(65.0, 10.0, &asset_server),
-            MouseWorldPositionText,
-            Despawn,
-        ));
-        commands.spawn((
-            metrics_utils::label(85.0, 10.0, &asset_server),
-            CameraDebugText,
-            Despawn,
-        ));
-        commands.spawn((
-            metrics_utils::label(105.0, 10.0, &asset_server),
-            PlayerHealthText,
-            Despawn,
-        ));
-    }
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        metrics_utils::label(5.0, 10.0, &asset_server),
+        FpsText,
+        Despawn,
+    ));
+    commands.spawn((
+        metrics_utils::label(25.0, 10.0, &asset_server),
+        PlayerPositionText,
+        Despawn,
+    ));
+    commands.spawn((
+        metrics_utils::label(45.0, 10.0, &asset_server),
+        MouseScreenPositionText,
+        Despawn,
+    ));
+    commands.spawn((
+        metrics_utils::label(65.0, 10.0, &asset_server),
+        MouseWorldPositionText,
+        Despawn,
+    ));
+    commands.spawn((
+        metrics_utils::label(85.0, 10.0, &asset_server),
+        CameraDebugText,
+        Despawn,
+    ));
+    commands.spawn((
+        metrics_utils::label(105.0, 10.0, &asset_server),
+        PlayerHealthText,
+        Despawn,
+    ));
+}
 
-    fn fps_update(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
-        for mut text in query.iter_mut() {
-            if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
-                if let Some(average) = fps.average() {
-                    text.sections[0].value = format!("FPS {:.0}", average);
-                }
+fn fps_update(diagnostics: Res<DiagnosticsStore>, mut query: Query<&mut Text, With<FpsText>>) {
+    for mut text in query.iter_mut() {
+        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
+            if let Some(smoothed) = fps.smoothed() {
+                text.sections[0].value = format!("FPS {:.0}", smoothed);
             }
         }
     }
+}
 
-    fn player_position_update(
-        mut player_position: Query<(&Player, &mut Transform)>,
-        mut query: Query<&mut Text, With<PlayerPositionText>>,
-    ) {
-        let mut player_x = 0f32;
-        let mut player_y = 0f32;
-        let mut player_z = 0f32;
-        for (_player, transform) in player_position.iter_mut() {
-            player_x = transform.translation.x;
-            player_y = transform.translation.y;
-            player_z = transform.translation.z;
-        }
+fn player_position_update(
+    mut player_position: Query<(&Player, &mut Transform)>,
+    mut query: Query<&mut Text, With<PlayerPositionText>>,
+) {
+    let mut player_x = 0f32;
+    let mut player_y = 0f32;
+    let mut player_z = 0f32;
+    for (_player, transform) in player_position.iter_mut() {
+        player_x = transform.translation.x;
+        player_y = transform.translation.y;
+        player_z = transform.translation.z;
+    }
+    for mut text in query.iter_mut() {
+        text.sections[0].value = format!("Player {:.0} {:.0} {:.0}", player_x, player_y, player_z);
+    }
+}
+
+fn mouse_screen_position_update(
+    cursor: Res<CursorUi>,
+    mut screen_text: Query<&mut Text, With<MouseScreenPositionText>>,
+) {
+    let cs_x = &cursor.x;
+    let cs_y = &cursor.y;
+    for mut text in screen_text.iter_mut() {
+        text.sections[0].value = format!("MS Screen {:.0} {:.0}", cs_x, cs_y);
+    }
+}
+
+fn mouse_world_position_update(
+    cursor: Res<CursorWorld>,
+    mut world_text: Query<&mut Text, With<MouseWorldPositionText>>,
+) {
+    let ws_x = &cursor.x;
+    let ws_y = &cursor.y;
+    let ws_z = &cursor.z;
+    for mut text in world_text.iter_mut() {
+        text.sections[0].value = format!("MS World {:.0} {:.0} {:.0}", ws_x, ws_y, ws_z);
+    }
+}
+
+fn camera_metrics(mut game: ResMut<Game>, mut query: Query<&mut Transform, With<Camera>>) {
+    for transform in query.iter_mut() {
+        game.camera_transform = Some(*transform);
+    }
+}
+
+fn camera_debug_text(game: Res<Game>, mut query: Query<&mut Text, With<CameraDebugText>>) {
+    if let Some(transform) = game.camera_transform {
         for mut text in query.iter_mut() {
-            text.sections[0].value =
-                format!("Player {:.0} {:.0} {:.0}", player_x, player_y, player_z);
+            let vec3 = transform.translation;
+            text.sections[0].value = format!("Camera {:.0} {:.0} {:.0}", vec3.x, vec3.y, vec3.z);
         }
     }
+}
 
-    fn mouse_screen_position_update(
-        cursor: Res<CursorUi>,
-        mut screen_text: Query<&mut Text, With<MouseScreenPositionText>>,
-    ) {
-        let cs_x = &cursor.x;
-        let cs_y = &cursor.y;
-        for mut text in screen_text.iter_mut() {
-            text.sections[0].value = format!("MS Screen {:.0} {:.0}", cs_x, cs_y);
-        }
-    }
-
-    fn mouse_world_position_update(
-        cursor: Res<CursorWorld>,
-        mut world_text: Query<&mut Text, With<MouseWorldPositionText>>,
-    ) {
-        let ws_x = &cursor.x;
-        let ws_y = &cursor.y;
-        let ws_z = &cursor.z;
-        for mut text in world_text.iter_mut() {
-            text.sections[0].value = format!("MS World {:.0} {:.0} {:.0}", ws_x, ws_y, ws_z);
-        }
-    }
-
-    fn camera_metrics(mut game: ResMut<Game>, mut query: Query<&mut Transform, With<Camera>>) {
-        for transform in query.iter_mut() {
-            game.camera_transform = Some(*transform);
-        }
-    }
-
-    fn camera_debug_text(game: Res<Game>, mut query: Query<&mut Text, With<CameraDebugText>>) {
-        if let Some(transform) = game.camera_transform {
+fn player_health_metric(
+    game: Res<Game>,
+    healths: Query<&Health>,
+    mut query: Query<&mut Text, With<PlayerHealthText>>,
+) {
+    if let Some(entity) = game.player_entity {
+        if let Ok(health) = healths.get(entity) {
             for mut text in query.iter_mut() {
-                let vec3 = transform.translation;
-                text.sections[0].value =
-                    format!("Camera {:.0} {:.0} {:.0}", vec3.x, vec3.y, vec3.z);
-            }
-        }
-    }
-
-    fn player_health_metric(
-        game: Res<Game>,
-        healths: Query<&Health>,
-        mut query: Query<&mut Text, With<PlayerHealthText>>,
-    ) {
-        if let Some(entity) = game.player_entity {
-            if let Ok(health) = healths.get(entity) {
-                for mut text in query.iter_mut() {
-                    text.sections[0].value = format!("Health {:.0}", health.get_health());
-                }
+                text.sections[0].value = format!("Health {:.0}", health.get_health());
             }
         }
     }
@@ -193,11 +190,8 @@ mod metrics_utils {
     fn default_style(top: f32, left: f32) -> Style {
         Style {
             position_type: PositionType::Absolute,
-            position: UiRect {
-                top: Val::Px(top),
-                left: Val::Px(left),
-                ..Default::default()
-            },
+            top: Val::Px(top),
+            left: Val::Px(left),
             align_self: AlignSelf::FlexEnd,
             ..Default::default()
         }

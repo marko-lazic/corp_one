@@ -12,7 +12,6 @@ pub struct GuiPlugin;
 
 impl Plugin for GuiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(MetricsPlugin);
-        app.add_plugin(CursorPlugin);
+        app.add_plugins((MetricsPlugin, CursorPlugin));
     }
 }

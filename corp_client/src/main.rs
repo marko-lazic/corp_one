@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use bevy::asset::ChangeWatcher;
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowMode};
@@ -40,7 +43,7 @@ fn main() {
         .add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {
-                    watch_for_changes: true,
+                    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
                     ..default()
                 })
                 .set(WindowPlugin {
@@ -48,13 +51,13 @@ fn main() {
                     ..default()
                 }),
         )
-        .add_plugin(GameStatePlugin)
-        .add_plugin(AssetLoadingPlugin)
-        .add_plugin(GuiPlugin)
-        .add_plugin(WorldPlugin)
-        .add_plugin(
+        .add_plugins((
+            GameStatePlugin,
+            AssetLoadingPlugin,
+            GuiPlugin,
+            WorldPlugin,
             WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Grave)),
-        )
+        ))
         .run();
 }
 

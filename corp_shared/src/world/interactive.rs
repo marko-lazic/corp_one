@@ -10,7 +10,7 @@ pub enum BackpackAction {
     TakeItem(Entity),
 }
 
-#[derive(Default, PartialEq, Copy, Clone, Debug)]
+#[derive(Event, Default, PartialEq, Copy, Clone, Debug)]
 pub enum InteractionEvent {
     #[default]
     Use,

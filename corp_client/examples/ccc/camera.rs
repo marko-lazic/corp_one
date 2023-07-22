@@ -20,7 +20,6 @@ pub struct MainCameraPlugin;
 
 #[derive(Bundle)]
 pub struct MainCameraBundle {
-    #[bundle]
     camera: Camera3dBundle,
     main_camera: MainCamera,
     rig: Rig,
@@ -44,9 +43,9 @@ impl MainCameraBundle {
 
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_camera.in_set(CameraSet::Update))
-            .add_system(Dolly::<MainCamera>::update_active)
-            .configure_set(DollyUpdateSet.after(CameraSet::Update));
+        app.add_systems(Update, update_camera.in_set(CameraSet::Update))
+            .add_systems(Update, Dolly::<MainCamera>::update_active)
+            .configure_set(Update, DollyUpdateSet.after(CameraSet::Update));
     }
 }
 
@@ -208,12 +207,14 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .add_plugin(InputPlugin)
-            .add_plugin(ControlPlugin)
-            .add_plugin(CharacterPlugin)
-            .add_plugin(MainCameraPlugin)
-            .configure_set(ControlSet::Input.before(CharacterSet::Movement))
-            .configure_set(CameraSet::Update.after(CharacterSet::Movement));
+            .add_plugins((
+                InputPlugin,
+                ControlPlugin,
+                CharacterPlugin,
+                MainCameraPlugin,
+            ))
+            .configure_set(Update, ControlSet::Input.before(CharacterSet::Movement))
+            .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
         app.world.spawn(Window::default());
         app
     }

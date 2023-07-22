@@ -21,10 +21,10 @@ pub struct GameStatePlugin;
 
 impl Plugin for GameStatePlugin {
     fn build(&self, app: &mut App) {
-        app.add_state::<GameState>();
-        app.add_system(teardown.in_schedule(OnExit(GameState::Loading)));
-        app.add_system(teardown.in_schedule(OnExit(GameState::Playing)));
-        app.add_system(teardown.in_schedule(OnExit(GameState::StarMap)));
+        app.add_state::<GameState>()
+            .add_systems(OnExit(GameState::Loading), teardown)
+            .add_systems(OnExit(GameState::Playing), teardown)
+            .add_systems(OnExit(GameState::StarMap), teardown);
     }
 }
 

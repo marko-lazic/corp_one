@@ -23,9 +23,12 @@ impl Plugin for CursorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CursorVisibility>()
             .init_resource::<CursorUi>()
-            .add_system(setup.in_schedule(OnEnter(GameState::LoadColony)))
-            .add_system(cursor_text_tooltip.in_set(OnUpdate(GameState::Playing)))
-            .add_system(update_screen_cursor_position.in_base_set(CoreSet::First));
+            .add_systems(OnEnter(GameState::LoadColony), setup)
+            .add_systems(
+                Update,
+                cursor_text_tooltip.run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(First, update_screen_cursor_position);
     }
 }
 
@@ -71,11 +74,8 @@ fn cursor_text_tooltip(
             // flip the height to accommodate y going from top to bottom in UI
             let text_top = (primary.resolution.height() - cursor.y) + 15.0;
             let text_left = cursor.x + 20.0;
-            style.position = UiRect {
-                top: Val::Px(text_top),
-                left: Val::Px(text_left),
-                ..Default::default()
-            };
+            style.top = Val::Px(text_top);
+            style.left = Val::Px(text_left);
         }
     } else {
         let result = query.get_single_mut();

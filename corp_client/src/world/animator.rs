@@ -31,42 +31,41 @@ impl AnimationComponent {
     }
 }
 
+#[derive(Resource, Deref, DerefMut)]
+struct PlayerAnimations(pub HashMap<PlayerAnimationAction, Handle<AnimationClip>>);
+
 pub struct AnimatorPlugin;
 
 impl Plugin for AnimatorPlugin {
     fn build(&self, app: &mut App) {
         // Warning: Re-insertion happens every time game enters playing state
-        app.add_system(Self::setup_animation_resources.in_schedule(OnExit(GameState::Loading)));
-        app.add_system(Self::play_animations.in_set(OnUpdate(GameState::Playing)));
+        app.add_systems(OnExit(GameState::Loading), setup_animation_resources)
+            .add_systems(Update, play_animations.run_if(in_state(GameState::Playing)));
     }
 }
 
-impl AnimatorPlugin {
-    fn setup_animation_resources(mut commands: Commands, player_assets: Res<PlayerAssets>) {
-        let mut hm: HashMap<PlayerAnimationAction, Handle<AnimationClip>> = HashMap::new();
-        hm.insert(PlayerAnimationAction::Run, player_assets.run.clone());
-        hm.insert(PlayerAnimationAction::Idle, player_assets.idle.clone());
-        commands.insert_resource(PlayerAnimations(hm));
-    }
-    fn play_animations(
-        player_animations: Res<PlayerAnimations>,
-        mut animation_player_query: Query<&mut AnimationPlayer>,
-        mut animation_components: Query<&mut AnimationComponent>,
-    ) {
-        if let Ok(mut animation_player) = animation_player_query.get_single_mut() {
-            for mut animation_component in animation_components.iter_mut() {
-                if let Some(next) = animation_component.next {
-                    animation_player.set_speed(1.2);
-                    animation_player
-                        .play(player_animations.get(&next).unwrap().clone_weak())
-                        .repeat();
-                    animation_component.current = next;
-                    animation_component.next = None;
-                }
+fn setup_animation_resources(mut commands: Commands, player_assets: Res<PlayerAssets>) {
+    let mut hm: HashMap<PlayerAnimationAction, Handle<AnimationClip>> = HashMap::new();
+    hm.insert(PlayerAnimationAction::Run, player_assets.run.clone());
+    hm.insert(PlayerAnimationAction::Idle, player_assets.idle.clone());
+    commands.insert_resource(PlayerAnimations(hm));
+}
+
+fn play_animations(
+    player_animations: Res<PlayerAnimations>,
+    mut animation_player_query: Query<&mut AnimationPlayer>,
+    mut animation_components: Query<&mut AnimationComponent>,
+) {
+    if let Ok(mut animation_player) = animation_player_query.get_single_mut() {
+        for mut animation_component in animation_components.iter_mut() {
+            if let Some(next) = animation_component.next {
+                animation_player.set_speed(1.2);
+                animation_player
+                    .play(player_animations.get(&next).unwrap().clone_weak())
+                    .repeat();
+                animation_component.current = next;
+                animation_component.next = None;
             }
         }
     }
 }
-
-#[derive(Resource, Deref, DerefMut)]
-struct PlayerAnimations(pub HashMap<PlayerAnimationAction, Handle<AnimationClip>>);

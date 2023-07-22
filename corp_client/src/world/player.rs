@@ -32,16 +32,16 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(CloningPlugin)
-            .add_system(
-                setup_player
-                    .in_set(WorldSystemSet::PlayerSetup)
-                    .in_schedule(OnEnter(GameState::SpawnPlayer)),
+        app.add_plugins(CloningPlugin)
+            .add_systems(
+                OnEnter(GameState::SpawnPlayer),
+                setup_player.in_set(WorldSystemSet::PlayerSetup),
             )
-            .add_system(
+            .add_systems(
+                Update,
                 handle_animation_action
                     .after(ControlSet::Input)
-                    .in_set(OnUpdate(GameState::Playing)),
+                    .run_if(in_state(GameState::Playing)),
             );
     }
 }

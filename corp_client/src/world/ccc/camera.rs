@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
 use bevy_dolly::system::DollyUpdateSet;
-use bevy_mod_picking::prelude::RapierPickCamera;
+// use bevy_mod_picking::prelude::RapierPickCamera;
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::state::Despawn;
@@ -22,11 +22,10 @@ pub struct MainCameraPlugin;
 
 #[derive(Bundle)]
 pub struct MainCameraBundle {
-    #[bundle]
     camera: Camera3dBundle,
     main_camera: MainCamera,
     rig: Rig,
-    pick_camera: RapierPickCamera,
+    // pick_camera: RapierPickCamera,
     despawn: Despawn,
 }
 
@@ -42,7 +41,7 @@ impl MainCameraBundle {
                 .with(Smooth::new_rotation(0.3))
                 .with(Arm::new(Vec3::Z * 18.0))
                 .build(),
-            pick_camera: RapierPickCamera::default(),
+            // pick_camera: RapierPickCamera::default(),
             despawn: Despawn,
         }
     }
@@ -50,9 +49,9 @@ impl MainCameraBundle {
 
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_camera.in_set(CameraSet::Update))
-            .add_system(Dolly::<MainCamera>::update_active)
-            .configure_set(DollyUpdateSet.after(CameraSet::Update));
+        app.add_systems(Update, update_camera.in_set(CameraSet::Update))
+            .add_systems(Update, Dolly::<MainCamera>::update_active)
+            .configure_set(Update, DollyUpdateSet.after(CameraSet::Update));
     }
 }
 
@@ -153,6 +152,7 @@ mod tests {
 
     use corp_shared::prelude::{Health, Player, TestUtils};
 
+    use crate::state::GameState;
     use crate::world::ccc::character::{CharacterPlugin, CharacterSet};
     use crate::world::ccc::control::{ControlPlugin, ControlSet};
     use crate::world::ccc::movement::MovementBundle;
@@ -218,12 +218,15 @@ mod tests {
         app.init_time()
             .add_event::<VortInEvent>()
             .init_resource::<Game>()
-            .add_plugin(InputPlugin)
-            .add_plugin(ControlPlugin)
-            .add_plugin(CharacterPlugin)
-            .add_plugin(MainCameraPlugin)
-            .configure_set(ControlSet::Input.before(CharacterSet::Movement))
-            .configure_set(CameraSet::Update.after(CharacterSet::Movement));
+            .add_state::<GameState>()
+            .add_plugins((
+                InputPlugin,
+                ControlPlugin,
+                CharacterPlugin,
+                MainCameraPlugin,
+            ))
+            .configure_set(Update, ControlSet::Input.before(CharacterSet::Movement))
+            .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
         app.world.spawn(Window::default());
         app
     }

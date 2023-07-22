@@ -7,14 +7,17 @@ fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
         .insert_resource(Game::default())
-        .add_plugins(DefaultPlugins)
-        .add_plugin(DebugLinesPlugin::default())
-        .add_plugin(ShapePlugin)
-        .add_system(my_cursor_system)
-        .add_startup_system(setup_system)
-        .add_system(draw_player_to_trigger_line)
-        .add_system(draw_player_to_mouse_line)
-        .add_system(player_look_trigger)
+        .add_plugins((DefaultPlugins, DebugLinesPlugin::default(), ShapePlugin))
+        .add_systems(Startup, setup_system)
+        .add_systems(
+            Update,
+            (
+                my_cursor_system,
+                draw_player_to_trigger_line,
+                draw_player_to_mouse_line,
+                player_look_trigger,
+            ),
+        )
         .run();
 }
 

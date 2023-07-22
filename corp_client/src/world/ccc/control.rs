@@ -1,5 +1,6 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
+use bevy::reflect::TypePath;
 use leafwing_input_manager::prelude::*;
 
 use corp_shared::prelude::{Health, Interactor, Player};
@@ -23,7 +24,7 @@ pub struct ControlPlugin;
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorWorld(Vec3);
 
-#[derive(Actionlike, Debug, PartialEq, Clone, Copy)]
+#[derive(Actionlike, Debug, PartialEq, Clone, Copy, TypePath)]
 pub enum ControlAction {
     Forward,
     Backward,
@@ -81,11 +82,12 @@ impl Default for ControlSettings {
 
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(InputManagerPlugin::<ControlAction>::default())
+        app.add_plugins(InputManagerPlugin::<ControlAction>::default())
             .init_resource::<ActionState<ControlAction>>()
             .init_resource::<CursorWorld>()
             .insert_resource(ControlSettings::default().input)
             .add_systems(
+                Update,
                 (
                     player_control_movement
                         .run_if(resource_changed::<ActionState<ControlAction>>()),
@@ -97,13 +99,17 @@ impl Plugin for ControlPlugin {
                     .in_set(ControlSet::Input),
             );
         // Migrated input.rs systems
-        app.add_system(keyboard_escape_action)
-            .add_system(starmap_keyboard.in_set(OnUpdate(GameState::StarMap)))
+        app.add_systems(Update, keyboard_escape_action)
             .add_systems(
+                Update,
+                starmap_keyboard.run_if(in_state(GameState::StarMap)),
+            )
+            .add_systems(
+                Update,
                 (use_barrier, kill)
                     .chain()
                     .in_set(ControlSet::Input)
-                    .in_set(OnUpdate(GameState::Playing)),
+                    .run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -313,9 +319,9 @@ mod tests {
         app.init_time()
             .add_event::<VortInEvent>()
             .init_resource::<Game>()
+            .add_state::<GameState>()
             .add_plugins(MinimalPlugins)
-            .add_plugin(InputPlugin)
-            .add_plugin(ControlPlugin);
+            .add_plugins((InputPlugin, ControlPlugin));
         app
     }
 }

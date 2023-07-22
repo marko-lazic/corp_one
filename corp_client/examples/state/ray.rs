@@ -68,11 +68,13 @@ mod tests {
 
     fn setup() -> App {
         let mut app = App::new();
-        app.add_plugin(HeadlessRenderPlugin);
-        app.add_plugin(TransformPlugin);
-        app.add_plugin(TimePlugin);
-        app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-        app.add_system(cast_ray_system);
+        app.add_plugins((
+            HeadlessRenderPlugin,
+            TransformPlugin,
+            TimePlugin,
+            RapierPhysicsPlugin::<NoUserData>::default(),
+        ));
+        app.add_systems(Update, cast_ray_system);
         app
     }
 
@@ -110,16 +112,18 @@ mod tests {
 
     impl Plugin for HeadlessRenderPlugin {
         fn build(&self, app: &mut App) {
-            app.add_plugin(WindowPlugin::default())
-                .add_plugin(AssetPlugin::default())
-                .add_plugin(ScenePlugin::default())
-                .add_plugin(RenderPlugin {
+            app.add_plugins((
+                WindowPlugin::default(),
+                AssetPlugin::default(),
+                ScenePlugin::default(),
+                RenderPlugin {
                     wgpu_settings: WgpuSettings {
                         backends: None,
                         ..Default::default()
                     },
-                })
-                .add_plugin(ImagePlugin::default());
+                },
+                ImagePlugin::default(),
+            ));
         }
     }
 }

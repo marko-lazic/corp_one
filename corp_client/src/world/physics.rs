@@ -8,46 +8,45 @@ pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        info!("Physics Plugin");
-        app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-        app.add_plugin(RapierDebugRenderPlugin::default());
-        app.add_system(Self::setup_colliders.in_schedule(OnEnter(GameState::SpawnPlayer)));
+        app.add_plugins((
+            RapierPhysicsPlugin::<NoUserData>::default(),
+            RapierDebugRenderPlugin::default(),
+        ))
+        .add_systems(OnEnter(GameState::SpawnPlayer), setup_colliders);
     }
 }
 
-impl PhysicsPlugin {
-    fn setup_colliders(
-        mut commands: Commands,
-        added_name: Query<(Entity, &Name)>,
-        children: Query<&Children>,
-        meshes: Res<Assets<Mesh>>,
-        mesh_handles: Query<&Handle<Mesh>>,
-    ) {
-        for (entity, name) in &added_name {
-            if name.to_lowercase().contains("wall") || name.to_lowercase().contains("tree") {
-                for (collider_entity, collider_mesh) in
-                    Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
-                {
-                    let rapier_collider =
-                        Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
-                            .expect("Failed to initialize a collider with a Mesh.");
+fn setup_colliders(
+    mut commands: Commands,
+    added_name: Query<(Entity, &Name)>,
+    children: Query<&Children>,
+    meshes: Res<Assets<Mesh>>,
+    mesh_handles: Query<&Handle<Mesh>>,
+) {
+    for (entity, name) in &added_name {
+        if name.to_lowercase().contains("wall") || name.to_lowercase().contains("tree") {
+            for (collider_entity, collider_mesh) in
+                Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
+            {
+                let rapier_collider =
+                    Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
+                        .expect("Failed to initialize a collider with a Mesh.");
 
-                    commands
-                        .entity(collider_entity)
-                        .insert((RigidBody::Fixed, rapier_collider));
-                }
-            } else if name.to_lowercase().contains("barrier") {
-                for (collider_entity, collider_mesh) in
-                    Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
-                {
-                    let rapier_collider =
-                        Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
-                            .expect("Failed to initialize a collider with a Mesh.");
+                commands
+                    .entity(collider_entity)
+                    .insert((RigidBody::Fixed, rapier_collider));
+            }
+        } else if name.to_lowercase().contains("barrier") {
+            for (collider_entity, collider_mesh) in
+                Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
+            {
+                let rapier_collider =
+                    Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
+                        .expect("Failed to initialize a collider with a Mesh.");
 
-                    commands
-                        .entity(collider_entity)
-                        .insert((RigidBody::KinematicPositionBased, rapier_collider));
-                }
+                commands
+                    .entity(collider_entity)
+                    .insert((RigidBody::KinematicPositionBased, rapier_collider));
             }
         }
     }

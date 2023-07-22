@@ -2,7 +2,7 @@ use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::pbr::{AlphaMode, Material, MaterialMeshBundle, MaterialPlugin};
 use bevy::prelude::*;
-use bevy::reflect::TypeUuid;
+use bevy::reflect::{TypePath, TypeUuid};
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 use bevy::utils::default;
 use bevy::DefaultPlugins;
@@ -10,9 +10,8 @@ use bevy::DefaultPlugins;
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_plugins(DefaultPlugins)
-        .add_plugin(MaterialPlugin::<BarrierMaterial>::default())
-        .add_startup_system(setup)
+        .add_plugins((DefaultPlugins, MaterialPlugin::<BarrierMaterial>::default()))
+        .add_systems(Startup, setup)
         .run();
 }
 
@@ -40,7 +39,7 @@ fn setup(
     });
 }
 
-#[derive(AsBindGroup, Debug, Clone, TypeUuid)]
+#[derive(AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
 #[uuid = "bac1a40f-4db1-4be7-8a11-b9ee3735c5f2"]
 struct BarrierMaterial {
     #[uniform(0)]

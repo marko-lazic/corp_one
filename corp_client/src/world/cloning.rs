@@ -1,53 +1,52 @@
 use bevy::prelude::*;
 
 use corp_shared::prelude::*;
-use corp_shared::prelude::{CLONE_HEALTH_80, Health};
+use corp_shared::prelude::{Health, CLONE_HEALTH_80};
 
 use crate::asset::asset_loading::ColonyAssets;
-use crate::Game;
 use crate::state::GameState;
-use crate::world::colony::Colony;
 use crate::world::colony::vortex::VortInEvent;
+use crate::world::colony::Colony;
+use crate::Game;
 
 pub struct CloningPlugin;
 
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(
-            Self::vort_in_dead_player_to_cloning.in_schedule(OnEnter(GameState::StarMap)),
-        );
-        app.add_system(Self::check_if_dead_and_go_to_cloning.in_set(OnUpdate(GameState::Playing)));
+        app.add_systems(OnEnter(GameState::StarMap), vort_in_dead_player_to_cloning)
+            .add_systems(
+                Update,
+                check_if_dead_and_go_to_cloning.run_if(in_state(GameState::Playing)),
+            );
     }
 }
 
-impl CloningPlugin {
-    fn check_if_dead_and_go_to_cloning(
-        colony_assets: Res<ColonyAssets>,
-        time: Res<Time>,
-        mut game: ResMut<Game>,
-        mut query: Query<&mut Health, With<Player>>,
-        mut next_state: ResMut<NextState<GameState>>,
-    ) {
-        if let Some(mut health) = query.iter_mut().next() {
-            if health.is_dead() {
-                health.cloning_cooldown.tick(time.delta());
-                if health.cloning_cooldown.finished() {
-                    game.current_colony_asset = colony_assets.cloning.clone();
-                    next_state.set(GameState::LoadColony);
-                }
+fn check_if_dead_and_go_to_cloning(
+    colony_assets: Res<ColonyAssets>,
+    time: Res<Time>,
+    mut game: ResMut<Game>,
+    mut query: Query<&mut Health, With<Player>>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    if let Some(mut health) = query.iter_mut().next() {
+        if health.is_dead() {
+            health.cloning_cooldown.tick(time.delta());
+            if health.cloning_cooldown.finished() {
+                game.current_colony_asset = colony_assets.cloning.clone();
+                next_state.set(GameState::LoadColony);
             }
         }
     }
+}
 
-    fn vort_in_dead_player_to_cloning(
-        mut game: ResMut<Game>,
-        mut vortex_events: EventWriter<VortInEvent>,
-    ) {
-        if game.health.is_dead() {
-            game.health.set_hit_points(CLONE_HEALTH_80);
-            game.health.cloning_cooldown.reset();
-            vortex_events.send(VortInEvent::vort(Colony::Cloning));
-        }
+fn vort_in_dead_player_to_cloning(
+    mut game: ResMut<Game>,
+    mut vortex_events: EventWriter<VortInEvent>,
+) {
+    if game.health.is_dead() {
+        game.health.set_hit_points(CLONE_HEALTH_80);
+        game.health.cloning_cooldown.reset();
+        vortex_events.send(VortInEvent::vort(Colony::Cloning));
     }
 }
 
@@ -71,7 +70,10 @@ mod tests {
         let mut app = App::new();
         init_time(&mut app);
         app.add_state::<GameState>();
-        app.add_systems((kill_player, CloningPlugin::check_if_dead_and_go_to_cloning).chain());
+        app.add_systems(
+            Update,
+            (kill_player, check_if_dead_and_go_to_cloning).chain(),
+        );
         app.insert_resource(create_colony_assets());
         app.insert_resource(Game::default());
         let player_entity = app.world.spawn((Player, Health::default())).id();
@@ -93,7 +95,7 @@ mod tests {
     fn test_vort_in_dead_player() {
         // Setup stage
         let mut schedule = Schedule::default();
-        schedule.add_system(CloningPlugin::vort_in_dead_player_to_cloning);
+        schedule.add_systems(vort_in_dead_player_to_cloning);
 
         // Setup world
         let mut world = World::default();

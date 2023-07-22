@@ -6,14 +6,16 @@ use bevy_prototype_lyon::prelude::*;
 fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
-        .add_plugins(DefaultPlugins)
-        .add_plugin(ShapePlugin)
-        .add_plugin(ResourceInspectorPlugin::<InspectorData>::default())
-        .add_startup_system(setup_system)
-        .add_system(move_parent)
-        .add_system(move_child)
-        .add_system(move_world)
-        .add_system(update_world_to_local)
+        .add_plugins((
+            DefaultPlugins,
+            ShapePlugin,
+            ResourceInspectorPlugin::<InspectorData>::default(),
+        ))
+        .add_systems(Startup, setup_system)
+        .add_systems(
+            Update,
+            (move_parent, move_child, move_world, update_world_to_local),
+        )
         .run();
 }
 
@@ -121,7 +123,7 @@ fn world_to_local(child_pt: &Transform, world_tr: &Transform) -> Vec3 {
 fn setup_system(mut commands: Commands) {
     commands.spawn((
         Camera2dBundle::default(),
-        bevy_mod_picking::PickingCameraBundle::default(),
+        // bevy_mod_picking::PickingCameraBundle::default(),
         // bevy_transform_gizmo::GizmoPickSource::default(),
     ));
 

@@ -12,7 +12,10 @@ impl Plugin for ColonyInteractionPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BackpackInteractionEvent>();
         app.register_component_as::<dyn Interactive, Door>();
-        app.add_plugin(BarrierPlugin);
-        app.add_system((interaction_system).in_set(OnUpdate(GameState::Playing)));
+        app.add_plugins(BarrierPlugin);
+        app.add_systems(
+            Update,
+            interaction_system.run_if(in_state(GameState::Playing)),
+        );
     }
 }

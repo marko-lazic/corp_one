@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use impl_tools::impl_default;
 
 #[derive(Resource, Default)]
 struct Game {
@@ -16,16 +15,21 @@ fn main() {
             color: Color::WHITE,
             brightness: 1.0,
         })
-        .add_startup_system(setup)
-        .add_system(setup_scene_once_loaded)
-        .add_system(keyboard_animation_control)
-        .add_system(play_animations)
+        .add_systems(Startup, setup)
+        .add_systems(
+            Update,
+            (
+                setup_scene_once_loaded,
+                keyboard_animation_control,
+                play_animations,
+            ),
+        )
         .run();
 }
 
-#[derive(PartialEq, Eq, Hash)]
-#[impl_default(Action::IDLE)]
+#[derive(PartialEq, Eq, Hash, Default)]
 enum Action {
+    #[default]
     IDLE = 0,
     RUN = 1,
 }

@@ -28,17 +28,19 @@ fn new_window() -> Window {
 fn main() {
     App::new()
         .insert_resource(Msaa::default())
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(new_window()),
-            ..default()
-        }))
-        .add_plugin(MainCameraPlugin)
-        .add_plugin(ControlPlugin)
-        .add_plugin(CharacterPlugin)
-        .add_startup_system(setup)
-        .configure_set(ControlSet::Input.before(CharacterSet::Movement))
-        .configure_set(CameraSet::Update.after(CharacterSet::Movement))
-        .add_system(exit_game)
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(new_window()),
+                ..default()
+            }),
+            MainCameraPlugin,
+            ControlPlugin,
+            CharacterPlugin,
+        ))
+        .add_systems(Startup, setup)
+        .configure_set(Update, ControlSet::Input.before(CharacterSet::Movement))
+        .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement))
+        .add_systems(Update, exit_game)
         .run();
 }
 

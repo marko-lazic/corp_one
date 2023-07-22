@@ -120,54 +120,48 @@ impl Plugin for AssetLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
             LoadingState::new(GameState::Loading).continue_to_state(GameState::StarMap),
-        );
-        app.add_collection_to_loading_state::<_, PlayerAssets>(GameState::Loading);
-        app.add_collection_to_loading_state::<_, MeshAssets>(GameState::Loading);
-        app.add_collection_to_loading_state::<_, TextureAssets>(GameState::Loading);
-        app.add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading);
-        app.add_collection_to_loading_state::<_, FontAssets>(GameState::Loading);
-        app.add_collection_to_loading_state::<_, ColonyAssets>(GameState::Loading);
-        app.add_collection_to_loading_state::<_, SceneAssets>(GameState::Loading);
-        app.add_systems(
-            (Self::setup, Self::start_loading)
-                .chain()
-                .in_schedule(OnEnter(GameState::Loading)),
-        );
+        )
+        .add_collection_to_loading_state::<_, PlayerAssets>(GameState::Loading)
+        .add_collection_to_loading_state::<_, MeshAssets>(GameState::Loading)
+        .add_collection_to_loading_state::<_, TextureAssets>(GameState::Loading)
+        .add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading)
+        .add_collection_to_loading_state::<_, FontAssets>(GameState::Loading)
+        .add_collection_to_loading_state::<_, ColonyAssets>(GameState::Loading)
+        .add_collection_to_loading_state::<_, SceneAssets>(GameState::Loading)
+        .add_systems(OnEnter(GameState::Loading), (setup, start_loading).chain());
     }
 }
 
-impl AssetLoadingPlugin {
-    fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-        commands.spawn((Camera2dBundle::default(), Despawn));
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((Camera2dBundle::default(), Despawn));
 
-        commands.spawn((
-            TextBundle {
-                text: Text::from_section(
-                    "Loading",
-                    TextStyle {
-                        font: asset_server.load(PATHS.font_fira_sans),
-                        font_size: 40.0,
-                        color: Color::rgb(0.9, 0.9, 0.9),
-                    },
-                ),
-                ..Default::default()
-            },
-            Despawn,
-        ));
-    }
+    commands.spawn((
+        TextBundle {
+            text: Text::from_section(
+                "Loading",
+                TextStyle {
+                    font: asset_server.load(PATHS.font_fira_sans),
+                    font_size: 40.0,
+                    color: Color::rgb(0.9, 0.9, 0.9),
+                },
+            ),
+            ..Default::default()
+        },
+        Despawn,
+    ));
+}
 
-    fn start_loading(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
-        commands.insert_resource(MaterialAssets {
-            cube: materials.add(StandardMaterial {
-                base_color: Color::rgb(0.8, 0.7, 0.6),
-                ..Default::default()
-            }),
-            green_material: materials.add(Color::rgb(0.1, 0.2, 0.1).into()),
-            blue_material: materials.add(Color::rgb(0.1, 0.4, 0.8).into()),
-            sky_blue_material: materials.add(Color::rgb(0.55, 0.71, 0.73).into()),
-            pink_material: materials.add(Color::PINK.into()),
-            orange_red_material: materials.add(Color::ORANGE_RED.into()),
-            sea_green_material: materials.add(Color::SEA_GREEN.into()),
-        });
-    }
+fn start_loading(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
+    commands.insert_resource(MaterialAssets {
+        cube: materials.add(StandardMaterial {
+            base_color: Color::rgb(0.8, 0.7, 0.6),
+            ..Default::default()
+        }),
+        green_material: materials.add(Color::rgb(0.1, 0.2, 0.1).into()),
+        blue_material: materials.add(Color::rgb(0.1, 0.4, 0.8).into()),
+        sky_blue_material: materials.add(Color::rgb(0.55, 0.71, 0.73).into()),
+        pink_material: materials.add(Color::PINK.into()),
+        orange_red_material: materials.add(Color::ORANGE_RED.into()),
+        sea_green_material: materials.add(Color::SEA_GREEN.into()),
+    });
 }

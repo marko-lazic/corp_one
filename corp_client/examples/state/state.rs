@@ -15,9 +15,11 @@ struct InventoryText(Entity);
 fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
-        .add_plugins(DefaultPlugins)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugins((
+            DefaultPlugins,
+            RapierPhysicsPlugin::<NoUserData>::default(),
+            RapierDebugRenderPlugin::default(),
+        ))
         .insert_resource(AmbientLight {
             color: Color::WHITE,
             brightness: 1.0,
@@ -30,8 +32,9 @@ fn main() {
         .add_event::<BackpackInteractionEvent>()
         .add_event::<DoorHackEvent>()
         .register_component_as::<dyn Interactive, Door>()
-        .add_startup_system(setup)
+        .add_systems(Startup, setup)
         .add_systems(
+            Update,
             (
                 door_cooldown_system,
                 process_temporary_faction_ownership_timers_system,
@@ -59,12 +62,6 @@ fn setup(
         transform: Transform::from_xyz(5.0, 5.0, 8.0).looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
         ..Default::default()
     });
-
-    let position = UiRect {
-        left: Val::Px(100.0),
-        top: Val::Px(50.0),
-        ..default()
-    };
 
     // spawn door
     let _ec_door = setup_door(
@@ -123,7 +120,8 @@ fn setup(
                 },
             ),
             style: Style {
-                position,
+                left: Val::Px(100.0),
+                top: Val::Px(50.0),
                 ..default()
             },
             ..Default::default()

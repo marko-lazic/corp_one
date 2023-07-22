@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::reflect::TypePath;
 use derive_more::Display;
 use leafwing_input_manager::prelude::*;
 
@@ -17,7 +18,7 @@ pub struct ControlPlugin;
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorWorld(Vec3);
 
-#[derive(Actionlike, Debug, PartialEq, Clone, Copy, Display)]
+#[derive(Actionlike, Debug, PartialEq, Clone, Copy, Display, TypePath)]
 pub enum ControlAction {
     Forward,
     Backward,
@@ -75,11 +76,12 @@ impl Default for ControlSettings {
 
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(InputManagerPlugin::<ControlAction>::default())
+        app.add_plugins(InputManagerPlugin::<ControlAction>::default())
             .init_resource::<ActionState<ControlAction>>()
             .init_resource::<CursorWorld>()
             .insert_resource(ControlSettings::default().input)
             .add_systems(
+                Update,
                 (
                     player_control_movement
                         .run_if(resource_changed::<ActionState<ControlAction>>()),
@@ -215,10 +217,8 @@ mod tests {
 
     fn setup() -> App {
         let mut app = App::new();
-        app.init_time();
-        app.add_plugins(MinimalPlugins);
-        app.add_plugin(InputPlugin);
-        app.add_plugin(ControlPlugin);
+        app.init_time()
+            .add_plugins((MinimalPlugins, InputPlugin, ControlPlugin));
         app
     }
 }

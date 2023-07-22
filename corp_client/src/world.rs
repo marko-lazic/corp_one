@@ -34,21 +34,23 @@ pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_set(CameraSetup.after(PlayerSetup))
+        app.configure_set(Update, CameraSetup.after(PlayerSetup))
             .insert_resource(AmbientLight {
                 color: Color::ORANGE_RED,
                 brightness: 0.8,
             })
-            .add_plugin(PhysicsPlugin)
-            .add_plugin(ColonyPlugin)
-            .add_plugin(AnimatorPlugin)
-            .add_plugin(StarMapPlugin)
-            .add_plugin(CharacterPlugin)
-            .add_plugin(ControlPlugin)
-            .add_plugin(MainCameraPlugin)
-            .add_plugin(ZonePlugin)
-            .add_plugin(PlayerPlugin)
-            .configure_set(ControlSet::Input.before(CharacterSet::Movement))
-            .configure_set(CameraSet::Update.after(CharacterSet::Movement));
+            .add_plugins((
+                PhysicsPlugin,
+                ColonyPlugin,
+                AnimatorPlugin,
+                StarMapPlugin,
+                CharacterPlugin,
+                ControlPlugin,
+                MainCameraPlugin,
+                ZonePlugin,
+                PlayerPlugin,
+            ))
+            .configure_set(Update, ControlSet::Input.before(CharacterSet::Movement))
+            .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
     }
 }

@@ -14,6 +14,7 @@ pub struct CharacterPlugin;
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
+            Update,
             (
                 is_movement_enabled,
                 calculate_character_movement,
@@ -112,6 +113,7 @@ mod tests {
 
     use corp_shared::prelude::{Health, Player, TestUtils};
 
+    use crate::state::GameState;
     use crate::world::ccc::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
     use crate::world::ccc::control::{ControlPlugin, ControlSet};
     use crate::world::ccc::movement::MovementBundle;
@@ -166,7 +168,7 @@ mod tests {
         app.update();
 
         // then
-        let expected_translation = Vec3::new(0.0, 0.0, -1.42);
+        let expected_translation = Vec3::new(0.0, 0.0, -1.42 * 3.0);
         let translation_result = app.get::<Transform>(player).translation;
         assert_relative_eq!(
             translation_result.z,
@@ -188,7 +190,7 @@ mod tests {
         app.update();
 
         // then
-        let expected_translation = Vec3::new(0.0, 0.0, -1.42);
+        let expected_translation = Vec3::new(0.0, 0.0, -1.42 * 3.0);
         let translation_result = app.get::<Transform>(player).translation;
         assert_relative_eq!(translation_result.z, expected_translation.z, epsilon = 0.01);
     }
@@ -216,13 +218,16 @@ mod tests {
         let mut app = App::new();
         app.init_time()
             .add_event::<VortInEvent>()
+            .add_state::<GameState>()
             .init_resource::<Game>()
-            .add_plugin(InputPlugin)
-            .add_plugin(ControlPlugin)
-            .add_plugin(CharacterPlugin)
-            .add_plugin(MainCameraPlugin)
-            .configure_set(ControlSet::Input.before(CharacterSet::Movement))
-            .configure_set(CameraSet::Update.after(CharacterSet::Movement));
+            .add_plugins((
+                InputPlugin,
+                ControlPlugin,
+                CharacterPlugin,
+                MainCameraPlugin,
+            ))
+            .configure_set(Update, ControlSet::Input.before(CharacterSet::Movement))
+            .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
         app
     }
 
