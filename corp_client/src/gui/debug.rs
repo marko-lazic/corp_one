@@ -6,9 +6,11 @@ use bevy::{
 
 use corp_shared::prelude::*;
 
-use crate::gui::cursor_ui::CursorUi;
-use crate::state::{Despawn, GameState};
-use crate::world::prelude::CursorWorld;
+use crate::{
+    gui::cursor_ui::CursorUi,
+    state::{Despawn, GameState},
+    world::prelude::CursorWorld,
+};
 
 #[derive(Component)]
 struct FpsText;
@@ -78,9 +80,11 @@ fn text(top: f32, left: f32) -> TextBundle {
 }
 
 fn update_fps_text(diagnostics: Res<DiagnosticsStore>, mut query: Query<&mut Text, With<FpsText>>) {
-    let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS)
+    let Some(fps) = diagnostics
+        .get(FrameTimeDiagnosticsPlugin::FPS)
         .map(|f| f.smoothed())
-        .flatten() else {
+        .flatten()
+    else {
         return;
     };
     for mut text in query.iter_mut() {

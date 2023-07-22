@@ -1,13 +1,16 @@
 use bevy::prelude::*;
-use bevy_asset_loader::asset_collection::AssetCollection;
-use bevy_asset_loader::loading_state::{LoadingState, LoadingStateAppExt};
+use bevy_asset_loader::{
+    asset_collection::AssetCollection,
+    loading_state::{LoadingState, LoadingStateAppExt},
+};
 use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
-use crate::asset::paths::PATHS;
-use crate::state::Despawn;
-use crate::state::GameState;
-use crate::world::colony::colony_assets::ColonyAsset;
+use crate::{
+    asset::PATHS,
+    state::{Despawn, GameState},
+    world::colony::colony_assets::ColonyAsset,
+};
 
 /// Exported using Blender export glTF 2.0 with settings enabled
 ///

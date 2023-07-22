@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::prelude::*;
-use bevy_inspector_egui::quick::ResourceInspectorPlugin;
+use bevy_inspector_egui::{prelude::*, quick::ResourceInspectorPlugin};
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 
 fn main() {

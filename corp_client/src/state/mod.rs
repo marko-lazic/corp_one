@@ -1,5 +1,3 @@
-pub use game_state::Despawn;
-pub use game_state::GameState;
-pub use game_state::GameStatePlugin;
+pub use game_state::{Despawn, GameState, GameStatePlugin};
 
 pub mod game_state;

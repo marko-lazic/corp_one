@@ -1,11 +1,8 @@
-use bevy::app::App;
-use bevy::asset::Assets;
-use bevy::pbr::{AlphaMode, Material, MaterialMeshBundle, MaterialPlugin};
-use bevy::prelude::*;
-use bevy::reflect::{TypePath, TypeUuid};
-use bevy::render::render_resource::{AsBindGroup, ShaderRef};
-use bevy::utils::default;
-use bevy::DefaultPlugins;
+use bevy::{
+    prelude::*,
+    reflect::{TypePath, TypeUuid},
+    render::render_resource::{AsBindGroup, ShaderRef},
+};
 
 fn main() {
     App::new()

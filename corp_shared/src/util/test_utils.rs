@@ -1,7 +1,9 @@
 use std::time::Duration;
 
-use bevy::app::App;
-use bevy::prelude::{Component, Entity, Mut, Time};
+use bevy::{
+    app::App,
+    prelude::{Component, Entity, Mut, Time},
+};
 
 pub trait TestUtils {
     fn init_time(&mut self) -> &mut Self;

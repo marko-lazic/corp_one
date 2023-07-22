@@ -1,15 +1,18 @@
 use bevy::prelude::*;
 
-use crate::world::animator::AnimatorPlugin;
-use crate::world::ccc::camera::{CameraSet, MainCameraPlugin};
-use crate::world::ccc::character::{CharacterPlugin, CharacterSet};
-use crate::world::ccc::control::{ControlPlugin, ControlSet};
-use crate::world::colony::zone::ZonePlugin;
-use crate::world::colony::ColonyPlugin;
-use crate::world::physics::PhysicsPlugin;
-use crate::world::player::PlayerPlugin;
-use crate::world::star_map::StarMapPlugin;
-use crate::world::WorldSystemSet::{CameraSetup, PlayerSetup};
+use crate::world::{
+    animator::AnimatorPlugin,
+    ccc::{
+        camera::{CameraSet, MainCameraPlugin},
+        character::{CharacterPlugin, CharacterSet},
+        control::{ControlPlugin, ControlSet},
+    },
+    colony::{zone::ZonePlugin, ColonyPlugin},
+    physics::PhysicsPlugin,
+    player::PlayerPlugin,
+    star_map::StarMapPlugin,
+    WorldSystemSet::{CameraSetup, PlayerSetup},
+};
 
 mod animator;
 mod ccc;
@@ -20,8 +23,7 @@ pub mod player;
 mod star_map;
 
 pub mod prelude {
-    pub use super::ccc::control::CursorWorld;
-    pub use super::ccc::movement::CharacterMovement;
+    pub use super::ccc::{control::CursorWorld, movement::CharacterMovement};
 }
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]

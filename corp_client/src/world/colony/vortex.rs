@@ -1,14 +1,14 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{Collider, QueryFilter, RapierContext};
 
-use corp_shared::prelude::Health;
-use corp_shared::prelude::*;
+use corp_shared::prelude::{Health, *};
 
-use crate::asset::asset_loading::ColonyAssets;
-use crate::state::GameState;
-use crate::world::colony::Colony;
-use crate::world::physics;
-use crate::Game;
+use crate::{
+    asset::ColonyAssets,
+    state::GameState,
+    world::{colony::Colony, physics},
+    Game,
+};
 
 #[derive(Event)]
 pub struct VortOutEvent;

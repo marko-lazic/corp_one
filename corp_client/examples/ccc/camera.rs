@@ -1,6 +1,8 @@
 use bevy::prelude::*;
-use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
-use bevy_dolly::system::DollyUpdateSet;
+use bevy_dolly::{
+    prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch},
+    system::DollyUpdateSet,
+};
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::control::ControlAction;
@@ -146,9 +148,11 @@ mod tests {
 
     use corp_shared::prelude::{Health, Player, TestUtils};
 
-    use crate::character::{CharacterPlugin, CharacterSet};
-    use crate::control::{ControlPlugin, ControlSet};
-    use crate::movement::MovementBundle;
+    use crate::{
+        character::{CharacterPlugin, CharacterSet},
+        control::{ControlPlugin, ControlSet},
+        movement::MovementBundle,
+    };
 
     use super::*;
 

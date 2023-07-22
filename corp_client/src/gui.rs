@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use crate::gui::cursor_ui::CursorPlugin;
-use crate::gui::debug::DebugGuiPlugin;
+use crate::gui::{cursor_ui::CursorPlugin, debug::DebugGuiPlugin};
 
 mod cursor_ui;
 mod debug;

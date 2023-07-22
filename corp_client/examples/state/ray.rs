@@ -1,5 +1,4 @@
-use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
+use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::prelude::*;
 
 use corp_shared::prelude::{Interactor, Player};
@@ -12,12 +11,16 @@ pub fn cast_ray_system(
 ) {
     let window = windows.single();
 
-    let Some(cursor_position) = window.cursor_position() else { return; };
+    let Some(cursor_position) = window.cursor_position() else {
+        return;
+    };
 
     // We will color in read the colliders hovered by the mouse.
     for (camera, camera_transform) in &cameras {
         // First, compute a ray from the mouse position.
-        let Some(ray) = camera.viewport_to_world(camera_transform, cursor_position) else { return; };
+        let Some(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
+            return;
+        };
 
         // Then cast the ray.
         let hit = rapier_context.cast_ray(
@@ -29,7 +32,9 @@ pub fn cast_ray_system(
         );
 
         if let Some((entity, _toi)) = hit {
-            let Ok(mut interactor) = interactor_query.get_single_mut() else { return; };
+            let Ok(mut interactor) = interactor_query.get_single_mut() else {
+                return;
+            };
             interactor.interact(entity);
         }
     }
@@ -37,10 +42,11 @@ pub fn cast_ray_system(
 
 #[cfg(test)]
 mod tests {
-    use bevy::render::settings::WgpuSettings;
-    use bevy::render::RenderPlugin;
-    use bevy::scene::ScenePlugin;
-    use bevy::time::TimePlugin;
+    use bevy::{
+        render::{settings::WgpuSettings, RenderPlugin},
+        scene::ScenePlugin,
+        time::TimePlugin,
+    };
 
     use corp_shared::prelude::TestUtils;
 

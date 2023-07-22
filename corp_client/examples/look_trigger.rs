@@ -1,5 +1,4 @@
-use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
+use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 use bevy_prototype_lyon::prelude::*;
 

@@ -1,7 +1,6 @@
-use std::io::ErrorKind;
 use std::{
     fs::{self, File},
-    io::Error,
+    io::{Error, ErrorKind},
     path::Path,
 };
 

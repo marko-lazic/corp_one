@@ -1,5 +1,7 @@
-use bevy::prelude::*;
-use bevy::render::mesh::{MeshVertexAttributeId, PrimitiveTopology, VertexAttributeValues};
+use bevy::{
+    prelude::*,
+    render::mesh::{MeshVertexAttributeId, PrimitiveTopology, VertexAttributeValues},
+};
 
 pub(crate) trait MeshExt {
     fn transform(&mut self, transform: Transform);

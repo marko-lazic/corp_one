@@ -1,7 +1,6 @@
 use std::time::Duration;
 
-use bevy::app::ScheduleRunnerPlugin;
-use bevy::prelude::*;
+use bevy::{app::ScheduleRunnerPlugin, prelude::*};
 
 fn main() {
     let frames_per_second = Duration::from_secs_f64(1.0 / 60.0);

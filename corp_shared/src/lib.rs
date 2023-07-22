@@ -15,13 +15,15 @@ pub const SERVER_PORT: u16 = 9001;
 pub const CLONING_SPAWN_POSITION: Vec3 = Vec3::from_array([0.; 3]);
 
 pub mod prelude {
-    pub use crate::items::inventory::*;
-    pub use crate::items::item::*;
-    pub use crate::stats::health::*;
-    pub use crate::util::test_utils::*;
-    pub use crate::world::faction::*;
-    pub use crate::world::interactive::*;
-    pub use crate::world::objects::backpack::*;
-    pub use crate::world::objects::door::*;
-    pub use crate::world::player::*;
+    pub use crate::{
+        items::{inventory::*, item::*},
+        stats::health::*,
+        util::test_utils::*,
+        world::{
+            faction::*,
+            interactive::*,
+            objects::{backpack::*, door::*},
+            player::*,
+        },
+    };
 }

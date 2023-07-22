@@ -4,18 +4,23 @@ use rand::seq::SliceRandom;
 
 use corp_shared::prelude::*;
 
-use crate::asset::asset_loading::PlayerAssets;
-use crate::state::Despawn;
-use crate::state::GameState;
-use crate::world::animator::{AnimationComponent, PlayerAnimationAction};
-use crate::world::ccc::camera::{MainCameraBundle, MainCameraFollow};
-use crate::world::ccc::control::ControlSet;
-use crate::world::ccc::movement::{CharacterMovement, MovementBundle};
-use crate::world::cloning::CloningPlugin;
-use crate::world::colony::vortex::VortexNode;
-use crate::world::physics::CollideGroups;
-use crate::world::WorldSystemSet;
-use crate::Game;
+use crate::{
+    asset::PlayerAssets,
+    state::{Despawn, GameState},
+    world::{
+        animator::{AnimationComponent, PlayerAnimationAction},
+        ccc::{
+            camera::{MainCameraBundle, MainCameraFollow},
+            control::ControlSet,
+            movement::{CharacterMovement, MovementBundle},
+        },
+        cloning::CloningPlugin,
+        colony::vortex::VortexNode,
+        physics::CollideGroups,
+        WorldSystemSet,
+    },
+    Game,
+};
 
 #[derive(Bundle)]
 struct PlayerPhysicsBundle {

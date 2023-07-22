@@ -112,9 +112,11 @@ mod tests {
 
     use corp_shared::prelude::{Health, Player, TestUtils};
 
-    use crate::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
-    use crate::control::{ControlPlugin, ControlSet};
-    use crate::movement::MovementBundle;
+    use crate::{
+        camera::{CameraSet, MainCameraBundle, MainCameraPlugin},
+        control::{ControlPlugin, ControlSet},
+        movement::MovementBundle,
+    };
 
     use super::*;
 

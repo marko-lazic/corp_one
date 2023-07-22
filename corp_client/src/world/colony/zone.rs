@@ -1,13 +1,13 @@
-use bevy::prelude::*;
-use bevy::utils::hashbrown::HashSet;
+use bevy::{prelude::*, utils::hashbrown::HashSet};
 use bevy_rapier3d::prelude::*;
 use serde::Deserialize;
 
 use corp_shared::prelude::*;
 
-use crate::state::GameState;
-use crate::world::colony::colony_assets::ZoneAsset;
-use crate::world::physics;
+use crate::{
+    state::GameState,
+    world::{colony::colony_assets::ZoneAsset, physics},
+};
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 pub enum ZoneType {

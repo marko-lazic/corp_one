@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use crate::world::objects::backpack::BackpackInteractionEvent;
-use crate::world::objects::door::DoorInteractionEvent;
+use crate::world::objects::{backpack::BackpackInteractionEvent, door::DoorInteractionEvent};
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum BackpackAction {

@@ -1,18 +1,24 @@
-use bevy::app::AppExit;
-use bevy::prelude::*;
-use bevy::reflect::TypePath;
+use bevy::{app::AppExit, prelude::*, reflect::TypePath};
 use leafwing_input_manager::prelude::*;
 
 use corp_shared::prelude::{Health, Interactor, Player};
 
-use crate::state::GameState;
-use crate::world::ccc::camera::{MainCamera, MainCameraFollow};
-use crate::world::ccc::double_tap::DoubleTap;
-use crate::world::ccc::movement::{ControlMovement, OrientationMode};
-use crate::world::colony::barrier::{BarrierControl, BarrierField};
-use crate::world::colony::vortex::VortInEvent;
-use crate::world::colony::Colony;
-use crate::Game;
+use crate::{
+    state::GameState,
+    world::{
+        ccc::{
+            camera::{MainCamera, MainCameraFollow},
+            double_tap::DoubleTap,
+            movement::{ControlMovement, OrientationMode},
+        },
+        colony::{
+            barrier::{BarrierControl, BarrierField},
+            vortex::VortInEvent,
+            Colony,
+        },
+    },
+    Game,
+};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ControlSet {
@@ -225,8 +231,10 @@ fn use_barrier(
             return;
         };
 
-        let Some((target_barrier, _)) = barrier_field_query.iter()
-            .find(|(_e, b)| b.name == barrier_control.barrier_field_name) else {
+        let Some((target_barrier, _)) = barrier_field_query
+            .iter()
+            .find(|(_e, b)| b.name == barrier_control.barrier_field_name)
+        else {
             return;
         };
 

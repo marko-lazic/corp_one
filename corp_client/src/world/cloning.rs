@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 
-use corp_shared::prelude::*;
-use corp_shared::prelude::{Health, CLONE_HEALTH_80};
+use corp_shared::prelude::{Health, CLONE_HEALTH_80, *};
 
-use crate::asset::asset_loading::ColonyAssets;
-use crate::state::GameState;
-use crate::world::colony::vortex::VortInEvent;
-use crate::world::colony::Colony;
-use crate::Game;
+use crate::{
+    asset::ColonyAssets,
+    state::GameState,
+    world::colony::{vortex::VortInEvent, Colony},
+    Game,
+};
 
 pub struct CloningPlugin;
 

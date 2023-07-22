@@ -113,12 +113,18 @@ mod tests {
 
     use corp_shared::prelude::{Health, Player, TestUtils};
 
-    use crate::state::GameState;
-    use crate::world::ccc::camera::{CameraSet, MainCameraBundle, MainCameraPlugin};
-    use crate::world::ccc::control::{ControlPlugin, ControlSet};
-    use crate::world::ccc::movement::MovementBundle;
-    use crate::world::colony::vortex::VortInEvent;
-    use crate::Game;
+    use crate::{
+        state::GameState,
+        world::{
+            ccc::{
+                camera::{CameraSet, MainCameraBundle, MainCameraPlugin},
+                control::{ControlPlugin, ControlSet},
+                movement::MovementBundle,
+            },
+            colony::vortex::VortInEvent,
+        },
+        Game,
+    };
 
     use super::*;
 

@@ -1,13 +1,15 @@
 use std::ops::Deref;
 
-use bevy::reflect::TypePath;
-use bevy::{prelude::*, reflect::TypeUuid};
+use bevy::{
+    prelude::*,
+    reflect::{TypePath, TypeUuid},
+};
 use serde::Deserialize;
 
-use crate::asset::asset_loading::MaterialAsset;
-use crate::world::colony::asset::color::ColorAsset;
-use crate::world::colony::zone::ZoneType;
-use crate::world::colony::Colony;
+use crate::{
+    asset::MaterialAsset,
+    world::colony::{asset::color::ColorAsset, zone::ZoneType, Colony},
+};
 
 #[derive(Default, Deserialize, Debug, TypeUuid, TypePath)]
 #[uuid = "962DF4C2-C221-4364-A9F7-B7340FB60437"]

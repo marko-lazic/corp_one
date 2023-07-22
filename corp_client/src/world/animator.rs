@@ -1,8 +1,6 @@
-use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{prelude::*, utils::HashMap};
 
-use crate::asset::asset_loading::PlayerAssets;
-use crate::state::GameState;
+use crate::{asset::PlayerAssets, state::GameState};
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub enum PlayerAnimationAction {

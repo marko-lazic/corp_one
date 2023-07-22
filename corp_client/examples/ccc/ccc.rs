@@ -1,16 +1,20 @@
 //! Demonstrates all common configuration options,
 //! and how to modify them at runtime
 
-use bevy::app::AppExit;
-use bevy::prelude::*;
-use bevy::window::{PresentMode, WindowMode};
+use bevy::{
+    app::AppExit,
+    prelude::*,
+    window::{PresentMode, WindowMode},
+};
 
 use corp_shared::prelude::Player;
 
-use crate::camera::{CameraSet, MainCameraBundle, MainCameraFollow, MainCameraPlugin};
-use crate::character::{CharacterPlugin, CharacterSet};
-use crate::control::{ControlPlugin, ControlSet};
-use crate::movement::MovementBundle;
+use crate::{
+    camera::{CameraSet, MainCameraBundle, MainCameraFollow, MainCameraPlugin},
+    character::{CharacterPlugin, CharacterSet},
+    control::{ControlPlugin, ControlSet},
+    movement::MovementBundle,
+};
 
 mod camera;
 mod character;

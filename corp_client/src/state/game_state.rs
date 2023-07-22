@@ -1,5 +1,4 @@
-use bevy::log::info;
-use bevy::prelude::*;
+use bevy::{log::info, prelude::*};
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum GameState {

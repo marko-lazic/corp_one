@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::state::GameState;
-use crate::util::mesh_extension::MeshExt;
+use crate::{state::GameState, util::mesh_extension::MeshExt};
 
 pub struct PhysicsPlugin;
 

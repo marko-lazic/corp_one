@@ -1,5 +1,4 @@
-use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::{prelude::*, utils::HashMap};
 
 #[derive(Resource, Default)]
 struct Game {

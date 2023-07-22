@@ -1,14 +1,11 @@
-use bevy::app::Plugin;
-use bevy::prelude::*;
+use bevy::{app::Plugin, prelude::*};
 // use bevy_mod_picking::events::{Out, Over};
 // use bevy_mod_picking::prelude::ListenedEvent;
 use bevy_rapier3d::prelude::ColliderDisabled;
 
 use corp_shared::prelude::*;
 
-use crate::gui::CursorVisibility;
-use crate::state::GameState;
-use crate::{App, Game};
+use crate::{gui::CursorVisibility, state::GameState, App, Game};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Hover {

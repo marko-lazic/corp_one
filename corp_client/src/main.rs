@@ -1,18 +1,21 @@
 use std::time::Duration;
 
-use bevy::asset::ChangeWatcher;
-use bevy::input::common_conditions::input_toggle_active;
-use bevy::prelude::*;
-use bevy::window::{PresentMode, WindowMode};
+use bevy::{
+    asset::ChangeWatcher,
+    input::common_conditions::input_toggle_active,
+    prelude::*,
+    window::{PresentMode, WindowMode},
+};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use corp_shared::prelude::Health;
 
-use crate::asset::asset_loading::AssetLoadingPlugin;
-use crate::gui::GuiPlugin;
-use crate::state::GameStatePlugin;
-use crate::world::colony::colony_assets::ColonyAsset;
-use crate::world::WorldPlugin;
+use crate::{
+    asset::AssetLoadingPlugin,
+    gui::GuiPlugin,
+    state::GameStatePlugin,
+    world::{colony::colony_assets::ColonyAsset, WorldPlugin},
+};
 
 mod asset;
 mod gui;

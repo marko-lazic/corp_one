@@ -3,9 +3,7 @@ use bevy_kira_audio::{Audio, AudioControl, AudioPlugin};
 
 use corp_shared::prelude::*;
 
-use crate::asset::asset_loading::AudioAssets;
-use crate::state::GameState;
-use crate::world::prelude::CharacterMovement;
+use crate::{asset::AudioAssets, state::GameState, world::prelude::CharacterMovement};
 
 pub struct SoundPlugin;
 

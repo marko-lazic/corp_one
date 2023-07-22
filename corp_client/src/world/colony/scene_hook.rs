@@ -1,15 +1,20 @@
-use bevy::ecs::system::EntityCommands;
-use bevy::log::info;
+use bevy::{ecs::system::EntityCommands, log::info};
 // use bevy_mod_picking::backends::rapier::RapierPickTarget;
 // use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use corp_shared::prelude::{ControlRegistry, Door, Faction, Security};
 
-use crate::state::Despawn;
-use crate::world::colony::barrier::{BarrierControl, BarrierField};
-use crate::world::colony::vortex::{VortexGate, VortexNode};
-use crate::world::physics;
+use crate::{
+    state::Despawn,
+    world::{
+        colony::{
+            barrier::{BarrierControl, BarrierField},
+            vortex::{VortexGate, VortexNode},
+        },
+        physics,
+    },
+};
 
 pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
     match name {

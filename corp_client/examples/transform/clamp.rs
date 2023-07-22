@@ -1,8 +1,5 @@
-use bevy::app::App;
 use bevy::prelude::*;
-use bevy::DefaultPlugins;
-use bevy_inspector_egui::prelude::*;
-use bevy_inspector_egui::quick::ResourceInspectorPlugin;
+use bevy_inspector_egui::{prelude::*, quick::ResourceInspectorPlugin};
 use bevy_prototype_lyon::prelude::*;
 
 use crate::shape::Icosphere;

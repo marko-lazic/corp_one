@@ -1,11 +1,12 @@
 use bevy::prelude::*;
-use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
-use bevy_dolly::system::DollyUpdateSet;
+use bevy_dolly::{
+    prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch},
+    system::DollyUpdateSet,
+};
 // use bevy_mod_picking::prelude::RapierPickCamera;
 use leafwing_input_manager::action_state::ActionState;
 
-use crate::state::Despawn;
-use crate::world::ccc::control::ControlAction;
+use crate::{state::Despawn, world::ccc::control::ControlAction};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CameraSet {
@@ -152,12 +153,18 @@ mod tests {
 
     use corp_shared::prelude::{Health, Player, TestUtils};
 
-    use crate::state::GameState;
-    use crate::world::ccc::character::{CharacterPlugin, CharacterSet};
-    use crate::world::ccc::control::{ControlPlugin, ControlSet};
-    use crate::world::ccc::movement::MovementBundle;
-    use crate::world::colony::vortex::VortInEvent;
-    use crate::Game;
+    use crate::{
+        state::GameState,
+        world::{
+            ccc::{
+                character::{CharacterPlugin, CharacterSet},
+                control::{ControlPlugin, ControlSet},
+                movement::MovementBundle,
+            },
+            colony::vortex::VortInEvent,
+        },
+        Game,
+    };
 
     use super::*;
 

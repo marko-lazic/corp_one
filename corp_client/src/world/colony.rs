@@ -6,15 +6,20 @@ use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 use serde::Deserialize;
 
-use crate::asset::asset_loading::{MaterialAssets, SceneAssets};
-use crate::state::Despawn;
-use crate::state::GameState;
-use crate::world::colony::colony_assets::ColonyAsset;
-use crate::world::colony::colony_interaction::ColonyInteractionPlugin;
-use crate::world::colony::vortex::{VortexNode, VortexPlugin};
-use crate::world::colony::zone::Zone;
-use crate::world::{physics, WorldSystemSet};
-use crate::Game;
+use crate::{
+    asset::{MaterialAssets, SceneAssets},
+    state::{Despawn, GameState},
+    world::{
+        colony::{
+            colony_assets::ColonyAsset,
+            colony_interaction::ColonyInteractionPlugin,
+            vortex::{VortexNode, VortexPlugin},
+            zone::Zone,
+        },
+        physics, WorldSystemSet,
+    },
+    Game,
+};
 
 mod asset;
 pub mod barrier;

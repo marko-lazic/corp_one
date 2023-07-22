@@ -1,12 +1,13 @@
-use bevy::prelude::*;
-use bevy::reflect::TypePath;
+use bevy::{prelude::*, reflect::TypePath};
 use derive_more::Display;
 use leafwing_input_manager::prelude::*;
 
 use corp_shared::prelude::Player;
 
-use crate::camera::{MainCamera, MainCameraFollow};
-use crate::movement::{ControlMovement, OrientationMode};
+use crate::{
+    camera::{MainCamera, MainCameraFollow},
+    movement::{ControlMovement, OrientationMode},
+};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ControlSet {

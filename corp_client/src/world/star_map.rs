@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
-use crate::asset::asset_loading::TextureAssets;
-use crate::state::Despawn;
-use crate::state::GameState;
+use crate::{
+    asset::TextureAssets,
+    state::{Despawn, GameState},
+};
 
 pub struct StarMapPlugin;
 

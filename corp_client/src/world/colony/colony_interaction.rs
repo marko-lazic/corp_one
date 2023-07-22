@@ -3,8 +3,7 @@ use bevy_trait_query::RegisterExt;
 
 use corp_shared::prelude::*;
 
-use crate::state::GameState;
-use crate::world::colony::barrier::BarrierPlugin;
+use crate::{state::GameState, world::colony::barrier::BarrierPlugin};
 
 pub struct ColonyInteractionPlugin;
 
