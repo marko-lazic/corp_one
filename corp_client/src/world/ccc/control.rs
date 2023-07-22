@@ -4,6 +4,7 @@ use leafwing_input_manager::prelude::*;
 use corp_shared::prelude::{Health, Interactor, Player};
 
 use crate::{
+    asset::Colony,
     state::GameState,
     world::{
         ccc::{
@@ -14,7 +15,6 @@ use crate::{
         colony::{
             barrier::{BarrierControl, BarrierField},
             vortex::VortInEvent,
-            Colony,
         },
     },
     Game,

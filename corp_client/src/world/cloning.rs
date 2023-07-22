@@ -3,9 +3,9 @@ use bevy::prelude::*;
 use corp_shared::prelude::{Health, CLONE_HEALTH_80, *};
 
 use crate::{
-    asset::ColonyAssets,
+    asset::{Colony, ColonyConfigAssets},
     state::GameState,
-    world::colony::{vortex::VortInEvent, Colony},
+    world::colony::vortex::VortInEvent,
     Game,
 };
 
@@ -22,7 +22,7 @@ impl Plugin for CloningPlugin {
 }
 
 fn check_if_dead_and_go_to_cloning(
-    colony_assets: Res<ColonyAssets>,
+    colony_config_assets: Res<ColonyConfigAssets>,
     time: Res<Time>,
     mut game: ResMut<Game>,
     mut query: Query<&mut Health, With<Player>>,
@@ -32,7 +32,7 @@ fn check_if_dead_and_go_to_cloning(
         if health.is_dead() {
             health.cloning_cooldown.tick(time.delta());
             if health.cloning_cooldown.finished() {
-                game.current_colony_asset = colony_assets.cloning.clone();
+                game.current_colony_config = colony_config_assets.cloning.clone();
                 next_state.set(GameState::LoadColony);
             }
         }
@@ -125,8 +125,8 @@ mod tests {
         app.world.insert_resource(time);
     }
 
-    fn create_colony_assets() -> ColonyAssets {
-        ColonyAssets {
+    fn create_colony_assets() -> ColonyConfigAssets {
+        ColonyConfigAssets {
             iris: Default::default(),
             liberte: Default::default(),
             cloning: Default::default(),

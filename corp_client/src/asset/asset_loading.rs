@@ -7,9 +7,8 @@ use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
 use crate::{
-    asset::PATHS,
+    asset::{ColonyConfig, PATHS},
     state::{Despawn, GameState},
-    world::colony::colony_assets::ColonyAsset,
 };
 
 /// Exported using Blender export glTF 2.0 with settings enabled
@@ -28,13 +27,13 @@ pub struct SceneAssets {
 }
 
 #[derive(Resource, AssetCollection)]
-pub struct ColonyAssets {
+pub struct ColonyConfigAssets {
     #[asset(path = "data/colony/iris.colony")]
-    pub iris: Handle<ColonyAsset>,
+    pub iris: Handle<ColonyConfig>,
     #[asset(path = "data/colony/liberte.colony")]
-    pub liberte: Handle<ColonyAsset>,
+    pub liberte: Handle<ColonyConfig>,
     #[asset(path = "data/colony/cloning.colony")]
-    pub cloning: Handle<ColonyAsset>,
+    pub cloning: Handle<ColonyConfig>,
 }
 
 #[derive(Resource, AssetCollection)]
@@ -129,7 +128,7 @@ impl Plugin for AssetLoadingPlugin {
         .add_collection_to_loading_state::<_, TextureAssets>(GameState::Loading)
         .add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading)
         .add_collection_to_loading_state::<_, FontAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, ColonyAssets>(GameState::Loading)
+        .add_collection_to_loading_state::<_, ColonyConfigAssets>(GameState::Loading)
         .add_collection_to_loading_state::<_, SceneAssets>(GameState::Loading)
         .add_systems(OnEnter(GameState::Loading), (setup, start_loading).chain());
     }

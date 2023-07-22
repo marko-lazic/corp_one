@@ -4,14 +4,12 @@ use bevy_common_assets::ron::RonAssetPlugin;
 // use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
-use serde::Deserialize;
 
 use crate::{
-    asset::{MaterialAssets, SceneAssets},
+    asset::{Colony, ColonyConfig, MaterialAssets, SceneAssets},
     state::{Despawn, GameState},
     world::{
         colony::{
-            colony_assets::ColonyAsset,
             colony_interaction::ColonyInteractionPlugin,
             vortex::{VortexNode, VortexPlugin},
             zone::Zone,
@@ -21,27 +19,11 @@ use crate::{
     Game,
 };
 
-mod asset;
 pub mod barrier;
-pub mod colony_assets;
 mod colony_interaction;
 mod scene_hook;
 pub mod vortex;
 pub mod zone;
-
-#[derive(Debug, Deserialize, Clone)]
-pub enum Colony {
-    Cloning,
-    Iris,
-    Liberte,
-    Playground,
-}
-
-impl Default for Colony {
-    fn default() -> Self {
-        Self::Cloning
-    }
-}
 
 pub struct ColonyPlugin;
 
@@ -51,7 +33,7 @@ impl Plugin for ColonyPlugin {
             VortexPlugin,
             ColonyInteractionPlugin,
             HookPlugin,
-            RonAssetPlugin::<ColonyAsset>::new(&["colony"]),
+            RonAssetPlugin::<ColonyConfig>::new(&["colony"]),
             // DefaultPickingPlugins,
         ))
         .add_systems(
@@ -75,13 +57,13 @@ impl Plugin for ColonyPlugin {
 }
 
 fn setup_colony(
-    colony_assets: Res<Assets<ColonyAsset>>,
+    colony_config: Res<Assets<ColonyConfig>>,
     scene_assets: Res<SceneAssets>,
     mut commands: Commands,
     game: Res<Game>,
 ) {
     info!("Setup colony");
-    let current_colony = colony_assets.get(&game.current_colony_asset).unwrap();
+    let current_colony = colony_config.get(&game.current_colony_config).unwrap();
     let colony_scene = match current_colony.name {
         Colony::Cloning => scene_assets.cloning.clone(),
         Colony::Iris => scene_assets.iris.clone(),
@@ -154,12 +136,12 @@ fn setup_debug_plane(
 fn setup_zones(
     mut commands: Commands,
     game: Res<Game>,
-    assets: Res<Assets<ColonyAsset>>,
+    colony_config: Res<Assets<ColonyConfig>>,
     material_assets: Res<MaterialAssets>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     info!("Setup zones");
-    if let Some(colony_asset) = assets.get(&game.current_colony_asset) {
+    if let Some(colony_asset) = colony_config.get(&game.current_colony_config) {
         for zone_asset in &colony_asset.zones {
             commands.spawn((
                 PbrBundle {

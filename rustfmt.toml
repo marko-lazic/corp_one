@@ -1,4 +1,5 @@
-imports_granularity = "Crate"
 use_field_init_shorthand = true
 newline_style = "Unix"
 edition = "2021"
+# The following lines may be uncommented on nightly Rust.
+imports_granularity = "Crate"

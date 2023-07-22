@@ -2,7 +2,7 @@
     name: Iris,
     description: "Iris Relaxed Alien Adventure",
     zones: [
-        ZoneAsset(
+        ZoneConfig(
             position: Vec3(-3.0, 0.1, -4.0),
             value: 9.3,
             second: 1.0,
@@ -10,7 +10,7 @@
             size: 1.0,
             material: OrangeRed,
         ),
-        ZoneAsset(
+        ZoneConfig(
             position: Vec3(3.0, 0.1, -4.0),
             value: 3.5,
             second: 1.0,

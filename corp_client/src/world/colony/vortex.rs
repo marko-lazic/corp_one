@@ -4,7 +4,7 @@ use bevy_rapier3d::prelude::{Collider, QueryFilter, RapierContext};
 use corp_shared::prelude::{Health, *};
 
 use crate::{
-    asset::ColonyAssets,
+    asset::ColonyConfigAssets,
     state::GameState,
     world::{colony::Colony, physics},
     Game,
@@ -73,7 +73,7 @@ fn vort_out_event_reader(
 }
 
 fn vort_in_event_reader(
-    colony_assets: Res<ColonyAssets>,
+    colony_config_assets: Res<ColonyConfigAssets>,
     mut vort_in_events: EventReader<VortInEvent>,
     mut game: ResMut<Game>,
     mut next_state: ResMut<NextState<GameState>>,
@@ -82,22 +82,22 @@ fn vort_in_event_reader(
         match vort_in.colony {
             Colony::Cloning => {
                 info!("Cloning Facility");
-                game.current_colony_asset = colony_assets.cloning.clone();
+                game.current_colony_config = colony_config_assets.cloning.clone();
                 next_state.set(GameState::LoadColony);
             }
             Colony::Iris => {
                 info!("Moonbase: Station Iris");
-                game.current_colony_asset = colony_assets.iris.clone();
+                game.current_colony_config = colony_config_assets.iris.clone();
                 next_state.set(GameState::LoadColony);
             }
             Colony::Liberte => {
                 info!("Mars: Colony Liberte");
-                game.current_colony_asset = colony_assets.liberte.clone();
+                game.current_colony_config = colony_config_assets.liberte.clone();
                 next_state.set(GameState::LoadColony);
             }
             Colony::Playground => {
                 info!("Alien Planet");
-                game.current_colony_asset = Handle::default();
+                game.current_colony_config = Handle::default();
                 next_state.set(GameState::LoadColony);
             }
         }

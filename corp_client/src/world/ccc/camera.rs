@@ -6,7 +6,10 @@ use bevy_dolly::{
 // use bevy_mod_picking::prelude::RapierPickCamera;
 use leafwing_input_manager::action_state::ActionState;
 
-use crate::{state::Despawn, world::ccc::control::ControlAction};
+use crate::{
+    state::{Despawn, GameState},
+    world::ccc::control::ControlAction,
+};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CameraSet {
@@ -50,9 +53,14 @@ impl MainCameraBundle {
 
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, update_camera.in_set(CameraSet::Update))
-            .add_systems(Update, Dolly::<MainCamera>::update_active)
-            .configure_set(Update, DollyUpdateSet.after(CameraSet::Update));
+        app.add_systems(
+            Update,
+            update_camera
+                .in_set(CameraSet::Update)
+                .run_if(in_state(GameState::Playing)),
+        )
+        .add_systems(Update, Dolly::<MainCamera>::update_active)
+        .configure_set(Update, DollyUpdateSet.after(CameraSet::Update));
     }
 }
 
@@ -237,6 +245,10 @@ mod tests {
                 ControlSet::PlayingInput.before(CharacterSet::Movement),
             )
             .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
+        app.world
+            .get_resource_mut::<NextState<GameState>>()
+            .unwrap()
+            .set(GameState::Playing);
         app.world.spawn(Window::default());
         app
     }

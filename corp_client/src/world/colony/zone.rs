@@ -1,26 +1,13 @@
 use bevy::{prelude::*, utils::hashbrown::HashSet};
 use bevy_rapier3d::prelude::*;
-use serde::Deserialize;
 
 use corp_shared::prelude::*;
 
 use crate::{
+    asset::{ZoneConfig, ZoneType},
     state::GameState,
-    world::{colony::colony_assets::ZoneAsset, physics},
+    world::physics,
 };
-
-#[derive(Copy, Clone, Debug, Deserialize)]
-pub enum ZoneType {
-    Heal,
-    Damage,
-    Unknown,
-}
-
-impl Default for ZoneType {
-    fn default() -> Self {
-        Self::Unknown
-    }
-}
 
 #[derive(Component)]
 pub struct Zone {
@@ -31,11 +18,11 @@ pub struct Zone {
 }
 
 impl Zone {
-    pub fn from(asset: ZoneAsset) -> Self {
+    pub fn from(zone_config: ZoneConfig) -> Self {
         Zone {
-            zone_type: asset.zone_type,
-            value: asset.value,
-            timer: Timer::from_seconds(asset.second, TimerMode::Repeating),
+            zone_type: zone_config.zone_type,
+            value: zone_config.value,
+            timer: Timer::from_seconds(zone_config.second, TimerMode::Repeating),
             entities: HashSet::new(),
         }
     }
@@ -69,8 +56,8 @@ fn handle_health_in_zones(
             for entity in zone.entities.iter() {
                 let mut health = healths.get_mut(*entity).unwrap();
                 match zone.zone_type {
-                    ZoneType::Damage => health.take_damage(zone.value),
-                    ZoneType::Heal => health.heal(zone.value),
+                    ZoneType::Damage => health.take_damage(zone.value.clone()),
+                    ZoneType::Heal => health.heal(zone.value.clone()),
                     _ => {}
                 }
             }

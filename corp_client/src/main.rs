@@ -11,10 +11,10 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use corp_shared::prelude::Health;
 
 use crate::{
-    asset::AssetLoadingPlugin,
+    asset::{AssetLoadingPlugin, ColonyConfig},
     gui::GuiPlugin,
     state::GameStatePlugin,
-    world::{colony::colony_assets::ColonyAsset, WorldPlugin},
+    world::WorldPlugin,
 };
 
 mod asset;
@@ -33,7 +33,7 @@ pub struct Game {
     use_entity: Option<Entity>,
     cursor_locked: bool,
     player_entity: Option<Entity>,
-    current_colony_asset: Handle<ColonyAsset>,
+    current_colony_config: Handle<ColonyConfig>,
     health: Health,
 }
 
