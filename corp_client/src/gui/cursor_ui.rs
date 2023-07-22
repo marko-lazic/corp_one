@@ -1,21 +1,17 @@
-use bevy::app::Plugin;
-use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
+use bevy::{prelude::*, text::DEFAULT_FONT_HANDLE};
 
-use crate::asset::asset_loading::FontAssets;
 use crate::state::{Despawn, GameState};
-use crate::{App, Visibility};
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorUi(Vec2);
-
-#[derive(Component)]
-struct UseMarker;
 
 #[derive(Resource, Default)]
 pub struct CursorVisibility {
     pub visible: bool,
 }
+
+#[derive(Component)]
+struct UseText;
 
 pub struct CursorPlugin;
 
@@ -24,32 +20,28 @@ impl Plugin for CursorPlugin {
         app.init_resource::<CursorVisibility>()
             .init_resource::<CursorUi>()
             .add_systems(OnEnter(GameState::LoadColony), setup)
-            .add_systems(
-                Update,
-                cursor_text_tooltip.run_if(in_state(GameState::Playing)),
-            )
-            .add_systems(First, update_screen_cursor_position);
+            .add_systems(First, update_cursor_ui_position)
+            .add_systems(Update, update_use_text.run_if(in_state(GameState::Playing)));
     }
 }
 
-fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
-    let text_style = TextStyle {
-        font: font_assets.fira_sans.clone(),
-        font_size: 20.0,
-        color: Color::WHITE,
-    };
-
+fn setup(mut commands: Commands) {
     commands.spawn((
-        TextBundle {
-            text: Text::from_section("[E] Use", text_style).with_alignment(TextAlignment::Center),
-            ..default()
-        },
-        UseMarker,
+        TextBundle::from_section(
+            "[E] Use",
+            TextStyle {
+                font: DEFAULT_FONT_HANDLE.typed(),
+                font_size: 20.0,
+                color: Color::WHITE,
+            },
+        )
+        .with_text_alignment(TextAlignment::Center),
+        UseText,
         Despawn,
     ));
 }
 
-fn update_screen_cursor_position(primary_query: Query<&Window>, mut cursor: ResMut<CursorUi>) {
+fn update_cursor_ui_position(primary_query: Query<&Window>, mut cursor: ResMut<CursorUi>) {
     let Ok(primary) = primary_query.get_single() else {
         return;
     };
@@ -59,26 +51,21 @@ fn update_screen_cursor_position(primary_query: Query<&Window>, mut cursor: ResM
     }
 }
 
-fn cursor_text_tooltip(
+fn update_use_text(
     cursor: Res<CursorUi>,
     cursor_visibility: Res<CursorVisibility>,
-    primary_query: Query<&Window, With<PrimaryWindow>>,
-    mut query: Query<(&mut Style, &mut Visibility), With<UseMarker>>,
+    mut q_use_text: Query<(&mut Style, &mut Visibility), With<UseText>>,
 ) {
     if cursor_visibility.visible {
-        for (mut style, mut visibility) in &mut query {
-            let Ok(primary) = primary_query.get_single() else {
-                return;
-            };
+        for (mut style, mut visibility) in &mut q_use_text {
             *visibility = Visibility::Visible;
-            // flip the height to accommodate y going from top to bottom in UI
-            let text_top = (primary.resolution.height() - cursor.y) + 15.0;
+            let text_top = cursor.y + 15.0;
             let text_left = cursor.x + 20.0;
             style.top = Val::Px(text_top);
             style.left = Val::Px(text_left);
         }
     } else {
-        let result = query.get_single_mut();
+        let result = q_use_text.get_single_mut();
         if let Ok((_, mut visibility)) = result {
             *visibility = Visibility::Hidden;
         }

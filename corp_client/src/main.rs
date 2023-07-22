@@ -7,7 +7,6 @@ use bevy::window::{PresentMode, WindowMode};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use corp_shared::prelude::Health;
-use gui::metrics::MetricsPlugin;
 
 use crate::asset::asset_loading::AssetLoadingPlugin;
 use crate::gui::GuiPlugin;
@@ -31,7 +30,6 @@ pub struct Game {
     use_entity: Option<Entity>,
     cursor_locked: bool,
     player_entity: Option<Entity>,
-    camera_transform: Option<Transform>,
     current_colony_asset: Handle<ColonyAsset>,
     health: Health,
 }
