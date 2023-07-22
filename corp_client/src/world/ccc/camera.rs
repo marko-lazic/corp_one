@@ -225,7 +225,10 @@ mod tests {
                 CharacterPlugin,
                 MainCameraPlugin,
             ))
-            .configure_set(Update, ControlSet::Input.before(CharacterSet::Movement))
+            .configure_set(
+                Update,
+                ControlSet::PlayingInput.before(CharacterSet::Movement),
+            )
             .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
         app.world.spawn(Window::default());
         app

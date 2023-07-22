@@ -50,7 +50,10 @@ impl Plugin for WorldPlugin {
                 ZonePlugin,
                 PlayerPlugin,
             ))
-            .configure_set(Update, ControlSet::Input.before(CharacterSet::Movement))
+            .configure_set(
+                Update,
+                ControlSet::PlayingInput.before(CharacterSet::Movement),
+            )
             .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
     }
 }

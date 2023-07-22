@@ -40,7 +40,7 @@ impl Plugin for PlayerPlugin {
             .add_systems(
                 Update,
                 handle_animation_action
-                    .after(ControlSet::Input)
+                    .after(ControlSet::PlayingInput)
                     .run_if(in_state(GameState::Playing)),
             );
     }

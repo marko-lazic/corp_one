@@ -16,7 +16,8 @@ use crate::Game;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ControlSet {
-    Input,
+    PlayingInput,
+    StarmapInput,
 }
 
 pub struct ControlPlugin;
@@ -86,30 +87,26 @@ impl Plugin for ControlPlugin {
             .init_resource::<ActionState<ControlAction>>()
             .init_resource::<CursorWorld>()
             .insert_resource(ControlSettings::default().input)
+            .add_systems(Update, keyboard_escape_action)
             .add_systems(
                 Update,
                 (
-                    player_control_movement
-                        .run_if(resource_changed::<ActionState<ControlAction>>()),
                     update_cursor_world,
-                    player_control_orientation
-                        .run_if(resource_changed::<ActionState<ControlAction>>()),
+                    player_control_movement,
+                    player_control_orientation,
+                    use_barrier,
+                    kill,
                 )
                     .chain()
-                    .in_set(ControlSet::Input),
-            );
-        // Migrated input.rs systems
-        app.add_systems(Update, keyboard_escape_action)
-            .add_systems(
-                Update,
-                starmap_keyboard.run_if(in_state(GameState::StarMap)),
+                    .in_set(ControlSet::PlayingInput)
+                    .run_if(resource_changed::<ActionState<ControlAction>>())
+                    .run_if(in_state(GameState::Playing)),
             )
             .add_systems(
                 Update,
-                (use_barrier, kill)
-                    .chain()
-                    .in_set(ControlSet::Input)
-                    .run_if(in_state(GameState::Playing)),
+                starmap_keyboard
+                    .in_set(ControlSet::StarmapInput)
+                    .run_if(in_state(GameState::StarMap)),
             );
     }
 }
