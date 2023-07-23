@@ -31,7 +31,6 @@ const HEIGHT: f32 = 720.0;
 #[derive(Resource, Default)]
 pub struct Game {
     use_entity: Option<Entity>,
-    cursor_locked: bool,
     player_entity: Option<Entity>,
     current_colony_config: Handle<ColonyConfig>,
     health: Health,

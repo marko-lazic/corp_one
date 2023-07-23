@@ -89,7 +89,7 @@ impl Plugin for ControlPlugin {
             .init_resource::<ActionState<ControlAction>>()
             .init_resource::<CursorWorld>()
             .insert_resource(ControlSettings::default().input)
-            .add_systems(Update, keyboard_escape_action)
+            .add_systems(Update, double_tap_to_exit)
             .add_systems(
                 Update,
                 (
@@ -98,18 +98,73 @@ impl Plugin for ControlPlugin {
                     player_control_orientation,
                     use_barrier,
                     kill,
+                    toggle_window_cursor_visible,
                 )
                     .chain()
                     .in_set(ControlSet::PlayingInput)
                     .run_if(resource_changed::<ActionState<ControlAction>>())
                     .run_if(in_state(GameState::Playing)),
             )
+            .add_systems(OnExit(GameState::Playing), enable_cursor_visible)
             .add_systems(
                 Update,
                 starmap_keyboard
                     .in_set(ControlSet::StarmapInput)
                     .run_if(in_state(GameState::StarMap)),
             );
+    }
+}
+
+fn double_tap_to_exit(
+    action_state: Res<ActionState<ControlAction>>,
+    time: Res<Time>,
+    mut app_exit_events: EventWriter<AppExit>,
+    mut double_tap: Local<DoubleTap>,
+) {
+    if action_state.just_pressed(ControlAction::Escape) {
+        double_tap.increment();
+    }
+    double_tap
+        .tick(time.delta())
+        .on_complete(|| app_exit_events.send(AppExit));
+}
+
+fn update_cursor_world(
+    windows: Query<&Window>,
+    mut cursor_world: ResMut<CursorWorld>,
+    q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
+    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
+) {
+    let Ok((camera, camera_transform)) = q_camera.get_single() else {
+        return;
+    };
+    let ground = Transform::from_xyz(0.0, 0.0, 0.0);
+    let Ok(follow_pos) = q_follow_cam.get_single() else {
+        return;
+    };
+
+    let ray = windows
+        .single()
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .unwrap_or_else(|| Ray {
+            origin: follow_pos.translation,
+            direction: follow_pos.down(),
+        });
+
+    // Calculate if and where the ray is hitting the ground plane.
+    let Some(distance) = ray.intersect_plane(ground.translation, ground.up()) else {
+        return;
+    };
+    let mouse_ground_pos = ray.get_point(distance);
+    cursor_world.0 = mouse_ground_pos;
+
+    for mut orientation_mode in &mut q_orientation {
+        if let OrientationMode::Location(_) = *orientation_mode {
+            *orientation_mode =
+                OrientationMode::Location(Vec2::new(mouse_ground_pos.x, mouse_ground_pos.z));
+        }
     }
 }
 
@@ -172,50 +227,11 @@ fn player_control_orientation(
     }
 }
 
-fn update_cursor_world(
-    windows: Query<&Window>,
-    mut cursor_world: ResMut<CursorWorld>,
-    q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
-    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
-) {
-    let Ok((camera, camera_transform)) = q_camera.get_single() else {
-        return;
-    };
-    let ground = Transform::from_xyz(0.0, 0.0, 0.0);
-    let Ok(follow_pos) = q_follow_cam.get_single() else {
-        return;
-    };
-
-    let ray = windows
-        .single()
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .unwrap_or_else(|| Ray {
-            origin: follow_pos.translation,
-            direction: follow_pos.down(),
-        });
-
-    // Calculate if and where the ray is hitting the ground plane.
-    let Some(distance) = ray.intersect_plane(ground.translation, ground.up()) else {
-        return;
-    };
-    let mouse_ground_pos = ray.get_point(distance);
-    cursor_world.0 = mouse_ground_pos;
-
-    for mut orientation_mode in &mut q_orientation {
-        if let OrientationMode::Location(_) = *orientation_mode {
-            *orientation_mode =
-                OrientationMode::Location(Vec2::new(mouse_ground_pos.x, mouse_ground_pos.z));
-        }
-    }
-}
-
 fn use_barrier(
     action_state: Res<ActionState<ControlAction>>,
     barrier_control_query: Query<&BarrierControl>,
     barrier_field_query: Query<(Entity, &BarrierField)>,
-    mut interactor_query: Query<&mut Interactor>,
+    mut q_interactor: Query<&mut Interactor>,
     game: Res<Game>,
 ) {
     if action_state.just_pressed(ControlAction::Use) {
@@ -234,23 +250,10 @@ fn use_barrier(
             return;
         };
 
-        let Ok(mut interactor) = interactor_query.get_single_mut() else {
+        let Ok(mut interactor) = q_interactor.get_single_mut() else {
             return;
         };
         interactor.interact(target_barrier);
-    }
-}
-
-fn starmap_keyboard(
-    action_state: Res<ActionState<ControlAction>>,
-    mut vortex_events: EventWriter<VortInEvent>,
-) {
-    if action_state.just_pressed(ControlAction::ColonyIris) {
-        vortex_events.send(VortInEvent::vort(Colony::Iris));
-    } else if action_state.just_pressed(ControlAction::ColonyLiberte) {
-        vortex_events.send(VortInEvent::vort(Colony::Liberte));
-    } else if action_state.just_pressed(ControlAction::ColonyPlayground) {
-        vortex_events.send(VortInEvent::vort(Colony::Playground));
     }
 }
 
@@ -265,30 +268,32 @@ fn kill(
     }
 }
 
-fn keyboard_escape_action(
+fn toggle_window_cursor_visible(
     action_state: Res<ActionState<ControlAction>>,
-    time: Res<Time>,
-    mut game: ResMut<Game>,
     mut windows: Query<&mut Window>,
-    mut app_exit_events: EventWriter<AppExit>,
-    mut double_tap: Local<DoubleTap>,
 ) {
     if action_state.just_pressed(ControlAction::Escape) {
-        double_tap.increment();
         let mut window = windows.single_mut();
-
-        if game.cursor_locked {
-            window.cursor.visible = true;
-            game.cursor_locked = false;
-        } else {
-            window.cursor.visible = false;
-            game.cursor_locked = true;
-        }
+        window.cursor.visible = !window.cursor.visible;
     }
+}
 
-    double_tap
-        .tick(time.delta())
-        .on_complete(|| app_exit_events.send(AppExit));
+fn enable_cursor_visible(mut windows: Query<&mut Window>) {
+    let mut window = windows.single_mut();
+    window.cursor.visible = true;
+}
+
+fn starmap_keyboard(
+    action_state: Res<ActionState<ControlAction>>,
+    mut vortex_events: EventWriter<VortInEvent>,
+) {
+    if action_state.just_pressed(ControlAction::ColonyIris) {
+        vortex_events.send(VortInEvent::vort(Colony::Iris));
+    } else if action_state.just_pressed(ControlAction::ColonyLiberte) {
+        vortex_events.send(VortInEvent::vort(Colony::Liberte));
+    } else if action_state.just_pressed(ControlAction::ColonyPlayground) {
+        vortex_events.send(VortInEvent::vort(Colony::Playground));
+    }
 }
 
 #[cfg(test)]
