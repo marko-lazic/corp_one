@@ -69,7 +69,3 @@ path = "examples/state/state.rs"
 [[example]]
 name = "pick"
 path = "examples/pick.rs"
-
-[[example]]
-name = "ccc"
-path = "examples/ccc/ccc.rs"

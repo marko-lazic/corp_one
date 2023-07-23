@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::{
     app::App,
-    prelude::{Component, Entity, Mut, Time},
+    prelude::{Component, Entity, Mut, NextState, States, Time},
 };
 
 pub trait TestUtils {
@@ -11,6 +11,7 @@ pub trait TestUtils {
     fn get<T: Component>(&self, entity: Entity) -> &T;
     fn get_mut<T: Component>(&mut self, entity: Entity) -> Mut<T>;
     fn has_component<T: Component>(&self, entity: Entity) -> bool;
+    fn set_state<T: States>(&mut self, state: T) -> &mut Self;
 }
 
 impl TestUtils for App {
@@ -52,5 +53,13 @@ impl TestUtils for App {
 
     fn has_component<T: Component>(&self, entity: Entity) -> bool {
         self.world.get::<T>(entity).is_some()
+    }
+
+    fn set_state<T: States>(&mut self, state: T) -> &mut Self {
+        self.world
+            .get_resource_mut::<NextState<T>>()
+            .unwrap()
+            .set(state);
+        self
     }
 }

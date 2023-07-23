@@ -7,11 +7,7 @@ use crate::{
     asset::Colony,
     state::GameState,
     world::{
-        ccc::{
-            camera::{MainCamera, MainCameraFollow},
-            double_tap::DoubleTap,
-            movement::{ControlMovement, OrientationMode},
-        },
+        ccc::{ControlMovement, DoubleTap, MainCamera, MainCameraFollow, OrientationMode},
         colony::{
             barrier::{BarrierControl, BarrierField},
             vortex::VortInEvent,

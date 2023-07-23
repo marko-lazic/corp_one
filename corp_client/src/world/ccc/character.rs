@@ -117,9 +117,8 @@ mod tests {
         state::GameState,
         world::{
             ccc::{
-                camera::{CameraSet, MainCameraBundle, MainCameraPlugin},
-                control::{ControlPlugin, ControlSet},
-                movement::MovementBundle,
+                CameraSet, ControlPlugin, ControlSet, MainCameraBundle, MainCameraPlugin,
+                MovementBundle,
             },
             colony::vortex::VortInEvent,
         },
@@ -237,6 +236,7 @@ mod tests {
                 ControlSet::PlayingInput.before(CharacterSet::Movement),
             )
             .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
+        app.set_state(GameState::Playing);
         app
     }
 

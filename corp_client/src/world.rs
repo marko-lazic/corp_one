@@ -2,11 +2,7 @@ use bevy::prelude::*;
 
 use crate::world::{
     animator::AnimatorPlugin,
-    ccc::{
-        camera::{CameraSet, MainCameraPlugin},
-        character::{CharacterPlugin, CharacterSet},
-        control::{ControlPlugin, ControlSet},
-    },
+    ccc::{CameraSet, CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MainCameraPlugin},
     colony::{zone::ZonePlugin, ColonyPlugin},
     physics::PhysicsPlugin,
     player::PlayerPlugin,
@@ -23,7 +19,7 @@ pub mod player;
 mod star_map;
 
 pub mod prelude {
-    pub use super::ccc::{control::CursorWorld, movement::CharacterMovement};
+    pub use super::ccc::{CharacterMovement, CursorWorld};
 }
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]

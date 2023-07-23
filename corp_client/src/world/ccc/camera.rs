@@ -164,11 +164,7 @@ mod tests {
     use crate::{
         state::GameState,
         world::{
-            ccc::{
-                character::{CharacterPlugin, CharacterSet},
-                control::{ControlPlugin, ControlSet},
-                movement::MovementBundle,
-            },
+            ccc::{CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MovementBundle},
             colony::vortex::VortInEvent,
         },
         Game,
@@ -245,10 +241,7 @@ mod tests {
                 ControlSet::PlayingInput.before(CharacterSet::Movement),
             )
             .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
-        app.world
-            .get_resource_mut::<NextState<GameState>>()
-            .unwrap()
-            .set(GameState::Playing);
+        app.set_state(GameState::Playing);
         app.world.spawn(Window::default());
         app
     }

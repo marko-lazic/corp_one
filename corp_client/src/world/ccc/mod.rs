@@ -1,5 +1,11 @@
-pub mod camera;
-pub mod character;
-pub mod control;
-pub mod double_tap;
-pub mod movement;
+mod camera;
+mod character;
+mod control;
+mod double_tap;
+mod movement;
+
+pub use camera::*;
+pub use character::*;
+pub use control::*;
+pub use double_tap::*;
+pub use movement::*;

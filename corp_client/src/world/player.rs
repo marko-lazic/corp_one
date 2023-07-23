@@ -9,11 +9,7 @@ use crate::{
     state::{Despawn, GameState},
     world::{
         animator::{AnimationComponent, PlayerAnimationAction},
-        ccc::{
-            camera::{MainCameraBundle, MainCameraFollow},
-            control::ControlSet,
-            movement::{CharacterMovement, MovementBundle},
-        },
+        ccc::{CharacterMovement, ControlSet, MainCameraBundle, MainCameraFollow, MovementBundle},
         cloning::CloningPlugin,
         colony::vortex::VortexNode,
         physics::CollideGroups,
