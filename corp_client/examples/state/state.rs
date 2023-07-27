@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_trait_query::RegisterExt;
+use corp_shared::asset::endesga;
 
 use corp_shared::prelude::*;
 
 use crate::ray::cast_ray_system;
 
-mod endesga;
 mod ray;
 
 #[derive(Component)]

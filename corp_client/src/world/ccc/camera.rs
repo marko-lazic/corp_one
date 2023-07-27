@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-use bevy_dolly::{
-    prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch},
-    system::DollyUpdateSet,
-};
+use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
 // use bevy_mod_picking::prelude::RapierPickCamera;
 use leafwing_input_manager::action_state::ActionState;
 
@@ -36,7 +33,13 @@ pub struct MainCameraBundle {
 impl MainCameraBundle {
     pub fn new(position: Vec3) -> Self {
         Self {
-            camera: Camera3dBundle::default(),
+            camera: Camera3dBundle {
+                camera: Camera {
+                    hdr: true,
+                    ..default()
+                },
+                ..default()
+            },
             main_camera: MainCamera,
             rig: Rig::builder()
                 .with(Position::new(position))
@@ -53,15 +56,23 @@ impl MainCameraBundle {
 
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            update_camera
-                .in_set(CameraSet::Update)
-                .run_if(in_state(GameState::Playing)),
-        )
-        .add_systems(Update, Dolly::<MainCamera>::update_active)
-        .configure_set(Update, DollyUpdateSet.after(CameraSet::Update));
+        app.insert_resource(Msaa::Sample4)
+            .add_systems(OnEnter(GameState::Playing), setup)
+            .add_systems(
+                Update,
+                (update_camera, Dolly::<MainCamera>::update_active)
+                    .chain()
+                    .in_set(CameraSet::Update)
+                    .run_if(in_state(GameState::Playing)),
+            );
     }
+}
+
+fn setup(mut commands: Commands, q_follow: Query<&Transform, With<MainCameraFollow>>) {
+    let Ok(follow_pos) = q_follow.get_single().map(|t| t.translation) else {
+        return;
+    };
+    commands.spawn(MainCameraBundle::new(follow_pos));
 }
 
 fn update_camera(
@@ -178,11 +189,13 @@ mod tests {
         let mut app = setup();
         let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
         setup_player(&mut app, player_pos);
-        let camera = setup_camera(&mut app, player_pos.translation);
+        app.set_state(GameState::Playing);
+        let camera = get_camera_entity(&mut app);
+        rotate_camera_yaw_minus_45(&mut app, camera);
+        app.update_after(Duration::from_secs_f32(1.0));
 
         // when
         app.send_input(KeyCode::D);
-        app.update();
         app.update();
 
         // then
@@ -196,7 +209,9 @@ mod tests {
         let mut app = setup();
         let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
         setup_player(&mut app, player_pos);
-        let camera = setup_camera(&mut app, player_pos.translation);
+        app.set_state(GameState::Playing);
+        let camera = get_camera_entity(&mut app);
+        rotate_camera_yaw_minus_45(&mut app, camera);
 
         // when
         app.send_input(KeyCode::Minus);
@@ -213,7 +228,10 @@ mod tests {
         let mut app = setup();
         let player_pos = Transform::from_xyz(0.0, 0.5, 0.0);
         setup_player(&mut app, player_pos);
-        let camera = setup_camera(&mut app, player_pos.translation);
+        app.set_state(GameState::Playing);
+        let camera = get_camera_entity(&mut app);
+        rotate_camera_yaw_minus_45(&mut app, camera);
+        app.update();
 
         // when
         app.send_input(KeyCode::Equals);
@@ -241,7 +259,6 @@ mod tests {
                 ControlSet::PlayingInput.before(CharacterSet::Movement),
             )
             .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
-        app.set_state(GameState::Playing);
         app.world.spawn(Window::default());
         app
     }
@@ -258,12 +275,17 @@ mod tests {
             .id()
     }
 
-    fn setup_camera(app: &mut App, position: Vec3) -> Entity {
-        let camera = app.world.spawn(MainCameraBundle::new(position)).id();
+    fn rotate_camera_yaw_minus_45(app: &mut App, camera: Entity) {
         app.get_mut::<Rig>(camera)
             .driver_mut::<YawPitch>()
             .rotate_yaw_pitch(-45.0, 0.0);
-        app.update_after(Duration::from_secs_f32(1.0));
-        camera
+    }
+
+    fn get_camera_entity(app: &mut App) -> Entity {
+        app.world
+            .query_filtered::<Entity, With<MainCamera>>()
+            .iter(&mut app.world)
+            .next()
+            .unwrap()
     }
 }

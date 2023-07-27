@@ -2,6 +2,7 @@ use std::net::{IpAddr, Ipv4Addr};
 
 use bevy::math::Vec3;
 
+pub mod asset;
 pub mod items;
 pub mod stats;
 pub mod util;

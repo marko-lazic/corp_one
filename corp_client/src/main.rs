@@ -39,7 +39,6 @@ pub struct Game {
 fn main() {
     App::new()
         .init_resource::<Game>()
-        .insert_resource(Msaa::Sample4)
         .add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {

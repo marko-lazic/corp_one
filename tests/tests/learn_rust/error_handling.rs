@@ -39,17 +39,17 @@ fn failing_more_gracefuly() {
 
 #[test]
 fn failing_more_gracefuly_closures() {
-    let _ = fs::remove_file("hello.txt");
-    let _f = File::open("hello.txt").unwrap_or_else(|error| {
+    let _ = fs::remove_file("hello2.txt");
+    let _f = File::open("hello2.txt").unwrap_or_else(|error| {
         if error.kind() == ErrorKind::NotFound {
-            File::create("hello.txt")
+            File::create("hello2.txt")
                 .unwrap_or_else(|error| panic!("Problem creating the file {:?}", error))
         } else {
             panic!("Problem opening the file {:?}", error)
         }
     });
-    assert!(Path::new("hello.txt").exists());
-    let _ = fs::remove_file("hello.txt");
+    assert!(Path::new("hello2.txt").exists());
+    let _ = fs::remove_file("hello2.txt");
 }
 
 #[test]

@@ -9,7 +9,7 @@ use crate::{
     state::{Despawn, GameState},
     world::{
         animator::{AnimationComponent, PlayerAnimationAction},
-        ccc::{CharacterMovement, ControlSet, MainCameraBundle, MainCameraFollow, MovementBundle},
+        ccc::{CharacterMovement, ControlSet, MainCameraFollow, MovementBundle},
         cloning::CloningPlugin,
         colony::vortex::VortexNode,
         physics::CollideGroups,
@@ -95,8 +95,6 @@ fn setup_player(
             Despawn,
         ))
         .id();
-
-    commands.spawn(MainCameraBundle::new(player_transform.translation));
 
     game.player_entity = Some(player);
 }
