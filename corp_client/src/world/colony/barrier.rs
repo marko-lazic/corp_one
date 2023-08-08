@@ -1,6 +1,6 @@
 use bevy::{app::Plugin, prelude::*};
-// use bevy_mod_picking::events::{Out, Over};
-// use bevy_mod_picking::prelude::ListenedEvent;
+use bevy_eventlistener::callbacks::ListenerInput;
+use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::ColliderDisabled;
 
 use corp_shared::prelude::*;
@@ -16,17 +16,17 @@ pub enum Hover {
 #[derive(Event)]
 pub struct BarrierPickingEvent(Entity, Hover);
 
-// impl From<ListenedEvent<Over>> for BarrierPickingEvent {
-//     fn from(event: ListenedEvent<Over>) -> Self {
-//         BarrierPickingEvent(event.target, Hover::Over)
-//     }
-// }
-//
-// impl From<ListenedEvent<Out>> for BarrierPickingEvent {
-//     fn from(event: ListenedEvent<Out>) -> Self {
-//         BarrierPickingEvent(event.target, Hover::Out)
-//     }
-// }
+impl From<ListenerInput<Pointer<Over>>> for BarrierPickingEvent {
+    fn from(event: ListenerInput<Pointer<Over>>) -> Self {
+        BarrierPickingEvent(event.target, Hover::Over)
+    }
+}
+
+impl From<ListenerInput<Pointer<Out>>> for BarrierPickingEvent {
+    fn from(event: ListenerInput<Pointer<Out>>) -> Self {
+        BarrierPickingEvent(event.target, Hover::Out)
+    }
+}
 
 #[derive(Component, Default, Debug)]
 pub struct BarrierControl {

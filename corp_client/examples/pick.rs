@@ -1,7 +1,6 @@
 use bevy::{input::common_conditions::input_toggle_active, prelude::*};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-// use bevy_mod_picking::backends::rapier::RapierPickTarget;
-// use bevy_mod_picking::prelude::*;
+use bevy_mod_picking::{backends::rapier::RapierPickTarget, prelude::*, DefaultPickingPlugins};
 use bevy_rapier3d::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
@@ -18,7 +17,7 @@ fn main() {
         .add_state::<GameState>()
         .add_plugins((
             DefaultPlugins,
-            // DefaultPickingPlugins,
+            DefaultPickingPlugins,
             RapierPhysicsPlugin::<NoUserData>::default(),
             RapierDebugRenderPlugin::default(),
             WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Grave)),
@@ -46,12 +45,11 @@ fn loading(
             ..Default::default()
         },
         Collider::cuboid(2.5, 2.5, 2.5),
-        // PickableBundle::default(),
-        // RapierPickTarget::default(),
-        // OnPointer::<Click>::run_callback(|In(event): In<ListenedEvent<Click>>| {
-        //     info!("Clicked on entity {:?}", event.target);
-        //     Bubble::Up
-        // }),
+        PickableBundle::default(),
+        RapierPickTarget::default(),
+        On::<Pointer<Click>>::run(|event: Listener<Pointer<Click>>| {
+            info!("Clicked on entity {:?}", event.target);
+        }),
     ));
 
     // light
@@ -75,7 +73,7 @@ fn spawn_player(mut commands: Commands, mut next_state: ResMut<NextState<GameSta
             transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
-        // RapierPickCamera::default(), // <- Sets the camera to use for picking.
+        RapierPickCamera::default(),
     ));
 
     next_state.set(GameState::Playing);

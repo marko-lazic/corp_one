@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-// use bevy_mod_picking::backends::rapier::RapierPickTarget;
-// use bevy_mod_picking::prelude::*;
+use bevy_mod_picking::{backends::rapier::RapierPickTarget, prelude::*};
 use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 
@@ -34,7 +33,7 @@ impl Plugin for ColonyPlugin {
             ColonyInteractionPlugin,
             HookPlugin,
             RonAssetPlugin::<ColonyConfig>::new(&["colony"]),
-            // DefaultPickingPlugins,
+            DefaultPickingPlugins,
         ))
         .add_systems(
             OnEnter(GameState::LoadColony),
@@ -101,12 +100,11 @@ fn setup_debug_plane(
             ..Default::default()
         },
         Collider::cuboid(2.6, 2.6, 2.6),
-        // PickableBundle::default(),
-        // RapierPickTarget::default(),
-        // OnPointer::<Click>::run_callback(|In(event): In<ListenedEvent<Click>>| {
-        //     info!("Clicked on entity {:?}", event.target);
-        //     Bubble::Up
-        // }),
+        PickableBundle::default(),
+        RapierPickTarget::default(),
+        On::<Pointer<Click>>::run(|event: Listener<Pointer<Click>>| {
+            info!("Clicked on entity {:?}", event.target);
+        }),
         Despawn,
     ));
 

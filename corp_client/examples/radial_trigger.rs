@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{prelude::*, quick::ResourceInspectorPlugin};
-// use bevy_mod_picking::prelude::*;
+use bevy_mod_picking::prelude::*;
 use bevy_prototype_debug_lines::DebugLinesPlugin;
 
 fn main() {
@@ -13,7 +13,7 @@ fn main() {
             DefaultPlugins,
             ResourceInspectorPlugin::<InspectorData>::new(),
             DebugLinesPlugin::default(),
-            // DefaultPickingPlugins,
+            DefaultPickingPlugins,
         ))
         // .add_plugin(TransformGizmoPlugin::default())
         .add_systems(Startup, setup)
@@ -68,7 +68,7 @@ fn setup(
             ..Default::default()
         })
         .insert((
-            // RapierPickCamera::default(),
+            RapierPickCamera::default(),
             // bevy_transform_gizmo::GizmoPickSource::default(),
         ));
 
@@ -89,7 +89,7 @@ fn setup(
             ..Default::default()
         })
         .insert((
-            // PickableBundle::default(),
+            PickableBundle::default(),
             // bevy_transform_gizmo::GizmoTransformable,
             Radial,
         ))
@@ -115,7 +115,7 @@ fn setup(
             ..Default::default()
         })
         .insert((
-            // PickableBundle::default(),
+            PickableBundle::default(),
             // bevy_transform_gizmo::GizmoTransformable,
             Player,
         ))

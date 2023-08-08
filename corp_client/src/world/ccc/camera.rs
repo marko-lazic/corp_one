@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
-// use bevy_mod_picking::prelude::RapierPickCamera;
+use bevy_mod_picking::prelude::RapierPickCamera;
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::{
@@ -26,7 +26,7 @@ pub struct MainCameraBundle {
     camera: Camera3dBundle,
     main_camera: MainCamera,
     rig: Rig,
-    // pick_camera: RapierPickCamera,
+    pick_camera: RapierPickCamera,
     despawn: Despawn,
 }
 
@@ -48,7 +48,7 @@ impl MainCameraBundle {
                 .with(Smooth::new_rotation(0.3))
                 .with(Arm::new(Vec3::Z * 18.0))
                 .build(),
-            // pick_camera: RapierPickCamera::default(),
+            pick_camera: RapierPickCamera::default(),
             despawn: Despawn,
         }
     }
