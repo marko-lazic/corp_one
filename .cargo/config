@@ -30,7 +30,12 @@ rustflags = ["-Zshare-generics=n"]
 # Optional: Uncommenting the following improves compile times, but reduces the amount of debug info to 'line number tables only'
 # In most cases the gains are negligible, but if you are on macos and have slow compile times you should see significant gains.
 
-# Enable a small amount of optimization in debug mode
+[profile.debugging]
+inherits = "dev"
+opt-level = 0
+debug = true
+
+# Enable a small amount of optimization in dev mode
 [profile.dev]
 opt-level = 1
 incremental = true
@@ -42,3 +47,7 @@ opt-level = 3
 [profile.dev.package.gfx-backend-vulkan]
 opt-level = 3
 debug-assertions = false
+
+# Enable high optimizations for our code in release mode, slower compile times
+[profile.release]
+codegen-units = 1

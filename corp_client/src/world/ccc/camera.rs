@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{core_pipeline::bloom::BloomSettings, prelude::*};
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
 use bevy_mod_picking::prelude::RapierPickCamera;
 use leafwing_input_manager::action_state::ActionState;
@@ -24,6 +24,7 @@ pub struct MainCameraPlugin;
 #[derive(Bundle)]
 pub struct MainCameraBundle {
     camera: Camera3dBundle,
+    bloom: BloomSettings,
     main_camera: MainCamera,
     rig: Rig,
     pick_camera: RapierPickCamera,
@@ -38,6 +39,10 @@ impl MainCameraBundle {
                     hdr: true,
                     ..default()
                 },
+                ..default()
+            },
+            bloom: BloomSettings {
+                intensity: 0.1,
                 ..default()
             },
             main_camera: MainCamera,
