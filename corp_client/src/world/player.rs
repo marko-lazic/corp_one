@@ -45,7 +45,7 @@ impl Plugin for PlayerPlugin {
             )
             .add_systems(
                 Update,
-                handle_animation_action
+                (handle_animation_action)
                     .after(ControlSet::PlayingInput)
                     .run_if(in_state(GameState::Playing)),
             );
@@ -59,15 +59,15 @@ fn setup_player(
     mut q_vortex_node_pos: Query<&mut Transform, With<VortexNode>>,
     mut commands: Commands,
 ) {
-    let random_position = q_vortex_node_pos
+    let rnd_node_position = q_vortex_node_pos
         .iter_mut()
         .map(|t| t.translation)
         .collect::<Vec<Vec3>>()
         .choose(&mut rand::thread_rng())
-        .map(|p| p.to_owned());
+        .map(|p| p.to_owned())
+        .unwrap_or_else(|| Vec3::new(1.0, 1.0, 1.0));
 
-    let position = random_position.unwrap_or_else(|| Vec3::new(1.0, 1.0, 1.0));
-    let player_transform = Transform::from_translation(position);
+    let player_transform = Transform::from_translation(rnd_node_position);
 
     let player = commands
         .spawn((

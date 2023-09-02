@@ -54,7 +54,9 @@ fn handle_health_in_zones(
         zone.timer.tick(time.delta());
         if zone.timer.finished() {
             for entity in zone.entities.iter() {
-                let mut health = healths.get_mut(*entity).unwrap();
+                let Ok(mut health) = healths.get_mut(*entity) else {
+                    return;
+                };
                 match zone.zone_type {
                     ZoneType::Damage => health.take_damage(zone.value.clone()),
                     ZoneType::Heal => health.heal(zone.value.clone()),

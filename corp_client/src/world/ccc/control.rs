@@ -300,15 +300,15 @@ fn enable_cursor_visible(mut windows: Query<&mut Window>) {
 }
 
 fn starmap_keyboard(
-    action_state: Res<ActionState<ControlAction>>,
-    mut vortex_events: EventWriter<VortInEvent>,
+    r_action_state: Res<ActionState<ControlAction>>,
+    mut ev_vort_in: EventWriter<VortInEvent>,
 ) {
-    if action_state.just_pressed(ControlAction::ColonyIris) {
-        vortex_events.send(VortInEvent::vort(Colony::Iris));
-    } else if action_state.just_pressed(ControlAction::ColonyLiberte) {
-        vortex_events.send(VortInEvent::vort(Colony::Liberte));
-    } else if action_state.just_pressed(ControlAction::ColonyPlayground) {
-        vortex_events.send(VortInEvent::vort(Colony::Playground));
+    if r_action_state.just_pressed(ControlAction::ColonyIris) {
+        ev_vort_in.send(VortInEvent::vort(Colony::Iris));
+    } else if r_action_state.just_pressed(ControlAction::ColonyLiberte) {
+        ev_vort_in.send(VortInEvent::vort(Colony::Liberte));
+    } else if r_action_state.just_pressed(ControlAction::ColonyPlayground) {
+        ev_vort_in.send(VortInEvent::vort(Colony::Playground));
     }
 }
 

@@ -55,10 +55,10 @@ impl Plugin for VortexPlugin {
     }
 }
 
-fn debug_vort_in(mut vortex_events: EventWriter<VortInEvent>, mut run_once: Local<bool>) {
+fn debug_vort_in(mut ev_vort_in: EventWriter<VortInEvent>, mut run_once: Local<bool>) {
     if !(*run_once) {
         info!("Debug vort in");
-        vortex_events.send(VortInEvent::vort(Colony::Iris));
+        ev_vort_in.send(VortInEvent::vort(Colony::Iris));
         *run_once = true;
     }
 }

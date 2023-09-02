@@ -179,10 +179,7 @@ mod tests {
 
     use crate::{
         state::GameState,
-        world::{
-            ccc::{CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MovementBundle},
-            colony::ColonyStore,
-        },
+        world::ccc::{CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MovementBundle},
     };
 
     use super::*;
