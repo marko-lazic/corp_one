@@ -115,14 +115,10 @@ mod tests {
 
     use crate::{
         state::GameState,
-        world::{
-            ccc::{
-                CameraSet, ControlPlugin, ControlSet, MainCameraBundle, MainCameraPlugin,
-                MovementBundle,
-            },
-            colony::vortex::VortInEvent,
+        world::ccc::{
+            CameraSet, ControlPlugin, ControlSet, MainCameraBundle, MainCameraPlugin,
+            MovementBundle,
         },
-        Game,
     };
 
     use super::*;
@@ -222,9 +218,7 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .add_event::<VortInEvent>()
             .add_state::<GameState>()
-            .init_resource::<Game>()
             .add_plugins((
                 InputPlugin,
                 ControlPlugin,

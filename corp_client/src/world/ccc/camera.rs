@@ -181,9 +181,8 @@ mod tests {
         state::GameState,
         world::{
             ccc::{CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MovementBundle},
-            colony::vortex::VortInEvent,
+            colony::ColonyStore,
         },
-        Game,
     };
 
     use super::*;
@@ -250,8 +249,6 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .add_event::<VortInEvent>()
-            .init_resource::<Game>()
             .add_state::<GameState>()
             .add_plugins((
                 InputPlugin,

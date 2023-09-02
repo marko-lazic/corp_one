@@ -5,7 +5,7 @@ use bevy_rapier3d::prelude::ColliderDisabled;
 
 use corp_shared::prelude::*;
 
-use crate::{gui::CursorVisibility, state::GameState, App, Game};
+use crate::{gui::CursorVisibility, state::GameState, world::ccc::UseEntity, App};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Hover {
@@ -58,29 +58,29 @@ pub struct BarrierPlugin;
 
 impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BarrierPickingEvent>();
-        app.add_event::<DoorInteractionEvent>();
-        app.add_event::<DoorHackEvent>();
-        app.add_event::<DoorStateEvent>();
-        app.add_systems(
-            Update,
-            (
-                receive_barrier_pickings.run_if(on_event::<BarrierPickingEvent>()),
-                open_close_barrier,
+        app.add_event::<BarrierPickingEvent>()
+            .add_event::<DoorInteractionEvent>()
+            .add_event::<DoorHackEvent>()
+            .add_event::<DoorStateEvent>()
+            .add_systems(
+                Update,
+                (
+                    receive_barrier_pickings.run_if(on_event::<BarrierPickingEvent>()),
+                    open_close_barrier,
+                )
+                    .run_if(in_state(GameState::Playing)),
             )
-                .run_if(in_state(GameState::Playing)),
-        );
-        app.add_systems(
-            Update,
-            (
-                door_cooldown_system,
-                process_temporary_faction_ownership_timers_system,
-                door_interaction_event_system,
-                door_hack_event_system,
-            )
-                .chain()
-                .run_if(in_state(GameState::Playing)),
-        );
+            .add_systems(
+                Update,
+                (
+                    door_cooldown_system,
+                    process_temporary_faction_ownership_timers_system,
+                    door_interaction_event_system,
+                    door_hack_event_system,
+                )
+                    .chain()
+                    .run_if(in_state(GameState::Playing)),
+            );
     }
 }
 
@@ -109,15 +109,28 @@ fn open_close_barrier(
 pub fn receive_barrier_pickings(
     mut pickings: EventReader<BarrierPickingEvent>,
     mut cursor_info: ResMut<CursorVisibility>,
-    mut game: ResMut<Game>,
+    mut r_use_target: ResMut<UseEntity>,
+    q_barrier_control: Query<&BarrierControl>,
+    q_barrier_field: Query<(Entity, &BarrierField)>,
 ) {
     for event in pickings.iter() {
         if event.1 == Hover::Over {
             cursor_info.visible = true;
-            game.use_entity = Some(event.0);
+
+            let Ok(barrier_control) = q_barrier_control.get(event.0) else {
+                return;
+            };
+
+            let Some((target_barrier, _)) = q_barrier_field
+                .iter()
+                .find(|(_e, b)| b.name == barrier_control.barrier_field_name)
+            else {
+                return;
+            };
+            r_use_target.set(Some(target_barrier));
         } else if event.1 == Hover::Out {
             cursor_info.visible = false;
-            game.use_entity = None;
+            r_use_target.set(None);
         }
     }
 }

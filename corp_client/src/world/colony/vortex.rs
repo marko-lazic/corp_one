@@ -6,8 +6,12 @@ use corp_shared::prelude::{Health, *};
 use crate::{
     asset::ColonyConfigAssets,
     state::GameState,
-    world::{colony::Colony, physics},
-    Game,
+    world::{
+        ccc::PlayerEntity,
+        colony::{Colony, ColonyStore},
+        physics,
+        player::PlayerStore,
+    },
 };
 
 #[derive(Event)]
@@ -60,45 +64,50 @@ fn debug_vort_in(mut vortex_events: EventWriter<VortInEvent>, mut run_once: Loca
 }
 
 fn vort_out_event_reader(
-    healths: Query<&Health, With<Player>>,
-    mut game: ResMut<Game>,
-    mut next_state: ResMut<NextState<GameState>>,
-    mut vort_out_events: EventReader<VortOutEvent>,
+    mut r_player_store: ResMut<PlayerStore>,
+    r_player_entity: Res<PlayerEntity>,
+    mut r_next_state: ResMut<NextState<GameState>>,
+    mut ev_vort_out: EventReader<VortOutEvent>,
+    q_health: Query<&Health, With<Player>>,
 ) {
-    if vort_out_events.iter().last().is_some() {
-        let health = healths.get(game.player_entity.unwrap()).unwrap();
-        game.health = health.clone();
-        next_state.set(GameState::StarMap);
+    if ev_vort_out.iter().last().is_some() {
+        let Some(e_player) = r_player_entity.get() else {
+            return;
+        };
+
+        let health = q_health.get(e_player).unwrap();
+        r_player_store.health = health.clone();
+        r_next_state.set(GameState::StarMap);
     }
 }
 
 fn vort_in_event_reader(
-    colony_config_assets: Res<ColonyConfigAssets>,
-    mut vort_in_events: EventReader<VortInEvent>,
-    mut game: ResMut<Game>,
-    mut next_state: ResMut<NextState<GameState>>,
+    r_colony_config_assets: Res<ColonyConfigAssets>,
+    mut r_colony_store: ResMut<ColonyStore>,
+    mut r_next_state: ResMut<NextState<GameState>>,
+    mut ev_vort_in: EventReader<VortInEvent>,
 ) {
-    for vort_in in vort_in_events.iter() {
+    for vort_in in ev_vort_in.iter() {
         match vort_in.colony {
             Colony::Cloning => {
                 info!("Cloning Facility");
-                game.current_colony_config = colony_config_assets.cloning.clone();
-                next_state.set(GameState::LoadColony);
+                r_colony_store.current_colony_config = r_colony_config_assets.cloning.clone();
+                r_next_state.set(GameState::LoadColony);
             }
             Colony::Iris => {
                 info!("Moonbase: Station Iris");
-                game.current_colony_config = colony_config_assets.iris.clone();
-                next_state.set(GameState::LoadColony);
+                r_colony_store.current_colony_config = r_colony_config_assets.iris.clone();
+                r_next_state.set(GameState::LoadColony);
             }
             Colony::Liberte => {
                 info!("Mars: Colony Liberte");
-                game.current_colony_config = colony_config_assets.liberte.clone();
-                next_state.set(GameState::LoadColony);
+                r_colony_store.current_colony_config = r_colony_config_assets.liberte.clone();
+                r_next_state.set(GameState::LoadColony);
             }
             Colony::Playground => {
                 info!("Alien Planet");
-                game.current_colony_config = Handle::default();
-                next_state.set(GameState::LoadColony);
+                r_colony_store.current_colony_config = Handle::default();
+                r_next_state.set(GameState::LoadColony);
             }
         }
     }

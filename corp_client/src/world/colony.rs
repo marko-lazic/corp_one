@@ -15,7 +15,6 @@ use crate::{
         },
         physics, WorldSystemSet,
     },
-    Game,
 };
 
 pub mod barrier;
@@ -24,50 +23,59 @@ mod scene_hook;
 pub mod vortex;
 pub mod zone;
 
+#[derive(Resource, Default)]
+pub struct ColonyStore {
+    pub current_colony_config: Handle<ColonyConfig>,
+}
+
 pub struct ColonyPlugin;
 
 impl Plugin for ColonyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            VortexPlugin,
-            ColonyInteractionPlugin,
-            HookPlugin,
-            RonAssetPlugin::<ColonyConfig>::new(&["colony"]),
-            DefaultPickingPlugins,
-        ))
-        .add_systems(
-            OnEnter(GameState::LoadColony),
-            (setup_colony, setup_debug_plane, setup_zones).chain(),
-        )
-        .add_systems(
-            Update,
-            next_state_spawn_player
-                .run_if(is_colony_loaded)
-                .run_if(in_state(GameState::LoadColony)),
-        )
-        .add_systems(
-            Update,
-            next_state_playing
-                .after(WorldSystemSet::CameraSetup)
-                .run_if(in_state(GameState::SpawnPlayer)),
-        )
-        .add_systems(OnEnter(GameState::Playing), update_lights);
+        app.init_resource::<ColonyStore>()
+            .add_plugins((
+                VortexPlugin,
+                ColonyInteractionPlugin,
+                HookPlugin,
+                RonAssetPlugin::<ColonyConfig>::new(&["colony"]),
+                DefaultPickingPlugins,
+            ))
+            .add_systems(
+                OnEnter(GameState::LoadColony),
+                (setup_colony, setup_debug_plane, setup_zones).chain(),
+            )
+            .add_systems(
+                Update,
+                next_state_spawn_player
+                    .run_if(is_colony_loaded)
+                    .run_if(in_state(GameState::LoadColony)),
+            )
+            .add_systems(
+                Update,
+                next_state_playing
+                    .after(WorldSystemSet::CameraSetup)
+                    .run_if(in_state(GameState::SpawnPlayer)),
+            )
+            .add_systems(OnEnter(GameState::Playing), update_lights);
     }
 }
 
 fn setup_colony(
-    colony_config: Res<Assets<ColonyConfig>>,
-    scene_assets: Res<SceneAssets>,
+    r_colony_config: Res<Assets<ColonyConfig>>,
+    r_scene_assets: Res<SceneAssets>,
+    r_colony_store: Res<ColonyStore>,
     mut commands: Commands,
-    game: Res<Game>,
 ) {
     info!("Setup colony");
-    let current_colony = colony_config.get(&game.current_colony_config).unwrap();
+    let current_colony = r_colony_config
+        .get(&r_colony_store.current_colony_config)
+        .unwrap();
+
     let colony_scene = match current_colony.name {
-        Colony::Cloning => scene_assets.cloning.clone(),
-        Colony::Iris => scene_assets.iris.clone(),
-        Colony::Liberte => scene_assets.liberte.clone(),
-        _ => scene_assets.liberte.clone(),
+        Colony::Cloning => r_scene_assets.cloning.clone(),
+        Colony::Iris => r_scene_assets.iris.clone(),
+        Colony::Liberte => r_scene_assets.liberte.clone(),
+        _ => r_scene_assets.liberte.clone(),
     };
 
     commands.spawn((
@@ -132,23 +140,23 @@ fn setup_debug_plane(
 }
 
 fn setup_zones(
+    r_colony_store: Res<ColonyStore>,
+    r_colony_config_assets: Res<Assets<ColonyConfig>>,
+    r_material_assets: Res<MaterialAssets>,
+    mut r_mesh_assets: ResMut<Assets<Mesh>>,
     mut commands: Commands,
-    game: Res<Game>,
-    colony_config: Res<Assets<ColonyConfig>>,
-    material_assets: Res<MaterialAssets>,
-    mut meshes: ResMut<Assets<Mesh>>,
 ) {
     info!("Setup zones");
-    if let Some(colony_asset) = colony_config.get(&game.current_colony_config) {
+    if let Some(colony_asset) = r_colony_config_assets.get(&r_colony_store.current_colony_config) {
         for zone_asset in &colony_asset.zones {
             commands.spawn((
                 PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Plane {
+                    mesh: r_mesh_assets.add(Mesh::from(shape::Plane {
                         size: zone_asset.size,
                         ..default()
                     })),
                     transform: Transform::from_translation(zone_asset.position),
-                    material: material_assets.get_material(&zone_asset.material),
+                    material: r_material_assets.get_material(&zone_asset.material),
                     ..Default::default()
                 },
                 Sensor,

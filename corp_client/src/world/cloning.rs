@@ -5,8 +5,10 @@ use corp_shared::prelude::{Health, CLONE_HEALTH_80, *};
 use crate::{
     asset::{Colony, ColonyConfigAssets},
     state::GameState,
-    world::colony::vortex::VortInEvent,
-    Game,
+    world::{
+        colony::{vortex::VortInEvent, ColonyStore},
+        player::PlayerStore,
+    },
 };
 
 pub struct CloningPlugin;
@@ -22,31 +24,31 @@ impl Plugin for CloningPlugin {
 }
 
 fn check_if_dead_and_go_to_cloning(
-    colony_config_assets: Res<ColonyConfigAssets>,
-    time: Res<Time>,
-    mut game: ResMut<Game>,
-    mut query: Query<&mut Health, With<Player>>,
-    mut next_state: ResMut<NextState<GameState>>,
+    r_colony_config_assets: Res<ColonyConfigAssets>,
+    r_time: Res<Time>,
+    mut r_colony_store: ResMut<ColonyStore>,
+    mut q_health: Query<&mut Health, With<Player>>,
+    mut r_next_state: ResMut<NextState<GameState>>,
 ) {
-    if let Some(mut health) = query.iter_mut().next() {
+    if let Some(mut health) = q_health.iter_mut().next() {
         if health.is_dead() {
-            health.cloning_cooldown.tick(time.delta());
+            health.cloning_cooldown.tick(r_time.delta());
             if health.cloning_cooldown.finished() {
-                game.current_colony_config = colony_config_assets.cloning.clone();
-                next_state.set(GameState::LoadColony);
+                r_colony_store.current_colony_config = r_colony_config_assets.cloning.clone();
+                r_next_state.set(GameState::LoadColony);
             }
         }
     }
 }
 
 fn vort_in_dead_player_to_cloning(
-    mut game: ResMut<Game>,
-    mut vortex_events: EventWriter<VortInEvent>,
+    mut r_player_store: ResMut<PlayerStore>,
+    mut ev_vort_in: EventWriter<VortInEvent>,
 ) {
-    if game.health.is_dead() {
-        game.health.set_hit_points(CLONE_HEALTH_80);
-        game.health.cloning_cooldown.reset();
-        vortex_events.send(VortInEvent::vort(Colony::Cloning));
+    if r_player_store.health.is_dead() {
+        r_player_store.health.set_hit_points(CLONE_HEALTH_80);
+        r_player_store.health.cloning_cooldown.reset();
+        ev_vort_in.send(VortInEvent::vort(Colony::Cloning));
     }
 }
 
@@ -75,7 +77,8 @@ mod tests {
             (kill_player, check_if_dead_and_go_to_cloning).chain(),
         );
         app.insert_resource(create_colony_assets());
-        app.insert_resource(Game::default());
+        app.init_resource::<PlayerStore>();
+        app.init_resource::<ColonyStore>();
         let player_entity = app.world.spawn((Player, Health::default())).id();
 
         // when
@@ -102,9 +105,9 @@ mod tests {
         // Setup test entities
         let _player_entity = world.spawn((Player, Health::default())).id();
 
-        let mut game = Game::default();
-        game.health.kill_mut();
-        world.insert_resource(game);
+        let mut player_store = PlayerStore::default();
+        player_store.health.kill_mut();
+        world.insert_resource(player_store);
         world.init_resource::<Events<VortInEvent>>();
         world.insert_resource(create_colony_assets());
 
@@ -112,9 +115,9 @@ mod tests {
         schedule.run(&mut world);
 
         assert_eq!(
-            world.resource::<Game>().health.get_health(),
+            world.resource::<PlayerStore>().health.get_health(),
             &CLONE_HEALTH_80,
-            "Game component health is set to clone health"
+            "PlayerStore health is set to clone health"
         );
     }
 

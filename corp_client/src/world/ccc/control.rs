@@ -8,12 +8,8 @@ use crate::{
     state::GameState,
     world::{
         ccc::{ControlMovement, DoubleTap, MainCamera, MainCameraFollow, OrientationMode},
-        colony::{
-            barrier::{BarrierControl, BarrierField},
-            vortex::VortInEvent,
-        },
+        colony::vortex::VortInEvent,
     },
-    Game,
 };
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
@@ -22,7 +18,33 @@ pub enum ControlSet {
     StarmapInput,
 }
 
-pub struct ControlPlugin;
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct PlayerEntity(pub Option<Entity>);
+
+impl PlayerEntity {
+    pub fn get(&self) -> Option<Entity> {
+        self.0
+    }
+}
+
+impl From<Entity> for PlayerEntity {
+    fn from(entity: Entity) -> Self {
+        Self(Some(entity))
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct UseEntity(Option<Entity>);
+
+impl UseEntity {
+    pub fn set(&mut self, target: Option<Entity>) {
+        self.0 = target;
+    }
+
+    pub fn get(&self) -> Option<Entity> {
+        self.0
+    }
+}
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorWorld(Vec3);
@@ -83,11 +105,15 @@ impl Default for ControlSettings {
     }
 }
 
+pub struct ControlPlugin;
+
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(InputManagerPlugin::<ControlAction>::default())
             .init_resource::<ActionState<ControlAction>>()
+            .init_resource::<PlayerEntity>()
             .init_resource::<CursorWorld>()
+            .init_resource::<UseEntity>()
             .insert_resource(ControlSettings::default().input)
             .add_systems(Update, double_tap_to_exit)
             .add_systems(
@@ -96,7 +122,7 @@ impl Plugin for ControlPlugin {
                     update_cursor_world,
                     player_control_movement,
                     player_control_orientation,
-                    use_barrier,
+                    use_event,
                     kill,
                     toggle_window_cursor_visible,
                 )
@@ -227,33 +253,23 @@ fn player_control_orientation(
     }
 }
 
-fn use_barrier(
-    action_state: Res<ActionState<ControlAction>>,
-    barrier_control_query: Query<&BarrierControl>,
-    barrier_field_query: Query<(Entity, &BarrierField)>,
+fn use_event(
+    r_use_entity: Res<UseEntity>,
+    r_player_entity: Res<PlayerEntity>,
+    r_action_state: Res<ActionState<ControlAction>>,
     mut q_interactor: Query<&mut Interactor>,
-    game: Res<Game>,
 ) {
-    if action_state.just_pressed(ControlAction::Use) {
-        let Some(target_entity) = game.use_entity else {
+    if r_action_state.just_pressed(ControlAction::Use) {
+        let Some(use_target) = r_use_entity.get() else {
             return;
         };
-
-        let Ok(barrier_control) = barrier_control_query.get(target_entity) else {
+        let Some(player) = r_player_entity.get() else {
             return;
         };
-
-        let Some((target_barrier, _)) = barrier_field_query
-            .iter()
-            .find(|(_e, b)| b.name == barrier_control.barrier_field_name)
-        else {
+        let Ok(mut interactor) = q_interactor.get_mut(player) else {
             return;
         };
-
-        let Ok(mut interactor) = q_interactor.get_single_mut() else {
-            return;
-        };
-        interactor.interact(target_barrier);
+        interactor.interact(use_target);
     }
 }
 
@@ -323,8 +339,6 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .add_event::<VortInEvent>()
-            .init_resource::<Game>()
             .add_state::<GameState>()
             .add_plugins(MinimalPlugins)
             .add_plugins((InputPlugin, ControlPlugin));

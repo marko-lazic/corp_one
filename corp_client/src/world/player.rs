@@ -9,14 +9,18 @@ use crate::{
     state::{Despawn, GameState},
     world::{
         animator::{AnimationComponent, PlayerAnimationAction},
-        ccc::{CharacterMovement, ControlSet, MainCameraFollow, MovementBundle},
+        ccc::{CharacterMovement, ControlSet, MainCameraFollow, MovementBundle, PlayerEntity},
         cloning::CloningPlugin,
         colony::vortex::VortexNode,
         physics::CollideGroups,
         WorldSystemSet,
     },
-    Game,
 };
+
+#[derive(Resource, Default)]
+pub struct PlayerStore {
+    pub health: Health,
+}
 
 #[derive(Bundle)]
 struct PlayerPhysicsBundle {
@@ -34,6 +38,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(CloningPlugin)
+            .init_resource::<PlayerStore>()
             .add_systems(
                 OnEnter(GameState::SpawnPlayer),
                 setup_player.in_set(WorldSystemSet::PlayerSetup),
@@ -48,12 +53,13 @@ impl Plugin for PlayerPlugin {
 }
 
 fn setup_player(
-    mut game: ResMut<Game>,
+    r_player_store: Res<PlayerStore>,
+    r_player_assets: Res<PlayerAssets>,
+    mut r_player_entity: ResMut<PlayerEntity>,
+    mut q_vortex_node_pos: Query<&mut Transform, With<VortexNode>>,
     mut commands: Commands,
-    player_assets: Res<PlayerAssets>,
-    mut vortex_nodes: Query<&mut Transform, With<VortexNode>>,
 ) {
-    let random_position = vortex_nodes
+    let random_position = q_vortex_node_pos
         .iter_mut()
         .map(|t| t.translation)
         .collect::<Vec<Vec3>>()
@@ -66,7 +72,7 @@ fn setup_player(
     let player = commands
         .spawn((
             SceneBundle {
-                scene: player_assets.mannequiny.clone(),
+                scene: r_player_assets.mannequiny.clone(),
                 transform: player_transform,
                 ..default()
             },
@@ -78,7 +84,7 @@ fn setup_player(
                 faction: Faction::EC,
                 rank: Rank::R6,
             },
-            game.health.clone(),
+            r_player_store.health.clone(),
             AnimationComponent::new(PlayerAnimationAction::Idle),
             PlayerPhysicsBundle {
                 rigid_body: RigidBody::Dynamic,
@@ -96,7 +102,7 @@ fn setup_player(
         ))
         .id();
 
-    game.player_entity = Some(player);
+    *r_player_entity = player.into();
 }
 
 fn handle_animation_action(

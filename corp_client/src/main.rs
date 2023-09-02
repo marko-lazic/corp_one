@@ -8,13 +8,8 @@ use bevy::{
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-use corp_shared::prelude::Health;
-
 use crate::{
-    asset::{AssetLoadingPlugin, ColonyConfig},
-    gui::GuiPlugin,
-    state::GameStatePlugin,
-    world::WorldPlugin,
+    asset::AssetLoadingPlugin, gui::GuiPlugin, state::GameStatePlugin, world::WorldPlugin,
 };
 
 mod asset;
@@ -28,17 +23,8 @@ const CORP_ONE_GAME_TITLE: &str = "Corp One";
 const WIDTH: f32 = 1200.0;
 const HEIGHT: f32 = 720.0;
 
-#[derive(Resource, Default)]
-pub struct Game {
-    use_entity: Option<Entity>,
-    player_entity: Option<Entity>,
-    current_colony_config: Handle<ColonyConfig>,
-    health: Health,
-}
-
 fn main() {
     App::new()
-        .init_resource::<Game>()
         .add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {
@@ -64,7 +50,7 @@ fn new_window() -> Window {
     Window {
         title: CORP_ONE_GAME_TITLE.to_string(),
         resolution: (WIDTH, HEIGHT).into(),
-        mode: WindowMode::BorderlessFullscreen,
+        mode: WindowMode::Windowed,
         present_mode: PresentMode::AutoNoVsync, // Reduces input latency
         ..default()
     }
