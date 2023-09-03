@@ -71,12 +71,8 @@ fn setup_player(
 
     let player = commands
         .spawn((
-            SceneBundle {
-                scene: r_player_assets.mannequiny.clone(),
-                transform: player_transform,
-                ..default()
-            },
             Player,
+            SpatialBundle::from_transform(player_transform),
             MovementBundle::default(),
             MainCameraFollow,
             Interactor::default(),
@@ -88,7 +84,7 @@ fn setup_player(
             AnimationComponent::new(PlayerAnimationAction::Idle),
             PlayerPhysicsBundle {
                 rigid_body: RigidBody::Dynamic,
-                collider: Collider::capsule_y(0.25, 0.25),
+                collider: Collider::capsule_y(0.65, 0.25),
                 locked_axis: LockedAxes::ROTATION_LOCKED,
                 friction: Friction {
                     coefficient: 0.0,
@@ -100,6 +96,15 @@ fn setup_player(
             },
             Despawn,
         ))
+        .with_children(|parent| {
+            parent.spawn((SceneBundle {
+                scene: r_player_assets.mannequiny.clone(),
+                // Offset the mesh y position by capsule total height
+                transform: Transform::from_xyz(0.0, -0.9, 0.0),
+                global_transform: GlobalTransform::default(),
+                ..default()
+            },));
+        })
         .id();
 
     *r_player_entity = player.into();
