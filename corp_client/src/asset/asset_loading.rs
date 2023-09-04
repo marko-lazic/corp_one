@@ -13,9 +13,9 @@ use crate::{
 
 /// Exported using Blender export glTF 2.0 with settings enabled
 ///
-/// Punctual Lights
+/// Include->Punctual Lights
 ///
-/// Data/Lighting Lighting Mode Unitless
+/// Data/Lighting->Lighting Mode Unitless
 #[derive(Resource, AssetCollection)]
 pub struct SceneAssets {
     #[asset(path = "scenes/iris/iris.glb#Scene0")]

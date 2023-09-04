@@ -2,7 +2,10 @@ use bevy::{ecs::system::EntityCommands, log::info};
 use bevy_mod_picking::{backends::rapier::RapierPickTarget, prelude::*};
 use bevy_rapier3d::prelude::*;
 
-use corp_shared::prelude::{ControlRegistry, Door, Faction, Security};
+use corp_shared::{
+    prelude::{ControlRegistry, Door, Faction, Security},
+    world::objects::territory::TerritoryNode,
+};
 
 use crate::{
     state::Despawn,
@@ -55,6 +58,7 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
             On::<Pointer<Out>>::send_event::<BarrierPickingEvent>(),
             Despawn,
         )),
+        "EnergyNode1" => commands.insert((TerritoryNode, Despawn)),
         "Plant Tree" => commands.insert(Despawn),
         _ => commands,
     };

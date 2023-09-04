@@ -23,7 +23,10 @@ fn setup_colliders(
     mesh_handles: Query<&Handle<Mesh>>,
 ) {
     for (entity, name) in &added_name {
-        if name.to_lowercase().contains("wall") || name.to_lowercase().contains("tree") {
+        if ["wall", "tree", "energynode"]
+            .iter()
+            .any(|&s| name.to_lowercase().contains(s))
+        {
             for (collider_entity, collider_mesh) in
                 Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
             {

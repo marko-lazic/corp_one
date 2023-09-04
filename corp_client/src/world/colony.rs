@@ -20,6 +20,7 @@ use crate::{
 pub mod barrier;
 mod colony_interaction;
 mod scene_hook;
+mod termnial;
 pub mod vortex;
 pub mod zone;
 
@@ -90,6 +91,7 @@ fn setup_colony(
                 }
             }),
         },
+        Name::new("Colony"),
         Despawn,
     ));
 }
