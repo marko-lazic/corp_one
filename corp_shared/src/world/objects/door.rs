@@ -1,34 +1,16 @@
-use std::{collections::HashMap, time::Duration};
+use std::time::Duration;
 
 use bevy::prelude::*;
-use lazy_static::lazy_static;
 
 use crate::prelude::*;
 
 pub const HACK_DURATION_FIVE_MIN: f32 = 5.0 * 60.0;
-
-lazy_static! {
-    static ref REQUIRED_RANK_BY_DOOR_SECURITY: HashMap<Security, Rank> = {
-        let mut map = HashMap::new();
-        map.insert(Security::Low, Rank::R4);
-        map.insert(Security::Medium, Rank::R5);
-        map.insert(Security::High, Rank::R6);
-        map
-    };
-}
 
 #[derive(Default, Eq, PartialEq, Debug, Copy, Clone)]
 pub enum DoorState {
     Open,
     #[default]
     Closed,
-}
-
-#[derive(Debug, Eq, PartialEq, Hash)]
-pub enum Security {
-    Low,
-    Medium,
-    High,
 }
 
 #[derive(Component)]
@@ -149,7 +131,7 @@ pub fn door_interaction_event_system(
                     match control_type {
                         ControlType::Permanent(_) => {
                             if Some(&member_of.rank)
-                                >= REQUIRED_RANK_BY_DOOR_SECURITY.get(door.security())
+                                >= REQUIRED_RANK_BY_SECURITY.get(door.security())
                             {
                                 door.toggle();
                                 door_state_event_writer

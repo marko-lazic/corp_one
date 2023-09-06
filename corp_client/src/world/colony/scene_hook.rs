@@ -3,8 +3,8 @@ use bevy_mod_picking::{backends::rapier::RapierPickTarget, prelude::*};
 use bevy_rapier3d::prelude::*;
 
 use corp_shared::{
-    prelude::{ControlRegistry, Door, Faction, Security},
-    world::objects::territory::TerritoryNode,
+    prelude::{ControlRegistry, Door, Faction, TerritoryNodeType},
+    world::{objects::territory::TerritoryNode, security::Security},
 };
 
 use crate::{
@@ -12,6 +12,7 @@ use crate::{
     world::{
         colony::{
             barrier::{BarrierControl, BarrierField, BarrierPickingEvent},
+            territory::TerritoryNodePickingEvent,
             vortex::{VortexGate, VortexNode},
         },
         physics,
@@ -58,7 +59,17 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
             On::<Pointer<Out>>::send_event::<BarrierPickingEvent>(),
             Despawn,
         )),
-        "EnergyNode1" => commands.insert((TerritoryNode, Despawn)),
+        "EnergyNode1" => commands.insert((
+            TerritoryNode {
+                r#type: TerritoryNodeType::EnergyNode,
+                security: Security::Low,
+            },
+            PickableBundle::default(),
+            RapierPickTarget::default(),
+            On::<Pointer<Over>>::send_event::<TerritoryNodePickingEvent>(),
+            On::<Pointer<Out>>::send_event::<TerritoryNodePickingEvent>(),
+            Despawn,
+        )),
         "Plant Tree" => commands.insert(Despawn),
         _ => commands,
     };

@@ -22,6 +22,7 @@ pub enum InteractionEvent {
 pub enum InteractionType {
     Door,
     Backpack,
+    TerritoryNode,
 }
 
 #[derive(Component, Default)]
@@ -87,6 +88,9 @@ pub fn interaction_system(
                                     backpack_entity: target_entity,
                                     interactor_entity,
                                 });
+                            }
+                            (InteractionType::TerritoryNode, InteractionEvent::Use) => {
+                                info!("Implement energy node");
                             }
                             (interaction_type, interaction_event) => {
                                 error!(

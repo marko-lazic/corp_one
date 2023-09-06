@@ -5,13 +5,11 @@ use bevy_rapier3d::prelude::ColliderDisabled;
 
 use corp_shared::prelude::*;
 
-use crate::{gui::CursorVisibility, state::GameState, world::ccc::UseEntity, App};
-
-#[derive(Debug, Eq, PartialEq)]
-pub enum Hover {
-    Over,
-    Out,
-}
+use crate::{
+    state::GameState,
+    world::{ccc::UseEntity, colony::colony_interaction::Hover},
+    App,
+};
 
 #[derive(Event)]
 pub struct BarrierPickingEvent(Entity, Hover);
@@ -108,19 +106,17 @@ fn open_close_barrier(
 
 pub fn receive_barrier_pickings(
     mut pickings: EventReader<BarrierPickingEvent>,
-    mut cursor_info: ResMut<CursorVisibility>,
     mut r_use_target: ResMut<UseEntity>,
     q_barrier_control: Query<&BarrierControl>,
     q_barrier_field: Query<(Entity, &BarrierField)>,
 ) {
     for event in pickings.iter() {
         if event.1 == Hover::Over {
-            cursor_info.visible = true;
-
             let Ok(barrier_control) = q_barrier_control.get(event.0) else {
                 return;
             };
 
+            // Try spawning barrier field and control as one entity with parent/child
             let Some((target_barrier, _)) = q_barrier_field
                 .iter()
                 .find(|(_e, b)| b.name == barrier_control.barrier_field_name)
@@ -129,7 +125,6 @@ pub fn receive_barrier_pickings(
             };
             r_use_target.set(Some(target_barrier));
         } else if event.1 == Hover::Out {
-            cursor_info.visible = false;
             r_use_target.set(None);
         }
     }

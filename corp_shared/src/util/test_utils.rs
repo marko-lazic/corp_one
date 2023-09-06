@@ -8,11 +8,11 @@ use bevy::{
 pub trait TestUtils {
     fn init_time(&mut self) -> &mut Self;
     fn update_after(&mut self, duration: Duration) -> &mut Self;
-    fn get<T: Component>(&self, entity: Entity) -> &T;
-    fn get_mut<T: Component>(&mut self, entity: Entity) -> Mut<T>;
-    fn has_component<T: Component>(&self, entity: Entity) -> bool;
-    fn get_resource_mut<T: Resource>(&mut self) -> Mut<T>;
-    fn set_state<T: States>(&mut self, state: T) -> &mut Self;
+    fn get<C: Component>(&self, entity: Entity) -> &C;
+    fn get_mut<C: Component>(&mut self, entity: Entity) -> Mut<C>;
+    fn has_component<C: Component>(&self, entity: Entity) -> bool;
+    fn get_resource_mut<R: Resource>(&mut self) -> Mut<R>;
+    fn set_state<S: States>(&mut self, state: S) -> &mut Self;
 }
 
 impl TestUtils for App {
@@ -32,37 +32,37 @@ impl TestUtils for App {
         self
     }
 
-    fn get<T: Component>(&self, entity: Entity) -> &T {
-        self.world.get::<T>(entity).unwrap_or_else(|| {
+    fn get<C: Component>(&self, entity: Entity) -> &C {
+        self.world.get::<C>(entity).unwrap_or_else(|| {
             panic!(
                 "Component {} not found on entity {}",
-                std::any::type_name::<T>(),
+                std::any::type_name::<C>(),
                 entity.index()
             )
         })
     }
 
-    fn get_mut<T: Component>(&mut self, entity: Entity) -> Mut<T> {
-        self.world.get_mut::<T>(entity).unwrap_or_else(|| {
+    fn get_mut<C: Component>(&mut self, entity: Entity) -> Mut<C> {
+        self.world.get_mut::<C>(entity).unwrap_or_else(|| {
             panic!(
                 "Component {} not found on entity {}",
-                std::any::type_name::<T>(),
+                std::any::type_name::<C>(),
                 entity.index()
             )
         })
     }
 
-    fn has_component<T: Component>(&self, entity: Entity) -> bool {
-        self.world.get::<T>(entity).is_some()
+    fn has_component<C: Component>(&self, entity: Entity) -> bool {
+        self.world.get::<C>(entity).is_some()
     }
 
-    fn get_resource_mut<T: Resource>(&mut self) -> Mut<T> {
-        self.world.get_resource_mut::<T>().unwrap()
+    fn get_resource_mut<R: Resource>(&mut self) -> Mut<R> {
+        self.world.get_resource_mut::<R>().unwrap()
     }
 
-    fn set_state<T: States>(&mut self, state: T) -> &mut Self {
+    fn set_state<S: States>(&mut self, state: S) -> &mut Self {
         self.world
-            .get_resource_mut::<NextState<T>>()
+            .get_resource_mut::<NextState<S>>()
             .unwrap()
             .set(state);
         self.update();

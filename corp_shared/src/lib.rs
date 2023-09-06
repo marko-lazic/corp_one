@@ -23,8 +23,9 @@ pub mod prelude {
         world::{
             faction::*,
             interactive::*,
-            objects::{backpack::*, door::*},
+            objects::{backpack::*, door::*, territory::*},
             player::*,
         },
     };
+    pub use crate::world::security::*;
 }

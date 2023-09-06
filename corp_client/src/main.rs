@@ -42,6 +42,7 @@ fn main() {
             GuiPlugin,
             WorldPlugin,
             WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Grave)),
+            bevy_framepace::FramepacePlugin,
         ))
         .run();
 }

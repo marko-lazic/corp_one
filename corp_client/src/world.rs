@@ -19,7 +19,7 @@ pub mod player;
 mod star_map;
 
 pub mod prelude {
-    pub use super::ccc::{CharacterMovement, CursorWorld};
+    pub use super::ccc::{CharacterMovement, CursorWorld, UseEntity};
 }
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]

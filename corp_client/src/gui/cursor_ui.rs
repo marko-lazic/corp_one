@@ -1,14 +1,12 @@
 use bevy::{prelude::*, text::DEFAULT_FONT_HANDLE};
 
-use crate::state::{Despawn, GameState};
+use crate::{
+    state::{Despawn, GameState},
+    world::prelude::UseEntity,
+};
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorUi(Vec2);
-
-#[derive(Resource, Default)]
-pub struct CursorVisibility {
-    pub visible: bool,
-}
 
 #[derive(Component)]
 struct UseText;
@@ -17,8 +15,7 @@ pub struct CursorPlugin;
 
 impl Plugin for CursorPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<CursorVisibility>()
-            .init_resource::<CursorUi>()
+        app.init_resource::<CursorUi>()
             .add_systems(OnEnter(GameState::LoadColony), setup)
             .add_systems(First, update_cursor_ui_position)
             .add_systems(Update, update_use_text.run_if(in_state(GameState::Playing)));
@@ -53,10 +50,10 @@ fn update_cursor_ui_position(primary_query: Query<&Window>, mut cursor: ResMut<C
 
 fn update_use_text(
     cursor: Res<CursorUi>,
-    cursor_visibility: Res<CursorVisibility>,
+    r_use_target: Res<UseEntity>,
     mut q_use_text: Query<(&mut Style, &mut Visibility), With<UseText>>,
 ) {
-    if cursor_visibility.visible {
+    if r_use_target.get().is_some() {
         for (mut style, mut visibility) in &mut q_use_text {
             *visibility = Visibility::Visible;
             let text_top = cursor.y + 15.0;

@@ -20,7 +20,7 @@ use crate::{
 pub mod barrier;
 mod colony_interaction;
 mod scene_hook;
-mod termnial;
+pub mod territory;
 pub mod vortex;
 pub mod zone;
 
