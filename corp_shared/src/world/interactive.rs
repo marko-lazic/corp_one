@@ -1,107 +1,26 @@
 use bevy::prelude::*;
 
-use crate::world::objects::{backpack::BackpackInteractionEvent, door::DoorInteractionEvent};
+pub trait InteractionEntity {}
 
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub enum BackpackAction {
-    List,
-    TakeAll,
-    TakeItem(Entity),
-}
-
-#[derive(Event, Default, PartialEq, Copy, Clone, Debug)]
-pub enum InteractionEvent {
-    #[default]
-    Use,
-    Backpack {
-        action: BackpackAction,
-    },
-}
-
-#[derive(Debug)]
-pub enum InteractionType {
+#[derive(Component)]
+pub enum InteractionObjectType {
     Door,
-    Backpack,
     TerritoryNode,
 }
 
-#[derive(Component, Default)]
-pub struct Interactor {
-    interacted: bool,
-    pub target_entity: Option<Entity>,
-    pub action: InteractionEvent,
+#[derive(Event, PartialEq, Copy, Clone, Debug)]
+pub struct InteractionEvent<T> {
+    pub interactor: Entity,
+    pub target: Entity,
+    _interaction_type: std::marker::PhantomData<T>,
 }
 
-impl Interactor {
-    pub fn interact(&mut self, target_entity: Entity) {
-        self.interacted = true;
-        self.target_entity = Some(target_entity);
-        self.action = InteractionEvent::Use;
-    }
-
-    pub fn interact_with(&mut self, target_entity: Entity, action: InteractionEvent) {
-        self.interacted = true;
-        self.target_entity = Some(target_entity);
-        self.action = action;
-    }
-
-    pub fn just_interacted(&mut self) -> bool {
-        if self.interacted {
-            self.interacted = false;
-            true
-        } else {
-            false
-        }
-    }
-
-    pub fn event(&self) -> InteractionEvent {
-        self.action
-    }
-}
-
-#[bevy_trait_query::queryable]
-pub trait Interactive {
-    fn interaction_type(&self) -> InteractionType;
-}
-
-pub fn interaction_system(
-    mut interactor_query: Query<(Entity, &mut Interactor)>,
-    interactive_query: Query<&mut dyn Interactive>,
-    mut door_interaction_event_writer: EventWriter<DoorInteractionEvent>,
-    mut backpack_interaction_event_writer: EventWriter<BackpackInteractionEvent>,
-) {
-    for (interactor_entity, mut interactor) in &mut interactor_query {
-        if interactor.just_interacted() {
-            if let Some(target_entity) = interactor.target_entity {
-                if let Ok(interactives) = interactive_query.get(target_entity) {
-                    for interactive in &interactives {
-                        match (interactive.interaction_type(), interactor.event()) {
-                            (InteractionType::Door, InteractionEvent::Use) => {
-                                door_interaction_event_writer.send(DoorInteractionEvent {
-                                    door_entity: target_entity,
-                                    interactor_entity,
-                                });
-                            }
-                            (InteractionType::Backpack, InteractionEvent::Backpack { action }) => {
-                                backpack_interaction_event_writer.send(BackpackInteractionEvent {
-                                    action,
-                                    backpack_entity: target_entity,
-                                    interactor_entity,
-                                });
-                            }
-                            (InteractionType::TerritoryNode, InteractionEvent::Use) => {
-                                info!("Implement energy node");
-                            }
-                            (interaction_type, interaction_event) => {
-                                error!(
-                                    "Unhandled interaction: {:?} {:?}",
-                                    interaction_type, interaction_event
-                                );
-                            }
-                        }
-                    }
-                }
-            }
+impl<T> InteractionEvent<T> {
+    pub fn new(interactor: Entity, target: Entity, _interaction_type: T) -> Self {
+        InteractionEvent {
+            interactor,
+            target,
+            _interaction_type: std::marker::PhantomData,
         }
     }
 }

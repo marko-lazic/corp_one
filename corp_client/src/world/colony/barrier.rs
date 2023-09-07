@@ -1,6 +1,5 @@
 use bevy::{app::Plugin, prelude::*};
 use bevy_rapier3d::prelude::ColliderDisabled;
-use bevy_trait_query::RegisterExt;
 
 use corp_shared::prelude::*;
 
@@ -46,8 +45,7 @@ pub struct BarrierPlugin;
 impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PickingEvent<BarrierPickingEvent>>()
-            .register_component_as::<dyn Interactive, Door>()
-            .add_event::<DoorInteractionEvent>()
+            .add_event::<InteractionEvent<UseDoorEvent>>()
             .add_event::<DoorHackEvent>()
             .add_event::<DoorStateEvent>()
             .add_systems(
@@ -55,7 +53,7 @@ impl Plugin for BarrierPlugin {
                 (
                     receive_barrier_pickings
                         .run_if(on_event::<PickingEvent<BarrierPickingEvent>>()),
-                    open_close_barrier,
+                    change_barrier_field_visibility_and_collision,
                 )
                     .run_if(in_state(GameState::Playing)),
             )
@@ -64,7 +62,8 @@ impl Plugin for BarrierPlugin {
                 (
                     door_cooldown_system,
                     process_temporary_faction_ownership_timers_system,
-                    door_interaction_event_system,
+                    door_interaction_event_system
+                        .run_if(on_event::<InteractionEvent<UseDoorEvent>>()),
                     door_hack_event_system,
                 )
                     .chain()
@@ -73,22 +72,22 @@ impl Plugin for BarrierPlugin {
     }
 }
 
-fn open_close_barrier(
+fn change_barrier_field_visibility_and_collision(
     mut commands: Commands,
-    mut barrier_query: Query<&mut Visibility, With<Door>>,
-    mut door_state_reader: EventReader<DoorStateEvent>,
+    mut q_barrier_field_visibility: Query<&mut Visibility, With<BarrierField>>,
+    mut ev_door_state_event: EventReader<DoorStateEvent>,
 ) {
-    for door_event in door_state_reader.iter() {
-        if let Ok(mut visible) = barrier_query.get_mut(door_event.entity()) {
-            if door_event.state() == DoorState::Open {
+    for door_state_event in ev_door_state_event.iter() {
+        if let Ok(mut visible) = q_barrier_field_visibility.get_mut(door_state_event.entity()) {
+            if door_state_event.state() == DoorState::Open {
                 *visible = Visibility::Hidden;
                 commands
-                    .entity(door_event.entity())
+                    .entity(door_state_event.entity())
                     .insert(ColliderDisabled);
-            } else if door_event.state() == DoorState::Closed {
+            } else if door_state_event.state() == DoorState::Closed {
                 *visible = Visibility::Visible;
                 commands
-                    .entity(door_event.entity())
+                    .entity(door_state_event.entity())
                     .remove::<ColliderDisabled>();
             }
         }
@@ -96,12 +95,12 @@ fn open_close_barrier(
 }
 
 pub fn receive_barrier_pickings(
-    mut pickings: EventReader<PickingEvent<BarrierPickingEvent>>,
+    mut ev_barrier_picking_event: EventReader<PickingEvent<BarrierPickingEvent>>,
     mut r_use_target: ResMut<UseEntity>,
     q_barrier_control: Query<&BarrierControl>,
     q_barrier_field: Query<(Entity, &BarrierField)>,
 ) {
-    for event in pickings.iter() {
+    for event in ev_barrier_picking_event.iter() {
         if event.mode == Hover::Over {
             let Ok(barrier_control) = q_barrier_control.get(event.target) else {
                 return;

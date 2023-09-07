@@ -1,20 +1,26 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use bevy_trait_query::RegisterExt;
-use corp_shared::asset::endesga;
 
-use corp_shared::prelude::*;
+use corp_shared::{asset::endesga, prelude::*};
 
 use crate::ray::cast_ray_system;
 
 mod ray;
 
+#[derive(Resource, Default)]
+struct PlayerEntity(Option<Entity>);
+
+#[derive(Resource, Default)]
+pub struct TargetEntity(pub Option<Entity>);
+
 #[derive(Component)]
-struct InventoryText(Entity);
+struct InventoryText;
 
 fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
+        .init_resource::<PlayerEntity>()
+        .init_resource::<TargetEntity>()
         .add_plugins((
             DefaultPlugins,
             RapierPhysicsPlugin::<NoUserData>::default(),
@@ -26,12 +32,9 @@ fn main() {
         })
         .add_event::<DoorStateEvent>()
         .add_event::<BackpackInteractionEvent>()
-        .add_event::<DoorInteractionEvent>()
-        .register_component_as::<dyn Interactive, Backpack>()
-        .add_event::<DoorInteractionEvent>()
+        .add_event::<InteractionEvent<UseDoorEvent>>()
         .add_event::<BackpackInteractionEvent>()
         .add_event::<DoorHackEvent>()
-        .register_component_as::<dyn Interactive, Door>()
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -54,9 +57,10 @@ fn main() {
 
 fn setup(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut r_player_entity: ResMut<PlayerEntity>,
+    r_asset_server: Res<AssetServer>,
+    mut r_assets_mesh: ResMut<Assets<Mesh>>,
+    mut r_assets_material: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(5.0, 5.0, 8.0).looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
@@ -66,8 +70,8 @@ fn setup(
     // spawn door
     let _ec_door = setup_door(
         &mut commands,
-        &mut meshes,
-        &mut materials,
+        &mut r_assets_mesh,
+        &mut r_assets_material,
         Transform::from_xyz(0.0, 0.5, 0.0),
         Faction::EC,
         Security::High,
@@ -75,8 +79,8 @@ fn setup(
 
     let _vi_door = setup_door(
         &mut commands,
-        &mut meshes,
-        &mut materials,
+        &mut r_assets_mesh,
+        &mut r_assets_material,
         Transform::from_xyz(-10.0, 0.5, 0.0),
         Faction::VI,
         Security::Low,
@@ -84,8 +88,8 @@ fn setup(
 
     let _cmg_door = setup_door(
         &mut commands,
-        &mut meshes,
-        &mut materials,
+        &mut r_assets_mesh,
+        &mut r_assets_material,
         Transform::from_xyz(5.0, 0.5, -5.0),
         Faction::CMG,
         Security::Medium,
@@ -99,7 +103,6 @@ fn setup(
             Transform::from_xyz(0.0, 0.0, 0.0),
             GlobalTransform::default(),
             Player,
-            Interactor::default(),
             Inventory::new(vec![hacking_tool_entity]),
             MemberOf {
                 faction: Faction::EC,
@@ -107,6 +110,7 @@ fn setup(
             },
         ))
         .id();
+    r_player_entity.0 = Some(player_entity);
 
     // print inventory
     commands.spawn((
@@ -114,7 +118,7 @@ fn setup(
             text: Text::from_section(
                 "null",
                 TextStyle {
-                    font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+                    font: r_asset_server.load("fonts/FiraMono-Medium.ttf"),
                     font_size: 30.0,
                     color: endesga::AQUA,
                 },
@@ -126,7 +130,7 @@ fn setup(
             },
             ..Default::default()
         },
-        InventoryText(player_entity),
+        InventoryText,
     ));
 }
 
@@ -157,13 +161,29 @@ fn setup_door(
     ec_door
 }
 
+fn interaction_system(
+    r_keyboard_input: Res<Input<KeyCode>>,
+    r_player_entity: Res<PlayerEntity>,
+    r_target_entity: Res<TargetEntity>,
+    mut ev_use_door: EventWriter<InteractionEvent<UseDoorEvent>>,
+) {
+    if r_keyboard_input.just_pressed(KeyCode::E) {
+        if let Some(interactor) = r_player_entity.0 {
+            if let Some(target) = r_target_entity.0 {
+                ev_use_door.send(InteractionEvent::new(interactor, target, UseDoorEvent));
+            }
+        }
+    }
+}
+
 fn show_inventory_system(
-    mut inventory_text_query: Query<(&mut Text, &InventoryText)>,
+    mut inventory_text_query: Query<&mut Text, With<InventoryText>>,
     mut inventories: Query<&mut Inventory, Changed<Inventory>>,
     item_query: Query<&Item>,
+    r_player_entity: Res<PlayerEntity>,
 ) {
-    for (mut text, inventory_text) in &mut inventory_text_query {
-        if let Ok(inventory) = inventories.get_mut(inventory_text.0) {
+    for mut text in &mut inventory_text_query {
+        if let Ok(inventory) = inventories.get_mut(r_player_entity.0.unwrap()) {
             let mut items: Vec<String> = Vec::new();
             for inventory_item in inventory.items() {
                 items.push(item_query.get(*inventory_item).unwrap().name.clone());

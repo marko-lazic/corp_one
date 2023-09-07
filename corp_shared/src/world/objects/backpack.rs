@@ -21,33 +21,34 @@ impl Backpack {
     }
 }
 
-impl Interactive for Backpack {
-    fn interaction_type(&self) -> InteractionType {
-        InteractionType::Backpack
-    }
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub enum BackpackAction {
+    List,
+    TakeAll,
+    TakeItem(Entity),
 }
 
 #[derive(Event)]
 pub struct BackpackInteractionEvent {
     pub action: BackpackAction,
-    pub backpack_entity: Entity,
     pub interactor_entity: Entity,
+    pub backpack_entity: Entity,
 }
 
 pub fn backpack_interaction_event_system(
-    mut event_reader: EventReader<BackpackInteractionEvent>,
-    mut inventory_query: Query<&mut Inventory, With<Interactor>>,
-    mut backpack_query: Query<&mut Backpack>,
-    item_query: Query<&Item>,
+    mut ev_backpack_interaction_event: EventReader<BackpackInteractionEvent>,
+    mut q_inventory: Query<&mut Inventory, With<Player>>,
+    mut q_backpack: Query<&mut Backpack>,
+    q_item: Query<&Item>,
 ) {
-    for event in &mut event_reader {
-        if let Ok(mut inventory) = inventory_query.get_mut(event.interactor_entity) {
-            if let Ok(mut backpack) = backpack_query.get_mut(event.backpack_entity) {
+    for event in &mut ev_backpack_interaction_event {
+        if let Ok(mut inventory) = q_inventory.get_mut(event.interactor_entity) {
+            if let Ok(mut backpack) = q_backpack.get_mut(event.backpack_entity) {
                 match event.action {
                     BackpackAction::List => {
                         let mut items: Vec<String> = Vec::new();
                         for backpack_item in backpack.items() {
-                            items.push(item_query.get(*backpack_item).unwrap().name.clone());
+                            items.push(q_item.get(*backpack_item).unwrap().name.clone());
                         }
                     }
                     BackpackAction::TakeAll => {
@@ -66,9 +67,9 @@ pub fn backpack_interaction_event_system(
 
 pub fn despawn_backpack_system(
     mut commands: Commands,
-    mut backpack_entities: Query<(Entity, &Backpack), Changed<Backpack>>,
+    mut q_entity_backpack: Query<(Entity, &Backpack), Changed<Backpack>>,
 ) {
-    for (entity, backpack) in &mut backpack_entities {
+    for (entity, backpack) in &mut q_entity_backpack {
         if backpack.items().is_empty() {
             commands.entity(entity).despawn_recursive();
         }
@@ -77,8 +78,6 @@ pub fn despawn_backpack_system(
 
 #[cfg(test)]
 mod tests {
-    use bevy_trait_query::RegisterExt;
-
     use super::*;
 
     #[test]
@@ -105,15 +104,14 @@ mod tests {
             .world
             .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
             .id();
-        let mut interactor = app.get_mut::<Interactor>(player_entity);
 
         // when
-        interactor.interact_with(
+        app.world.send_event(BackpackInteractionEvent {
+            action: BackpackAction::List,
+            interactor_entity: player_entity,
             backpack_entity,
-            InteractionEvent::Backpack {
-                action: BackpackAction::List,
-            },
-        );
+        });
+
         app.update();
 
         // then
@@ -131,15 +129,13 @@ mod tests {
             .world
             .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
             .id();
-        let mut interactor = app.get_mut::<Interactor>(player_entity);
 
         // when
-        interactor.interact_with(
+        app.world.send_event(BackpackInteractionEvent {
+            action: BackpackAction::TakeAll,
+            interactor_entity: player_entity,
             backpack_entity,
-            InteractionEvent::Backpack {
-                action: BackpackAction::TakeAll,
-            },
-        );
+        });
         app.update();
 
         // then
@@ -157,15 +153,13 @@ mod tests {
             .world
             .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
             .id();
-        let mut interactor = app.get_mut::<Interactor>(player_entity);
 
         // when
-        interactor.interact_with(
+        app.world.send_event(BackpackInteractionEvent {
+            action: BackpackAction::TakeItem(item_entity_2),
+            interactor_entity: player_entity,
             backpack_entity,
-            InteractionEvent::Backpack {
-                action: BackpackAction::TakeItem(item_entity_2),
-            },
-        );
+        });
         app.update();
 
         // then
@@ -183,23 +177,13 @@ mod tests {
 
     fn setup() -> (App, Entity) {
         let mut app = App::new();
-        app.init_time();
-        app.add_event::<BackpackInteractionEvent>();
-        app.add_event::<DoorInteractionEvent>();
-        app.register_component_as::<dyn Interactive, Backpack>();
-        app.add_systems(
-            Update,
-            (
-                interaction_system,
-                backpack_interaction_event_system,
-                despawn_backpack_system,
-            )
-                .chain(),
-        );
-        let player_entity = app
-            .world
-            .spawn((Player, Interactor::default(), Inventory::default()))
-            .id();
+        app.init_time()
+            .add_event::<BackpackInteractionEvent>()
+            .add_systems(
+                Update,
+                (backpack_interaction_event_system, despawn_backpack_system).chain(),
+            );
+        let player_entity = app.world.spawn((Player, Inventory::default())).id();
         (app, player_entity)
     }
 }

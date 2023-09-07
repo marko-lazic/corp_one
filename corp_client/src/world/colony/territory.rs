@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_trait_query::RegisterExt;
-use corp_shared::prelude::{Interactive, TerritoryNode};
+
+use corp_shared::prelude::{InteractionEvent, UseTerritoryNodeEvent};
 
 use crate::{
     state::GameState,
@@ -17,12 +17,16 @@ pub struct TerritoryNodePlugin;
 impl Plugin for TerritoryNodePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PickingEvent<TerritoryNodePickingEvent>>()
-            .register_component_as::<dyn Interactive, TerritoryNode>()
+            .add_event::<InteractionEvent<UseTerritoryNodeEvent>>()
             .add_systems(
                 Update,
-                (receive_territory_node_pickings
-                    .run_if(on_event::<PickingEvent<TerritoryNodePickingEvent>>()))
-                .run_if(in_state(GameState::Playing)),
+                (
+                    receive_territory_node_pickings
+                        .run_if(on_event::<PickingEvent<TerritoryNodePickingEvent>>()),
+                    territory_interaction_system
+                        .run_if(on_event::<InteractionEvent<UseTerritoryNodeEvent>>()),
+                )
+                    .run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -37,5 +41,13 @@ fn receive_territory_node_pickings(
         } else if event.mode == Hover::Out {
             r_use_target.set(None);
         }
+    }
+}
+
+fn territory_interaction_system(
+    mut ev_interaction: EventReader<InteractionEvent<UseTerritoryNodeEvent>>,
+) {
+    for event in ev_interaction.iter() {
+        info!("Interaction with territory node: {:?}", event.target);
     }
 }

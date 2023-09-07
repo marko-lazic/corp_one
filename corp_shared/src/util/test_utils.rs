@@ -11,6 +11,8 @@ pub trait TestUtils {
     fn get<C: Component>(&self, entity: Entity) -> &C;
     fn get_mut<C: Component>(&mut self, entity: Entity) -> Mut<C>;
     fn has_component<C: Component>(&self, entity: Entity) -> bool;
+
+    fn get_resource<R: Resource>(&self) -> &R;
     fn get_resource_mut<R: Resource>(&mut self) -> Mut<R>;
     fn set_state<S: States>(&mut self, state: S) -> &mut Self;
 }
@@ -54,6 +56,10 @@ impl TestUtils for App {
 
     fn has_component<C: Component>(&self, entity: Entity) -> bool {
         self.world.get::<C>(entity).is_some()
+    }
+
+    fn get_resource<R: Resource>(&self) -> &R {
+        self.world.get_resource::<R>().unwrap()
     }
 
     fn get_resource_mut<R: Resource>(&mut self) -> Mut<R> {

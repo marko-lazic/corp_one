@@ -5,10 +5,7 @@ use bevy_mod_picking::prelude::*;
 
 use corp_shared::prelude::*;
 
-use crate::{
-    state::GameState,
-    world::colony::{barrier::BarrierPlugin, territory::TerritoryNodePlugin},
-};
+use crate::world::colony::{barrier::BarrierPlugin, territory::TerritoryNodePlugin};
 
 #[derive(Event)]
 pub struct PickingEvent<E> {
@@ -49,10 +46,6 @@ impl Plugin for ObjectInteractionPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BackpackInteractionEvent>() // Does not have plugin ATM
             .add_plugins(BarrierPlugin)
-            .add_plugins(TerritoryNodePlugin)
-            .add_systems(
-                Update,
-                interaction_system.run_if(in_state(GameState::Playing)),
-            );
+            .add_plugins(TerritoryNodePlugin);
     }
 }

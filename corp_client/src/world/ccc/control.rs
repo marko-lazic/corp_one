@@ -1,7 +1,9 @@
 use bevy::{app::AppExit, prelude::*, reflect::TypePath};
 use leafwing_input_manager::prelude::*;
 
-use corp_shared::prelude::{Health, Interactor, Player};
+use corp_shared::prelude::{
+    Health, InteractionEvent, InteractionObjectType, Player, UseDoorEvent, UseTerritoryNodeEvent,
+};
 
 use crate::{
     asset::Colony,
@@ -142,22 +144,22 @@ impl Plugin for ControlPlugin {
 }
 
 fn double_tap_to_exit(
-    action_state: Res<ActionState<ControlAction>>,
-    time: Res<Time>,
-    mut app_exit_events: EventWriter<AppExit>,
-    mut double_tap: Local<DoubleTap>,
+    r_action_state: Res<ActionState<ControlAction>>,
+    r_time: Res<Time>,
+    mut ev_exit_app: EventWriter<AppExit>,
+    mut l_double_tap: Local<DoubleTap>,
 ) {
-    if action_state.just_pressed(ControlAction::Escape) {
-        double_tap.increment();
+    if r_action_state.just_pressed(ControlAction::Escape) {
+        l_double_tap.increment();
     }
-    double_tap
-        .tick(time.delta())
-        .on_complete(|| app_exit_events.send(AppExit));
+    l_double_tap
+        .tick(r_time.delta())
+        .on_complete(|| ev_exit_app.send(AppExit));
 }
 
 fn update_cursor_world(
-    windows: Query<&Window>,
-    mut cursor_world: ResMut<CursorWorld>,
+    q_windows: Query<&Window>,
+    mut r_cursor_world: ResMut<CursorWorld>,
     q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut q_orientation: Query<&mut OrientationMode, With<Player>>,
@@ -170,7 +172,7 @@ fn update_cursor_world(
         return;
     };
 
-    let ray = windows
+    let ray = q_windows
         .single()
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
@@ -184,7 +186,7 @@ fn update_cursor_world(
         return;
     };
     let mouse_ground_pos = ray.get_point(distance);
-    cursor_world.0 = mouse_ground_pos;
+    r_cursor_world.0 = mouse_ground_pos;
 
     for mut orientation_mode in &mut q_orientation {
         if let OrientationMode::Location(_) = *orientation_mode {
@@ -195,7 +197,7 @@ fn update_cursor_world(
 }
 
 fn player_control_movement(
-    action_state: Res<ActionState<ControlAction>>,
+    r_action_state: Res<ActionState<ControlAction>>,
     q_camera: Query<&Transform, With<MainCamera>>,
     mut q_movement: Query<&mut ControlMovement, With<Player>>,
 ) {
@@ -220,16 +222,16 @@ fn player_control_movement(
         return;
     };
     let mut direction = Vec3::ZERO;
-    if action_state.pressed(ControlAction::Forward) {
+    if r_action_state.pressed(ControlAction::Forward) {
         direction -= cam_forward;
     }
-    if action_state.pressed(ControlAction::Backward) {
+    if r_action_state.pressed(ControlAction::Backward) {
         direction += cam_forward;
     }
-    if action_state.pressed(ControlAction::Left) {
+    if r_action_state.pressed(ControlAction::Left) {
         direction -= cam_right;
     }
-    if action_state.pressed(ControlAction::Right) {
+    if r_action_state.pressed(ControlAction::Right) {
         direction += cam_right;
     }
 
@@ -237,15 +239,15 @@ fn player_control_movement(
 }
 
 fn player_control_orientation(
-    cursor_world: Res<CursorWorld>,
-    action_state: Res<ActionState<ControlAction>>,
+    r_cursor_world: Res<CursorWorld>,
+    r_action_state: Res<ActionState<ControlAction>>,
     mut q_orientation: Query<&mut OrientationMode, With<Player>>,
 ) {
-    if action_state.just_pressed(ControlAction::OrientationMode) {
+    if r_action_state.just_pressed(ControlAction::OrientationMode) {
         for mut orientation_mode in &mut q_orientation {
             *orientation_mode = match *orientation_mode {
                 OrientationMode::Direction => {
-                    OrientationMode::Location(Vec2::new(cursor_world.x, cursor_world.z))
+                    OrientationMode::Location(Vec2::new(r_cursor_world.x, r_cursor_world.z))
                 }
                 OrientationMode::Location(_) => OrientationMode::Direction,
             }
@@ -254,48 +256,66 @@ fn player_control_orientation(
 }
 
 fn use_event(
+    mut commands: Commands,
     r_use_entity: Res<UseEntity>,
     r_player_entity: Res<PlayerEntity>,
     r_action_state: Res<ActionState<ControlAction>>,
-    mut q_interactor: Query<&mut Interactor>,
+    q_interaction_object: Query<&InteractionObjectType>,
 ) {
     if r_action_state.just_pressed(ControlAction::Use) {
-        let Some(use_target) = r_use_entity.get() else {
-            return;
-        };
         let Some(player) = r_player_entity.get() else {
             return;
         };
-        let Ok(mut interactor) = q_interactor.get_mut(player) else {
+        let Some(use_target) = r_use_entity.get() else {
             return;
         };
-        interactor.interact(use_target);
+
+        let Ok(interaction_object) = q_interaction_object.get(use_target) else {
+            return;
+        };
+
+        match interaction_object {
+            InteractionObjectType::Door => {
+                commands.add(move |w: &mut World| {
+                    w.send_event(InteractionEvent::new(player, use_target, UseDoorEvent));
+                });
+            }
+            InteractionObjectType::TerritoryNode => {
+                commands.add(move |w: &mut World| {
+                    w.send_event(InteractionEvent::new(
+                        player,
+                        use_target,
+                        UseTerritoryNodeEvent,
+                    ));
+                });
+            }
+        }
     }
 }
 
 fn kill(
-    action_state: Res<ActionState<ControlAction>>,
-    mut healths: Query<&mut Health, With<Player>>,
+    r_action_state: Res<ActionState<ControlAction>>,
+    mut q_player_health: Query<&mut Health, With<Player>>,
 ) {
-    if action_state.just_pressed(ControlAction::Kill) {
-        if let Some(mut health) = healths.iter_mut().next() {
+    if r_action_state.just_pressed(ControlAction::Kill) {
+        if let Some(mut health) = q_player_health.iter_mut().next() {
             health.kill_mut();
         }
     }
 }
 
 fn toggle_window_cursor_visible(
-    action_state: Res<ActionState<ControlAction>>,
-    mut windows: Query<&mut Window>,
+    r_action_state: Res<ActionState<ControlAction>>,
+    mut q_windows: Query<&mut Window>,
 ) {
-    if action_state.just_pressed(ControlAction::Escape) {
-        let mut window = windows.single_mut();
+    if r_action_state.just_pressed(ControlAction::Escape) {
+        let mut window = q_windows.single_mut();
         window.cursor.visible = !window.cursor.visible;
     }
 }
 
-fn enable_cursor_visible(mut windows: Query<&mut Window>) {
-    let mut window = windows.single_mut();
+fn enable_cursor_visible(mut q_windows: Query<&mut Window>) {
+    let mut window = q_windows.single_mut();
     window.cursor.visible = true;
 }
 

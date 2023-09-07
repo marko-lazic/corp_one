@@ -75,7 +75,6 @@ fn setup_player(
             SpatialBundle::from_transform(player_transform),
             MovementBundle::default(),
             MainCameraFollow,
-            Interactor::default(),
             MemberOf {
                 faction: Faction::EC,
                 rank: Rank::R6,

@@ -66,17 +66,7 @@ impl Default for Door {
     }
 }
 
-impl Interactive for Door {
-    fn interaction_type(&self) -> InteractionType {
-        InteractionType::Door
-    }
-}
-
-#[derive(Event)]
-pub struct DoorInteractionEvent {
-    pub door_entity: Entity,
-    pub interactor_entity: Entity,
-}
+pub struct UseDoorEvent;
 
 #[derive(Event)]
 pub struct DoorHackEvent {
@@ -98,35 +88,37 @@ impl DoorStateEvent {
 }
 
 pub fn door_cooldown_system(
-    mut door_state_event_writer: EventWriter<DoorStateEvent>,
-    mut door_query: Query<(Entity, &mut Door)>,
-    time: Res<Time>,
+    mut ev_door_state: EventWriter<DoorStateEvent>,
+    mut q_entity_door: Query<(Entity, &mut Door)>,
+    r_time: Res<Time>,
 ) {
-    for (entity, mut door) in &mut door_query {
+    for (entity, mut door) in &mut q_entity_door {
         // If the door is currently open and the cooldown timer has expired, set the state to Closed
-        if door.state == DoorState::Open && door.open_cooldown.tick(time.delta()).just_finished() {
+        if door.state == DoorState::Open && door.open_cooldown.tick(r_time.delta()).just_finished()
+        {
             door.state = DoorState::Closed;
-            door_state_event_writer.send(DoorStateEvent(entity, DoorState::Closed));
+            ev_door_state.send(DoorStateEvent(entity, DoorState::Closed));
             door.open_cooldown.reset();
         }
 
         // If the door toggle cooldown timer has expired, allow the player to interact with the door again
         if !door.toggle_cooldown.finished() {
-            door.toggle_cooldown.tick(time.delta());
+            door.toggle_cooldown.tick(r_time.delta());
         }
     }
 }
 
 pub fn door_interaction_event_system(
-    mut door_interaction_event_reader: EventReader<DoorInteractionEvent>,
-    mut door_hack_event_writer: EventWriter<DoorHackEvent>,
-    mut door_state_event_writer: EventWriter<DoorStateEvent>,
-    interactor_query: Query<&MemberOf>,
-    mut door_query: Query<(&mut Door, &ControlRegistry)>,
+    mut ev_door_interaction: EventReader<InteractionEvent<UseDoorEvent>>,
+    mut ev_door_hack: EventWriter<DoorHackEvent>,
+    mut ev_door_state: EventWriter<DoorStateEvent>,
+    q_member_of: Query<&MemberOf>,
+    mut q_door_control_registry: Query<(&mut Door, &ControlRegistry)>,
 ) {
-    for event in door_interaction_event_reader.iter() {
-        if let Ok(member_of) = interactor_query.get(event.interactor_entity) {
-            if let Ok((mut door, control_registry)) = door_query.get_mut(event.door_entity) {
+    for event in ev_door_interaction.iter() {
+        if let Ok(member_of) = q_member_of.get(event.interactor) {
+            if let Ok((mut door, control_registry)) = q_door_control_registry.get_mut(event.target)
+            {
                 if let Some(control_type) = control_registry.get_control_type(&member_of.faction) {
                     match control_type {
                         ControlType::Permanent(_) => {
@@ -134,20 +126,18 @@ pub fn door_interaction_event_system(
                                 >= REQUIRED_RANK_BY_SECURITY.get(door.security())
                             {
                                 door.toggle();
-                                door_state_event_writer
-                                    .send(DoorStateEvent(event.door_entity, door.state()));
+                                ev_door_state.send(DoorStateEvent(event.target, door.state()));
                             }
                         }
                         ControlType::Hacked(_, _) => {
                             door.toggle();
-                            door_state_event_writer
-                                .send(DoorStateEvent(event.door_entity, door.state()));
+                            ev_door_state.send(DoorStateEvent(event.target, door.state()));
                         }
                     }
                 } else {
-                    door_hack_event_writer.send(DoorHackEvent {
-                        door_entity: event.door_entity,
-                        interactor_entity: event.interactor_entity,
+                    ev_door_hack.send(DoorHackEvent {
+                        door_entity: event.target,
+                        interactor_entity: event.interactor,
                     });
                 }
             }
@@ -156,24 +146,24 @@ pub fn door_interaction_event_system(
 }
 
 pub fn door_hack_event_system(
-    mut door_hack_event_reader: EventReader<DoorHackEvent>,
-    mut door_state_event_writer: EventWriter<DoorStateEvent>,
-    mut door_query: Query<(&mut Door, &mut ControlRegistry)>,
-    mut interactor_query: Query<(&mut Inventory, &MemberOf), With<Interactor>>,
-    hacking_tool_query: Query<&HackingTool>,
     mut commands: Commands,
+    mut ev_door_hack: EventReader<DoorHackEvent>,
+    mut ev_door_state: EventWriter<DoorStateEvent>,
+    mut q_door_control_registry: Query<(&mut Door, &mut ControlRegistry)>,
+    mut q_player_inventory_member_of: Query<(&mut Inventory, &MemberOf), With<Player>>,
+    q_hacking_tool: Query<&HackingTool>,
 ) {
-    for event in door_hack_event_reader.iter() {
+    for event in ev_door_hack.iter() {
         if let Ok((mut door, mut faction_ownership_registry)) =
-            door_query.get_mut(event.door_entity)
+            q_door_control_registry.get_mut(event.door_entity)
         {
             if let Ok((mut inventory, member_of)) =
-                interactor_query.get_mut(event.interactor_entity)
+                q_player_inventory_member_of.get_mut(event.interactor_entity)
             {
                 if let Some(hacking_tool_entity) = inventory
                     .items
                     .iter()
-                    .find(|&&item_entity| hacking_tool_query.get(item_entity).is_ok())
+                    .find(|&&item_entity| q_hacking_tool.get(item_entity).is_ok())
                     .copied()
                 {
                     inventory.remove_item(hacking_tool_entity);
@@ -186,7 +176,7 @@ pub fn door_hack_event_system(
                         ),
                     );
                     door.toggle();
-                    door_state_event_writer.send(DoorStateEvent(event.door_entity, door.state()));
+                    ev_door_state.send(DoorStateEvent(event.door_entity, door.state()));
                 }
             }
         }
@@ -198,7 +188,6 @@ mod tests {
     use std::time::Duration;
 
     use bevy::prelude::*;
-    use bevy_trait_query::RegisterExt;
 
     use crate::prelude::*;
 
@@ -243,8 +232,11 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -261,8 +253,11 @@ mod tests {
         let door_entity_2 = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity_1);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity_1,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -281,8 +276,11 @@ mod tests {
         app.get_mut::<Door>(door_entity).state = DoorState::Open;
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -298,11 +296,17 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update_after(Duration::from_secs_f32(3.0));
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -318,11 +322,17 @@ mod tests {
         let player_entity = setup_player(&mut app, vec![], Faction::EC, Rank::R6);
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update_after(Duration::from_secs_f32(0.5));
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update_after(Duration::from_secs_f32(0.1));
 
         // then
@@ -340,8 +350,11 @@ mod tests {
 
         // when
         for _ in 0..3 {
-            app.get_mut::<Interactor>(player_entity)
-                .interact(door_entity);
+            app.world.send_event(InteractionEvent::new(
+                player_entity,
+                door_entity,
+                UseDoorEvent,
+            ));
             app.update_after(Duration::from_secs_f32(2.0));
         }
 
@@ -361,8 +374,11 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -383,8 +399,11 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.get_mut::<Interactor>(cmg_player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            cmg_player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -400,8 +419,11 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::CMG, Security::High);
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -419,8 +441,11 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::CMG, Security::Low);
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -436,14 +461,20 @@ mod tests {
         let player_entity =
             setup_player(&mut app, vec![hacking_tool_entity], Faction::EC, Rank::R1);
         let door_entity = setup_door(&mut app, Faction::VI, Security::Medium);
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
         app.update_after(Duration::from_secs_f32(2.0 * 60.0));
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -459,14 +490,20 @@ mod tests {
         let player_entity =
             setup_player(&mut app, vec![hacking_tool_entity], Faction::VI, Rank::R0);
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
         app.update_after(Duration::from_secs_f32(HACK_DURATION_FIVE_MIN));
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -482,8 +519,11 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -499,15 +539,21 @@ mod tests {
         let player_entity =
             setup_player(&mut app, vec![hacking_tool_entity], Faction::EC, Rank::R2);
         let door_entity = setup_door(&mut app, Faction::CMG, Security::Low);
-        app.get_mut::<Interactor>(player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
         app.update_after(Duration::from_secs_f32(10.0));
         let another_player_entity = setup_player(&mut app, vec![], Faction::EC, Rank::R0);
 
         // when
-        app.get_mut::<Interactor>(another_player_entity)
-            .interact(door_entity);
+        app.world.send_event(InteractionEvent::new(
+            another_player_entity,
+            door_entity,
+            UseDoorEvent,
+        ));
         app.update();
 
         // then
@@ -518,17 +564,15 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time();
-        app.add_event::<DoorInteractionEvent>();
+        app.add_event::<InteractionEvent<UseDoorEvent>>();
         app.add_event::<BackpackInteractionEvent>();
         app.add_event::<DoorHackEvent>();
         app.add_event::<DoorStateEvent>();
-        app.register_component_as::<dyn Interactive, Door>();
         app.add_systems(
             Update,
             (
                 door_cooldown_system,
                 process_temporary_faction_ownership_timers_system,
-                interaction_system,
                 door_interaction_event_system,
                 door_hack_event_system,
             )
@@ -540,12 +584,7 @@ mod tests {
     fn setup_player(app: &mut App, items: Vec<Entity>, faction: Faction, rank: Rank) -> Entity {
         let player_entity = app
             .world
-            .spawn((
-                Player,
-                Interactor::default(),
-                Inventory::new(items),
-                MemberOf { faction, rank },
-            ))
+            .spawn((Player, Inventory::new(items), MemberOf { faction, rank }))
             .id();
         player_entity
     }

@@ -1,29 +1,29 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::prelude::*;
 
-use corp_shared::prelude::{Interactor, Player};
+use crate::TargetEntity;
 
 pub fn cast_ray_system(
-    windows: Query<&Window, With<PrimaryWindow>>,
-    rapier_context: Res<RapierContext>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
-    mut interactor_query: Query<&mut Interactor, With<Player>>,
+    r_rapier_context: Res<RapierContext>,
+    mut r_target_entity: ResMut<TargetEntity>,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
+    q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
-    let window = windows.single();
+    let window = q_windows.single();
 
     let Some(cursor_position) = window.cursor_position() else {
         return;
     };
 
     // We will color in read the colliders hovered by the mouse.
-    for (camera, camera_transform) in &cameras {
+    for (camera, camera_transform) in &q_camera {
         // First, compute a ray from the mouse position.
         let Some(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
             return;
         };
 
         // Then cast the ray.
-        let hit = rapier_context.cast_ray(
+        let hit = r_rapier_context.cast_ray(
             ray.origin,
             ray.direction,
             f32::MAX,
@@ -32,10 +32,9 @@ pub fn cast_ray_system(
         );
 
         if let Some((entity, _toi)) = hit {
-            let Ok(mut interactor) = interactor_query.get_single_mut() else {
-                return;
-            };
-            interactor.interact(entity);
+            r_target_entity.0 = Some(entity);
+        } else {
+            r_target_entity.0 = None;
         }
     }
 }
@@ -48,15 +47,15 @@ mod tests {
         time::TimePlugin,
     };
 
-    use corp_shared::prelude::TestUtils;
+    use corp_shared::prelude::{Player, TestUtils};
 
     use super::*;
 
     #[test]
     fn test_ray_intersect_door() {
         let mut app = setup();
-        let _camera_entity = setup_camera(&mut app);
-        let player_entity = setup_player(&mut app);
+        setup_camera(&mut app);
+        setup_player(&mut app);
         let door_entity = setup_door(&mut app);
 
         let mut query = app.world.query::<&mut Window>();
@@ -67,9 +66,8 @@ mod tests {
         app.update();
         app.update();
 
-        let interactor = app.get::<Interactor>(player_entity);
-        assert!(interactor.target_entity.is_some());
-        assert_eq!(interactor.target_entity.unwrap(), door_entity);
+        let target_entity = app.get_resource::<TargetEntity>();
+        assert_eq!(target_entity.0, Some(door_entity));
     }
 
     fn setup() -> App {
@@ -79,8 +77,9 @@ mod tests {
             TransformPlugin,
             TimePlugin,
             RapierPhysicsPlugin::<NoUserData>::default(),
-        ));
-        app.add_systems(Update, cast_ray_system);
+        ))
+        .init_resource::<TargetEntity>()
+        .add_systems(Update, cast_ray_system);
         app
     }
 
@@ -97,7 +96,7 @@ mod tests {
     }
 
     fn setup_player(app: &mut App) -> Entity {
-        let player_entity = app.world.spawn((Player, Interactor::default())).id();
+        let player_entity = app.world.spawn(Player).id();
         player_entity
     }
 
