@@ -1,5 +1,5 @@
 use bevy::{ecs::system::EntityCommands, log::info};
-use bevy_mod_picking::{backends::rapier::RapierPickTarget, prelude::*};
+use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use corp_shared::{
@@ -40,7 +40,6 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
         "BarrierControl11" | "BarrierControl12" => commands.insert((
             BarrierControl::new("B1"),
             PickableBundle::default(),
-            RapierPickTarget::default(),
             On::<Pointer<Over>>::send_event::<BarrierPickingEvent>(),
             On::<Pointer<Out>>::send_event::<BarrierPickingEvent>(),
             Despawn,
@@ -54,7 +53,6 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
         "BarrierControl21" | "BarrierControl22" => commands.insert((
             BarrierControl::new("B2"),
             PickableBundle::default(),
-            RapierPickTarget::default(),
             On::<Pointer<Over>>::send_event::<BarrierPickingEvent>(),
             On::<Pointer<Out>>::send_event::<BarrierPickingEvent>(),
             Despawn,
@@ -65,7 +63,6 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
                 security: Security::Low,
             },
             PickableBundle::default(),
-            RapierPickTarget::default(),
             On::<Pointer<Over>>::send_event::<TerritoryNodePickingEvent>(),
             On::<Pointer<Out>>::send_event::<TerritoryNodePickingEvent>(),
             Despawn,

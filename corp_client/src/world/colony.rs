@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use bevy_mod_picking::{backends::rapier::RapierPickTarget, prelude::*};
+use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 
@@ -111,7 +111,6 @@ fn setup_debug_plane(
         },
         Collider::cuboid(2.6, 2.6, 2.6),
         PickableBundle::default(),
-        RapierPickTarget::default(),
         On::<Pointer<Click>>::run(|event: Listener<Pointer<Click>>| {
             info!("Clicked on entity {:?}", event.target);
         }),

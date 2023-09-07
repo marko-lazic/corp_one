@@ -1,6 +1,6 @@
 use bevy::{input::common_conditions::input_toggle_active, prelude::*};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_mod_picking::{backends::rapier::RapierPickTarget, prelude::*, DefaultPickingPlugins};
+use bevy_mod_picking::{prelude::*, DefaultPickingPlugins};
 use bevy_rapier3d::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
@@ -46,7 +46,6 @@ fn loading(
         },
         Collider::cuboid(2.5, 2.5, 2.5),
         PickableBundle::default(),
-        RapierPickTarget::default(),
         On::<Pointer<Click>>::run(|event: Listener<Pointer<Click>>| {
             info!("Clicked on entity {:?}", event.target);
         }),
