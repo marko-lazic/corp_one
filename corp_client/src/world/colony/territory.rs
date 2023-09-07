@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_eventlistener::callbacks::ListenerInput;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
@@ -7,21 +6,30 @@ use crate::{
     world::{ccc::UseEntity, colony::colony_interaction::Hover},
 };
 
-#[derive(Event)]
-pub struct TerritoryNodePickingEvent(Entity, Hover);
+#[derive(Clone, Event, EntityEvent)]
+pub struct TerritoryNodePickingEvent {
+    #[target]
+    target: Entity,
+    mode: Hover,
+}
 
 impl From<ListenerInput<Pointer<Over>>> for TerritoryNodePickingEvent {
     fn from(event: ListenerInput<Pointer<Over>>) -> Self {
-        TerritoryNodePickingEvent(event.target, Hover::Over)
+        TerritoryNodePickingEvent {
+            target: event.target,
+            mode: Hover::Over,
+        }
     }
 }
 
 impl From<ListenerInput<Pointer<Out>>> for TerritoryNodePickingEvent {
     fn from(event: ListenerInput<Pointer<Out>>) -> Self {
-        TerritoryNodePickingEvent(event.target, Hover::Out)
+        TerritoryNodePickingEvent {
+            target: event.target,
+            mode: Hover::Out,
+        }
     }
 }
-
 pub struct TerritoryNodePlugin;
 
 impl Plugin for TerritoryNodePlugin {
@@ -39,9 +47,9 @@ fn receive_territory_node_pickings(
     mut r_use_target: ResMut<UseEntity>,
 ) {
     for event in pickings.iter() {
-        if event.1 == Hover::Over {
-            r_use_target.set(Some(event.0));
-        } else if event.1 == Hover::Out {
+        if event.mode == Hover::Over {
+            r_use_target.set(Some(event.target));
+        } else if event.mode == Hover::Out {
             r_use_target.set(None);
         }
     }

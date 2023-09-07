@@ -1,5 +1,4 @@
 use bevy::{app::Plugin, prelude::*};
-use bevy_eventlistener::callbacks::ListenerInput;
 use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::ColliderDisabled;
 
@@ -11,18 +10,28 @@ use crate::{
     App,
 };
 
-#[derive(Event)]
-pub struct BarrierPickingEvent(Entity, Hover);
+#[derive(Clone, Event, EntityEvent)]
+pub struct BarrierPickingEvent {
+    #[target]
+    target: Entity,
+    mode: Hover,
+}
 
 impl From<ListenerInput<Pointer<Over>>> for BarrierPickingEvent {
     fn from(event: ListenerInput<Pointer<Over>>) -> Self {
-        BarrierPickingEvent(event.target, Hover::Over)
+        BarrierPickingEvent {
+            target: event.target,
+            mode: Hover::Over,
+        }
     }
 }
 
 impl From<ListenerInput<Pointer<Out>>> for BarrierPickingEvent {
     fn from(event: ListenerInput<Pointer<Out>>) -> Self {
-        BarrierPickingEvent(event.target, Hover::Out)
+        BarrierPickingEvent {
+            target: event.target,
+            mode: Hover::Out,
+        }
     }
 }
 
@@ -111,8 +120,8 @@ pub fn receive_barrier_pickings(
     q_barrier_field: Query<(Entity, &BarrierField)>,
 ) {
     for event in pickings.iter() {
-        if event.1 == Hover::Over {
-            let Ok(barrier_control) = q_barrier_control.get(event.0) else {
+        if event.mode == Hover::Over {
+            let Ok(barrier_control) = q_barrier_control.get(event.target) else {
                 return;
             };
 
@@ -124,7 +133,7 @@ pub fn receive_barrier_pickings(
                 return;
             };
             r_use_target.set(Some(target_barrier));
-        } else if event.1 == Hover::Out {
+        } else if event.mode == Hover::Out {
             r_use_target.set(None);
         }
     }

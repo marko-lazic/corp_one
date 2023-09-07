@@ -8,7 +8,7 @@ use crate::{
     world::colony::{barrier::BarrierPlugin, territory::TerritoryNodePlugin},
 };
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Hover {
     Over,
     Out,
