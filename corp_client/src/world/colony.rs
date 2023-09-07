@@ -9,7 +9,7 @@ use crate::{
     state::{Despawn, GameState},
     world::{
         colony::{
-            colony_interaction::ColonyInteractionPlugin,
+            object_interaction::ObjectInteractionPlugin,
             vortex::{VortexNode, VortexPlugin},
             zone::Zone,
         },
@@ -18,7 +18,7 @@ use crate::{
 };
 
 pub mod barrier;
-mod colony_interaction;
+mod object_interaction;
 mod scene_hook;
 pub mod territory;
 pub mod vortex;
@@ -36,7 +36,7 @@ impl Plugin for ColonyPlugin {
         app.init_resource::<ColonyStore>()
             .add_plugins((
                 VortexPlugin,
-                ColonyInteractionPlugin,
+                ObjectInteractionPlugin,
                 HookPlugin,
                 RonAssetPlugin::<ColonyConfig>::new(&["colony"]),
                 DefaultPickingPlugins,

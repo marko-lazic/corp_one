@@ -1,39 +1,19 @@
 use bevy::{app::Plugin, prelude::*};
-use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::ColliderDisabled;
+use bevy_trait_query::RegisterExt;
 
 use corp_shared::prelude::*;
 
 use crate::{
     state::GameState,
-    world::{ccc::UseEntity, colony::colony_interaction::Hover},
+    world::{
+        ccc::UseEntity,
+        colony::object_interaction::{Hover, PickingEvent},
+    },
     App,
 };
 
-#[derive(Clone, Event, EntityEvent)]
-pub struct BarrierPickingEvent {
-    #[target]
-    target: Entity,
-    mode: Hover,
-}
-
-impl From<ListenerInput<Pointer<Over>>> for BarrierPickingEvent {
-    fn from(event: ListenerInput<Pointer<Over>>) -> Self {
-        BarrierPickingEvent {
-            target: event.target,
-            mode: Hover::Over,
-        }
-    }
-}
-
-impl From<ListenerInput<Pointer<Out>>> for BarrierPickingEvent {
-    fn from(event: ListenerInput<Pointer<Out>>) -> Self {
-        BarrierPickingEvent {
-            target: event.target,
-            mode: Hover::Out,
-        }
-    }
-}
+pub struct BarrierPickingEvent;
 
 #[derive(Component, Default, Debug)]
 pub struct BarrierControl {
@@ -65,14 +45,16 @@ pub struct BarrierPlugin;
 
 impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<BarrierPickingEvent>()
+        app.add_event::<PickingEvent<BarrierPickingEvent>>()
+            .register_component_as::<dyn Interactive, Door>()
             .add_event::<DoorInteractionEvent>()
             .add_event::<DoorHackEvent>()
             .add_event::<DoorStateEvent>()
             .add_systems(
                 Update,
                 (
-                    receive_barrier_pickings.run_if(on_event::<BarrierPickingEvent>()),
+                    receive_barrier_pickings
+                        .run_if(on_event::<PickingEvent<BarrierPickingEvent>>()),
                     open_close_barrier,
                 )
                     .run_if(in_state(GameState::Playing)),
@@ -114,7 +96,7 @@ fn open_close_barrier(
 }
 
 pub fn receive_barrier_pickings(
-    mut pickings: EventReader<BarrierPickingEvent>,
+    mut pickings: EventReader<PickingEvent<BarrierPickingEvent>>,
     mut r_use_target: ResMut<UseEntity>,
     q_barrier_control: Query<&BarrierControl>,
     q_barrier_field: Query<(Entity, &BarrierField)>,

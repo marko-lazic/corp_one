@@ -12,6 +12,7 @@ use crate::{
     world::{
         colony::{
             barrier::{BarrierControl, BarrierField, BarrierPickingEvent},
+            object_interaction::PickingEvent,
             territory::TerritoryNodePickingEvent,
             vortex::{VortexGate, VortexNode},
         },
@@ -40,8 +41,8 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
         "BarrierControl11" | "BarrierControl12" => commands.insert((
             BarrierControl::new("B1"),
             PickableBundle::default(),
-            On::<Pointer<Over>>::send_event::<BarrierPickingEvent>(),
-            On::<Pointer<Out>>::send_event::<BarrierPickingEvent>(),
+            On::<Pointer<Over>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
+            On::<Pointer<Out>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
             Despawn,
         )),
 
@@ -53,8 +54,8 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
         "BarrierControl21" | "BarrierControl22" => commands.insert((
             BarrierControl::new("B2"),
             PickableBundle::default(),
-            On::<Pointer<Over>>::send_event::<BarrierPickingEvent>(),
-            On::<Pointer<Out>>::send_event::<BarrierPickingEvent>(),
+            On::<Pointer<Over>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
+            On::<Pointer<Out>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
             Despawn,
         )),
         "EnergyNode1" => commands.insert((
@@ -63,8 +64,8 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
                 security: Security::Low,
             },
             PickableBundle::default(),
-            On::<Pointer<Over>>::send_event::<TerritoryNodePickingEvent>(),
-            On::<Pointer<Out>>::send_event::<TerritoryNodePickingEvent>(),
+            On::<Pointer<Over>>::send_event::<PickingEvent<TerritoryNodePickingEvent>>(),
+            On::<Pointer<Out>>::send_event::<PickingEvent<TerritoryNodePickingEvent>>(),
             Despawn,
         )),
         "Plant Tree" => commands.insert(Despawn),
