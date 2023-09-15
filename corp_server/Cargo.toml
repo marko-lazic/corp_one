@@ -6,12 +6,10 @@ edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-bevy_app = { version = "0.11.2", default_features = false }
-bevy_core = { version = "0.11.2", default_features = false }
-bevy_ecs = { version = "0.11.2", default_features = false }
-bevy_time = { version = "0.11.2", default_features = false }
-bevy_log = { version = "0.11.2", default_features = false }
+bevy = { version = "0.11.2", default_features = false }
 bevy-tokio-tasks = "0.11.0"
-surrealdb = { version = "1.0.0-beta.9", features = ["kv-mem"] }
+surrealdb = { version = "1.0.0", features = ["kv-mem"] }
+surrealdb-migrations = { git = "https://github.com/johansmitsnl/surrealdb-migrations.git", rev = "db63c07" }
 once_cell = "1.18.0"
 serde = "1.0.183"
+dotenv = "0.15.0"
