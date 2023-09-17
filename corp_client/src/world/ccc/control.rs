@@ -7,6 +7,7 @@ use corp_shared::prelude::{
 
 use crate::{
     asset::Colony,
+    sound::InteractionSoundEvent,
     state::GameState,
     world::{
         ccc::{ControlMovement, DoubleTap, MainCamera, MainCameraFollow, OrientationMode},
@@ -261,6 +262,7 @@ fn use_event(
     r_player_entity: Res<PlayerEntity>,
     r_action_state: Res<ActionState<ControlAction>>,
     q_interaction_object: Query<&InteractionObjectType>,
+    mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
 ) {
     if r_action_state.just_pressed(ControlAction::Use) {
         let Some(player) = r_player_entity.get() else {
@@ -290,6 +292,8 @@ fn use_event(
                 });
             }
         }
+
+        ev_interaction_sound.send(InteractionSoundEvent);
     }
 }
 

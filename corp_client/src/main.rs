@@ -15,7 +15,7 @@ use crate::{
 
 mod asset;
 mod gui;
-mod sound;
+pub mod sound;
 pub mod state;
 pub mod util;
 mod world;

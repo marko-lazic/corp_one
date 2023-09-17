@@ -11,19 +11,30 @@ struct BackgroundMusic;
 #[derive(Resource)]
 struct RunSound;
 
+#[derive(Resource)]
+struct InteractionSound;
+
+#[derive(Event)]
+pub struct InteractionSoundEvent;
+
 pub struct SoundPlugin;
 
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(AudioPlugin)
+            .add_event::<InteractionSoundEvent>()
             .add_audio_channel::<BackgroundMusic>()
             .add_audio_channel::<RunSound>()
+            .add_audio_channel::<InteractionSound>()
             .add_systems(
-                OnEnter(GameState::Playing),
+                OnExit(GameState::Loading),
                 (setup_walk_sound, setup_background_music),
             )
-            .add_systems(Update, walk_sound.run_if(in_state(GameState::Playing)))
-            .add_systems(OnExit(GameState::Playing), stop_audio);
+            .add_systems(
+                Update,
+                (walk_sound, play_interaction_event).run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(OnExit(GameState::Playing), pause_loops);
     }
 }
 
@@ -44,8 +55,8 @@ fn setup_background_music(
         .with_volume(0.3);
 }
 
-fn stop_audio(audio: Res<Audio>) {
-    audio.stop();
+fn pause_loops(run: Res<AudioChannel<RunSound>>) {
+    run.pause();
 }
 
 fn walk_sound(
@@ -58,5 +69,18 @@ fn walk_sound(
         } else {
             run.pause().fade_out(AudioTween::default());
         }
+    }
+}
+
+fn play_interaction_event(
+    interaction: Res<AudioChannel<InteractionSound>>,
+    audio_assets: Res<AudioAssets>,
+    mut ev_interaction_sound: EventReader<InteractionSoundEvent>,
+) {
+    for _ev in &mut ev_interaction_sound {
+        interaction
+            .play(audio_assets.interaction_on.clone())
+            .fade_in(AudioTween::default())
+            .with_volume(0.3);
     }
 }

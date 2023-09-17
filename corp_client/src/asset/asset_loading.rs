@@ -48,6 +48,10 @@ pub struct AudioAssets {
     pub higher_than_possible: Handle<AudioSource>,
     #[asset(path = "sound/running.wav")]
     pub running: Handle<AudioSource>,
+    #[asset(path = "sound/future-sounds-4.wav")]
+    pub interaction_on: Handle<AudioSource>,
+    #[asset(path = "sound/future-sounds-9.wav")]
+    pub interaction_off: Handle<AudioSource>,
 }
 
 #[derive(Resource, AssetCollection)]
