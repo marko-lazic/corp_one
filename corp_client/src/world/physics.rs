@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{state::GameState, util::mesh_extension::MeshExt};
+use crate::{state::GameState, util::mesh_extension::MeshExt, world::shader::Shaders};
 
 pub struct PhysicsPlugin;
 
@@ -21,6 +21,7 @@ fn setup_colliders(
     children: Query<&Children>,
     meshes: Res<Assets<Mesh>>,
     mesh_handles: Query<&Handle<Mesh>>,
+    shaders: Res<Shaders>,
 ) {
     for (entity, name) in &added_name {
         if ["wall", "tree", "energynode"]
@@ -49,6 +50,15 @@ fn setup_colliders(
                 commands
                     .entity(collider_entity)
                     .insert((RigidBody::KinematicPositionBased, rapier_collider));
+
+                // Shaders should be refactored out of physics plugin
+                if name.to_lowercase().contains("barrierfield") {
+                    commands.entity(collider_entity).insert(MaterialMeshBundle {
+                        mesh: mesh_handles.get(collider_entity).unwrap().clone(),
+                        material: shaders.barrier.clone(),
+                        ..default()
+                    });
+                }
             }
         }
     }

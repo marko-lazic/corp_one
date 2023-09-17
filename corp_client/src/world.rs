@@ -6,6 +6,7 @@ use crate::world::{
     colony::{zone::ZonePlugin, ColonyPlugin},
     physics::PhysicsPlugin,
     player::PlayerPlugin,
+    shader::ShaderPlugin,
     star_map::StarMapPlugin,
     WorldSystemSet::{CameraSetup, PlayerSetup},
 };
@@ -16,6 +17,7 @@ mod cloning;
 pub mod colony;
 mod physics;
 pub mod player;
+mod shader;
 mod star_map;
 
 pub mod prelude {
@@ -38,6 +40,7 @@ impl Plugin for WorldPlugin {
                 brightness: 0.8,
             })
             .add_plugins((
+                ShaderPlugin,
                 PhysicsPlugin,
                 ColonyPlugin,
                 AnimatorPlugin,
