@@ -9,7 +9,8 @@ use bevy::{
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use crate::{
-    asset::AssetLoadingPlugin, gui::GuiPlugin, state::GameStatePlugin, world::WorldPlugin,
+    asset::AssetLoadingPlugin, gui::GuiPlugin, sound::SoundPlugin, state::GameStatePlugin,
+    world::WorldPlugin,
 };
 
 mod asset;
@@ -39,6 +40,7 @@ fn main() {
         .add_plugins((
             GameStatePlugin,
             AssetLoadingPlugin,
+            SoundPlugin,
             GuiPlugin,
             WorldPlugin,
             WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Grave)),

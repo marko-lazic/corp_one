@@ -44,10 +44,10 @@ pub struct FontAssets {
 
 #[derive(Resource, AssetCollection)]
 pub struct AudioAssets {
-    #[asset(path = "sound/slow-travel.wav")]
-    pub slow_travel: Handle<AudioSource>,
-    #[asset(path = "sound/walk.wav")]
-    pub walk: Handle<AudioSource>,
+    #[asset(path = "sound/andrewkn-higher-than-possible.ogg")]
+    pub higher_than_possible: Handle<AudioSource>,
+    #[asset(path = "sound/running.wav")]
+    pub running: Handle<AudioSource>,
 }
 
 #[derive(Resource, AssetCollection)]
