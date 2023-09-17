@@ -1,17 +1,19 @@
-struct BarrierMaterial {
- color: vec4<f32>,
-}
-
-@group(1) @binding(0)
-var<uniform> material: BarrierMaterial;
-
-struct FragmentInput {
-    @builtin(front_facing) is_front: bool,
-    @builtin(position) frag_coord: vec4<f32>,
-    #import bevy_pbr::mesh_vertex_output
-}
+#import bevy_pbr::mesh_vertex_output  MeshVertexOutput
+#import bevy_pbr::mesh_view_bindings  globals
 
 @fragment
-fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
-    return material.color;
+fn fragment(mesh: MeshVertexOutput) -> @location(0) vec4<f32> {
+    let pos = mesh.world_position.xyz;
+    let height = pos.y - 0.5;
+    let speed = 2.0;
+    let distance_from_top = sin(globals.time * speed) * 0.2 + 0.8;
+    let min_red = 0.0;
+    let max_red = 1.0;
+
+    let red = mix(max_red, min_red, height + distance_from_top);
+    let green = 1.0;
+    let blue = 0.7;
+    let alpha = 0.7;
+
+    return vec4<f32>(red, green, blue, alpha);
 }
