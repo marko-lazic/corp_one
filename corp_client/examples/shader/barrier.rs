@@ -54,14 +54,16 @@ fn setup(
         MainCamera,
     ));
     // cube
-    commands.spawn(MaterialMeshBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        material: custom_materials.add(CustomMaterial {
-            alpha_mode: AlphaMode::Blend,
+    commands.spawn(
+        (MaterialMeshBundle {
+            mesh: meshes.add(shape::Cube::new(1.0).into()),
+            transform: Transform::from_xyz(0.0, 0.5, 0.0),
+            material: custom_materials.add(CustomMaterial {
+                alpha_mode: AlphaMode::Blend,
+            }),
+            ..default()
         }),
-        ..default()
-    });
+    );
     // plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(shape::Plane::from_size(5.0).into()),

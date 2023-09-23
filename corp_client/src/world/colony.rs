@@ -104,7 +104,7 @@ fn setup_debug_plane(
     // spawn cube
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 5.0 })),
+            mesh: meshes.add(shape::Cube { size: 5.0 }.into()),
             material: materials.add(Color::WHITE.into()),
             transform: Transform::from_xyz(10., 0., 0.),
             ..Default::default()
@@ -120,10 +120,7 @@ fn setup_debug_plane(
     info!("Setup debug plane");
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane {
-                size: 100.0,
-                ..default()
-            })),
+            mesh: meshes.add(shape::Plane::from_size(100.0).into()),
             transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
             material: materials.add(StandardMaterial {
                 base_color: Color::WHITE,
@@ -152,10 +149,7 @@ fn setup_zones(
         for zone_asset in &colony_asset.zones {
             commands.spawn((
                 PbrBundle {
-                    mesh: r_mesh_assets.add(Mesh::from(shape::Plane {
-                        size: zone_asset.size,
-                        ..default()
-                    })),
+                    mesh: r_mesh_assets.add(shape::Plane::from_size(zone_asset.size).into()),
                     transform: Transform::from_translation(zone_asset.position),
                     material: r_material_assets.get_material(&zone_asset.material),
                     ..Default::default()
