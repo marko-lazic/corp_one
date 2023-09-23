@@ -60,6 +60,10 @@ name = "barrier"
 path = "examples/shader/barrier.rs"
 
 [[example]]
+name = "starfield"
+path = "examples/shader/starfield.rs"
+
+[[example]]
 name = "clamp"
 path = "examples/transform/clamp.rs"
 

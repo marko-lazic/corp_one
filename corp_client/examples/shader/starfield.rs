@@ -24,11 +24,11 @@ fn main() {
                     }),
                     ..default()
                 }),
-            MaterialPlugin::<CustomMaterial>::default(),
+            MaterialPlugin::<StarfieldMaterial>::default(),
             PanOrbitCameraPlugin,
         ))
         .add_systems(Startup, setup)
-        .add_systems(Update, rotate_camera)
+        .add_systems(Update, (rotate_camera, update_starfield))
         .run();
 }
 
@@ -38,7 +38,7 @@ struct MainCamera;
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut custom_materials: ResMut<Assets<CustomMaterial>>,
+    mut custom_materials: ResMut<Assets<StarfieldMaterial>>,
     mut standard_materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn(PointLightBundle {
@@ -57,8 +57,9 @@ fn setup(
     commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(shape::Cube::new(1.0).into()),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        material: custom_materials.add(CustomMaterial {
-            alpha_mode: AlphaMode::Blend,
+        material: custom_materials.add(StarfieldMaterial {
+            mouse: Vec2::new(0.0, 0.0),
+            speed2: 0.2,
         }),
         ..default()
     });
@@ -86,18 +87,35 @@ fn rotate_camera(
     }
 }
 
-#[derive(AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
-#[uuid = "b62bb455-a72c-4b56-87bb-81e0554e234f"]
-pub struct CustomMaterial {
-    alpha_mode: AlphaMode,
+fn update_starfield(
+    material_handle: Query<&Handle<StarfieldMaterial>>,
+    mut materials: ResMut<Assets<StarfieldMaterial>>,
+    primary_query: Query<&Window>,
+) {
+    let Ok(primary) = primary_query.get_single() else {
+        return;
+    };
+
+    let handle = material_handle.single();
+    let mat = materials.get_mut(handle).unwrap();
+
+    if let Some(position) = primary.cursor_position() {
+        mat.mouse.x = position.x;
+        mat.mouse.y = position.y;
+    }
 }
 
-impl Material for CustomMaterial {
-    fn fragment_shader() -> ShaderRef {
-        "shaders/barrier.wgsl".into()
-    }
+#[derive(AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
+#[uuid = "ca6d82f5-b686-43cc-8f48-f931b4cefe09"]
+pub struct StarfieldMaterial {
+    #[uniform(0)]
+    mouse: Vec2,
+    #[uniform(0)]
+    speed2: f32,
+}
 
-    fn alpha_mode(&self) -> AlphaMode {
-        self.alpha_mode
+impl Material for StarfieldMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/starfield.wgsl".into()
     }
 }
