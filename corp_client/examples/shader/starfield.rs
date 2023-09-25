@@ -116,6 +116,6 @@ pub struct StarfieldMaterial {
 
 impl Material for StarfieldMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/starfield.wgsl".into()
+        "shaders_ex/starfield_ex.wgsl".into()
     }
 }
