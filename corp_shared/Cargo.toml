@@ -5,5 +5,5 @@ authors = ["Marko Lazić <marko.lazic@comyno.com>"]
 edition = "2021"
 
 [dependencies]
-bevy = "0.11"
+bevy = { workspace = true }
 lazy_static = "1.4.0"

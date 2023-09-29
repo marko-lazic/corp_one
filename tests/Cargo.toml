@@ -10,7 +10,7 @@ autobenches = false
 
 [dependencies]
 unicode-segmentation = "1.9.0"
-bevy = "0.11"
+bevy = { workspace = true }
 
 [[test]]
 name = "integration"

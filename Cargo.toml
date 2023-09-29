@@ -17,3 +17,6 @@ default-members = [
     "corp_shared",
     "tests",
 ]
+
+[workspace.dependencies]
+bevy = "0.11.2"

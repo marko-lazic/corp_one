@@ -20,7 +20,7 @@ pub struct BarrierMaterial {
 
 impl Material for BarrierMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/barrier_ex.wgsl".into()
+        "shaders/barrier.wgsl".into()
     }
 
     fn alpha_mode(&self) -> AlphaMode {
