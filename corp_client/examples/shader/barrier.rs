@@ -24,8 +24,9 @@ fn main() {
                     }),
                     ..default()
                 }),
-            MaterialPlugin::<CustomMaterial>::default(),
+            MaterialPlugin::<DistortionMaterial>::default(),
             PanOrbitCameraPlugin,
+            // BarrierPipelinePlugin,
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, rotate_camera)
@@ -37,8 +38,9 @@ struct MainCamera;
 
 fn setup(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut custom_materials: ResMut<Assets<CustomMaterial>>,
+    mut custom_materials: ResMut<Assets<DistortionMaterial>>,
     mut standard_materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn(PointLightBundle {
@@ -57,9 +59,15 @@ fn setup(
     commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(shape::Cube::new(1.0).into()),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        material: custom_materials.add(CustomMaterial {
-            alpha_mode: AlphaMode::Blend,
-        }),
+        // material: custom_materials.add(CustomMaterial {
+        //     fragment_uniforms: Default::default(),
+        //     vertex_uniforms: Default::default(),
+        //     alpha_mode: AlphaMode::Blend,
+        //     noise_view_x: Some(asset_server.load("shaders_ex/noise/noise_texture_1.png")),
+        //     noise_view_y: Some(asset_server.load("shaders_ex/noise/noise_texture_2.png")),
+        //     noise_vertex: Some(asset_server.load("shaders_ex/noise/noise_texture_3.png")),
+        // }
+        material: custom_materials.add(DistortionMaterial {}),
         ..default()
     });
     // plane
@@ -86,18 +94,117 @@ fn rotate_camera(
     }
 }
 
-#[derive(AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
-#[uuid = "b62bb455-a72c-4b56-87bb-81e0554e234f"]
-pub struct CustomMaterial {
+#[derive(AsBindGroup, TypeUuid, TypePath, Debug, Clone)]
+#[uuid = "878acc0e-9933-4b48-87c7-5326d3484d87"]
+pub struct DistortionMaterial {
+    #[uniform(0)]
+    fragment_uniforms: FragmentUniforms,
+    #[uniform(0)]
+    vertex_uniforms: VertexUniforms,
     alpha_mode: AlphaMode,
+    #[texture(1)]
+    #[sampler(2)]
+    pub noise_view_x: Option<Handle<Image>>,
+    #[texture(3)]
+    #[sampler(4)]
+    pub noise_view_y: Option<Handle<Image>>,
+    #[texture(5)]
+    #[sampler(6)]
+    pub noise_vertex: Option<Handle<Image>>,
 }
 
-impl Material for CustomMaterial {
+impl Material for DistortionMaterial {
+    // fn vertex_shader() -> ShaderRef {
+    //     "shaders_ex/barrier_ex.wgsl".into()
+    // }
     fn fragment_shader() -> ShaderRef {
-        "shaders_ex/barrier_ex.wgsl".into()
+        "shaders_ex/barrier_ex3.wgsl".into()
     }
 
-    fn alpha_mode(&self) -> AlphaMode {
-        self.alpha_mode
+    // fn alpha_mode(&self) -> AlphaMode {
+    //     self.alpha_mode
+    // }
+}
+
+#[derive(Debug, Clone, ShaderType)]
+pub struct FragmentUniforms {
+    distortion_view: f32,
+    speed_view: f32,
+    fesnel_amount: f32,
+    tint_color: Color,
+}
+
+impl Default for FragmentUniforms {
+    fn default() -> Self {
+        FragmentUniforms {
+            distortion_view: 0.3,
+            speed_view: 0.5,
+            fesnel_amount: 0.0,
+            tint_color: Color::rgb(0.0, 0.0, 1.0),
+        }
+    }
+}
+
+#[derive(Debug, Clone, ShaderType)]
+struct VertexUniforms {
+    distortion_vertex: f32,
+    speed_vertex: f32,
+}
+
+impl Default for VertexUniforms {
+    fn default() -> Self {
+        VertexUniforms {
+            distortion_vertex: 0.03,
+            speed_vertex: 0.1,
+        }
+    }
+}
+
+#[derive(Resource)]
+pub struct BarrierPipeline {
+    texture_bind_group: BindGroupLayout,
+}
+
+impl FromWorld for BarrierPipeline {
+    fn from_world(render_world: &mut World) -> Self {
+        let texture_bind_group = render_world
+            .resource::<RenderDevice>()
+            .create_bind_group_layout(&BindGroupLayoutDescriptor {
+                label: Some("barrier_texture_bind_group_layout"),
+                entries: &[
+                    BindGroupLayoutEntry {
+                        binding: 7,
+                        visibility: ShaderStages::FRAGMENT,
+                        ty: BindingType::Texture {
+                            sample_type: TextureSampleType::Float { filterable: true },
+                            view_dimension: TextureViewDimension::D2,
+                            multisampled: false,
+                        },
+                        count: None,
+                    },
+                    BindGroupLayoutEntry {
+                        binding: 8,
+                        visibility: ShaderStages::FRAGMENT,
+                        ty: BindingType::Sampler(SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+            });
+
+        BarrierPipeline { texture_bind_group }
+    }
+}
+
+struct BarrierPipelinePlugin;
+
+impl Plugin for BarrierPipelinePlugin {
+    fn build(&self, _app: &mut App) {}
+
+    fn finish(&self, app: &mut App) {
+        let Ok(render_app) = app.get_sub_app_mut(RenderApp) else {
+            return;
+        };
+
+        render_app.init_resource::<BarrierPipeline>();
     }
 }
