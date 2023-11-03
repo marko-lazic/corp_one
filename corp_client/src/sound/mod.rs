@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{prelude::*, AudioChannel};
-
 use corp_shared::prelude::*;
 
 use crate::{asset::AudioAssets, state::GameState, world::prelude::CharacterMovement};
