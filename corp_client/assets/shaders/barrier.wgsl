@@ -1,8 +1,10 @@
-#import bevy_pbr::mesh_vertex_output  MeshVertexOutput
-#import bevy_pbr::mesh_view_bindings  globals
+#import bevy_pbr::{
+    mesh_view_bindings::globals,
+    forward_io::VertexOutput,
+}
 
 @fragment
-fn fragment(mesh: MeshVertexOutput) -> @location(0) vec4<f32> {
+fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let pos = mesh.world_position.xyz;
     let height = pos.y - 0.8;
     let speed = 2.0;

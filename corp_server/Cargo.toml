@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 corp_shared = { path = "../corp_shared" }
 bevy = { workspace = true }
-bevy-tokio-tasks = "0.11.0"
+bevy-tokio-tasks = { git = "https://github.com/foxzool/bevy-tokio-tasks.git", rev = "b12e1d0" }
 surrealdb = { version = "1.0.0", features = ["kv-mem"] }
 surrealdb-migrations = { git = "https://github.com/johansmitsnl/surrealdb-migrations.git", rev = "db63c07" }
 once_cell = "1.18.0"

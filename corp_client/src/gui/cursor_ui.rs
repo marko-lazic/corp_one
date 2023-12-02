@@ -1,4 +1,4 @@
-use bevy::{prelude::*, text::DEFAULT_FONT_HANDLE};
+use bevy::prelude::*;
 
 use crate::{
     state::{Despawn, GameState},
@@ -27,7 +27,7 @@ fn setup(mut commands: Commands) {
         TextBundle::from_section(
             "[E] Use",
             TextStyle {
-                font: DEFAULT_FONT_HANDLE.typed(),
+                font: Default::default(),
                 font_size: 20.0,
                 color: Color::WHITE,
             },

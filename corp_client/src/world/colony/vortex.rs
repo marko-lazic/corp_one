@@ -70,7 +70,7 @@ fn vort_out_event_reader(
     mut ev_vort_out: EventReader<VortOutEvent>,
     q_health: Query<&Health, With<Player>>,
 ) {
-    if ev_vort_out.iter().last().is_some() {
+    if ev_vort_out.read().last().is_some() {
         let Some(e_player) = r_player_entity.get() else {
             return;
         };
@@ -87,7 +87,7 @@ fn vort_in_event_reader(
     mut r_next_state: ResMut<NextState<GameState>>,
     mut ev_vort_in: EventReader<VortInEvent>,
 ) {
-    for vort_in in ev_vort_in.iter() {
+    for vort_in in ev_vort_in.read() {
         match vort_in.colony {
             Colony::Cloning => {
                 info!("Cloning Facility");

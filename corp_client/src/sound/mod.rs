@@ -76,7 +76,7 @@ fn play_interaction_event(
     audio_assets: Res<AudioAssets>,
     mut ev_interaction_sound: EventReader<InteractionSoundEvent>,
 ) {
-    for _ev in &mut ev_interaction_sound {
+    for _ev in &mut ev_interaction_sound.read() {
         interaction
             .play(audio_assets.interaction_on.clone())
             .fade_in(AudioTween::default())

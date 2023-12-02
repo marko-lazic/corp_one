@@ -28,8 +28,7 @@ impl TestUtils for App {
 
     fn update_after(&mut self, duration: Duration) -> &mut Self {
         let mut time = self.world.resource_mut::<Time>();
-        let last_update = time.last_update().unwrap();
-        time.update_with_instant(last_update + duration);
+        time.advance_by(duration);
         self.update();
         self
     }

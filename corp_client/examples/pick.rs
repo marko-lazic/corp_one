@@ -67,13 +67,10 @@ fn loading(
 
 fn spawn_player(mut commands: Commands, mut next_state: ResMut<NextState<GameState>>) {
     // camera
-    commands.spawn((
-        Camera3dBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        },
-        RapierPickCamera::default(),
-    ));
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
 
     next_state.set(GameState::Playing);
 }

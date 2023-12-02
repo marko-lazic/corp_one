@@ -1,7 +1,6 @@
 use bevy::{
     diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::*,
-    text::DEFAULT_FONT_HANDLE,
 };
 
 use corp_shared::prelude::*;
@@ -65,7 +64,7 @@ fn text(top: f32, left: f32) -> TextBundle {
     TextBundle::from_section(
         "",
         TextStyle {
-            font: DEFAULT_FONT_HANDLE.typed(),
+            font: Default::default(),
             font_size: 20.0,
             color: Color::WHITE,
         },

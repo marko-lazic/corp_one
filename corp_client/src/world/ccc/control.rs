@@ -153,9 +153,9 @@ fn double_tap_to_exit(
     if r_action_state.just_pressed(ControlAction::Escape) {
         l_double_tap.increment();
     }
-    l_double_tap
-        .tick(r_time.delta())
-        .on_complete(|| ev_exit_app.send(AppExit));
+    l_double_tap.tick(r_time.delta()).on_complete(|| {
+        ev_exit_app.send(AppExit);
+    });
 }
 
 fn update_cursor_world(

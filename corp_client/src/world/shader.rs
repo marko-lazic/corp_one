@@ -12,7 +12,7 @@ use bevy::{
 
 use crate::state::GameState;
 
-#[derive(AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
+#[derive(Asset, AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
 #[uuid = "bd5c76fd-6fdd-4de4-9744-4e8beea8daaf"]
 pub struct BarrierMaterial {
     alpha_mode: AlphaMode,

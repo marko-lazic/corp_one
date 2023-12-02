@@ -19329,6 +19329,7 @@
                         "POSITION" : 0,
                         "NORMAL" : 1,
                         "TEXCOORD_0" : 2,
+                        "TEXCOORD_1" : 3,
                         "COLOR_0" : 4,
                         "JOINTS_0" : 6,
                         "WEIGHTS_0" : 7
@@ -19341,6 +19342,7 @@
                         "POSITION" : 9,
                         "NORMAL" : 10,
                         "TEXCOORD_0" : 11,
+                        "TEXCOORD_1" : 12,
                         "COLOR_0" : 13,
                         "JOINTS_0" : 15,
                         "WEIGHTS_0" : 16
@@ -19353,6 +19355,7 @@
                         "POSITION" : 18,
                         "NORMAL" : 19,
                         "TEXCOORD_0" : 20,
+                        "TEXCOORD_1" : 21,
                         "COLOR_0" : 22,
                         "JOINTS_0" : 24,
                         "WEIGHTS_0" : 25

@@ -34,7 +34,7 @@ pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_set(Update, CameraSetup.after(PlayerSetup))
+        app.configure_sets(Update, CameraSetup.after(PlayerSetup))
             .insert_resource(AmbientLight {
                 color: Color::ORANGE_RED,
                 brightness: 0.8,
@@ -51,10 +51,12 @@ impl Plugin for WorldPlugin {
                 ZonePlugin,
                 PlayerPlugin,
             ))
-            .configure_set(
+            .configure_sets(
                 Update,
-                ControlSet::PlayingInput.before(CharacterSet::Movement),
-            )
-            .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
+                (
+                    ControlSet::PlayingInput.before(CharacterSet::Movement),
+                    CameraSet::Update.after(CharacterSet::Movement),
+                ),
+            );
     }
 }

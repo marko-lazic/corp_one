@@ -1,7 +1,4 @@
-use std::time::Duration;
-
 use bevy::{
-    asset::ChangeWatcher,
     input::common_conditions::input_toggle_active,
     prelude::*,
     window::{PresentMode, WindowMode},
@@ -26,17 +23,10 @@ const HEIGHT: f32 = 720.0;
 
 fn main() {
     App::new()
-        .add_plugins(
-            DefaultPlugins
-                .set(AssetPlugin {
-                    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(new_window()),
-                    ..default()
-                }),
-        )
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(new_window()),
+            ..default()
+        }))
         .add_plugins((
             GameStatePlugin,
             AssetLoadingPlugin,

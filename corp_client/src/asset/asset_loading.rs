@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-use bevy_asset_loader::{
-    asset_collection::AssetCollection,
-    loading_state::{LoadingState, LoadingStateAppExt},
-};
+use bevy_asset_loader::prelude::*;
 use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
@@ -16,7 +13,7 @@ use crate::{
 /// Include->Punctual Lights
 ///
 /// Data/Lighting->Lighting Mode Unitless
-#[derive(Resource, AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct SceneAssets {
     #[asset(path = "scenes/iris/iris.glb#Scene0")]
     pub iris: Handle<Scene>,
@@ -26,7 +23,7 @@ pub struct SceneAssets {
     pub liberte: Handle<Scene>,
 }
 
-#[derive(Resource, AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct ColonyConfigAssets {
     #[asset(path = "data/colony/iris.colony")]
     pub iris: Handle<ColonyConfig>,
@@ -36,13 +33,13 @@ pub struct ColonyConfigAssets {
     pub cloning: Handle<ColonyConfig>,
 }
 
-#[derive(Resource, AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct FontAssets {
     #[asset(path = "fonts/FiraMono-Medium.ttf")]
     pub fira_sans: Handle<Font>,
 }
 
-#[derive(Resource, AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct AudioAssets {
     #[asset(path = "sound/andrewkn-higher-than-possible.ogg")]
     pub higher_than_possible: Handle<AudioSource>,

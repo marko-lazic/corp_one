@@ -1,6 +1,5 @@
 use bevy::{core_pipeline::bloom::BloomSettings, prelude::*};
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
-use bevy_mod_picking::prelude::RapierPickCamera;
 use leafwing_input_manager::action_state::ActionState;
 
 use crate::{
@@ -27,7 +26,6 @@ pub struct MainCameraBundle {
     bloom: BloomSettings,
     main_camera: MainCamera,
     rig: Rig,
-    pick_camera: RapierPickCamera,
     despawn: Despawn,
 }
 
@@ -53,7 +51,6 @@ impl MainCameraBundle {
                 .with(Smooth::new_rotation(0.3))
                 .with(Arm::new(Vec3::Z * 18.0))
                 .build(),
-            pick_camera: RapierPickCamera::default(),
             despawn: Despawn,
         }
     }
@@ -253,11 +250,13 @@ mod tests {
                 CharacterPlugin,
                 MainCameraPlugin,
             ))
-            .configure_set(
+            .configure_sets(
                 Update,
-                ControlSet::PlayingInput.before(CharacterSet::Movement),
-            )
-            .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
+                (
+                    ControlSet::PlayingInput.before(CharacterSet::Movement),
+                    CameraSet::Update.after(CharacterSet::Movement),
+                ),
+            );
         app.world.spawn(Window::default());
         app
     }

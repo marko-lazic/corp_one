@@ -77,7 +77,7 @@ fn change_barrier_field_visibility_and_collision(
     mut q_barrier_field_visibility: Query<&mut Visibility, With<BarrierField>>,
     mut ev_door_state_event: EventReader<DoorStateEvent>,
 ) {
-    for door_state_event in ev_door_state_event.iter() {
+    for door_state_event in ev_door_state_event.read() {
         if let Ok(mut visible) = q_barrier_field_visibility.get_mut(door_state_event.entity()) {
             if door_state_event.state() == DoorState::Open {
                 *visible = Visibility::Hidden;
@@ -100,7 +100,7 @@ pub fn receive_barrier_pickings(
     q_barrier_control: Query<&BarrierControl>,
     q_barrier_field: Query<(Entity, &BarrierField)>,
 ) {
-    for event in ev_barrier_picking_event.iter() {
+    for event in ev_barrier_picking_event.read() {
         if event.mode == Hover::Over {
             let Ok(barrier_control) = q_barrier_control.get(event.target) else {
                 return;

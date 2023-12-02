@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use crate::asset::MaterialAsset;
 
-#[derive(Default, Deserialize, Debug, TypeUuid, TypePath)]
+#[derive(Asset, Default, Deserialize, Debug, TypeUuid, TypePath)]
 #[uuid = "962DF4C2-C221-4364-A9F7-B7340FB60437"]
 pub struct ColonyConfig {
     pub name: Colony,

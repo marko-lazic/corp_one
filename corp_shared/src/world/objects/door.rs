@@ -115,7 +115,7 @@ pub fn door_interaction_event_system(
     q_member_of: Query<&MemberOf>,
     mut q_door_control_registry: Query<(&mut Door, &ControlRegistry)>,
 ) {
-    for event in ev_door_interaction.iter() {
+    for event in ev_door_interaction.read() {
         if let Ok(member_of) = q_member_of.get(event.interactor) {
             if let Ok((mut door, control_registry)) = q_door_control_registry.get_mut(event.target)
             {
@@ -153,7 +153,7 @@ pub fn door_hack_event_system(
     mut q_player_inventory_member_of: Query<(&mut Inventory, &MemberOf), With<Player>>,
     q_hacking_tool: Query<&HackingTool>,
 ) {
-    for event in ev_door_hack.iter() {
+    for event in ev_door_hack.read() {
         if let Ok((mut door, mut faction_ownership_registry)) =
             q_door_control_registry.get_mut(event.door_entity)
         {

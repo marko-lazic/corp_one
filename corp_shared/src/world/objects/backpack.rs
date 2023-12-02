@@ -41,7 +41,7 @@ pub fn backpack_interaction_event_system(
     mut q_backpack: Query<&mut Backpack>,
     q_item: Query<&Item>,
 ) {
-    for event in &mut ev_backpack_interaction_event {
+    for event in &mut ev_backpack_interaction_event.read() {
         if let Ok(mut inventory) = q_inventory.get_mut(event.interactor_entity) {
             if let Ok(mut backpack) = q_backpack.get_mut(event.backpack_entity) {
                 match event.action {

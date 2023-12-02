@@ -35,7 +35,7 @@ fn receive_territory_node_pickings(
     mut pickings: EventReader<PickingEvent<TerritoryNodePickingEvent>>,
     mut r_use_target: ResMut<UseEntity>,
 ) {
-    for event in pickings.iter() {
+    for event in pickings.read() {
         if event.mode == Hover::Over {
             r_use_target.set(Some(event.target));
         } else if event.mode == Hover::Out {
@@ -47,7 +47,7 @@ fn receive_territory_node_pickings(
 fn territory_interaction_system(
     mut ev_interaction: EventReader<InteractionEvent<UseTerritoryNodeEvent>>,
 ) {
-    for event in ev_interaction.iter() {
+    for event in ev_interaction.read() {
         info!("Interaction with territory node: {:?}", event.target);
     }
 }
