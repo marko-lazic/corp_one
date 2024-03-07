@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use leafwing_input_manager::InputManagerBundle;
 use rand::seq::SliceRandom;
 
 use corp_shared::prelude::*;
@@ -9,7 +10,10 @@ use crate::{
     state::{Despawn, GameState},
     world::{
         animator::{AnimationComponent, PlayerAnimationAction},
-        ccc::{CharacterMovement, ControlSet, MainCameraFollow, MovementBundle, PlayerEntity},
+        ccc::{
+            CharacterMovement, ControlSet, MainCameraFollow, MovementBundle, PlayerAction,
+            PlayerEntity,
+        },
         cloning::CloningPlugin,
         colony::vortex::VortexNode,
         physics::CollideGroups,
@@ -72,6 +76,10 @@ fn setup_player(
     let player = commands
         .spawn((
             Player,
+            InputManagerBundle {
+                input_map: PlayerAction::player_input_map(),
+                ..default()
+            },
             SpatialBundle::from_transform(player_transform),
             MovementBundle::default(),
             MainCameraFollow,

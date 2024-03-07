@@ -2,9 +2,11 @@ use bevy::{core_pipeline::bloom::BloomSettings, prelude::*};
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
 use leafwing_input_manager::action_state::ActionState;
 
+use corp_shared::prelude::Player;
+
 use crate::{
     state::{Despawn, GameState},
-    world::ccc::control::ControlAction,
+    world::ccc::control::PlayerAction,
 };
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
@@ -78,7 +80,7 @@ fn setup(mut commands: Commands, q_follow: Query<&Transform, With<MainCameraFoll
 }
 
 fn update_camera(
-    action_state: Res<ActionState<ControlAction>>,
+    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
     time: Res<Time>,
     mut rig_q: Query<&mut Rig>,
     q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
@@ -91,14 +93,16 @@ fn update_camera(
     };
     let camera_yp = rig.driver_mut::<YawPitch>();
 
-    if action_state.just_pressed(ControlAction::CameraRotateClockwise) {
+    let action_state = q_action_state.single();
+
+    if action_state.just_pressed(&PlayerAction::CameraRotateClockwise) {
         camera_yp.rotate_yaw_pitch(-45.0, 0.0);
     }
-    if action_state.just_pressed(ControlAction::CameraRotateCounterClockwise) {
+    if action_state.just_pressed(&PlayerAction::CameraRotateCounterClockwise) {
         camera_yp.rotate_yaw_pitch(45.0, 0.0);
     }
 
-    if action_state.pressed(ControlAction::CameraZoomIn) {
+    if action_state.pressed(&PlayerAction::CameraZoomIn) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
             xz.z = (xz.z - 4.0 * time.delta_seconds()).abs();
@@ -106,7 +110,7 @@ fn update_camera(
         }
     }
 
-    if action_state.pressed(ControlAction::CameraZoomOut) {
+    if action_state.pressed(&PlayerAction::CameraZoomOut) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
             xz.z = (xz.z + 4.0 * time.delta_seconds()).abs();
@@ -115,7 +119,7 @@ fn update_camera(
     }
 
     let mut target_zoom_factor: f32 = 1.0;
-    if action_state.pressed(ControlAction::Aim) {
+    if action_state.pressed(&PlayerAction::Aim) {
         target_zoom_factor = 1.8;
     }
 

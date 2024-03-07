@@ -52,8 +52,28 @@ impl UseEntity {
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorWorld(Vec3);
 
-#[derive(Actionlike, Debug, PartialEq, Clone, Copy, TypePath)]
-pub enum ControlAction {
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
+pub enum UIAction {
+    Escape,
+    ColonyIris,
+    ColonyLiberte,
+    ColonyPlayground,
+}
+
+impl UIAction {
+    fn ui_input_map() -> InputMap<UIAction> {
+        let mut input = InputMap::default();
+        input
+            .insert(UIAction::Escape, KeyCode::Escape)
+            .insert(UIAction::ColonyIris, KeyCode::I)
+            .insert(UIAction::ColonyPlayground, KeyCode::P)
+            .insert(UIAction::ColonyLiberte, KeyCode::L);
+        input
+    }
+}
+
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
+pub enum PlayerAction {
     Forward,
     Backward,
     Left,
@@ -62,49 +82,36 @@ pub enum ControlAction {
     OrientationMode,
     Use,
     Shoot,
-    Escape,
     CameraZoomIn,
     CameraZoomOut,
     CameraRotateClockwise,
     CameraRotateCounterClockwise,
     Kill,
-    ColonyIris,
-    ColonyPlayground,
-    ColonyLiberte,
 }
 
-#[derive(Resource)]
-pub struct ControlSettings {
-    input: InputMap<ControlAction>,
-}
-
-impl Default for ControlSettings {
-    fn default() -> Self {
+impl PlayerAction {
+    pub fn player_input_map() -> InputMap<PlayerAction> {
         let mut input = InputMap::default();
         input
             // Movement
-            .insert(KeyCode::W, ControlAction::Forward)
-            .insert(KeyCode::S, ControlAction::Backward)
-            .insert(KeyCode::A, ControlAction::Left)
-            .insert(KeyCode::D, ControlAction::Right)
+            .insert(PlayerAction::Forward, KeyCode::W)
+            .insert(PlayerAction::Backward, KeyCode::S)
+            .insert(PlayerAction::Left, KeyCode::A)
+            .insert(PlayerAction::Right, KeyCode::D)
             // Weapon
-            .insert(MouseButton::Right, ControlAction::Aim)
+            .insert(PlayerAction::Aim, MouseButton::Right)
             // Abilities
-            .insert(KeyCode::E, ControlAction::Use)
-            .insert(KeyCode::K, ControlAction::Kill)
-            .insert(MouseButton::Left, ControlAction::Shoot)
+            .insert(PlayerAction::Use, KeyCode::E)
+            .insert(PlayerAction::Kill, KeyCode::K)
+            .insert(PlayerAction::Shoot, MouseButton::Left)
             // Options
-            .insert(KeyCode::Escape, ControlAction::Escape)
-            .insert(KeyCode::Space, ControlAction::OrientationMode)
-            .insert(KeyCode::Equals, ControlAction::CameraZoomIn)
-            .insert(KeyCode::Minus, ControlAction::CameraZoomOut)
-            .insert(KeyCode::Z, ControlAction::CameraRotateClockwise)
-            .insert(KeyCode::C, ControlAction::CameraRotateCounterClockwise)
-            .insert(KeyCode::I, ControlAction::ColonyIris)
-            .insert(KeyCode::P, ControlAction::ColonyPlayground)
-            .insert(KeyCode::L, ControlAction::ColonyLiberte);
+            .insert(PlayerAction::OrientationMode, KeyCode::Space)
+            .insert(PlayerAction::CameraZoomIn, KeyCode::Equals)
+            .insert(PlayerAction::CameraZoomOut, KeyCode::Minus)
+            .insert(PlayerAction::CameraRotateClockwise, KeyCode::Z)
+            .insert(PlayerAction::CameraRotateCounterClockwise, KeyCode::C);
 
-        Self { input }
+        input
     }
 }
 
@@ -112,12 +119,13 @@ pub struct ControlPlugin;
 
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InputManagerPlugin::<ControlAction>::default())
-            .init_resource::<ActionState<ControlAction>>()
+        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .init_resource::<PlayerEntity>()
             .init_resource::<CursorWorld>()
             .init_resource::<UseEntity>()
-            .insert_resource(ControlSettings::default().input)
+            .add_plugins(InputManagerPlugin::<UIAction>::default())
+            .init_resource::<ActionState<UIAction>>()
+            .insert_resource(UIAction::ui_input_map())
             .add_systems(Update, double_tap_to_exit)
             .add_systems(
                 Update,
@@ -131,7 +139,6 @@ impl Plugin for ControlPlugin {
                 )
                     .chain()
                     .in_set(ControlSet::PlayingInput)
-                    .run_if(resource_changed::<ActionState<ControlAction>>())
                     .run_if(in_state(GameState::Playing)),
             )
             .add_systems(OnExit(GameState::Playing), enable_cursor_visible)
@@ -145,12 +152,12 @@ impl Plugin for ControlPlugin {
 }
 
 fn double_tap_to_exit(
-    r_action_state: Res<ActionState<ControlAction>>,
+    action_state: Res<ActionState<UIAction>>,
     r_time: Res<Time>,
     mut ev_exit_app: EventWriter<AppExit>,
     mut l_double_tap: Local<DoubleTap>,
 ) {
-    if r_action_state.just_pressed(ControlAction::Escape) {
+    if action_state.just_pressed(&UIAction::Escape) {
         l_double_tap.increment();
     }
     l_double_tap.tick(r_time.delta()).on_complete(|| {
@@ -198,7 +205,7 @@ fn update_cursor_world(
 }
 
 fn player_control_movement(
-    r_action_state: Res<ActionState<ControlAction>>,
+    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
     q_camera: Query<&Transform, With<MainCamera>>,
     mut q_movement: Query<&mut ControlMovement, With<Player>>,
 ) {
@@ -222,17 +229,20 @@ fn player_control_movement(
     let Ok(mut movement) = q_movement.get_single_mut() else {
         return;
     };
+
+    let action_state = q_action_state.single();
+
     let mut direction = Vec3::ZERO;
-    if r_action_state.pressed(ControlAction::Forward) {
+    if action_state.pressed(&PlayerAction::Forward) {
         direction -= cam_forward;
     }
-    if r_action_state.pressed(ControlAction::Backward) {
+    if action_state.pressed(&PlayerAction::Backward) {
         direction += cam_forward;
     }
-    if r_action_state.pressed(ControlAction::Left) {
+    if action_state.pressed(&PlayerAction::Left) {
         direction -= cam_right;
     }
-    if r_action_state.pressed(ControlAction::Right) {
+    if action_state.pressed(&PlayerAction::Right) {
         direction += cam_right;
     }
 
@@ -241,10 +251,11 @@ fn player_control_movement(
 
 fn player_control_orientation(
     r_cursor_world: Res<CursorWorld>,
-    r_action_state: Res<ActionState<ControlAction>>,
+    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
     mut q_orientation: Query<&mut OrientationMode, With<Player>>,
 ) {
-    if r_action_state.just_pressed(ControlAction::OrientationMode) {
+    let action_state = q_action_state.single();
+    if action_state.just_pressed(&PlayerAction::OrientationMode) {
         for mut orientation_mode in &mut q_orientation {
             *orientation_mode = match *orientation_mode {
                 OrientationMode::Direction => {
@@ -260,11 +271,13 @@ fn use_event(
     mut commands: Commands,
     r_use_entity: Res<UseEntity>,
     r_player_entity: Res<PlayerEntity>,
-    r_action_state: Res<ActionState<ControlAction>>,
+    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
     q_interaction_object: Query<&InteractionObjectType>,
     mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
 ) {
-    if r_action_state.just_pressed(ControlAction::Use) {
+    let action_state = q_action_state.single();
+
+    if action_state.just_pressed(&PlayerAction::Use) {
         let Some(player) = r_player_entity.get() else {
             return;
         };
@@ -298,10 +311,11 @@ fn use_event(
 }
 
 fn kill(
-    r_action_state: Res<ActionState<ControlAction>>,
+    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
     mut q_player_health: Query<&mut Health, With<Player>>,
 ) {
-    if r_action_state.just_pressed(ControlAction::Kill) {
+    let action_state = q_action_state.single();
+    if action_state.just_pressed(&PlayerAction::Kill) {
         if let Some(mut health) = q_player_health.iter_mut().next() {
             health.kill_mut();
         }
@@ -309,10 +323,10 @@ fn kill(
 }
 
 fn toggle_window_cursor_visible(
-    r_action_state: Res<ActionState<ControlAction>>,
+    action_state: Res<ActionState<UIAction>>,
     mut q_windows: Query<&mut Window>,
 ) {
-    if r_action_state.just_pressed(ControlAction::Escape) {
+    if action_state.just_pressed(&UIAction::Escape) {
         let mut window = q_windows.single_mut();
         window.cursor.visible = !window.cursor.visible;
     }
@@ -324,14 +338,14 @@ fn enable_cursor_visible(mut q_windows: Query<&mut Window>) {
 }
 
 fn starmap_keyboard(
-    r_action_state: Res<ActionState<ControlAction>>,
+    action_state: Res<ActionState<UIAction>>,
     mut ev_vort_in: EventWriter<VortInEvent>,
 ) {
-    if r_action_state.just_pressed(ControlAction::ColonyIris) {
+    if action_state.just_pressed(&UIAction::ColonyIris) {
         ev_vort_in.send(VortInEvent::vort(Colony::Iris));
-    } else if r_action_state.just_pressed(ControlAction::ColonyLiberte) {
+    } else if action_state.just_pressed(&UIAction::ColonyLiberte) {
         ev_vort_in.send(VortInEvent::vort(Colony::Liberte));
-    } else if r_action_state.just_pressed(ControlAction::ColonyPlayground) {
+    } else if action_state.just_pressed(&UIAction::ColonyPlayground) {
         ev_vort_in.send(VortInEvent::vort(Colony::Playground));
     }
 }
@@ -350,14 +364,14 @@ mod tests {
         let mut app = setup();
 
         // when
-        app.send_input(KeyCode::W);
+        app.send_input(KeyCode::Escape);
         app.update();
 
         // then
         assert!(app
             .world
-            .resource::<ActionState<ControlAction>>()
-            .pressed(ControlAction::Forward));
+            .resource::<ActionState<UIAction>>()
+            .pressed(&UIAction::Escape));
     }
 
     fn setup() -> App {

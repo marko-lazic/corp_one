@@ -7,14 +7,14 @@ edition = "2021"
 [dependencies]
 corp_shared = { path = "../corp_shared" }
 bevy = { workspace = true, features = ["wav"] }
-leafwing-input-manager = "0.11.1"
+leafwing-input-manager = "0.12.1"
 bevy_mod_picking = { version = "0.17.0", default-features = false, features = ["backend_rapier"] }
 bevy-inspector-egui = "0.21.0"
 bevy_asset_loader = "0.18.0"
 bevy_kira_audio = { version = "0.18.0", features = ["wav", "ogg"] }
 bevy_common_assets = { version = "0.8.0", features = ["ron"] }
 bevy_rapier3d = "0.23.0"
-bevy_dolly = { path = "../../bevy_dolly" }
+bevy_dolly = "0.0.2"
 bevy-scene-hook = "9.0.0"
 serde = "1.0.192"
 rand = "0.8.5"

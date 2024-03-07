@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::world::{
     animator::AnimatorPlugin,
     ccc::{CameraSet, CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MainCameraPlugin},
-    colony::{zone::ZonePlugin, ColonyPlugin},
+    colony::{ColonyPlugin, zone::ZonePlugin},
     physics::PhysicsPlugin,
     player::PlayerPlugin,
     shader::ShaderPlugin,
