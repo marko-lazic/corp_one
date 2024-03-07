@@ -111,7 +111,7 @@ mod tests {
     use bevy_dolly::prelude::{Rig, YawPitch};
     use leafwing_input_manager::prelude::MockInput;
 
-    use corp_shared::prelude::{Health, Player, TestUtils};
+    use corp_shared::prelude::{Player, TestUtils};
 
     use crate::{
         state::GameState,

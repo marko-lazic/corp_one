@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
-use corp_shared::prelude::{Health, CLONE_HEALTH_80, *};
+use corp_shared::prelude::*;
 
 use crate::{
     asset::{Colony, ColonyConfigAssets},
     state::GameState,
     world::{
-        colony::{vortex::VortInEvent, ColonyStore},
+        colony::{ColonyStore, vortex::VortInEvent},
         player::PlayerStore,
     },
 };
@@ -54,10 +54,6 @@ fn vort_in_dead_player_to_cloning(
 
 #[cfg(test)]
 mod tests {
-    use bevy::ecs::event::Events;
-
-    use corp_shared::prelude::MIN_HEALTH;
-
     use super::*;
 
     fn kill_player(mut healths: Query<&mut Health, With<Player>>) {

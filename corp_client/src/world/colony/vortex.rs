@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{Collider, QueryFilter, RapierContext};
 
-use corp_shared::prelude::{*, Health};
+use corp_shared::prelude::*;
 
 use crate::{
     asset::ColonyConfigAssets,

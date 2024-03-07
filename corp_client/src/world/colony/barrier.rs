@@ -1,4 +1,4 @@
-use bevy::{app::Plugin, prelude::*};
+use bevy::prelude::*;
 use bevy_rapier3d::prelude::ColliderDisabled;
 
 use corp_shared::prelude::*;
@@ -9,7 +9,6 @@ use crate::{
         ccc::UseEntity,
         colony::object_interaction::{Hover, PickingEvent},
     },
-    App,
 };
 
 pub struct BarrierPickingEvent;
