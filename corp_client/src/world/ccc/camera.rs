@@ -143,8 +143,11 @@ fn update_camera(
         return;
     };
 
-    let ray = windows
-        .single()
+    let Ok(window) = windows.get_single() else {
+        return;
+    };
+
+    let ray = window
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .unwrap_or_else(|| Ray3d {
