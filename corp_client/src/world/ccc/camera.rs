@@ -103,7 +103,10 @@ fn update_camera(
     };
     let camera_yp = rig.driver_mut::<YawPitch>();
 
-    let action_state = q_action_state.single();
+    let Ok(action_state) = q_action_state.get_single() else {
+        warn!("PlayerAction state is missing.");
+        return;
+    };
 
     if action_state.just_pressed(&PlayerAction::CameraRotateClockwise) {
         camera_yp.rotate_yaw_pitch(-45.0, 0.0);
@@ -185,12 +188,13 @@ mod tests {
 
     use approx::assert_relative_eq;
     use bevy::input::InputPlugin;
-    use leafwing_input_manager::input_mocking::MockInput;
+    use leafwing_input_manager::{input_mocking::MockInput, InputManagerBundle};
 
     use corp_shared::prelude::{Health, TestUtils};
 
-    use crate::world::ccc::{
-        CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MovementBundle,
+    use crate::{
+        sound::InteractionSoundEvent,
+        world::ccc::{CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MovementBundle},
     };
 
     use super::*;
@@ -257,6 +261,7 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
+            .add_event::<InteractionSoundEvent>()
             .init_state::<GameState>()
             .add_plugins((
                 InputPlugin,
@@ -280,6 +285,10 @@ mod tests {
             .spawn((
                 TransformBundle::from_transform(transform),
                 Player,
+                InputManagerBundle {
+                    input_map: PlayerAction::player_input_map(),
+                    ..default()
+                },
                 MainCameraFollow,
                 Health::default(),
                 MovementBundle::default(),

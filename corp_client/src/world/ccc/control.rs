@@ -254,7 +254,10 @@ fn player_control_orientation(
     q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
     mut q_orientation: Query<&mut OrientationMode, With<Player>>,
 ) {
-    let action_state = q_action_state.single();
+    let Ok(action_state) = q_action_state.get_single() else {
+        warn!("PlayerAction state is missing.");
+        return;
+    };
     if action_state.just_pressed(&PlayerAction::OrientationMode) {
         for mut orientation_mode in &mut q_orientation {
             *orientation_mode = match *orientation_mode {
@@ -275,8 +278,10 @@ fn use_event(
     q_interaction_object: Query<&InteractionObjectType>,
     mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
 ) {
-    let action_state = q_action_state.single();
-
+    let Ok(action_state) = q_action_state.get_single() else {
+        warn!("PlayerAction state is missing.");
+        return;
+    };
     if action_state.just_pressed(&PlayerAction::Use) {
         let Some(player) = r_player_entity.get() else {
             return;
@@ -314,7 +319,10 @@ fn kill(
     q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
     mut q_player_health: Query<&mut Health, With<Player>>,
 ) {
-    let action_state = q_action_state.single();
+    let Ok(action_state) = q_action_state.get_single() else {
+        warn!("PlayerAction state is missing.");
+        return;
+    };
     if action_state.just_pressed(&PlayerAction::Kill) {
         if let Some(mut health) = q_player_health.iter_mut().next() {
             health.kill_mut();

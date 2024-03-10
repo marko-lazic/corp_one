@@ -109,15 +109,16 @@ mod tests {
     use approx::assert_relative_eq;
     use bevy::input::InputPlugin;
     use bevy_dolly::prelude::{Rig, YawPitch};
-    use leafwing_input_manager::prelude::MockInput;
+    use leafwing_input_manager::{InputManagerBundle, prelude::MockInput};
 
     use corp_shared::prelude::{Player, TestUtils};
 
     use crate::{
+        sound::InteractionSoundEvent,
         state::GameState,
         world::ccc::{
             CameraSet, ControlPlugin, ControlSet, MainCameraBundle, MainCameraPlugin,
-            MovementBundle,
+            MovementBundle, PlayerAction,
         },
     };
 
@@ -218,6 +219,7 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
+            .add_event::<InteractionSoundEvent>()
             .init_state::<GameState>()
             .add_plugins((
                 InputPlugin,
@@ -227,9 +229,11 @@ mod tests {
             ))
             .configure_sets(
                 Update,
-                ControlSet::PlayingInput.before(CharacterSet::Movement),
-            )
-            .configure_sets(Update, CameraSet::Update.after(CharacterSet::Movement));
+                (
+                    ControlSet::PlayingInput.before(CharacterSet::Movement),
+                    CameraSet::Update.after(CharacterSet::Movement),
+                ),
+            );
         app.set_state(GameState::Playing);
         app
     }
@@ -239,6 +243,10 @@ mod tests {
             .spawn((
                 TransformBundle::default(),
                 Player,
+                InputManagerBundle {
+                    input_map: PlayerAction::player_input_map(),
+                    ..default()
+                },
                 Health::default(),
                 MovementBundle::default(),
             ))
