@@ -1,9 +1,6 @@
-use std::time::Duration;
-
 use bevy::{
-    asset::ChangeWatcher,
     prelude::*,
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     render::render_resource::{AsBindGroup, ShaderRef},
 };
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
@@ -11,19 +8,13 @@ use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 fn main() {
     App::new()
         .add_plugins((
-            DefaultPlugins
-                .set(AssetPlugin {
-                    // Tell the asset server to watch for asset changes on disk:
-                    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        resolution: (640.0, 480.0).into(),
-                        ..default()
-                    }),
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    resolution: (640.0, 480.0).into(),
                     ..default()
                 }),
+                ..default()
+            }),
             MaterialPlugin::<CustomMaterial>::default(),
             PanOrbitCameraPlugin,
         ))
@@ -55,7 +46,7 @@ fn setup(
     ));
     // cube
     commands.spawn(MaterialMeshBundle {
-        mesh: meshes.add(shape::Cube::new(1.0).into()),
+        mesh: meshes.add(Cuboid::default()),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         material: custom_materials.add(CustomMaterial {
             alpha_mode: AlphaMode::Blend,
@@ -64,8 +55,8 @@ fn setup(
     });
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(5.0).into()),
-        material: standard_materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+        mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
+        material: standard_materials.add(Color::rgb(0.3, 0.5, 0.3)),
         ..default()
     });
 }
@@ -73,7 +64,7 @@ fn setup(
 fn rotate_camera(
     mut camera: Query<&mut Transform, With<MainCamera>>,
     time: Res<Time>,
-    mouse_button_input: Res<Input<MouseButton>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
 ) {
     if !mouse_button_input.pressed(MouseButton::Left) {
         let cam_transform = camera.single_mut().into_inner();
@@ -86,8 +77,7 @@ fn rotate_camera(
     }
 }
 
-#[derive(AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
-#[uuid = "b62bb455-a72c-4b56-87bb-81e0554e234f"]
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
     alpha_mode: AlphaMode,
 }

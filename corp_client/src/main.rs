@@ -6,7 +6,7 @@ use bevy::{
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use crate::{
-    asset::AssetLoadingPlugin, gui::GuiPlugin, sound::SoundPlugin, state::GameStatePlugin,
+    asset::AssetLoadingPlugin, gui::gui::GuiPlugin, sound::SoundPlugin, state::GameStatePlugin,
     world::WorldPlugin,
 };
 
@@ -33,7 +33,7 @@ fn main() {
             SoundPlugin,
             GuiPlugin,
             WorldPlugin,
-            WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Grave)),
+            WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Backquote)),
             bevy_framepace::FramepacePlugin,
         ))
         .run();

@@ -1,14 +1,17 @@
-#import bevy_pbr::mesh_vertex_output    MeshVertexOutput
-#import bevy_pbr::mesh_view_bindings    view
-#import bevy_pbr::mesh_view_bindings    globals
+#import bevy_pbr::{
+    forward_io::VertexOutput,
+    mesh_view_bindings::view,
+    mesh_view_bindings::globals,
 
-struct StarfieldMaterial {
+}
+
+struct StarFieldMaterial {
     mouse: vec2<f32>,
     speed2: f32,
 }
 
-@group(1) @binding(0)
-var<uniform> starfield: StarfieldMaterial;
+@group(2) @binding(0)
+var<uniform> star_field: StarFieldMaterial;
 
 const iterations: i32 = 12;
 const formuparam2: f32 = 0.79;
@@ -60,12 +63,12 @@ fn field(p: vec3<f32>) -> FieldResult {
 }
 
 @fragment
-fn fragment(mesh: MeshVertexOutput) -> @location(0) vec4<f32> {
+fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let uv2 = 2. * mesh.position.xy / vec2<f32>(512.) - 1.;
     let uvs = uv2 * vec2<f32>(512.) / 512.;
 
     let time2 = globals.time;
-    var speed = -starfield.speed2;
+    var speed = -star_field.speed2;
     speed = .005 * cos(time2 * 0.02 + 3.1415926 / 4.0);
     let formuparam = formuparam2;
 
@@ -83,8 +86,8 @@ fn fragment(mesh: MeshVertexOutput) -> @location(0) vec4<f32> {
     let v2 = 1.0;
     var dir = vec3<f32>(uv * zoom, 1.);
     var v_from = vec3<f32>(0.0, 0.0, 0.0);
-    v_from.x -= 2.0 * (starfield.mouse.x - 0.5);
-    v_from.y -= 2.0 * (starfield.mouse.y - 0.5);
+    v_from.x -= 2.0 * (star_field.mouse.x - 0.5);
+    v_from.y -= 2.0 * (star_field.mouse.y - 0.5);
 
     var forward = vec3(0., 0., 1.);
     v_from.x += transverse_speed * (1.0) * cos(0.01 * globals.time) + 0.001 * globals.time;

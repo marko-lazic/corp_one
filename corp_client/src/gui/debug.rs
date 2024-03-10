@@ -75,12 +75,12 @@ fn text(top: f32, left: f32) -> TextBundle {
         left: Val::Px(left),
         ..default()
     })
-    .with_text_alignment(TextAlignment::Left)
+    .with_text_justify(JustifyText::Left)
 }
 
 fn update_fps_text(diagnostics: Res<DiagnosticsStore>, mut query: Query<&mut Text, With<FpsText>>) {
     let Some(fps) = diagnostics
-        .get(FrameTimeDiagnosticsPlugin::FPS)
+        .get(&FrameTimeDiagnosticsPlugin::FPS)
         .map(|f| f.smoothed())
         .flatten()
     else {

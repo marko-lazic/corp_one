@@ -16,7 +16,7 @@ pub struct CursorPlugin;
 impl Plugin for CursorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CursorUi>()
-            .add_systems(OnEnter(GameState::LoadColony), setup)
+            .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(First, update_cursor_ui_position)
             .add_systems(Update, update_use_text.run_if(in_state(GameState::Playing)));
     }
@@ -32,7 +32,7 @@ fn setup(mut commands: Commands) {
                 color: Color::WHITE,
             },
         )
-        .with_text_alignment(TextAlignment::Center),
+        .with_text_justify(JustifyText::Center),
         UseText,
         Despawn,
     ));

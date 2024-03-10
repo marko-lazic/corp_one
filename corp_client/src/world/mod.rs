@@ -37,7 +37,7 @@ impl Plugin for WorldPlugin {
         app.configure_sets(Update, CameraSetup.after(PlayerSetup))
             .insert_resource(AmbientLight {
                 color: Color::ORANGE_RED,
-                brightness: 0.8,
+                ..default()
             })
             .add_plugins((
                 ShaderPlugin,

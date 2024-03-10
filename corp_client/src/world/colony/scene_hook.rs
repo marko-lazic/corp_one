@@ -30,7 +30,7 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
             Despawn,
         )),
         n if n.starts_with("VortexNode") => {
-            info!("Insert vortex node");
+            info!("Insert vortex node: {}", n);
             commands.insert((VortexNode, Despawn))
         }
         "BarrierField1" => {

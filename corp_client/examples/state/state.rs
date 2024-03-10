@@ -26,10 +26,7 @@ fn main() {
             RapierPhysicsPlugin::<NoUserData>::default(),
             RapierDebugRenderPlugin::default(),
         ))
-        .insert_resource(AmbientLight {
-            color: Color::WHITE,
-            brightness: 1.0,
-        })
+        .insert_resource(AmbientLight::default())
         .add_event::<DoorStateEvent>()
         .add_event::<BackpackInteractionEvent>()
         .add_event::<InteractionEvent<UseDoorEvent>>()
@@ -147,8 +144,8 @@ fn setup_door(
     let ec_door = commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: door_size })),
-                material: materials.add(endesga::SKY.into()).into(),
+                mesh: meshes.add(Cuboid::new(door_size, door_size, door_size)),
+                material: materials.add(endesga::SKY).into(),
                 transform: door_position,
                 ..default()
             },
@@ -162,12 +159,12 @@ fn setup_door(
 }
 
 fn interaction_system(
-    r_keyboard_input: Res<Input<KeyCode>>,
+    r_keyboard_input: Res<ButtonInput<KeyCode>>,
     r_player_entity: Res<PlayerEntity>,
     r_target_entity: Res<TargetEntity>,
     mut ev_use_door: EventWriter<InteractionEvent<UseDoorEvent>>,
 ) {
-    if r_keyboard_input.just_pressed(KeyCode::E) {
+    if r_keyboard_input.just_pressed(KeyCode::KeyE) {
         if let Some(interactor) = r_player_entity.0 {
             if let Some(target) = r_target_entity.0 {
                 ev_use_door.send(InteractionEvent::new(interactor, target, UseDoorEvent));

@@ -17,7 +17,7 @@ fn main() {
     let frames_per_second = Duration::from_secs_f64(1.0 / 60.0);
 
     App::new()
-        .add_state::<ServerState>()
+        .init_state::<ServerState>()
         .add_plugins((
             LogPlugin::default(),
             MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frames_per_second)),

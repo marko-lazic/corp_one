@@ -1,9 +1,6 @@
-use std::time::Duration;
-
 use bevy::{
-    asset::ChangeWatcher,
     prelude::*,
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     render::render_resource::{AsBindGroup, ShaderRef},
 };
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
@@ -11,24 +8,18 @@ use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 fn main() {
     App::new()
         .add_plugins((
-            DefaultPlugins
-                .set(AssetPlugin {
-                    // Tell the asset server to watch for asset changes on disk:
-                    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        resolution: (640.0, 480.0).into(),
-                        ..default()
-                    }),
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    resolution: (640.0, 480.0).into(),
                     ..default()
                 }),
-            MaterialPlugin::<StarfieldMaterial>::default(),
+                ..default()
+            }),
+            MaterialPlugin::<StarFieldMaterial>::default(),
             PanOrbitCameraPlugin,
         ))
         .add_systems(Startup, setup)
-        .add_systems(Update, (rotate_camera, update_starfield))
+        .add_systems(Update, (rotate_camera, update_star_field))
         .run();
 }
 
@@ -38,7 +29,7 @@ struct MainCamera;
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut custom_materials: ResMut<Assets<StarfieldMaterial>>,
+    mut custom_materials: ResMut<Assets<StarFieldMaterial>>,
     mut standard_materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn(PointLightBundle {
@@ -55,9 +46,9 @@ fn setup(
     ));
     // cube
     commands.spawn(MaterialMeshBundle {
-        mesh: meshes.add(shape::Cube::new(1.0).into()),
+        mesh: meshes.add(Cuboid::default()),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        material: custom_materials.add(StarfieldMaterial {
+        material: custom_materials.add(StarFieldMaterial {
             mouse: Vec2::new(0.0, 0.0),
             speed2: 0.2,
         }),
@@ -65,8 +56,8 @@ fn setup(
     });
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(5.0).into()),
-        material: standard_materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+        mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
+        material: standard_materials.add(Color::rgb(0.3, 0.5, 0.3)),
         ..default()
     });
 }
@@ -74,7 +65,7 @@ fn setup(
 fn rotate_camera(
     mut camera: Query<&mut Transform, With<MainCamera>>,
     time: Res<Time>,
-    mouse_button_input: Res<Input<MouseButton>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
 ) {
     if !mouse_button_input.pressed(MouseButton::Left) {
         let cam_transform = camera.single_mut().into_inner();
@@ -87,9 +78,9 @@ fn rotate_camera(
     }
 }
 
-fn update_starfield(
-    material_handle: Query<&Handle<StarfieldMaterial>>,
-    mut materials: ResMut<Assets<StarfieldMaterial>>,
+fn update_star_field(
+    material_handle: Query<&Handle<StarFieldMaterial>>,
+    mut materials: ResMut<Assets<StarFieldMaterial>>,
     primary_query: Query<&Window>,
 ) {
     let Ok(primary) = primary_query.get_single() else {
@@ -105,17 +96,16 @@ fn update_starfield(
     }
 }
 
-#[derive(AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
-#[uuid = "ca6d82f5-b686-43cc-8f48-f931b4cefe09"]
-pub struct StarfieldMaterial {
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct StarFieldMaterial {
     #[uniform(0)]
     mouse: Vec2,
     #[uniform(0)]
     speed2: f32,
 }
 
-impl Material for StarfieldMaterial {
+impl Material for StarFieldMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders_ex/starfield_ex.wgsl".into()
+        "shaders_ex/star_field_ex.wgsl".into()
     }
 }

@@ -25,7 +25,7 @@ pub fn cast_ray_system(
         // Then cast the ray.
         let hit = r_rapier_context.cast_ray(
             ray.origin,
-            ray.direction,
+            ray.direction.into(),
             f32::MAX,
             true,
             QueryFilter::only_fixed(),
@@ -42,7 +42,10 @@ pub fn cast_ray_system(
 #[cfg(test)]
 mod tests {
     use bevy::{
-        render::{settings::WgpuSettings, RenderPlugin},
+        render::{
+            RenderPlugin,
+            settings::{RenderCreation, WgpuSettings},
+        },
         scene::ScenePlugin,
         time::TimePlugin,
     };
@@ -122,10 +125,11 @@ mod tests {
                 AssetPlugin::default(),
                 ScenePlugin::default(),
                 RenderPlugin {
-                    wgpu_settings: WgpuSettings {
+                    render_creation: RenderCreation::Automatic(WgpuSettings {
                         backends: None,
-                        ..Default::default()
-                    },
+                        ..default()
+                    }),
+                    ..default()
                 },
                 ImagePlugin::default(),
             ));

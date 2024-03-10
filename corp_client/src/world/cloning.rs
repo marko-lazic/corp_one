@@ -6,7 +6,7 @@ use crate::{
     asset::{Colony, ColonyConfigAssets},
     state::GameState,
     world::{
-        colony::{ColonyStore, vortex::VortInEvent},
+        colony::{vortex::VortInEvent, ColonyStore},
         player::PlayerStore,
     },
 };
@@ -67,7 +67,7 @@ mod tests {
         // given
         let mut app = App::new();
         init_time(&mut app);
-        app.add_state::<GameState>();
+        app.init_state::<GameState>();
         app.add_systems(
             Update,
             (kill_player, check_if_dead_and_go_to_cloning).chain(),

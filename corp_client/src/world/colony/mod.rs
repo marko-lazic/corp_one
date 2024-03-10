@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
-use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
+use bevy_scene_hook::{HookedSceneBundle, HookPlugin, SceneHook};
 
 use crate::{
     asset::{Colony, ColonyConfig, MaterialAssets, SceneAssets},
@@ -104,8 +104,8 @@ fn setup_debug_plane(
     // spawn cube
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(shape::Cube { size: 5.0 }.into()),
-            material: materials.add(Color::WHITE.into()),
+            mesh: meshes.add(Cuboid::new(5.0, 5.0, 5.0)),
+            material: materials.add(Color::WHITE),
             transform: Transform::from_xyz(10., 0., 0.),
             ..Default::default()
         },
@@ -120,7 +120,7 @@ fn setup_debug_plane(
     info!("Setup debug plane");
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(shape::Plane::from_size(100.0).into()),
+            mesh: meshes.add(Plane3d::default().mesh().size(100.0, 100.0)),
             transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
             material: materials.add(StandardMaterial {
                 base_color: Color::WHITE,
@@ -149,7 +149,11 @@ fn setup_zones(
         for zone_asset in &colony_asset.zones {
             commands.spawn((
                 PbrBundle {
-                    mesh: r_mesh_assets.add(shape::Plane::from_size(zone_asset.size).into()),
+                    mesh: r_mesh_assets.add(
+                        Plane3d::default()
+                            .mesh()
+                            .size(zone_asset.size, zone_asset.size),
+                    ),
                     transform: Transform::from_translation(zone_asset.position),
                     material: r_material_assets.get_material(&zone_asset.material),
                     ..Default::default()
@@ -183,5 +187,6 @@ fn update_lights(mut query: Query<&mut PointLight>) {
     info!("Update lights");
     for mut point_light in query.iter_mut() {
         point_light.shadows_enabled = true;
+        point_light.intensity = 100_000.0;
     }
 }

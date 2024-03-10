@@ -122,15 +122,16 @@ pub struct AssetLoadingPlugin;
 impl Plugin for AssetLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(GameState::Loading).continue_to_state(GameState::StarMap),
+            LoadingState::new(GameState::Loading)
+                .continue_to_state(GameState::StarMap)
+                .load_collection::<PlayerAssets>()
+                .load_collection::<MeshAssets>()
+                .load_collection::<TextureAssets>()
+                .load_collection::<AudioAssets>()
+                .load_collection::<FontAssets>()
+                .load_collection::<ColonyConfigAssets>()
+                .load_collection::<SceneAssets>(),
         )
-        .add_collection_to_loading_state::<_, PlayerAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, MeshAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, TextureAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, FontAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, ColonyConfigAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, SceneAssets>(GameState::Loading)
         .add_systems(OnEnter(GameState::Loading), (setup, start_loading).chain());
     }
 }
@@ -160,11 +161,11 @@ fn start_loading(mut commands: Commands, mut materials: ResMut<Assets<StandardMa
             base_color: Color::rgb(0.8, 0.7, 0.6),
             ..Default::default()
         }),
-        green_material: materials.add(Color::rgb(0.1, 0.2, 0.1).into()),
-        blue_material: materials.add(Color::rgb(0.1, 0.4, 0.8).into()),
-        sky_blue_material: materials.add(Color::rgb(0.55, 0.71, 0.73).into()),
-        pink_material: materials.add(Color::PINK.into()),
-        orange_red_material: materials.add(Color::ORANGE_RED.into()),
-        sea_green_material: materials.add(Color::SEA_GREEN.into()),
+        green_material: materials.add(Color::rgb(0.1, 0.2, 0.1)),
+        blue_material: materials.add(Color::rgb(0.1, 0.4, 0.8)),
+        sky_blue_material: materials.add(Color::rgb(0.55, 0.71, 0.73)),
+        pink_material: materials.add(Color::PINK),
+        orange_red_material: materials.add(Color::ORANGE_RED),
+        sea_green_material: materials.add(Color::SEA_GREEN),
     });
 }

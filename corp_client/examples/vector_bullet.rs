@@ -1,23 +1,41 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{prelude::*, quick::ResourceInspectorPlugin};
-use bevy_prototype_debug_lines::{DebugLines, DebugLinesPlugin};
 
 fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
+        .init_resource::<InspectorData>()
         .init_resource::<GameData>()
-        .add_plugins(DefaultPlugins)
+        .init_gizmo_group::<MyRoundGizmos>()
         .add_plugins((
+            DefaultPlugins,
             ResourceInspectorPlugin::<InspectorData>::new(),
-            DebugLinesPlugin::default(),
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, draw_distance_vec)
         .run();
 }
 
+#[derive(Default, Reflect, GizmoConfigGroup)]
+struct MyRoundGizmos {}
+
+#[derive(Component)]
+struct Movable;
+
+#[derive(Resource, Default)]
+struct GameData {
+    sphere: Option<Entity>,
+}
+
+#[derive(Reflect, Resource, Default, InspectorOptions)]
+#[reflect(Resource, InspectorOptions)]
+struct InspectorData {
+    #[inspector(min = 0.0, max = 100.0)]
+    offset: f32,
+}
+
 fn draw_distance_vec(
-    mut lines: ResMut<DebugLines>,
+    mut gizmos: Gizmos<MyRoundGizmos>,
     game: Res<GameData>,
     mut query: Query<&mut Transform, With<Movable>>,
     inspector: Res<InspectorData>,
@@ -32,9 +50,9 @@ fn draw_distance_vec(
     let a_to_b = b - a; // to point (b) minus (-) from point (a)
     let a_to_b_dir = a_to_b.normalize();
     let c = a + a_to_b_dir * 8.0;
-    lines.line_colored(zero, a, 0.0, red);
-    lines.line_colored(zero, b, 0.0, blue);
-    lines.line_colored(a, c, 0.0, green);
+    gizmos.line(zero, a, red);
+    gizmos.line(zero, b, blue);
+    gizmos.line(a, c, green);
 
     // let midpoint = (a - b) / 2.;
     let mut sphere = query.get_mut(game.sphere.unwrap()).unwrap();
@@ -57,10 +75,7 @@ fn setup(
     // sphere
     let sphere_id = commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.1,
-                ..Default::default()
-            })),
+            mesh: meshes.add(Sphere::new(0.1).mesh().ico(7).unwrap()),
             material: materials.add(StandardMaterial {
                 base_color: Color::LIME_GREEN,
                 ..Default::default()
@@ -72,19 +87,4 @@ fn setup(
         .id();
 
     game.sphere = Some(sphere_id);
-}
-
-#[derive(Component)]
-struct Movable;
-
-#[derive(Resource, Default)]
-struct GameData {
-    sphere: Option<Entity>,
-}
-
-#[derive(Reflect, Resource, Default, InspectorOptions)]
-#[reflect(Resource, InspectorOptions)]
-struct InspectorData {
-    #[inspector(min = 0.0, max = 100.0)]
-    offset: f32,
 }

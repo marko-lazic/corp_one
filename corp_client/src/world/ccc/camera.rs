@@ -1,4 +1,8 @@
-use bevy::{core_pipeline::bloom::BloomSettings, prelude::*};
+use bevy::{
+    core_pipeline::bloom::BloomSettings,
+    prelude::*,
+    render::camera::{Exposure, PhysicalCameraParameters},
+};
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
 use leafwing_input_manager::action_state::ActionState;
 
@@ -39,6 +43,11 @@ impl MainCameraBundle {
                     hdr: true,
                     ..default()
                 },
+                exposure: Exposure::from_physical_camera(PhysicalCameraParameters {
+                    aperture_f_stops: 1.0,
+                    shutter_speed_s: 1.0 / 125.0,
+                    sensitivity_iso: 100.0,
+                }),
                 ..default()
             },
             bloom: BloomSettings {
@@ -76,6 +85,7 @@ fn setup(mut commands: Commands, q_follow: Query<&Transform, With<MainCameraFoll
     let Ok(follow_pos) = q_follow.get_single().map(|t| t.translation) else {
         return;
     };
+    info!("Setup Camera");
     commands.spawn(MainCameraBundle::new(follow_pos));
 }
 
@@ -124,7 +134,8 @@ fn update_camera(
     }
 
     let (camera, camera_transform) = q_camera.single();
-    let ground = Transform::from_xyz(0.0, 0.0, 0.0);
+    let ground_origin = Vec3::ZERO;
+
     let Ok(follow_pos) = q_follow_cam.get_single() else {
         return;
     };
@@ -133,13 +144,13 @@ fn update_camera(
         .single()
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .unwrap_or_else(|| Ray {
+        .unwrap_or_else(|| Ray3d {
             origin: follow_pos.translation,
             direction: follow_pos.down(),
         });
 
     // Calculate if and where the ray is hitting the ground plane.
-    let Some(distance) = ray.intersect_plane(ground.translation, ground.up()) else {
+    let Some(distance) = ray.intersect_plane(ground_origin, Plane3d::new(Vec3::Y)) else {
         return;
     };
     let mouse_ground_pos = ray.get_point(distance);
@@ -176,11 +187,10 @@ mod tests {
     use bevy::input::InputPlugin;
     use leafwing_input_manager::input_mocking::MockInput;
 
-    use corp_shared::prelude::{Health, Player, TestUtils};
+    use corp_shared::prelude::{Health, TestUtils};
 
-    use crate::{
-        state::GameState,
-        world::ccc::{CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MovementBundle},
+    use crate::world::ccc::{
+        CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MovementBundle,
     };
 
     use super::*;
@@ -197,7 +207,7 @@ mod tests {
         app.update_after(Duration::from_secs_f32(1.0));
 
         // when
-        app.send_input(KeyCode::D);
+        app.send_input(KeyCode::KeyD);
         app.update();
 
         // then
@@ -236,7 +246,7 @@ mod tests {
         app.update();
 
         // when
-        app.send_input(KeyCode::Equals);
+        app.send_input(KeyCode::Equal);
         app.update_after(Duration::from_secs_f32(4.0));
 
         // then
@@ -247,7 +257,7 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .add_state::<GameState>()
+            .init_state::<GameState>()
             .add_plugins((
                 InputPlugin,
                 ControlPlugin,

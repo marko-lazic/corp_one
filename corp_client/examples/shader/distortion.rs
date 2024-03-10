@@ -1,10 +1,7 @@
-use std::time::Duration;
-
 use bevy::{
-    asset::ChangeWatcher,
     pbr::{MaterialPipeline, MaterialPipelineKey},
     prelude::*,
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     render::{
         mesh::MeshVertexBufferLayout,
         render_resource::{
@@ -18,19 +15,13 @@ use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 fn main() {
     App::new()
         .add_plugins((
-            DefaultPlugins
-                .set(AssetPlugin {
-                    // Tell the asset server to watch for asset changes on disk:
-                    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        resolution: (640.0, 480.0).into(),
-                        ..default()
-                    }),
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    resolution: (640.0, 480.0).into(),
                     ..default()
                 }),
+                ..default()
+            }),
             PanOrbitCameraPlugin,
             MaterialPlugin::<DistortionMaterial>::default(),
             // PanOrbitCameraPlugin,
@@ -64,7 +55,7 @@ fn setup(
     ));
     // cube
     commands.spawn(MaterialMeshBundle {
-        mesh: meshes.add(shape::Cube::new(1.0).into()),
+        mesh: meshes.add(Cuboid::default()),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         material: custom_materials.add(DistortionMaterial {
             alpha_mode: AlphaMode::Blend,
@@ -76,8 +67,8 @@ fn setup(
     });
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(5.0).into()),
-        material: standard_materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+        mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
+        material: standard_materials.add(Color::rgb(0.3, 0.5, 0.3)),
         ..default()
     });
 }
@@ -85,7 +76,7 @@ fn setup(
 fn rotate_camera(
     mut camera: Query<&mut Transform, With<MainCamera>>,
     time: Res<Time>,
-    mouse_button_input: Res<Input<MouseButton>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
 ) {
     if !mouse_button_input.pressed(MouseButton::Left) {
         let cam_transform = camera.single_mut().into_inner();
@@ -98,6 +89,7 @@ fn rotate_camera(
     }
 }
 
+#[allow(unused)] // The system should be able to change distortion parameters from the game
 fn update_distortion(
     material_handle: Query<&Handle<DistortionMaterial>>,
     mut materials: ResMut<Assets<DistortionMaterial>>,
@@ -108,8 +100,7 @@ fn update_distortion(
     };
 }
 
-#[derive(AsBindGroup, TypeUuid, TypePath, Debug, Clone, Default)]
-#[uuid = "a3d71c04-d054-4946-80f8-ba6cfbc90cad"]
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct DistortionMaterial {
     alpha_mode: AlphaMode,
     #[uniform(0)]
@@ -153,7 +144,7 @@ impl Material for DistortionMaterial {
 pub struct FragmentUniforms {
     distortion_view: f32,
     speed_view: f32,
-    fesnel_amount: f32,
+    fresnel_amount: f32,
     tint_color: Color,
 }
 
@@ -162,7 +153,7 @@ impl Default for FragmentUniforms {
         FragmentUniforms {
             distortion_view: 0.3,
             speed_view: 0.5,
-            fesnel_amount: 0.0,
+            fresnel_amount: 0.0,
             tint_color: Color::rgb(0.0, 0.0, 1.0),
         }
     }

@@ -1,13 +1,9 @@
-use bevy::{
-    prelude::*,
-    reflect::{TypePath, TypeUuid},
-};
+use bevy::{prelude::*, reflect::TypePath};
 use serde::Deserialize;
 
 use crate::asset::MaterialAsset;
 
-#[derive(Asset, Default, Deserialize, Debug, TypeUuid, TypePath)]
-#[uuid = "962DF4C2-C221-4364-A9F7-B7340FB60437"]
+#[derive(Asset, Default, Deserialize, Debug, TypePath)]
 pub struct ColonyConfig {
     pub name: Colony,
     pub description: String,

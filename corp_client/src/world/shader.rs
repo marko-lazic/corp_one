@@ -1,7 +1,7 @@
 use bevy::{
     pbr::{MaterialPipeline, MaterialPipelineKey},
     prelude::*,
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     render::{
         mesh::MeshVertexBufferLayout,
         render_resource::{
@@ -12,8 +12,7 @@ use bevy::{
 
 use crate::state::GameState;
 
-#[derive(Asset, AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
-#[uuid = "bd5c76fd-6fdd-4de4-9744-4e8beea8daaf"]
+#[derive(Asset, AsBindGroup, Debug, Clone, TypePath)]
 pub struct BarrierMaterial {
     alpha_mode: AlphaMode,
 }

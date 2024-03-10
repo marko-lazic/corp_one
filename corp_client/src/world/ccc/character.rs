@@ -131,7 +131,7 @@ mod tests {
         setup_camera(&mut app);
 
         // when
-        app.send_input(KeyCode::W);
+        app.send_input(KeyCode::KeyW);
         app.update();
 
         // then
@@ -147,8 +147,8 @@ mod tests {
         setup_camera(&mut app);
 
         // when
-        app.send_input(KeyCode::W);
-        app.send_input(KeyCode::A);
+        app.send_input(KeyCode::KeyW);
+        app.send_input(KeyCode::KeyA);
         app.update();
 
         // then
@@ -165,7 +165,7 @@ mod tests {
         setup_camera(&mut app);
 
         // when
-        app.send_input(KeyCode::W);
+        app.send_input(KeyCode::KeyW);
         app.update();
 
         // then
@@ -187,7 +187,7 @@ mod tests {
         let player = setup_player(&mut app);
 
         // when
-        app.send_input(KeyCode::W);
+        app.send_input(KeyCode::KeyW);
         app.update();
 
         // then
@@ -205,7 +205,7 @@ mod tests {
 
         // when
         app.get_mut::<Health>(player).kill_mut();
-        app.send_input(KeyCode::W);
+        app.send_input(KeyCode::KeyW);
         app.update();
 
         // then
@@ -218,18 +218,18 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .add_state::<GameState>()
+            .init_state::<GameState>()
             .add_plugins((
                 InputPlugin,
                 ControlPlugin,
                 CharacterPlugin,
                 MainCameraPlugin,
             ))
-            .configure_set(
+            .configure_sets(
                 Update,
                 ControlSet::PlayingInput.before(CharacterSet::Movement),
             )
-            .configure_set(Update, CameraSet::Update.after(CharacterSet::Movement));
+            .configure_sets(Update, CameraSet::Update.after(CharacterSet::Movement));
         app.set_state(GameState::Playing);
         app
     }

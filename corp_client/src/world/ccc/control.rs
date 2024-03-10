@@ -65,9 +65,9 @@ impl UIAction {
         let mut input = InputMap::default();
         input
             .insert(UIAction::Escape, KeyCode::Escape)
-            .insert(UIAction::ColonyIris, KeyCode::I)
-            .insert(UIAction::ColonyPlayground, KeyCode::P)
-            .insert(UIAction::ColonyLiberte, KeyCode::L);
+            .insert(UIAction::ColonyIris, KeyCode::KeyI)
+            .insert(UIAction::ColonyPlayground, KeyCode::KeyP)
+            .insert(UIAction::ColonyLiberte, KeyCode::KeyL);
         input
     }
 }
@@ -94,22 +94,22 @@ impl PlayerAction {
         let mut input = InputMap::default();
         input
             // Movement
-            .insert(PlayerAction::Forward, KeyCode::W)
-            .insert(PlayerAction::Backward, KeyCode::S)
-            .insert(PlayerAction::Left, KeyCode::A)
-            .insert(PlayerAction::Right, KeyCode::D)
+            .insert(PlayerAction::Forward, KeyCode::KeyW)
+            .insert(PlayerAction::Backward, KeyCode::KeyS)
+            .insert(PlayerAction::Left, KeyCode::KeyA)
+            .insert(PlayerAction::Right, KeyCode::KeyD)
             // Weapon
             .insert(PlayerAction::Aim, MouseButton::Right)
             // Abilities
-            .insert(PlayerAction::Use, KeyCode::E)
-            .insert(PlayerAction::Kill, KeyCode::K)
+            .insert(PlayerAction::Use, KeyCode::KeyE)
+            .insert(PlayerAction::Kill, KeyCode::KeyK)
             .insert(PlayerAction::Shoot, MouseButton::Left)
             // Options
             .insert(PlayerAction::OrientationMode, KeyCode::Space)
-            .insert(PlayerAction::CameraZoomIn, KeyCode::Equals)
+            .insert(PlayerAction::CameraZoomIn, KeyCode::Equal)
             .insert(PlayerAction::CameraZoomOut, KeyCode::Minus)
-            .insert(PlayerAction::CameraRotateClockwise, KeyCode::Z)
-            .insert(PlayerAction::CameraRotateCounterClockwise, KeyCode::C);
+            .insert(PlayerAction::CameraRotateClockwise, KeyCode::KeyZ)
+            .insert(PlayerAction::CameraRotateCounterClockwise, KeyCode::KeyC);
 
         input
     }
@@ -175,7 +175,7 @@ fn update_cursor_world(
     let Ok((camera, camera_transform)) = q_camera.get_single() else {
         return;
     };
-    let ground = Transform::from_xyz(0.0, 0.0, 0.0);
+    let ground_origin = Vec3::ZERO;
     let Ok(follow_pos) = q_follow_cam.get_single() else {
         return;
     };
@@ -184,13 +184,13 @@ fn update_cursor_world(
         .single()
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .unwrap_or_else(|| Ray {
+        .unwrap_or_else(|| Ray3d {
             origin: follow_pos.translation,
             direction: follow_pos.down(),
         });
 
     // Calculate if and where the ray is hitting the ground plane.
-    let Some(distance) = ray.intersect_plane(ground.translation, ground.up()) else {
+    let Some(distance) = ray.intersect_plane(ground_origin, Plane3d::new(Vec3::Y)) else {
         return;
     };
     let mouse_ground_pos = ray.get_point(distance);
@@ -377,7 +377,7 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .add_state::<GameState>()
+            .init_state::<GameState>()
             .add_plugins(MinimalPlugins)
             .add_plugins((InputPlugin, ControlPlugin));
         app
