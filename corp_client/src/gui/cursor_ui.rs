@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    asset::FontAssets,
     state::{Despawn, GameState},
     world::prelude::UseEntity,
 };
@@ -22,12 +23,12 @@ impl Plugin for CursorPlugin {
     }
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
     commands.spawn((
         TextBundle::from_section(
             "[E] Use",
             TextStyle {
-                font: Default::default(),
+                font: font_assets.default_font.clone(),
                 font_size: 20.0,
                 color: Color::WHITE,
             },

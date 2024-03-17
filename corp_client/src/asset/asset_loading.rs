@@ -35,8 +35,8 @@ pub struct ColonyConfigAssets {
 
 #[derive(AssetCollection, Resource)]
 pub struct FontAssets {
-    #[asset(path = "fonts/FiraMono-Medium.ttf")]
-    pub fira_sans: Handle<Font>,
+    #[asset(path = "fonts/Anonymous Pro.ttf")]
+    pub default_font: Handle<Font>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -144,7 +144,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             text: Text::from_section(
                 "Loading",
                 TextStyle {
-                    font: asset_server.load(PATHS.font_fira_sans),
+                    font: asset_server.load(PATHS.default_font),
                     font_size: 40.0,
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },

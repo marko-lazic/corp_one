@@ -6,6 +6,7 @@ use bevy::{
 use corp_shared::prelude::*;
 
 use crate::{
+    asset::FontAssets,
     gui::cursor_ui::CursorUi,
     state::{Despawn, GameState},
     world::prelude::CursorWorld,
@@ -51,20 +52,44 @@ impl Plugin for DebugGuiPlugin {
     }
 }
 
-fn setup(mut commands: Commands) {
-    commands.spawn((text(5.0, 10.0), FpsText, Despawn));
-    commands.spawn((text(25.0, 10.0), PlayerPositionText, Despawn));
-    commands.spawn((text(45.0, 10.0), MouseScreenPositionText, Despawn));
-    commands.spawn((text(65.0, 10.0), MouseWorldPositionText, Despawn));
-    commands.spawn((text(85.0, 10.0), CameraDebugText, Despawn));
-    commands.spawn((text(105.0, 10.0), PlayerHealthText, Despawn));
+fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
+    commands.spawn((
+        text(font_assets.default_font.clone(), 5.0, 10.0),
+        FpsText,
+        Despawn,
+    ));
+    commands.spawn((
+        text(font_assets.default_font.clone(), 25.0, 10.0),
+        PlayerPositionText,
+        Despawn,
+    ));
+    commands.spawn((
+        text(font_assets.default_font.clone(), 45.0, 10.0),
+        MouseScreenPositionText,
+        Despawn,
+    ));
+    commands.spawn((
+        text(font_assets.default_font.clone(), 65.0, 10.0),
+        MouseWorldPositionText,
+        Despawn,
+    ));
+    commands.spawn((
+        text(font_assets.default_font.clone(), 85.0, 10.0),
+        CameraDebugText,
+        Despawn,
+    ));
+    commands.spawn((
+        text(font_assets.default_font.clone(), 105.0, 10.0),
+        PlayerHealthText,
+        Despawn,
+    ));
 }
 
-fn text(top: f32, left: f32) -> TextBundle {
+fn text(font: Handle<Font>, top: f32, left: f32) -> TextBundle {
     TextBundle::from_section(
         "",
         TextStyle {
-            font: Default::default(),
+            font,
             font_size: 20.0,
             color: Color::WHITE,
         },
