@@ -15,7 +15,7 @@ use crate::{
             PlayerAction, PlayerEntity,
         },
         cloning::CloningPlugin,
-        colony::vortex::VortexNode,
+        colony::prelude::VortexNode,
         physics::CollideGroups,
     },
 };

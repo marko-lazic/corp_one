@@ -14,8 +14,8 @@ use crate::{
     asset::{Colony, ColonyConfig, MaterialAssets, SceneAssets},
     state::{Despawn, GameState},
     world::{
-        colony::scene_hook,
-        prelude::{CollideGroups, PhysicsSystems, PlayerSpawnEvent, zone::Zone},
+        colony::{prelude::Zone, scene_hook},
+        prelude::{CollideGroups, PhysicsSystems, PlayerSpawnEvent},
     },
 };
 

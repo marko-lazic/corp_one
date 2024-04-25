@@ -11,7 +11,7 @@ use crate::{
     state::GameState,
     world::{
         ccc::{ControlMovement, DoubleTap, MainCamera, MainCameraFollow, OrientationMode},
-        colony::vortex::VortInEvent,
+        colony::prelude::VortInEvent,
     },
 };
 

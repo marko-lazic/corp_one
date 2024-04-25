@@ -10,7 +10,7 @@ use corp_shared::prelude::Player;
 
 use crate::{
     state::{Despawn, GameState},
-    world::ccc::control::PlayerAction,
+    world::ccc::PlayerAction,
 };
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]

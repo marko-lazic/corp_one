@@ -6,7 +6,7 @@ use crate::{
     asset::{Colony, ColonyConfigAssets},
     state::GameState,
     world::{
-        colony::{prelude::ColonyLoadEvent, vortex::VortInEvent},
+        colony::prelude::{ColonyLoadEvent, VortInEvent},
         player::PlayerStore,
     },
 };

@@ -7,7 +7,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use crate::{
     asset::AssetLoadingPlugin, gui::gui::GuiPlugin, sound::SoundPlugin, state::GameStatePlugin,
-    world::WorldPlugin,
+    world::prelude::WorldPlugin,
 };
 
 mod asset;

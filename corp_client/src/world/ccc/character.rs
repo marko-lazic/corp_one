@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use corp_shared::prelude::Health;
 
-use crate::world::ccc::movement::{CharacterMovement, ControlMovement, OrientationMode};
+use crate::world::ccc::{CharacterMovement, ControlMovement, OrientationMode};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CharacterSet {
