@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemId, prelude::*};
 use bevy_rapier3d::prelude::*;
 use leafwing_input_manager::InputManagerBundle;
 use rand::seq::SliceRandom;
@@ -11,19 +11,19 @@ use crate::{
     world::{
         animator::{AnimationComponent, PlayerAnimationAction},
         ccc::{
-            CharacterMovement, ControlSet, MainCameraFollow, MovementBundle, PlayerAction,
-            PlayerEntity,
+            CharacterMovement, ControlSet, MainCameraBundle, MainCameraFollow, MovementBundle,
+            PlayerAction, PlayerEntity,
         },
         cloning::CloningPlugin,
         colony::vortex::VortexNode,
         physics::CollideGroups,
-        WorldSystemSet,
     },
 };
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct PlayerStore {
     pub health: Health,
+    pub setup_player: SystemId,
 }
 
 #[derive(Bundle)]
@@ -37,15 +37,22 @@ struct PlayerPhysicsBundle {
     collide_groups: CollisionGroups,
 }
 
+#[derive(Event)]
+pub enum PlayerSpawnEvent {
+    SpawnRandom,
+    PlayerSpawned,
+}
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(CloningPlugin)
-            .init_resource::<PlayerStore>()
+            .add_event::<PlayerSpawnEvent>()
+            .add_systems(Startup, setup)
             .add_systems(
-                OnEnter(GameState::SpawnPlayer),
-                setup_player.in_set(WorldSystemSet::PlayerSetup),
+                Update,
+                player_spawn_event_reader.run_if(in_state(GameState::LoadColony)),
             )
             .add_systems(
                 Update,
@@ -56,12 +63,35 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn setup_player(
+fn setup(world: &mut World) {
+    let setup_player = world.register_system(setup_player);
+    world.insert_resource(PlayerStore {
+        health: Default::default(),
+        setup_player,
+    })
+}
+
+fn player_spawn_event_reader(
+    mut r_player_spawn_event: EventReader<PlayerSpawnEvent>,
+    mut commands: Commands,
+    player_store: Res<PlayerStore>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    for event in r_player_spawn_event.read() {
+        match event {
+            PlayerSpawnEvent::SpawnRandom => commands.run_system(player_store.setup_player),
+            PlayerSpawnEvent::PlayerSpawned => next_state.set(GameState::Playing),
+        }
+    }
+}
+
+pub fn setup_player(
     r_player_store: Res<PlayerStore>,
     r_player_assets: Res<PlayerAssets>,
     mut r_player_entity: ResMut<PlayerEntity>,
     mut q_vortex_node_pos: Query<&mut Transform, With<VortexNode>>,
     mut commands: Commands,
+    mut r_player_spawn_event: EventWriter<PlayerSpawnEvent>,
 ) {
     let rnd_node_position = q_vortex_node_pos
         .iter_mut()
@@ -114,7 +144,10 @@ fn setup_player(
         })
         .id();
 
+    info!("Setup Camera");
+    commands.spawn(MainCameraBundle::new(rnd_node_position));
     *r_player_entity = player.into();
+    r_player_spawn_event.send(PlayerSpawnEvent::PlayerSpawned);
 }
 
 fn handle_animation_action(

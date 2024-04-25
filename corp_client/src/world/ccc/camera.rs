@@ -69,24 +69,14 @@ impl MainCameraBundle {
 
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Msaa::Sample4)
-            .add_systems(OnEnter(GameState::Playing), setup)
-            .add_systems(
-                Update,
-                (update_camera, Dolly::<MainCamera>::update_active)
-                    .chain()
-                    .in_set(CameraSet::Update)
-                    .run_if(in_state(GameState::Playing)),
-            );
+        app.insert_resource(Msaa::Sample4).add_systems(
+            Update,
+            (update_camera, Dolly::<MainCamera>::update_active)
+                .chain()
+                .in_set(CameraSet::Update)
+                .run_if(in_state(GameState::Playing)),
+        );
     }
-}
-
-fn setup(mut commands: Commands, q_follow: Query<&Transform, With<MainCameraFollow>>) {
-    let Ok(follow_pos) = q_follow.get_single().map(|t| t.translation) else {
-        return;
-    };
-    info!("Setup Camera");
-    commands.spawn(MainCameraBundle::new(follow_pos));
 }
 
 fn update_camera(
@@ -284,7 +274,8 @@ mod tests {
     }
 
     fn setup_player(app: &mut App, transform: Transform) -> Entity {
-        app.world
+        let player_entity = app
+            .world
             .spawn((
                 TransformBundle::from_transform(transform),
                 Player,
@@ -296,7 +287,10 @@ mod tests {
                 Health::default(),
                 MovementBundle::default(),
             ))
-            .id()
+            .id();
+        app.world
+            .spawn(MainCameraBundle::new(transform.translation));
+        player_entity
     }
 
     fn rotate_camera_yaw_minus_45(app: &mut App, camera: Entity) {

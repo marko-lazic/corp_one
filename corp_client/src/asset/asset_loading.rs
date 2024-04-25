@@ -4,7 +4,7 @@ use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
 use crate::{
-    asset::{ColonyConfig, PATHS},
+    asset::ColonyConfig,
     state::{Despawn, GameState},
 };
 
@@ -48,18 +48,11 @@ pub struct AudioAssets {
     #[asset(path = "sound/future-sounds-4.wav")]
     pub interaction_on: Handle<AudioSource>,
     #[asset(path = "sound/future-sounds-9.wav")]
-    pub interaction_off: Handle<AudioSource>,
+    pub _interaction_off: Handle<AudioSource>,
 }
 
 #[derive(Resource, AssetCollection)]
-pub struct MeshAssets {
-    #[asset(path = "mesh/node/node_template.gltf#Mesh0/Primitive0")]
-    pub energy_node: Handle<Mesh>,
-    #[asset(path = "mesh/cube/cube.gltf#Mesh0/Primitive0")]
-    pub cube: Handle<Mesh>,
-    #[asset(path = "mesh/vortex_node.glb#Mesh0/Primitive0")]
-    pub vortex_node: Handle<Mesh>,
-}
+pub struct MeshAssets {}
 
 #[derive(Resource, AssetCollection)]
 pub struct PlayerAssets {
@@ -95,7 +88,6 @@ impl Default for MaterialAsset {
 
 #[derive(Resource)]
 pub struct MaterialAssets {
-    pub cube: Handle<StandardMaterial>,
     pub green_material: Handle<StandardMaterial>,
     pub blue_material: Handle<StandardMaterial>,
     pub sky_blue_material: Handle<StandardMaterial>,
@@ -144,7 +136,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             text: Text::from_section(
                 "Loading",
                 TextStyle {
-                    font: asset_server.load(PATHS.default_font),
+                    font: asset_server.load("fonts/Anonymous Pro.ttf"),
                     font_size: 40.0,
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },
@@ -157,10 +149,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn start_loading(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
     commands.insert_resource(MaterialAssets {
-        cube: materials.add(StandardMaterial {
-            base_color: Color::rgb(0.8, 0.7, 0.6),
-            ..Default::default()
-        }),
         green_material: materials.add(Color::rgb(0.1, 0.2, 0.1)),
         blue_material: materials.add(Color::rgb(0.1, 0.4, 0.8)),
         sky_blue_material: materials.add(Color::rgb(0.55, 0.71, 0.73)),

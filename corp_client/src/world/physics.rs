@@ -1,7 +1,15 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemId, prelude::*};
 use bevy_rapier3d::prelude::*;
 
-use crate::{state::GameState, util::mesh_extension::MeshExt, world::shader::Shaders};
+use crate::{
+    util::mesh_extension::MeshExt,
+    world::shader::Shaders,
+};
+
+#[derive(Resource)]
+pub struct PhysicsSystems {
+    pub setup_colliders: SystemId,
+}
 
 pub struct PhysicsPlugin;
 
@@ -11,8 +19,13 @@ impl Plugin for PhysicsPlugin {
             RapierPhysicsPlugin::<NoUserData>::default(),
             RapierDebugRenderPlugin::default(),
         ))
-        .add_systems(OnEnter(GameState::SpawnPlayer), setup_colliders);
+        .add_systems(Startup, setup);
     }
+}
+
+fn setup(world: &mut World) {
+    let setup_colliders = world.register_system(setup_colliders);
+    world.insert_resource(PhysicsSystems { setup_colliders });
 }
 
 fn setup_colliders(

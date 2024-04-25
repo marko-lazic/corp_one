@@ -6,7 +6,7 @@ use crate::{
     asset::{Colony, ColonyConfigAssets},
     state::GameState,
     world::{
-        colony::{vortex::VortInEvent, ColonyStore},
+        colony::{prelude::ColonyLoadEvent, vortex::VortInEvent},
         player::PlayerStore,
     },
 };
@@ -26,7 +26,7 @@ impl Plugin for CloningPlugin {
 fn check_if_dead_and_go_to_cloning(
     r_colony_config_assets: Res<ColonyConfigAssets>,
     r_time: Res<Time>,
-    mut r_colony_store: ResMut<ColonyStore>,
+    mut ev_colony_load: EventWriter<ColonyLoadEvent>,
     mut q_health: Query<&mut Health, With<Player>>,
     mut r_next_state: ResMut<NextState<GameState>>,
 ) {
@@ -34,7 +34,7 @@ fn check_if_dead_and_go_to_cloning(
         if health.is_dead() {
             health.cloning_cooldown.tick(r_time.delta());
             if health.cloning_cooldown.finished() {
-                r_colony_store.current_colony_config = r_colony_config_assets.cloning.clone();
+                ev_colony_load.send(ColonyLoadEvent(r_colony_config_assets.cloning.clone()));
                 r_next_state.set(GameState::LoadColony);
             }
         }
@@ -54,6 +54,8 @@ fn vort_in_dead_player_to_cloning(
 
 #[cfg(test)]
 mod tests {
+    use crate::world::player::setup_player;
+
     use super::*;
 
     fn kill_player(mut healths: Query<&mut Health, With<Player>>) {
@@ -73,8 +75,12 @@ mod tests {
             (kill_player, check_if_dead_and_go_to_cloning).chain(),
         );
         app.insert_resource(create_colony_assets());
-        app.init_resource::<PlayerStore>();
-        app.init_resource::<ColonyStore>();
+        let setup_player = app.world.register_system(setup_player);
+        app.insert_resource(PlayerStore {
+            health: Health::default(),
+            setup_player,
+        });
+        app.add_event::<ColonyLoadEvent>();
         let player_entity = app.world.spawn((Player, Health::default())).id();
 
         // when
@@ -101,7 +107,11 @@ mod tests {
         // Setup test entities
         let _player_entity = world.spawn((Player, Health::default())).id();
 
-        let mut player_store = PlayerStore::default();
+        let setup_player = world.register_system(setup_player);
+        let mut player_store = PlayerStore {
+            health: Health::default(),
+            setup_player,
+        };
         player_store.health.kill_mut();
         world.insert_resource(player_store);
         world.init_resource::<Events<VortInEvent>>();

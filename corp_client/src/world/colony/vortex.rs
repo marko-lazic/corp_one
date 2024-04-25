@@ -4,14 +4,9 @@ use bevy_rapier3d::prelude::{Collider, QueryFilter, RapierContext};
 use corp_shared::prelude::*;
 
 use crate::{
-    asset::ColonyConfigAssets,
+    asset::prelude::{Colony, ColonyConfigAssets},
     state::GameState,
-    world::{
-        ccc::PlayerEntity,
-        colony::{Colony, ColonyStore},
-        physics,
-        player::PlayerStore,
-    },
+    world::{ccc::PlayerEntity, colony::prelude::ColonyLoadEvent, physics, player::PlayerStore},
 };
 
 #[derive(Event)]
@@ -42,7 +37,7 @@ impl Plugin for VortexPlugin {
             .add_event::<VortOutEvent>()
             .add_systems(
                 Update,
-                (vort_in_event_reader, debug_vort_in)
+                (debug_vort_in, vort_in_event_reader)
                     .chain()
                     .run_if(in_state(GameState::StarMap)),
             )
@@ -83,24 +78,19 @@ fn vort_out_event_reader(
 
 fn vort_in_event_reader(
     r_colony_config_assets: Res<ColonyConfigAssets>,
-    mut r_colony_store: ResMut<ColonyStore>,
     mut r_next_state: ResMut<NextState<GameState>>,
     mut ev_vort_in: EventReader<VortInEvent>,
+    mut ev_colony_load: EventWriter<ColonyLoadEvent>,
 ) {
     for vort_in in ev_vort_in.read() {
         info!("Vort in: {:?}", vort_in.colony);
-        match vort_in.colony {
-            Colony::Cloning => {
-                r_colony_store.current_colony_config = r_colony_config_assets.cloning.clone()
-            }
-            Colony::Iris => {
-                r_colony_store.current_colony_config = r_colony_config_assets.iris.clone()
-            }
-            Colony::Liberte => {
-                r_colony_store.current_colony_config = r_colony_config_assets.liberte.clone()
-            }
-            Colony::Playground => r_colony_store.current_colony_config = Handle::default(),
-        }
+        let colony_config_handle = match vort_in.colony {
+            Colony::Cloning => r_colony_config_assets.cloning.clone(),
+            Colony::Iris => r_colony_config_assets.iris.clone(),
+            Colony::Liberte => r_colony_config_assets.liberte.clone(),
+            Colony::Playground => Handle::default(),
+        };
+        ev_colony_load.send(ColonyLoadEvent(colony_config_handle));
         r_next_state.set(GameState::LoadColony);
     }
 }

@@ -1,7 +1,9 @@
 pub use asset_loading::*;
 pub use colony_configs::*;
-pub use paths::*;
 
 mod asset_loading;
 mod colony_configs;
-mod paths;
+
+pub mod prelude {
+    pub use super::{asset_loading::ColonyConfigAssets, colony_configs::Colony};
+}

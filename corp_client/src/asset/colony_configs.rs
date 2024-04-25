@@ -3,9 +3,10 @@ use serde::Deserialize;
 
 use crate::asset::MaterialAsset;
 
-#[derive(Asset, Default, Deserialize, Debug, TypePath)]
+#[derive(Asset, Clone, Default, Deserialize, Debug, TypePath)]
 pub struct ColonyConfig {
     pub name: Colony,
+    #[allow(dead_code)]
     pub description: String,
     pub zones: Vec<ZoneConfig>,
 }
