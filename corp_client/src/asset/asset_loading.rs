@@ -3,10 +3,8 @@ use bevy_asset_loader::prelude::*;
 use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
-use crate::{
-    asset::ColonyConfig,
-    state::{Despawn, GameState},
-};
+use crate::asset::prelude::{ColonyConfig, PATH};
+use crate::state::{Despawn, GameState};
 
 /// Exported using Blender export glTF 2.0 with settings enabled
 ///
@@ -136,7 +134,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             text: Text::from_section(
                 "Loading",
                 TextStyle {
-                    font: asset_server.load("fonts/Anonymous Pro.ttf"),
+                    font: asset_server.load(PATH.default_font),
                     font_size: 40.0,
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },
