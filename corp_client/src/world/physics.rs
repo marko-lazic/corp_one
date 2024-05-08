@@ -1,10 +1,7 @@
 use bevy::{ecs::system::SystemId, prelude::*};
 use bevy_rapier3d::prelude::*;
 
-use crate::{
-    util::mesh_extension::MeshExt,
-    world::shader::Shaders,
-};
+use crate::{util::mesh_extension::MeshExt, world::shader::Shaders};
 
 #[derive(Resource)]
 pub struct PhysicsSystems {
@@ -37,7 +34,7 @@ fn setup_colliders(
     shaders: Res<Shaders>,
 ) {
     for (entity, name) in &added_name {
-        if ["wall", "tree", "energynode"]
+        if ["wall", "tree", "energynode", "barriercontrol"]
             .iter()
             .any(|&s| name.to_lowercase().contains(s))
         {
@@ -52,7 +49,7 @@ fn setup_colliders(
                     .entity(collider_entity)
                     .insert((RigidBody::Fixed, rapier_collider));
             }
-        } else if name.to_lowercase().contains("barrier") {
+        } else if name.to_lowercase().contains("barrierfield") {
             for (collider_entity, collider_mesh) in
                 Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
             {
@@ -65,13 +62,11 @@ fn setup_colliders(
                     .insert((RigidBody::KinematicPositionBased, rapier_collider));
 
                 // Shaders should be refactored out of physics plugin
-                if name.to_lowercase().contains("barrierfield") {
-                    commands.entity(collider_entity).insert(MaterialMeshBundle {
-                        mesh: mesh_handles.get(collider_entity).unwrap().clone(),
-                        material: shaders.barrier.clone(),
-                        ..default()
-                    });
-                }
+                commands.entity(collider_entity).insert(MaterialMeshBundle {
+                    mesh: mesh_handles.get(collider_entity).unwrap().clone(),
+                    material: shaders.barrier.clone(),
+                    ..default()
+                });
             }
         }
     }

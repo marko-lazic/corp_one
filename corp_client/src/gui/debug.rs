@@ -1,7 +1,4 @@
-use bevy::{
-    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
-    prelude::*,
-};
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 
 use corp_shared::prelude::*;
 
@@ -12,8 +9,13 @@ use crate::{
     world::prelude::CursorWorld,
 };
 
+#[derive(Event)]
+pub enum DebugGuiEvent {
+    Interaction(String),
+}
+
 #[derive(Component)]
-struct FpsText;
+struct InteractionText;
 
 #[derive(Component)]
 struct PlayerPositionText;
@@ -35,11 +37,12 @@ pub struct DebugGuiPlugin;
 impl Plugin for DebugGuiPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(FrameTimeDiagnosticsPlugin)
+            .add_event::<DebugGuiEvent>()
             .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(
                 Update,
                 (
-                    update_fps_text,
+                    update_interaction_text,
                     update_player_position_text,
                     update_mouse_screen_position_text,
                     update_mouse_world_position_text,
@@ -55,7 +58,7 @@ impl Plugin for DebugGuiPlugin {
 fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
     commands.spawn((
         text(font_assets.default_font.clone(), 5.0, 10.0),
-        FpsText,
+        InteractionText,
         Despawn,
     ));
     commands.spawn((
@@ -103,16 +106,18 @@ fn text(font: Handle<Font>, top: f32, left: f32) -> TextBundle {
     .with_text_justify(JustifyText::Left)
 }
 
-fn update_fps_text(diagnostics: Res<DiagnosticsStore>, mut query: Query<&mut Text, With<FpsText>>) {
-    let Some(fps) = diagnostics
-        .get(&FrameTimeDiagnosticsPlugin::FPS)
-        .map(|f| f.smoothed())
-        .flatten()
-    else {
-        return;
-    };
-    for mut text in query.iter_mut() {
-        text.sections[0].value = format!("FPS {:.0}", fps);
+fn update_interaction_text(
+    mut e_debug_gui: EventReader<DebugGuiEvent>,
+    mut query: Query<&mut Text, With<InteractionText>>,
+) {
+    for event in e_debug_gui.read() {
+        match event {
+            DebugGuiEvent::Interaction(message) => {
+                for mut interaction_text in query.iter_mut() {
+                    interaction_text.sections[0].value = message.to_owned();
+                }
+            }
+        }
     }
 }
 

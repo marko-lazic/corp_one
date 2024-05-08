@@ -83,9 +83,9 @@ fn load_colony_event(
                     scene: colony_scene,
                     ..default()
                 },
-                hook: SceneHook::new(|entity_ref, commands| {
+                hook: SceneHook::new(move |entity_ref, commands| {
                     if let Some(name) = entity_ref.get::<Name>().map(|t| t.as_str()) {
-                        scene_hook::scene_hook_insert_components(name, commands)
+                        scene_hook::scene_hook_insert_components(entity_ref.id(), name, commands)
                     }
                 }),
             },
@@ -112,7 +112,7 @@ fn load_colony_event(
         Despawn,
     ));
 
-    // spawn cube
+    // spawn debug ground
     commands.spawn((
         PbrBundle {
             mesh: r_mesh_assets.add(Plane3d::default().mesh().size(100.0, 100.0)),

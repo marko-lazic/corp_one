@@ -1,4 +1,7 @@
+use std::f32::consts::PI;
+
 use bevy::{app::AppExit, prelude::*};
+use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
 use leafwing_input_manager::prelude::*;
 
 use corp_shared::prelude::{
@@ -7,11 +10,12 @@ use corp_shared::prelude::{
 
 use crate::{
     asset::Colony,
+    gui::prelude::DebugGuiEvent,
     sound::InteractionSoundEvent,
     state::GameState,
     world::{
         ccc::{ControlMovement, DoubleTap, MainCamera, MainCameraFollow, OrientationMode},
-        colony::prelude::VortInEvent,
+        colony::prelude::{BarrierControl, BarrierField, VortInEvent},
     },
 };
 
@@ -133,7 +137,8 @@ impl Plugin for ControlPlugin {
                     update_cursor_world,
                     player_control_movement,
                     player_control_orientation,
-                    use_event,
+                    detect_interactable_objects,
+                    create_use_event,
                     kill,
                     toggle_window_cursor_visible,
                 )
@@ -270,7 +275,71 @@ fn player_control_orientation(
     }
 }
 
-fn use_event(
+const HORIZONTAL_FOV: f32 = 2.0 * PI / 3.0; // 120 degrees in radians
+const NUM_RAYS: usize = 10; // Number of rays to evenly distribute within the FOV
+const RAY_SPACING: f32 = HORIZONTAL_FOV / (NUM_RAYS - 1) as f32; // Angle between each ray
+const LOOKUP_RANGE: f32 = 2.0; // Range of rays
+
+fn detect_interactable_objects(
+    r_player_entity: Res<PlayerEntity>,
+    mut r_use_entity: ResMut<UseEntity>,
+    q_transform: Query<&Transform>,
+    r_rapier_context: Res<RapierContext>,
+    q_object_type: Query<&InteractionObjectType>,
+    q_name: Query<&Name>,
+    mut e_debug_gui: EventWriter<DebugGuiEvent>,
+) {
+    let Some(e_player) = r_player_entity.get() else {
+        return;
+    };
+
+    let Ok(t_player) = q_transform.get(e_player) else {
+        return;
+    };
+
+    let mut l_usable_objects = Vec::new();
+    for i in 0..NUM_RAYS {
+        // Calculate the horizontal angle for the current ray
+        let ray_angle = (i as f32 * RAY_SPACING) - (HORIZONTAL_FOV / 2.0);
+
+        // Create a rotation quaternion for the current ray angle
+        let ray_rotation = Quat::from_rotation_y(ray_angle);
+
+        // Rotate the player's forward vector to get the ray's direction
+        let ray_direction = ray_rotation.mul_vec3(t_player.forward().into());
+
+        // Calculate the endpoint of the ray
+        let ray_end = t_player.translation + ray_direction * LOOKUP_RANGE;
+
+        let ray = Ray3d::new(t_player.translation, ray_end - t_player.translation);
+
+        // Cast the ray
+        if let Some((entity, _real)) = r_rapier_context.cast_ray(
+            ray.origin,
+            ray.direction.into(),
+            LOOKUP_RANGE,
+            true,
+            QueryFilter::only_fixed(),
+        ) {
+            let name = q_name.get(entity).map(|n| n.as_str()).unwrap_or("unknown");
+
+            if let Ok(component) = q_object_type.get(entity) {
+                l_usable_objects.push(entity);
+                e_debug_gui.send(DebugGuiEvent::Interaction(format!(
+                    "Entity {entity:?}, Name {name}, Obj {:?}",
+                    component
+                )));
+            } else {
+                e_debug_gui.send(DebugGuiEvent::Interaction(format!(
+                    "Entity {entity:?}, Name {name}, Unknown Interaction Type",
+                )));
+            }
+        }
+    }
+    r_use_entity.set(l_usable_objects.pop());
+}
+
+fn create_use_event(
     mut commands: Commands,
     r_use_entity: Res<UseEntity>,
     r_player_entity: Res<PlayerEntity>,
@@ -286,25 +355,50 @@ fn use_event(
         let Some(player) = r_player_entity.get() else {
             return;
         };
-        let Some(use_target) = r_use_entity.get() else {
+        let Some(e_use_target) = r_use_entity.get() else {
             return;
         };
 
-        let Ok(interaction_object) = q_interaction_object.get(use_target) else {
+        let Ok(interaction_object) = q_interaction_object.get(e_use_target) else {
             return;
         };
 
         match interaction_object {
-            InteractionObjectType::Door => {
+            InteractionObjectType::DoorControl => {
                 commands.add(move |w: &mut World| {
-                    w.send_event(InteractionEvent::new(player, use_target, UseDoorEvent));
+                    let barrier_fields = {
+                        let fields = w.query::<&BarrierField>().iter(&w).collect::<Vec<_>>();
+                        fields
+                    };
+
+                    if let Some(barrier_control) = w.get::<BarrierControl>(e_use_target) {
+                        let target_entity = barrier_fields
+                            .iter()
+                            .find(|&&bf| bf.name == barrier_control.barrier_field_name)
+                            .map(|&bf| bf.entity);
+
+                        if let Some(target_entity) = target_entity {
+                            w.send_event(InteractionEvent::new(
+                                player,
+                                target_entity,
+                                UseDoorEvent,
+                            ));
+                        } else {
+                            warn!(
+                                "Didn't find any barrier field with name: {}",
+                                barrier_control.barrier_field_name
+                            );
+                        }
+                    } else {
+                        warn!("Barrier control not found for entity: {:?}", e_use_target);
+                    }
                 });
             }
             InteractionObjectType::TerritoryNode => {
                 commands.add(move |w: &mut World| {
                     w.send_event(InteractionEvent::new(
                         player,
-                        use_target,
+                        e_use_target,
                         UseTerritoryNodeEvent,
                     ));
                 });

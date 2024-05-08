@@ -26,14 +26,16 @@ impl BarrierControl {
     }
 }
 
-#[derive(Component, Default, Debug)]
+#[derive(Component, Debug)]
 pub struct BarrierField {
+    pub entity: Entity,
     pub name: String,
 }
 
 impl BarrierField {
-    pub fn new(name: &str) -> Self {
+    pub fn new(entity: Entity, name: &str) -> Self {
         Self {
+            entity,
             name: name.to_string(),
         }
     }
@@ -96,23 +98,10 @@ fn change_barrier_field_visibility_and_collision(
 pub fn receive_barrier_pickings(
     mut ev_barrier_picking_event: EventReader<PickingEvent<BarrierPickingEvent>>,
     mut r_use_target: ResMut<UseEntity>,
-    q_barrier_control: Query<&BarrierControl>,
-    q_barrier_field: Query<(Entity, &BarrierField)>,
 ) {
     for event in ev_barrier_picking_event.read() {
         if event.mode == Hover::Over {
-            let Ok(barrier_control) = q_barrier_control.get(event.target) else {
-                return;
-            };
-
-            // Try spawning barrier field and control as one entity with parent/child
-            let Some((target_barrier, _)) = q_barrier_field
-                .iter()
-                .find(|(_e, b)| b.name == barrier_control.barrier_field_name)
-            else {
-                return;
-            };
-            r_use_target.set(Some(target_barrier));
+            r_use_target.set(Some(event.target));
         } else if event.mode == Hover::Out {
             r_use_target.set(None);
         }

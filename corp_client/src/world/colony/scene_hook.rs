@@ -1,4 +1,4 @@
-use bevy::{ecs::system::EntityCommands, log::info};
+use bevy::{ecs::system::EntityCommands, log::info, prelude::Entity};
 use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -20,7 +20,7 @@ use crate::{
     },
 };
 
-pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
+pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut EntityCommands) {
     match name {
         n if n.starts_with("VortexGate") => commands.insert((
             VortexGate,
@@ -33,42 +33,44 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
             info!("Insert vortex node: {}", n);
             commands.insert((VortexNode, Despawn))
         }
-        "BarrierField1" => {
+        n if n.starts_with("BarrierField1") => {
             let mut registry = ControlRegistry::default();
             registry.add_permanent(Faction::EC);
             commands.insert((
-                BarrierField::new("B1"),
+                BarrierField::new(entity, "B1"),
                 Door::new(Security::Low),
                 registry,
-                InteractionObjectType::Door,
             ))
         }
-        "BarrierControl11" | "BarrierControl12" => commands.insert((
-            BarrierControl::new("B1"),
-            PickableBundle::default(),
-            On::<Pointer<Over>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
-            On::<Pointer<Out>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
-            Despawn,
-        )),
+        n if n.starts_with("BarrierControl11") | n.starts_with("BarrierControl12") => commands
+            .insert((
+                BarrierControl::new("B1"),
+                PickableBundle::default(),
+                On::<Pointer<Over>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
+                On::<Pointer<Out>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
+                InteractionObjectType::DoorControl,
+                Despawn,
+            )),
 
-        "BarrierField2" => {
+        n if n.starts_with("BarrierField2") => {
             let mut registry = ControlRegistry::default();
             registry.add_permanent(Faction::EC);
             commands.insert((
-                BarrierField::new("B2"),
+                BarrierField::new(entity, "B2"),
                 Door::new(Security::Low),
-                InteractionObjectType::Door,
                 registry,
             ))
         }
-        "BarrierControl21" | "BarrierControl22" => commands.insert((
-            BarrierControl::new("B2"),
-            PickableBundle::default(),
-            On::<Pointer<Over>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
-            On::<Pointer<Out>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
-            Despawn,
-        )),
-        "EnergyNode1" => commands.insert((
+        n if n.starts_with("BarrierControl21") | n.starts_with("BarrierControl22") => commands
+            .insert((
+                BarrierControl::new("B2"),
+                PickableBundle::default(),
+                On::<Pointer<Over>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
+                On::<Pointer<Out>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
+                InteractionObjectType::DoorControl,
+                Despawn,
+            )),
+        n if n.starts_with("EnergyNode1") => commands.insert((
             TerritoryNode {
                 r#type: TerritoryNodeType::EnergyNode,
                 security: Security::Low,
@@ -79,7 +81,7 @@ pub fn scene_hook_insert_components(name: &str, commands: &mut EntityCommands) {
             InteractionObjectType::TerritoryNode,
             Despawn,
         )),
-        "Plant Tree" => commands.insert(Despawn),
+        n if n.starts_with("Plant Tree") => commands.insert(Despawn),
         _ => commands,
     };
 }

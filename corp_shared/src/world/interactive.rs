@@ -2,9 +2,9 @@ use bevy::prelude::*;
 
 pub trait InteractionEntity {}
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub enum InteractionObjectType {
-    Door,
+    DoorControl,
     TerritoryNode,
 }
 
