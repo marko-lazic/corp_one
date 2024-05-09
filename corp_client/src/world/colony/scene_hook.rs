@@ -11,9 +11,7 @@ use crate::{
     state::Despawn,
     world::{
         colony::{
-            barrier::{BarrierControl, BarrierField, BarrierPickingEvent},
-            object_interaction::PickingEvent,
-            territory::TerritoryNodePickingEvent,
+            barrier::{BarrierControl, BarrierField},
             vortex::{VortexGate, VortexNode},
         },
         physics,
@@ -46,8 +44,6 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             .insert((
                 BarrierControl::new("B1"),
                 PickableBundle::default(),
-                On::<Pointer<Over>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
-                On::<Pointer<Out>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
                 InteractionObjectType::DoorControl,
                 Despawn,
             )),
@@ -65,8 +61,6 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             .insert((
                 BarrierControl::new("B2"),
                 PickableBundle::default(),
-                On::<Pointer<Over>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
-                On::<Pointer<Out>>::send_event::<PickingEvent<BarrierPickingEvent>>(),
                 InteractionObjectType::DoorControl,
                 Despawn,
             )),
@@ -76,8 +70,6 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
                 security: Security::Low,
             },
             PickableBundle::default(),
-            On::<Pointer<Over>>::send_event::<PickingEvent<TerritoryNodePickingEvent>>(),
-            On::<Pointer<Out>>::send_event::<PickingEvent<TerritoryNodePickingEvent>>(),
             InteractionObjectType::TerritoryNode,
             Despawn,
         )),

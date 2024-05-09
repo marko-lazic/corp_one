@@ -1,44 +1,8 @@
-use std::marker::PhantomData;
-
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
 
 use corp_shared::prelude::*;
 
 use crate::world::colony::{barrier::BarrierPlugin, territory::TerritoryNodePlugin};
-
-#[derive(Event)]
-pub struct PickingEvent<E> {
-    pub target: Entity,
-    pub mode: Hover,
-    _marker: PhantomData<E>,
-}
-
-impl<E> From<ListenerInput<Pointer<Over>>> for PickingEvent<E> {
-    fn from(event: ListenerInput<Pointer<Over>>) -> Self {
-        PickingEvent {
-            target: event.target,
-            mode: Hover::Over,
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl<E> From<ListenerInput<Pointer<Out>>> for PickingEvent<E> {
-    fn from(event: ListenerInput<Pointer<Out>>) -> Self {
-        PickingEvent {
-            target: event.target,
-            mode: Hover::Out,
-            _marker: PhantomData,
-        }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Hover {
-    Over,
-    Out,
-}
 
 pub struct ObjectInteractionPlugin;
 
