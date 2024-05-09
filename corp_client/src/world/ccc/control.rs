@@ -180,7 +180,7 @@ fn update_cursor_world(
     let Ok((camera, camera_transform)) = q_camera.get_single() else {
         return;
     };
-    let ground_origin = Vec3::ZERO;
+    let belt_level = Vec3::new(0.0, 1.0, 0.0);
     let Ok(follow_pos) = q_follow_cam.get_single() else {
         return;
     };
@@ -194,8 +194,8 @@ fn update_cursor_world(
             direction: follow_pos.down(),
         });
 
-    // Calculate if and where the ray is hitting the ground plane.
-    let Some(distance) = ray.intersect_plane(ground_origin, Plane3d::new(Vec3::Y)) else {
+    // Calculate if and where the ray is hitting the belt (of the character height) level.
+    let Some(distance) = ray.intersect_plane(belt_level, Plane3d::new(Vec3::Y)) else {
         return;
     };
     let mouse_ground_pos = ray.get_point(distance);
@@ -288,6 +288,7 @@ fn detect_interactable_objects(
     q_object_type: Query<&InteractionObjectType>,
     q_name: Query<&Name>,
     mut e_debug_gui: EventWriter<DebugGuiEvent>,
+    r_cursor_world: Res<CursorWorld>,
 ) {
     let Some(e_player) = r_player_entity.get() else {
         return;
@@ -311,32 +312,80 @@ fn detect_interactable_objects(
         // Calculate the endpoint of the ray
         let ray_end = t_player.translation + ray_direction * LOOKUP_RANGE;
 
-        let ray = Ray3d::new(t_player.translation, ray_end - t_player.translation);
+        let direction = ray_end - t_player.translation;
+
+        if direction == Vec3::ZERO {
+            warn!("FOV ray direction is zero");
+            return;
+        }
+
+        let ray = Ray3d::new(t_player.translation, direction);
 
         // Cast the ray
-        if let Some((entity, _real)) = r_rapier_context.cast_ray(
-            ray.origin,
-            ray.direction.into(),
-            LOOKUP_RANGE,
-            true,
-            QueryFilter::only_fixed(),
-        ) {
-            let name = q_name.get(entity).map(|n| n.as_str()).unwrap_or("unknown");
-
-            if let Ok(component) = q_object_type.get(entity) {
-                l_usable_objects.push(entity);
-                e_debug_gui.send(DebugGuiEvent::Interaction(format!(
-                    "Entity {entity:?}, Name {name}, Obj {:?}",
-                    component
-                )));
-            } else {
-                e_debug_gui.send(DebugGuiEvent::Interaction(format!(
-                    "Entity {entity:?}, Name {name}, Unknown Interaction Type",
-                )));
-            }
+        if let Some(entity) = find_interactable_entity(&r_rapier_context, &q_object_type, ray) {
+            l_usable_objects.push(entity);
+            update_debug_gui_text(&q_object_type, &q_name, &mut e_debug_gui, &entity);
         }
     }
+    // Cast cursor ray
+    let cursor = r_cursor_world.0;
+    let direction = Vec3::new(cursor.x, t_player.translation.y, cursor.z) - t_player.translation;
+    if direction == Vec3::ZERO {
+        return;
+    }
+    let ray = Ray3d::new(t_player.translation, direction);
+
+    if let Some(entity) = find_interactable_entity(&r_rapier_context, &q_object_type, ray) {
+        l_usable_objects.push(entity);
+        update_debug_gui_text(&q_object_type, &q_name, &mut e_debug_gui, &entity);
+    }
+
     r_use_entity.set(l_usable_objects.pop());
+}
+
+fn find_interactable_entity(
+    r_rapier_context: &Res<RapierContext>,
+    q_object_type: &Query<&InteractionObjectType>,
+    ray: Ray3d,
+) -> Option<Entity> {
+    if let Some((entity, _real)) = r_rapier_context.cast_ray(
+        ray.origin,
+        ray.direction.into(),
+        LOOKUP_RANGE,
+        true,
+        QueryFilter::only_fixed(),
+    ) {
+        if let Ok(_) = q_object_type.get(entity.clone()) {
+            Some(entity)
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+fn update_debug_gui_text(
+    q_object_type: &Query<&InteractionObjectType>,
+    q_name: &Query<&Name>,
+    e_debug_gui: &mut EventWriter<DebugGuiEvent>,
+    entity: &Entity,
+) {
+    let name = q_name
+        .get(entity.clone())
+        .map(|n| n.as_str())
+        .unwrap_or("unknown");
+
+    if let Ok(component) = q_object_type.get(entity.clone()) {
+        e_debug_gui.send(DebugGuiEvent::Interaction(format!(
+            "Entity {entity:?}, Name {name}, Obj {:?}",
+            component
+        )));
+    } else {
+        e_debug_gui.send(DebugGuiEvent::Interaction(format!(
+            "Entity {entity:?}, Name {name}, Unknown Interaction Type",
+        )));
+    }
 }
 
 fn create_use_event(
