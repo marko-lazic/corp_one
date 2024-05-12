@@ -6,7 +6,7 @@ use corp_shared::prelude::*;
 use crate::{
     asset::prelude::{Colony, ColonyConfigAssets},
     state::GameState,
-    world::{ccc::PlayerEntity, colony::prelude::ColonyLoadEvent, physics, player::PlayerStore},
+    world::{ccc::PlayerEntity, colony::prelude::ColonyLoadEvent, player::PlayerStore},
 };
 
 #[derive(Event)]

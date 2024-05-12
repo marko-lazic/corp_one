@@ -50,19 +50,25 @@ fn update_cursor_ui_position(primary_query: Query<&Window>, mut cursor: ResMut<C
 }
 
 fn update_use_text(
-    cursor: Res<CursorUi>,
-    r_use_target: Res<UseEntity>,
+    r_use_entity: Res<UseEntity>,
+    camera: Query<(&Camera, &GlobalTransform)>,
     mut q_use_text: Query<(&mut Style, &mut Visibility), With<UseText>>,
 ) {
-    if r_use_target.get().is_some() {
+    let Ok((camera, camera_transform)) = camera.get_single() else {
+        return;
+    };
+    if let Some(usable_entity) = r_use_entity.0.iter().last() {
+        let (_, hit_point) = usable_entity.get();
         for (mut style, mut visibility) in &mut q_use_text {
             *visibility = Visibility::Visible;
-            let text_top = cursor.y + 15.0;
-            let text_left = cursor.x + 20.0;
-            style.top = Val::Px(text_top);
-            style.left = Val::Px(text_left);
+            if let Some(hit_point_screen) = camera.world_to_viewport(camera_transform, hit_point) {
+                style.left = Val::Px(hit_point_screen.x);
+                style.top = Val::Px(hit_point_screen.y);
+            }
         }
-    } else {
+    }
+
+    if r_use_entity.0.is_empty() {
         let result = q_use_text.get_single_mut();
         if let Ok((_, mut visibility)) = result {
             *visibility = Visibility::Hidden;

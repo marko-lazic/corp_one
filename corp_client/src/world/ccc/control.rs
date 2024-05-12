@@ -40,18 +40,23 @@ impl From<Entity> for PlayerEntity {
     }
 }
 
-#[derive(Resource, Default)]
-pub struct UseEntity(Option<Entity>);
+pub struct UsableEntity {
+    entity: Entity,
+    hit_point: Vec3,
+}
 
-impl UseEntity {
-    pub fn set(&mut self, target: Option<Entity>) {
-        self.0 = target;
+impl UsableEntity {
+    pub fn new(entity: Entity, hit_point: Vec3) -> Self {
+        Self { entity, hit_point }
     }
 
-    pub fn get(&self) -> Option<Entity> {
-        self.0
+    pub fn get(&self) -> (Entity, Vec3) {
+        (self.entity, self.hit_point)
     }
 }
+
+#[derive(Resource, Default)]
+pub struct UseEntity(pub Vec<UsableEntity>);
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorWorld(Vec3);
@@ -289,6 +294,7 @@ fn detect_interactable_objects(
     r_player_entity: Res<PlayerEntity>,
     mut r_use_entity: ResMut<UseEntity>,
     q_transform: Query<&Transform>,
+    q_parent: Query<&Parent>,
     r_rapier_context: Res<RapierContext>,
     q_object_type: Query<&InteractionObjectType>,
     mut e_debug_gui: EventWriter<DebugGuiEvent>,
@@ -338,8 +344,9 @@ fn detect_interactable_objects(
     let ray = Ray3d::new(origin, direction);
     rays.push(ray);
 
+    // Clear any previously selected entities
+    r_use_entity.0.clear();
     // Collect usable objects
-    let mut usable_objects = Vec::new();
     for ray in rays {
         if let Some((entity, real)) = r_rapier_context.cast_ray(
             ray.origin,
@@ -354,7 +361,19 @@ fn detect_interactable_objects(
                     (ray.origin + ray.direction * real) - ray.origin,
                     Color::RED,
                 );
-                usable_objects.push(entity);
+
+                let Ok(parent) = q_parent.get(entity) else {
+                    warn!("Failed to retrieve parent for entity {entity:?}");
+                    return;
+                };
+
+                let Ok(transform) = q_transform.get(parent.get()) else {
+                    warn!("Failed to retrieve transform for entity {entity:?}");
+                    return;
+                };
+                r_use_entity
+                    .0
+                    .push(UsableEntity::new(entity, transform.translation));
                 e_debug_gui.send(DebugGuiEvent::Interaction(entity));
             } else {
                 gizmos.ray(
@@ -371,8 +390,6 @@ fn detect_interactable_objects(
             );
         }
     }
-
-    r_use_entity.set(usable_objects.pop());
 }
 
 fn create_use_event(
@@ -391,11 +408,12 @@ fn create_use_event(
         let Some(player) = r_player_entity.get() else {
             return;
         };
-        let Some(e_use_target) = r_use_entity.get() else {
+        let Some(usable_entity) = r_use_entity.0.iter().last() else {
             return;
         };
+        let usable_entity = usable_entity.entity;
 
-        let Ok(interaction_object) = q_interaction_object.get(e_use_target) else {
+        let Ok(interaction_object) = q_interaction_object.get(usable_entity) else {
             return;
         };
 
@@ -407,7 +425,7 @@ fn create_use_event(
                         fields
                     };
 
-                    if let Some(barrier_control) = w.get::<BarrierControl>(e_use_target) {
+                    if let Some(barrier_control) = w.get::<BarrierControl>(usable_entity) {
                         let target_entity = barrier_fields
                             .iter()
                             .find(|&&bf| bf.name == barrier_control.barrier_field_name)
@@ -426,7 +444,7 @@ fn create_use_event(
                             );
                         }
                     } else {
-                        warn!("Barrier control not found for entity: {:?}", e_use_target);
+                        warn!("Barrier control not found for entity: {:?}", usable_entity);
                     }
                 });
             }
@@ -434,7 +452,7 @@ fn create_use_event(
                 commands.add(move |w: &mut World| {
                     w.send_event(InteractionEvent::new(
                         player,
-                        e_use_target,
+                        usable_entity,
                         UseTerritoryNodeEvent,
                     ));
                 });
