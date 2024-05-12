@@ -5,8 +5,8 @@ use corp_shared::prelude::*;
 
 use crate::{
     asset::{ZoneConfig, ZoneType},
-    state::GameState,
-    world::physics,
+    state::GameState
+    ,
 };
 
 #[derive(Component)]
@@ -71,16 +71,20 @@ fn zone_collider(
     mut zones: Query<(&mut Zone, &Transform, &Collider)>,
     rapier_context: Res<RapierContext>,
 ) {
-    let filter = QueryFilter::only_dynamic().groups(physics::CollideGroups::zone());
+    let filter = QueryFilter::only_kinematic();
 
-    for (mut zone, transform, collider) in zones.iter_mut() {
+    for (mut zone, t_zone, collider) in zones.iter_mut() {
         zone.entities.clear();
-        let shape_rot = transform.rotation;
-        let shape_pos = transform.translation;
-        rapier_context.intersections_with_shape(shape_pos, shape_rot, collider, filter, |entity| {
-            zone.add(entity);
-            // Match all intersections, not just the first one
-            true
-        });
+        rapier_context.intersections_with_shape(
+            t_zone.translation,
+            t_zone.rotation,
+            collider,
+            filter,
+            |entity| {
+                zone.add(entity);
+                // Match all intersections, not just the first one
+                true
+            },
+        );
     }
 }

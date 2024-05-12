@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::KinematicCharacterController;
 
 use corp_shared::prelude::Health;
 
@@ -50,12 +51,15 @@ fn calculate_character_movement(
 
 fn move_character(
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &CharacterMovement), Changed<CharacterMovement>>,
+    mut controllers: Query<
+        (&mut KinematicCharacterController, &CharacterMovement),
+        Changed<CharacterMovement>,
+    >,
 ) {
     let delta_seconds = time.delta_seconds();
-    for (mut transform, character_movement) in &mut query {
-        let new_position = transform.translation + character_movement.velocity * delta_seconds;
-        transform.translation = new_position;
+    for (mut controller, character_movement) in &mut controllers {
+        let new_position = character_movement.velocity * delta_seconds;
+        controller.translation = Some(new_position);
     }
 }
 

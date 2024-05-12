@@ -106,7 +106,7 @@ fn vortex_gate_collider(
     rapier_context: Res<RapierContext>,
     mut ev_vort_out: EventWriter<VortOutEvent>,
 ) {
-    let filter = QueryFilter::only_dynamic().groups(physics::CollideGroups::vortex_gate());
+    let filter = QueryFilter::only_kinematic();
 
     for (transform, collider) in q_vortex_gate_tr_co.iter() {
         let shape_rot = transform.rotation;

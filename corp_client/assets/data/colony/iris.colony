@@ -3,7 +3,7 @@
     description: "Iris Relaxed Alien Adventure",
     zones: [
         ZoneConfig(
-            position: Vec3(-3.0, 0.1, -4.0),
+            position: Vec3(-3.0, 0.01, -4.0),
             value: 9.3,
             second: 1.0,
             zone_type: Damage,
@@ -11,7 +11,7 @@
             material: OrangeRed,
         ),
         ZoneConfig(
-            position: Vec3(3.0, 0.1, -4.0),
+            position: Vec3(3.0, 0.01, -4.0),
             value: 3.5,
             second: 1.0,
             zone_type: Heal,

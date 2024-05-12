@@ -11,8 +11,11 @@ use crate::{
 
 #[derive(Event)]
 pub enum DebugGuiEvent {
-    Interaction(String),
+    Interaction(Entity),
 }
+
+#[derive(Default, Reflect, GizmoConfigGroup)]
+pub struct DebugGizmos {}
 
 #[derive(Component)]
 struct InteractionText;
@@ -36,7 +39,8 @@ pub struct DebugGuiPlugin;
 
 impl Plugin for DebugGuiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(FrameTimeDiagnosticsPlugin)
+        app.init_gizmo_group::<DebugGizmos>()
+            .add_plugins(FrameTimeDiagnosticsPlugin)
             .add_event::<DebugGuiEvent>()
             .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(
@@ -55,7 +59,11 @@ impl Plugin for DebugGuiPlugin {
     }
 }
 
-fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
+fn setup(
+    mut commands: Commands,
+    font_assets: Res<FontAssets>,
+    mut config_store: ResMut<GizmoConfigStore>,
+) {
     commands.spawn((
         text(font_assets.default_font.clone(), 5.0, 10.0),
         InteractionText,
@@ -86,6 +94,9 @@ fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
         PlayerHealthText,
         Despawn,
     ));
+
+    let (debug_gizmo_config, _) = config_store.config_mut::<DebugGizmos>();
+    debug_gizmo_config.enabled = false;
 }
 
 fn text(font: Handle<Font>, top: f32, left: f32) -> TextBundle {
@@ -109,10 +120,25 @@ fn text(font: Handle<Font>, top: f32, left: f32) -> TextBundle {
 fn update_interaction_text(
     mut e_debug_gui: EventReader<DebugGuiEvent>,
     mut query: Query<&mut Text, With<InteractionText>>,
+    q_interaction_object_type: Query<&InteractionObjectType>,
+    q_name: Query<&Name>,
 ) {
     for event in e_debug_gui.read() {
         match event {
-            DebugGuiEvent::Interaction(message) => {
+            DebugGuiEvent::Interaction(entity) => {
+                let name = q_name
+                    .get(entity.clone())
+                    .map(|n| n.as_str())
+                    .unwrap_or("unknown");
+
+                let interaction_type = q_interaction_object_type
+                    .get(entity.clone())
+                    .map(|o| format!("{o:?}"))
+                    .unwrap_or("unknown".into());
+
+                let message =
+                    format!("Entity {entity:?}, Name {name}, Interaction Type {interaction_type}");
+
                 for mut interaction_text in query.iter_mut() {
                     interaction_text.sections[0].value = message.to_owned();
                 }

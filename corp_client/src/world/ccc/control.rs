@@ -10,7 +10,7 @@ use corp_shared::prelude::{
 
 use crate::{
     asset::Colony,
-    gui::prelude::DebugGuiEvent,
+    gui::prelude::{DebugGizmos, DebugGuiEvent},
     sound::InteractionSoundEvent,
     state::GameState,
     world::{
@@ -215,6 +215,7 @@ fn player_control_movement(
     mut q_movement: Query<&mut ControlMovement, With<Player>>,
 ) {
     let Ok(cam) = q_camera.get_single() else {
+        warn!("Can not find Transform, With<MainCamera>");
         return;
     };
 
@@ -232,10 +233,14 @@ fn player_control_movement(
     .normalize_or_zero();
 
     let Ok(mut movement) = q_movement.get_single_mut() else {
+        warn!("Can not find ControlMovement, With<Player>");
         return;
     };
 
-    let action_state = q_action_state.single();
+    let Ok(action_state) = q_action_state.get_single() else {
+        warn!("Can not find ActionState<PlayerAction>, With<Player>");
+        return;
+    };
 
     let mut direction = Vec3::ZERO;
     if action_state.pressed(&PlayerAction::Forward) {
@@ -286,9 +291,9 @@ fn detect_interactable_objects(
     q_transform: Query<&Transform>,
     r_rapier_context: Res<RapierContext>,
     q_object_type: Query<&InteractionObjectType>,
-    q_name: Query<&Name>,
     mut e_debug_gui: EventWriter<DebugGuiEvent>,
     r_cursor_world: Res<CursorWorld>,
+    mut gizmos: Gizmos<DebugGizmos>,
 ) {
     let Some(e_player) = r_player_entity.get() else {
         return;
@@ -298,7 +303,9 @@ fn detect_interactable_objects(
         return;
     };
 
-    let mut l_usable_objects = Vec::new();
+    let mut rays = Vec::new();
+    // Cast FOV rays
+    let origin = t_player.translation;
     for i in 0..NUM_RAYS {
         // Calculate the horizontal angle for the current ray
         let ray_angle = (i as f32 * RAY_SPACING) - (HORIZONTAL_FOV / 2.0);
@@ -310,82 +317,62 @@ fn detect_interactable_objects(
         let ray_direction = ray_rotation.mul_vec3(t_player.forward().into());
 
         // Calculate the endpoint of the ray
-        let ray_end = t_player.translation + ray_direction * LOOKUP_RANGE;
+        let ray_end = origin + ray_direction * LOOKUP_RANGE;
 
-        let direction = ray_end - t_player.translation;
+        let direction = ray_end - origin;
 
         if direction == Vec3::ZERO {
             warn!("FOV ray direction is zero");
             return;
         }
 
-        let ray = Ray3d::new(t_player.translation, direction);
-
-        // Cast the ray
-        if let Some(entity) = find_interactable_entity(&r_rapier_context, &q_object_type, ray) {
-            l_usable_objects.push(entity);
-            update_debug_gui_text(&q_object_type, &q_name, &mut e_debug_gui, &entity);
-        }
+        let ray = Ray3d::new(origin, direction);
+        rays.push(ray);
     }
     // Cast cursor ray
     let cursor = r_cursor_world.0;
-    let direction = Vec3::new(cursor.x, t_player.translation.y, cursor.z) - t_player.translation;
+    let direction = Vec3::new(cursor.x, origin.y, cursor.z) - origin;
     if direction == Vec3::ZERO {
         return;
     }
-    let ray = Ray3d::new(t_player.translation, direction);
+    let ray = Ray3d::new(origin, direction);
+    rays.push(ray);
 
-    if let Some(entity) = find_interactable_entity(&r_rapier_context, &q_object_type, ray) {
-        l_usable_objects.push(entity);
-        update_debug_gui_text(&q_object_type, &q_name, &mut e_debug_gui, &entity);
-    }
-
-    r_use_entity.set(l_usable_objects.pop());
-}
-
-fn find_interactable_entity(
-    r_rapier_context: &Res<RapierContext>,
-    q_object_type: &Query<&InteractionObjectType>,
-    ray: Ray3d,
-) -> Option<Entity> {
-    if let Some((entity, _real)) = r_rapier_context.cast_ray(
-        ray.origin,
-        ray.direction.into(),
-        LOOKUP_RANGE,
-        true,
-        QueryFilter::only_fixed(),
-    ) {
-        if let Ok(_) = q_object_type.get(entity.clone()) {
-            Some(entity)
+    // Collect usable objects
+    let mut usable_objects = Vec::new();
+    for ray in rays {
+        if let Some((entity, real)) = r_rapier_context.cast_ray(
+            ray.origin,
+            ray.direction.into(),
+            LOOKUP_RANGE,
+            true,
+            QueryFilter::only_fixed().exclude_sensors(),
+        ) {
+            if let Ok(_) = q_object_type.get(entity.clone()) {
+                gizmos.ray(
+                    ray.origin,
+                    (ray.origin + ray.direction * real) - ray.origin,
+                    Color::RED,
+                );
+                usable_objects.push(entity);
+                e_debug_gui.send(DebugGuiEvent::Interaction(entity));
+            } else {
+                gizmos.ray(
+                    ray.origin,
+                    (ray.origin + ray.direction * real) - ray.origin,
+                    Color::RED,
+                );
+            }
         } else {
-            None
+            gizmos.ray(
+                ray.origin,
+                (ray.origin + ray.direction * 2.0) - ray.origin,
+                Color::RED,
+            );
         }
-    } else {
-        None
     }
-}
 
-fn update_debug_gui_text(
-    q_object_type: &Query<&InteractionObjectType>,
-    q_name: &Query<&Name>,
-    e_debug_gui: &mut EventWriter<DebugGuiEvent>,
-    entity: &Entity,
-) {
-    let name = q_name
-        .get(entity.clone())
-        .map(|n| n.as_str())
-        .unwrap_or("unknown");
-
-    if let Ok(component) = q_object_type.get(entity.clone()) {
-        e_debug_gui.send(DebugGuiEvent::Interaction(format!(
-            "Entity {entity:?}, Name {name}, Obj {:?}",
-            component
-        )));
-    } else {
-        e_debug_gui.send(DebugGuiEvent::Interaction(format!(
-            "Entity {entity:?}, Name {name}, Unknown Interaction Type",
-        )));
-    }
+    r_use_entity.set(usable_objects.pop());
 }
 
 fn create_use_event(

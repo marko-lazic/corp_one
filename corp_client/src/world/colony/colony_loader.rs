@@ -78,6 +78,7 @@ fn load_colony_event(
     // spawn scene
     let colony_scene = commands
         .spawn((
+            Name::new("Colony"),
             HookedSceneBundle {
                 scene: SceneBundle {
                     scene: colony_scene,
@@ -89,15 +90,14 @@ fn load_colony_event(
                     }
                 }),
             },
-            Name::new("Colony"),
             Despawn,
         ))
         .id();
 
     commands.insert_resource(ColonyScene(colony_scene));
 
-    // spawn cube
     commands.spawn((
+        Name::new("Debug Cube"),
         PbrBundle {
             mesh: r_mesh_assets.add(Cuboid::new(5.0, 5.0, 5.0)),
             material: materials.add(Color::WHITE),
@@ -112,8 +112,8 @@ fn load_colony_event(
         Despawn,
     ));
 
-    // spawn debug ground
     commands.spawn((
+        Name::new("Debug Ground"),
         PbrBundle {
             mesh: r_mesh_assets.add(Plane3d::default().mesh().size(100.0, 100.0)),
             transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
@@ -134,6 +134,7 @@ fn load_colony_event(
     // spawn zones
     for zone_asset in &current_colony.zones {
         commands.spawn((
+            Name::new(format!("Zone {:?}", zone_asset.zone_type)),
             PbrBundle {
                 mesh: r_mesh_assets.add(
                     Plane3d::default()

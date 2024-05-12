@@ -29,12 +29,11 @@ pub struct PlayerStore {
 #[derive(Bundle)]
 struct PlayerPhysicsBundle {
     rigid_body: RigidBody,
+    kcc: KinematicCharacterController,
     collider: Collider,
     locked_axis: LockedAxes,
-    friction: Friction,
-    active_events: ActiveEvents,
-    contact_force_event_threshold: ContactForceEventThreshold,
     collide_groups: CollisionGroups,
+    active_events: ActiveEvents,
 }
 
 #[derive(Event)]
@@ -101,16 +100,17 @@ pub fn setup_player(
         .map(|p| p.to_owned())
         .unwrap_or_else(|| Vec3::new(1.0, 1.0, 1.0));
 
-    let player_transform = Transform::from_translation(rnd_node_position);
+    let player_spawn_position = Transform::from_translation(rnd_node_position + Vec3::Y);
 
     let player = commands
         .spawn((
-            Player,
+            Name::new("Player"),
             InputManagerBundle {
                 input_map: PlayerAction::player_input_map(),
                 ..default()
             },
-            SpatialBundle::from_transform(player_transform),
+            SpatialBundle::from_transform(player_spawn_position),
+            Player,
             MovementBundle::default(),
             MainCameraFollow,
             MemberOf {
@@ -120,27 +120,25 @@ pub fn setup_player(
             r_player_store.health.clone(),
             AnimationComponent::new(PlayerAnimationAction::Idle),
             PlayerPhysicsBundle {
-                rigid_body: RigidBody::Dynamic,
+                rigid_body: RigidBody::KinematicPositionBased,
+                kcc: KinematicCharacterController {
+                    offset: CharacterLength::Absolute(0.01),
+                    ..default()
+                },
                 collider: Collider::capsule_y(0.65, 0.25),
                 locked_axis: LockedAxes::ROTATION_LOCKED,
-                friction: Friction {
-                    coefficient: 0.0,
-                    combine_rule: CoefficientCombineRule::Min,
-                },
-                active_events: ActiveEvents::COLLISION_EVENTS,
-                contact_force_event_threshold: ContactForceEventThreshold(30.0),
                 collide_groups: CollideGroups::player(),
+                active_events: ActiveEvents::COLLISION_EVENTS,
             },
             Despawn,
         ))
-        .with_children(|parent| {
-            parent.spawn((SceneBundle {
+        .with_children(|child_builder| {
+            child_builder.spawn(SceneBundle {
                 scene: r_player_assets.mannequiny.clone(),
                 // Offset the mesh y position by capsule total height
-                transform: Transform::from_xyz(0.0, -0.9, 0.0),
-                global_transform: GlobalTransform::default(),
+                transform: Transform::from_xyz(0.0, -1.0, 0.0),
                 ..default()
-            },));
+            });
         })
         .id();
 
