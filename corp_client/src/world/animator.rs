@@ -6,10 +6,14 @@ use corp_shared::prelude::Player;
 
 use crate::{asset::PlayerAssets, state::GameState, world::ccc::CharacterMovement};
 
+struct MannequinAnimationNodeIndex {
+    idle: AnimationNodeIndex,
+    run: AnimationNodeIndex,
+}
+
 #[derive(Resource)]
 struct MannequinAnimations {
-    animations: Vec<AnimationNodeIndex>,
-    #[allow(dead_code)]
+    node: MannequinAnimationNodeIndex,
     graph: Handle<AnimationGraph>,
 }
 
@@ -48,12 +52,11 @@ fn setup_animation_graph(
     let handle = animation_graphs.add(animation_graph);
 
     commands.insert_resource(MannequinAnimations {
-        animations: vec![idle, run],
+        node: MannequinAnimationNodeIndex { idle, run },
         graph: handle,
     });
 }
 
-// Once the scene is loaded, start the animation
 fn setup_scene_once_loaded(
     mut commands: Commands,
     animations: Res<MannequinAnimations>,
@@ -61,15 +64,9 @@ fn setup_scene_once_loaded(
 ) {
     for (entity, mut player) in &mut players {
         let mut transitions = AnimationTransitions::new();
-
-        // Make sure to start the animation via the `AnimationTransitions`
-        // component. The `AnimationTransitions` component wants to manage all
-        // the animations and will get confused if the animations are started
-        // directly via the `AnimationPlayer`.
         transitions
-            .play(&mut player, animations.animations[0], Duration::ZERO)
+            .play(&mut player, animations.node.idle, Duration::ZERO)
             .repeat();
-
         commands
             .entity(entity)
             .insert(animations.graph.clone())
@@ -85,15 +82,15 @@ fn animation_control(
     for (mut player, mut transitions) in &mut animation_players {
         for movement in q_player_movement.iter_mut() {
             if movement.is_moving() {
-                if !player.is_playing_animation(animations.animations[1]) {
+                if !player.is_playing_animation(animations.node.run) {
                     transitions
-                        .play(&mut player, animations.animations[1], Duration::ZERO)
+                        .play(&mut player, animations.node.run, Duration::ZERO)
                         .repeat();
                 }
             } else {
-                if !player.is_playing_animation(animations.animations[0]) {
+                if !player.is_playing_animation(animations.node.idle) {
                     transitions
-                        .play(&mut player, animations.animations[0], Duration::ZERO)
+                        .play(&mut player, animations.node.idle, Duration::ZERO)
                         .repeat();
                 }
             }
