@@ -1,60 +1,71 @@
 use bevy::{
-    pbr::{MaterialPipeline, MaterialPipelineKey},
     prelude::*,
     reflect::TypePath,
-    render::{
-        mesh::MeshVertexBufferLayoutRef,
-        render_resource::{
-            AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
-        },
-    },
+    render::render_resource::{AsBindGroup, ShaderRef, ShaderType},
 };
 
-use crate::state::GameState;
-
-#[derive(Asset, AsBindGroup, Debug, Clone, TypePath)]
-pub struct BarrierMaterial {
-    alpha_mode: AlphaMode,
-}
-
-impl Material for BarrierMaterial {
-    fn fragment_shader() -> ShaderRef {
-        "shaders/barrier.wgsl".into()
-    }
-
-    fn alpha_mode(&self) -> AlphaMode {
-        self.alpha_mode
-    }
-
-    fn specialize(
-        _pipeline: &MaterialPipeline<Self>,
-        descriptor: &mut RenderPipelineDescriptor,
-        _layout: &MeshVertexBufferLayoutRef,
-        _key: MaterialPipelineKey<Self>,
-    ) -> Result<(), SpecializedMeshPipelineError> {
-        descriptor.primitive.cull_mode = None;
-        Ok(())
-    }
-}
-
-#[derive(Resource, Debug, Clone)]
-pub(crate) struct Shaders {
-    pub(crate) barrier: Handle<BarrierMaterial>,
-}
+use crate::asset::prelude::ASSET_PATH;
 
 pub struct ShaderPlugin;
 
 impl Plugin for ShaderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MaterialPlugin::<BarrierMaterial>::default())
-            .add_systems(OnExit(GameState::Loading), setup_shader);
+        app.add_plugins((
+            MaterialPlugin::<ForceFieldMaterial>::default(),
+            MaterialPlugin::<PrepassOutputMaterial> {
+                prepass_enabled: false,
+                ..default()
+            },
+        ));
     }
 }
 
-fn setup_shader(mut commands: Commands, mut barrier_materials: ResMut<Assets<BarrierMaterial>>) {
-    commands.insert_resource(Shaders {
-        barrier: barrier_materials.add(BarrierMaterial {
-            alpha_mode: AlphaMode::Blend,
-        }),
-    });
+// This is the struct that will be passed to your shader
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct ForceFieldMaterial {}
+
+impl Material for ForceFieldMaterial {
+    fn fragment_shader() -> ShaderRef {
+        ASSET_PATH.force_field_shader.into()
+    }
+
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Add
+    }
+
+    fn specialize(
+        _pipeline: &bevy::pbr::MaterialPipeline<Self>,
+        descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
+        _layout: &bevy::render::mesh::MeshVertexBufferLayoutRef,
+        _key: bevy::pbr::MaterialPipelineKey<Self>,
+    ) -> Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
+        descriptor.primitive.cull_mode = None;
+        Ok(())
+    }
+}
+#[derive(Debug, Clone, Default, ShaderType)]
+pub struct ShowPrepassSettings {
+    show_depth: u32,
+    show_normals: u32,
+    show_motion_vectors: u32,
+    padding_1: u32,
+    padding_2: u32,
+}
+
+// This shader simply loads the prepass texture and outputs it directly
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct PrepassOutputMaterial {
+    #[uniform(0)]
+    pub settings: ShowPrepassSettings,
+}
+
+impl Material for PrepassOutputMaterial {
+    fn fragment_shader() -> ShaderRef {
+        ASSET_PATH.prepass_shader.into()
+    }
+
+    // This needs to be transparent in order to show the scene behind the mesh
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
+    }
 }

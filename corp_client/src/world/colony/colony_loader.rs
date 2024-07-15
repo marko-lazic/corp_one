@@ -1,4 +1,8 @@
-use bevy::{prelude::*, scene::SceneInstanceReady};
+use bevy::{
+    pbr::{NotShadowCaster, NotShadowReceiver},
+    prelude::*,
+    scene::SceneInstanceReady,
+};
 use bevy_mod_picking::{
     events::{Click, Pointer},
     PickableBundle,
@@ -16,6 +20,7 @@ use crate::{
     world::{
         colony::{prelude::Zone, scene_hook},
         prelude::{CollideGroups, PhysicsSystems, PlayerSpawnEvent},
+        shader::ForceFieldMaterial,
     },
 };
 
@@ -56,9 +61,10 @@ fn load_colony_event(
     mut ev_colony_load: EventReader<ColonyLoadEvent>,
     r_colony_config: Res<Assets<ColonyConfig>>,
     r_scene_assets: Res<SceneAssets>,
-    mut r_mesh_assets: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut r_meshes: ResMut<Assets<Mesh>>,
+    mut r_materials: ResMut<Assets<StandardMaterial>>,
     r_material_assets: Res<MaterialAssets>,
+    mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
     mut commands: Commands,
 ) {
     info!("Setup colony");
@@ -98,12 +104,14 @@ fn load_colony_event(
 
     commands.spawn((
         Name::new("Debug Cube"),
-        PbrBundle {
-            mesh: r_mesh_assets.add(Cuboid::new(5.0, 5.0, 5.0)),
-            material: materials.add(Color::WHITE),
+        MaterialMeshBundle {
+            mesh: r_meshes.add(Cuboid::new(5.0, 5.0, 5.0)),
+            material: r_force_field_materials.add(ForceFieldMaterial {}),
             transform: Transform::from_xyz(10., 0., 0.),
             ..Default::default()
         },
+        NotShadowReceiver,
+        NotShadowCaster,
         Collider::cuboid(2.6, 2.6, 2.6),
         PickableBundle::default(),
         On::<Pointer<Click>>::run(|event: Listener<Pointer<Click>>| {
@@ -115,9 +123,9 @@ fn load_colony_event(
     commands.spawn((
         Name::new("Debug Ground"),
         PbrBundle {
-            mesh: r_mesh_assets.add(Plane3d::default().mesh().size(100.0, 100.0)),
+            mesh: r_meshes.add(Plane3d::default().mesh().size(100.0, 100.0)),
             transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
-            material: materials.add(StandardMaterial {
+            material: r_materials.add(StandardMaterial {
                 base_color: Color::WHITE,
                 perceptual_roughness: 0.0,
                 reflectance: 0.0,
@@ -136,7 +144,7 @@ fn load_colony_event(
         commands.spawn((
             Name::new(format!("Zone {:?}", zone_asset.zone_type)),
             PbrBundle {
-                mesh: r_mesh_assets.add(
+                mesh: r_meshes.add(
                     Plane3d::default()
                         .mesh()
                         .size(zone_asset.size, zone_asset.size),

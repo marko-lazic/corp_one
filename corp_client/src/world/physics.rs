@@ -1,7 +1,11 @@
-use bevy::{ecs::system::SystemId, prelude::*};
+use bevy::{
+    ecs::system::SystemId,
+    pbr::{NotShadowCaster, NotShadowReceiver},
+    prelude::*,
+};
 use bevy_rapier3d::prelude::*;
 
-use crate::{util::mesh_extension::MeshExt, world::shader::Shaders};
+use crate::{util::mesh_extension::MeshExt, world::shader::ForceFieldMaterial};
 
 #[derive(Resource)]
 pub struct PhysicsSystems {
@@ -27,19 +31,19 @@ fn setup(world: &mut World) {
 
 fn setup_colliders(
     mut commands: Commands,
-    added_name: Query<(Entity, &Name)>,
-    children: Query<&Children>,
-    meshes: Res<Assets<Mesh>>,
-    mesh_handles: Query<&Handle<Mesh>>,
-    shaders: Res<Shaders>,
+    q_added_name: Query<(Entity, &Name)>,
+    q_children: Query<&Children>,
+    r_meshes: Res<Assets<Mesh>>,
+    r_mesh_handles: Query<&Handle<Mesh>>,
+    mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
 ) {
-    for (entity, name) in &added_name {
+    for (entity, name) in &q_added_name {
         if ["wall", "tree", "energynode", "barriercontrol"]
             .iter()
             .any(|&s| name.to_lowercase().contains(s))
         {
             for (collider_entity, collider_mesh) in
-                Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
+                Mesh::search_in_children(entity, &q_children, &r_meshes, &r_mesh_handles)
             {
                 let rapier_collider =
                     Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
@@ -51,7 +55,7 @@ fn setup_colliders(
             }
         } else if name.to_lowercase().contains("barrierfield") {
             for (collider_entity, collider_mesh) in
-                Mesh::search_in_children(entity, &children, &meshes, &mesh_handles)
+                Mesh::search_in_children(entity, &q_children, &r_meshes, &r_mesh_handles)
             {
                 let rapier_collider =
                     Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
@@ -62,11 +66,18 @@ fn setup_colliders(
                     .insert((RigidBody::KinematicPositionBased, rapier_collider));
 
                 // Shaders should be refactored out of physics plugin
-                commands.entity(collider_entity).insert(MaterialMeshBundle {
-                    mesh: mesh_handles.get(collider_entity).unwrap().clone(),
-                    material: shaders.barrier.clone(),
-                    ..default()
-                });
+                commands.entity(collider_entity).insert((
+                    MaterialMeshBundle {
+                        mesh: r_mesh_handles.get(collider_entity).unwrap().clone(),
+                        material: r_force_field_materials.add(ForceFieldMaterial {}),
+                        ..default()
+                    },
+                    NotShadowReceiver,
+                    NotShadowCaster,
+                ));
+                commands
+                    .entity(collider_entity)
+                    .remove::<Handle<StandardMaterial>>();
             }
         }
     }

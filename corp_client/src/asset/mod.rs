@@ -6,9 +6,5 @@ mod colony_configs;
 mod path;
 
 pub mod prelude {
-    pub use super::{
-        asset_loading::*,
-        colony_configs::*,
-        path::PATH,
-    };
+    pub use super::{asset_loading::*, colony_configs::*, path::ASSET_PATH};
 }

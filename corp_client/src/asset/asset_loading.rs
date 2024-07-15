@@ -4,7 +4,7 @@ use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
 use crate::{
-    asset::prelude::{ColonyConfig, PATH},
+    asset::prelude::{ASSET_PATH, ColonyConfig},
     state::{Despawn, GameState},
 };
 
@@ -136,7 +136,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             text: Text::from_section(
                 "Loading",
                 TextStyle {
-                    font: asset_server.load(PATH.default_font),
+                    font: asset_server.load(ASSET_PATH.default_font),
                     font_size: 40.0,
                     color: Color::srgb(0.9, 0.9, 0.9),
                 },

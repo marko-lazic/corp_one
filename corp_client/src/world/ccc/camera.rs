@@ -1,5 +1,8 @@
 use bevy::{
-    core_pipeline::bloom::BloomSettings,
+    core_pipeline::{
+        bloom::BloomSettings,
+        prepass::{DepthPrepass, MotionVectorPrepass, NormalPrepass},
+    },
     prelude::*,
     render::camera::{Exposure, PhysicalCameraParameters},
 };
@@ -29,6 +32,9 @@ pub struct MainCameraPlugin;
 #[derive(Bundle)]
 pub struct MainCameraBundle {
     camera: Camera3dBundle,
+    depth_prepass: DepthPrepass,
+    normal_prepass: NormalPrepass,
+    motion_vector_prepass: MotionVectorPrepass,
     bloom: BloomSettings,
     main_camera: MainCamera,
     rig: Rig,
@@ -51,10 +57,12 @@ impl MainCameraBundle {
                 }),
                 ..default()
             },
-            bloom: BloomSettings {
-                intensity: 0.1,
-                ..default()
-            },
+            depth_prepass: DepthPrepass,
+            // This will generate a texture containing world normals (with normal maps applied)
+            normal_prepass: NormalPrepass,
+            // This will generate a texture containing screen space pixel motion vectors
+            motion_vector_prepass: MotionVectorPrepass,
+            bloom: BloomSettings::NATURAL,
             main_camera: MainCamera,
             rig: Rig::builder()
                 .with(Position::new(position))
