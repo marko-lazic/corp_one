@@ -22,7 +22,7 @@ rand = "0.8.5"
 bitflags = "2.4"
 
 [dev-dependencies]
-bevy_panorbit_camera = "0.18.0"
+bevy_panorbit_camera = "0.19.1"
 lazy_static = "1.4.0"
 derive_more = "0.99.17"
 approx = "0.5"
@@ -50,8 +50,8 @@ name = "distortion"
 path = "examples/shader/distortion.rs"
 
 [[example]]
-name = "starfield"
-path = "examples/shader/star_field.rs"
+name = "force_field"
+path = "examples/shader/force_field.rs"
 
 [[example]]
 name = "state"
