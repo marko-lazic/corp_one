@@ -75,12 +75,12 @@ fn setup_scene_once_loaded(
 }
 
 fn animation_control(
-    mut q_player_movement: Query<&CharacterMovement, With<Player>>,
-    mut animation_players: Query<(&mut AnimationPlayer, &mut AnimationTransitions)>,
+    q_player_movement: Query<&CharacterMovement, With<Player>>,
+    mut q_animation_players: Query<(&mut AnimationPlayer, &mut AnimationTransitions)>,
     animations: Res<MannequinAnimations>,
 ) {
-    for (mut player, mut transitions) in &mut animation_players {
-        for movement in q_player_movement.iter_mut() {
+    for (mut player, mut transitions) in &mut q_animation_players {
+        for movement in &q_player_movement {
             if movement.is_moving() {
                 if !player.is_playing_animation(animations.node.run) {
                     transitions
