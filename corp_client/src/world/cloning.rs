@@ -75,22 +75,25 @@ mod tests {
             (kill_player, check_if_dead_and_go_to_cloning).chain(),
         );
         app.insert_resource(create_colony_assets());
-        let setup_player = app.world.register_system(setup_player);
+        let setup_player = app.world().register_system(setup_player);
         app.insert_resource(PlayerStore {
             health: Health::default(),
             setup_player,
         });
         app.add_event::<ColonyLoadEvent>();
-        let player_entity = app.world.spawn((Player, Health::default())).id();
+        let player_entity = app.world().spawn((Player, Health::default())).id();
 
         // when
         app.update();
 
         // Check resulting changes
-        assert!(app.world.get::<Player>(player_entity).is_some());
+        assert!(app.world().get::<Player>(player_entity).is_some());
 
         assert_eq!(
-            *app.world.get::<Health>(player_entity).unwrap().get_health(),
+            *app.world()
+                .get::<Health>(player_entity)
+                .unwrap()
+                .get_health(),
             MIN_HEALTH.clone(),
             "Player is dead"
         );
@@ -131,7 +134,7 @@ mod tests {
         app.init_resource::<Time>();
         let mut time = Time::default();
         time.update();
-        app.world.insert_resource(time);
+        app.world().insert_resource(time);
     }
 
     fn create_colony_assets() -> ColonyConfigAssets {

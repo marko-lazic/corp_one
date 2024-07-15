@@ -1,68 +1,101 @@
-use bevy::{prelude::*, utils::HashMap};
+use std::time::Duration;
 
-use crate::{asset::PlayerAssets, state::GameState};
+use bevy::{animation::animate_targets, prelude::*};
 
-#[derive(PartialEq, Eq, Hash, Copy, Clone)]
-pub enum PlayerAnimationAction {
-    Run = 0,
-    Idle = 1,
+use corp_shared::prelude::Player;
+
+use crate::{asset::PlayerAssets, state::GameState, world::ccc::CharacterMovement};
+
+#[derive(Resource)]
+struct MannequinAnimations {
+    animations: Vec<AnimationNodeIndex>,
+    #[allow(dead_code)]
+    graph: Handle<AnimationGraph>,
 }
-
-impl Default for PlayerAnimationAction {
-    fn default() -> Self {
-        Self::Idle
-    }
-}
-
-#[derive(Component, Default)]
-pub struct AnimationComponent {
-    pub next: Option<PlayerAnimationAction>,
-    pub current: PlayerAnimationAction,
-}
-
-impl AnimationComponent {
-    pub fn new(action: PlayerAnimationAction) -> Self {
-        Self {
-            next: Some(action),
-            ..default()
-        }
-    }
-}
-
-#[derive(Resource, Deref, DerefMut)]
-struct PlayerAnimations(pub HashMap<PlayerAnimationAction, Handle<AnimationClip>>);
 
 pub struct AnimatorPlugin;
 
 impl Plugin for AnimatorPlugin {
     fn build(&self, app: &mut App) {
         // Warning: Re-insertion happens every time game enters playing state
-        app.add_systems(OnExit(GameState::Loading), setup_animation_resources)
-            .add_systems(Update, play_animations.run_if(in_state(GameState::Playing)));
+        // Loading needs to be split into loading for resources and data setup
+        app.add_systems(OnExit(GameState::Loading), setup_animation_graph)
+            .add_systems(
+                Update,
+                setup_scene_once_loaded
+                    .before(animate_targets)
+                    .run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(
+                Update,
+                animation_control.run_if(in_state(GameState::Playing)),
+            );
     }
 }
 
-fn setup_animation_resources(mut commands: Commands, player_assets: Res<PlayerAssets>) {
-    let mut hm: HashMap<PlayerAnimationAction, Handle<AnimationClip>> = HashMap::new();
-    hm.insert(PlayerAnimationAction::Run, player_assets.run.clone());
-    hm.insert(PlayerAnimationAction::Idle, player_assets.idle.clone());
-    commands.insert_resource(PlayerAnimations(hm));
+fn setup_animation_graph(
+    mut commands: Commands,
+    player_assets: Res<PlayerAssets>,
+    mut animation_graphs: ResMut<Assets<AnimationGraph>>,
+) {
+    // Build the animation graph
+    let mut animation_graph = AnimationGraph::new();
+
+    let idle = animation_graph.add_clip(player_assets.idle.clone(), 1.0, animation_graph.root);
+    let run = animation_graph.add_clip(player_assets.run.clone(), 1.0, animation_graph.root);
+
+    // Insert a resource with the current scene information
+    let handle = animation_graphs.add(animation_graph);
+
+    commands.insert_resource(MannequinAnimations {
+        animations: vec![idle, run],
+        graph: handle,
+    });
 }
 
-fn play_animations(
-    player_animations: Res<PlayerAnimations>,
-    mut animation_player_query: Query<&mut AnimationPlayer>,
-    mut animation_components: Query<&mut AnimationComponent>,
+// Once the scene is loaded, start the animation
+fn setup_scene_once_loaded(
+    mut commands: Commands,
+    animations: Res<MannequinAnimations>,
+    mut players: Query<(Entity, &mut AnimationPlayer), Added<AnimationPlayer>>,
 ) {
-    if let Ok(mut animation_player) = animation_player_query.get_single_mut() {
-        for mut animation_component in animation_components.iter_mut() {
-            if let Some(next) = animation_component.next {
-                animation_player.set_speed(1.2);
-                animation_player
-                    .play(player_animations.get(&next).unwrap().clone_weak())
-                    .repeat();
-                animation_component.current = next;
-                animation_component.next = None;
+    for (entity, mut player) in &mut players {
+        let mut transitions = AnimationTransitions::new();
+
+        // Make sure to start the animation via the `AnimationTransitions`
+        // component. The `AnimationTransitions` component wants to manage all
+        // the animations and will get confused if the animations are started
+        // directly via the `AnimationPlayer`.
+        transitions
+            .play(&mut player, animations.animations[0], Duration::ZERO)
+            .repeat();
+
+        commands
+            .entity(entity)
+            .insert(animations.graph.clone())
+            .insert(transitions);
+    }
+}
+
+fn animation_control(
+    mut q_player_movement: Query<&CharacterMovement, With<Player>>,
+    mut animation_players: Query<(&mut AnimationPlayer, &mut AnimationTransitions)>,
+    animations: Res<MannequinAnimations>,
+) {
+    for (mut player, mut transitions) in &mut animation_players {
+        for movement in q_player_movement.iter_mut() {
+            if movement.is_moving() {
+                if !player.is_playing_animation(animations.animations[1]) {
+                    transitions
+                        .play(&mut player, animations.animations[1], Duration::ZERO)
+                        .repeat();
+                }
+            } else {
+                if !player.is_playing_animation(animations.animations[0]) {
+                    transitions
+                        .play(&mut player, animations.animations[0], Duration::ZERO)
+                        .repeat();
+                }
             }
         }
     }

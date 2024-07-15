@@ -1,10 +1,12 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::tailwind, prelude::*};
 use bevy_asset_loader::prelude::*;
 use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
-use crate::asset::prelude::{ColonyConfig, PATH};
-use crate::state::{Despawn, GameState};
+use crate::{
+    asset::prelude::{ColonyConfig, PATH},
+    state::{Despawn, GameState},
+};
 
 /// Exported using Blender export glTF 2.0 with settings enabled
 ///
@@ -136,7 +138,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 TextStyle {
                     font: asset_server.load(PATH.default_font),
                     font_size: 40.0,
-                    color: Color::rgb(0.9, 0.9, 0.9),
+                    color: Color::srgb(0.9, 0.9, 0.9),
                 },
             ),
             ..Default::default()
@@ -147,11 +149,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn start_loading(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
     commands.insert_resource(MaterialAssets {
-        green_material: materials.add(Color::rgb(0.1, 0.2, 0.1)),
-        blue_material: materials.add(Color::rgb(0.1, 0.4, 0.8)),
-        sky_blue_material: materials.add(Color::rgb(0.55, 0.71, 0.73)),
-        pink_material: materials.add(Color::PINK),
-        orange_red_material: materials.add(Color::ORANGE_RED),
-        sea_green_material: materials.add(Color::SEA_GREEN),
+        green_material: materials.add(Color::srgb(0.1, 0.2, 0.1)),
+        blue_material: materials.add(Color::srgb(0.1, 0.4, 0.8)),
+        sky_blue_material: materials.add(Color::srgb(0.55, 0.71, 0.73)),
+        pink_material: materials.add(Color::from(tailwind::PINK_700)),
+        orange_red_material: materials.add(Color::from(tailwind::ORANGE_700)),
+        sea_green_material: materials.add(Color::from(tailwind::GREEN_700)),
     });
 }

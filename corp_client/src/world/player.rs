@@ -9,11 +9,7 @@ use crate::{
     asset::PlayerAssets,
     state::{Despawn, GameState},
     world::{
-        animator::{AnimationComponent, PlayerAnimationAction},
-        ccc::{
-            CharacterMovement, ControlSet, MainCameraBundle, MainCameraFollow, MovementBundle,
-            PlayerAction, PlayerEntity,
-        },
+        ccc::{MainCameraBundle, MainCameraFollow, MovementBundle, PlayerAction, PlayerEntity},
         cloning::CloningPlugin,
         colony::prelude::VortexNode,
         physics::CollideGroups,
@@ -52,12 +48,6 @@ impl Plugin for PlayerPlugin {
             .add_systems(
                 Update,
                 player_spawn_event_reader.run_if(in_state(GameState::LoadColony)),
-            )
-            .add_systems(
-                Update,
-                (handle_animation_action)
-                    .after(ControlSet::PlayingInput)
-                    .run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -118,7 +108,6 @@ pub fn setup_player(
                 rank: Rank::R6,
             },
             r_player_store.health.clone(),
-            AnimationComponent::new(PlayerAnimationAction::Idle),
             PlayerPhysicsBundle {
                 rigid_body: RigidBody::KinematicPositionBased,
                 kcc: KinematicCharacterController {
@@ -146,21 +135,4 @@ pub fn setup_player(
     commands.spawn(MainCameraBundle::new(rnd_node_position));
     *r_player_entity = player.into();
     r_player_spawn_event.send(PlayerSpawnEvent::PlayerSpawned);
-}
-
-fn handle_animation_action(
-    mut query: Query<(&CharacterMovement, &mut AnimationComponent), With<Player>>,
-    mut last_action: Local<PlayerAnimationAction>,
-) {
-    if let Ok((player_movement, mut animation_component)) = query.get_single_mut() {
-        if player_movement.is_moving() && *last_action == PlayerAnimationAction::Idle {
-            animation_component.next = Some(PlayerAnimationAction::Run);
-            *last_action = PlayerAnimationAction::Run;
-        }
-
-        if !player_movement.is_moving() && *last_action == PlayerAnimationAction::Run {
-            animation_component.next = Some(PlayerAnimationAction::Idle);
-            *last_action = PlayerAnimationAction::Idle;
-        }
-    }
 }

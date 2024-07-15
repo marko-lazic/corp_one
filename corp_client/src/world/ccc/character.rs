@@ -243,7 +243,7 @@ mod tests {
     }
 
     fn setup_player(app: &mut App) -> Entity {
-        app.world
+        app.world()
             .spawn((
                 TransformBundle::default(),
                 Player,
@@ -258,7 +258,7 @@ mod tests {
     }
 
     fn setup_camera(app: &mut App) -> Entity {
-        let camera = app.world.spawn(MainCameraBundle::new(Vec3::ZERO)).id();
+        let camera = app.world().spawn(MainCameraBundle::new(Vec3::ZERO)).id();
         app.get_mut::<Rig>(camera)
             .driver_mut::<YawPitch>()
             .rotate_yaw_pitch(-45.0, 0.0);

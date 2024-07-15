@@ -39,7 +39,7 @@ mod tests {
         let e_player = setup_player(&mut app, Vec::new(), Faction::EC, Rank::R7);
 
         // when
-        app.world.send_event(InteractionEvent::new(
+        app.world().send_event(InteractionEvent::new(
             e_player,
             e_energy_node,
             UseTerritoryNodeEvent,

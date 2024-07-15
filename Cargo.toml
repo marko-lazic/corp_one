@@ -19,4 +19,4 @@ default-members = [
 ]
 
 [workspace.dependencies]
-bevy = "0.13.1"
+bevy = "0.14.0"

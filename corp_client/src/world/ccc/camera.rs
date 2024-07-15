@@ -47,6 +47,7 @@ impl MainCameraBundle {
                     aperture_f_stops: 1.0,
                     shutter_speed_s: 1.0 / 125.0,
                     sensitivity_iso: 100.0,
+                    sensor_height: 0.01866,
                 }),
                 ..default()
             },
@@ -146,7 +147,7 @@ fn update_camera(
         });
 
     // Calculate if and where the ray is hitting the ground plane.
-    let Some(distance) = ray.intersect_plane(ground_origin, Plane3d::new(Vec3::Y)) else {
+    let Some(distance) = ray.intersect_plane(ground_origin, InfinitePlane3d::new(Vec3::Y)) else {
         return;
     };
     let mouse_ground_pos = ray.get_point(distance);
@@ -269,13 +270,13 @@ mod tests {
                     CameraSet::Update.after(CharacterSet::Movement),
                 ),
             );
-        app.world.spawn(Window::default());
+        app.world().spawn(Window::default());
         app
     }
 
     fn setup_player(app: &mut App, transform: Transform) -> Entity {
         let player_entity = app
-            .world
+            .world()
             .spawn((
                 TransformBundle::from_transform(transform),
                 Player,
@@ -288,7 +289,7 @@ mod tests {
                 MovementBundle::default(),
             ))
             .id();
-        app.world
+        app.world()
             .spawn(MainCameraBundle::new(transform.translation));
         player_entity
     }
@@ -300,9 +301,9 @@ mod tests {
     }
 
     fn get_camera_entity(app: &mut App) -> Entity {
-        app.world
+        app.world()
             .query_filtered::<Entity, With<MainCamera>>()
-            .iter(&mut app.world)
+            .iter(&mut app.world())
             .next()
             .unwrap()
     }

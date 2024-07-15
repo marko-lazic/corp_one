@@ -25,7 +25,7 @@ impl Plugin for WorldPlugin {
             WorldSystemSet::CameraSetup.after(WorldSystemSet::PlayerSetup),
         )
         .insert_resource(AmbientLight {
-            color: Color::ORANGE_RED,
+            color: bevy::color::palettes::tailwind::ORANGE_600.into(),
             ..default()
         })
         .add_plugins((

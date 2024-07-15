@@ -171,7 +171,7 @@ fn double_tap_to_exit(
         l_double_tap.increment();
     }
     l_double_tap.tick(r_time.delta()).on_complete(|| {
-        ev_exit_app.send(AppExit);
+        ev_exit_app.send(AppExit::Success);
     });
 }
 
@@ -200,7 +200,7 @@ fn update_cursor_world(
         });
 
     // Calculate if and where the ray is hitting the belt (of the character height) level.
-    let Some(distance) = ray.intersect_plane(belt_level, Plane3d::new(Vec3::Y)) else {
+    let Some(distance) = ray.intersect_plane(belt_level, InfinitePlane3d::new(Vec3::Y)) else {
         return;
     };
     let mouse_ground_pos = ray.get_point(distance);
@@ -359,7 +359,7 @@ fn detect_interactable_objects(
                 gizmos.ray(
                     ray.origin,
                     (ray.origin + ray.direction * real) - ray.origin,
-                    Color::RED,
+                    bevy::color::palettes::tailwind::RED_700,
                 );
 
                 let Ok(parent) = q_parent.get(entity) else {
@@ -379,14 +379,14 @@ fn detect_interactable_objects(
                 gizmos.ray(
                     ray.origin,
                     (ray.origin + ray.direction * real) - ray.origin,
-                    Color::RED,
+                    bevy::color::palettes::tailwind::RED_700,
                 );
             }
         } else {
             gizmos.ray(
                 ray.origin,
                 (ray.origin + ray.direction * 2.0) - ray.origin,
-                Color::RED,
+                bevy::color::palettes::tailwind::RED_700,
             );
         }
     }
@@ -525,7 +525,7 @@ mod tests {
 
         // then
         assert!(app
-            .world
+            .world()
             .resource::<ActionState<UIAction>>()
             .pressed(&UIAction::Escape));
     }

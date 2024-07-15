@@ -1,9 +1,6 @@
 use std::time::Duration;
 
-use bevy::{
-    app::App,
-    prelude::{Component, Entity, Mut, NextState, Resource, States, Time},
-};
+use bevy::{app::App, prelude::*, state::state::FreelyMutableState};
 
 pub trait TestUtils {
     fn init_time(&mut self) -> &mut Self;
@@ -14,7 +11,7 @@ pub trait TestUtils {
 
     fn get_resource<R: Resource>(&self) -> &R;
     fn get_resource_mut<R: Resource>(&mut self) -> Mut<R>;
-    fn set_state<S: States>(&mut self, state: S) -> &mut Self;
+    fn set_state<S: FreelyMutableState + FromWorld>(&mut self, state: S) -> &mut Self;
 }
 
 impl TestUtils for App {
@@ -22,19 +19,19 @@ impl TestUtils for App {
         self.init_resource::<Time>();
         let mut time = Time::default();
         time.update();
-        self.world.insert_resource(time);
+        self.world_mut().insert_resource(time);
         self
     }
 
     fn update_after(&mut self, duration: Duration) -> &mut Self {
-        let mut time = self.world.resource_mut::<Time>();
+        let mut time = self.world_mut().resource_mut::<Time>();
         time.advance_by(duration);
         self.update();
         self
     }
 
     fn get<C: Component>(&self, entity: Entity) -> &C {
-        self.world.get::<C>(entity).unwrap_or_else(|| {
+        self.world().get::<C>(entity).unwrap_or_else(|| {
             panic!(
                 "Component {} not found on entity {}",
                 std::any::type_name::<C>(),
@@ -44,7 +41,7 @@ impl TestUtils for App {
     }
 
     fn get_mut<C: Component>(&mut self, entity: Entity) -> Mut<C> {
-        self.world.get_mut::<C>(entity).unwrap_or_else(|| {
+        self.world_mut().get_mut::<C>(entity).unwrap_or_else(|| {
             panic!(
                 "Component {} not found on entity {}",
                 std::any::type_name::<C>(),
@@ -54,19 +51,19 @@ impl TestUtils for App {
     }
 
     fn has_component<C: Component>(&self, entity: Entity) -> bool {
-        self.world.get::<C>(entity).is_some()
+        self.world().get::<C>(entity).is_some()
     }
 
     fn get_resource<R: Resource>(&self) -> &R {
-        self.world.get_resource::<R>().unwrap()
+        self.world().get_resource::<R>().unwrap()
     }
 
     fn get_resource_mut<R: Resource>(&mut self) -> Mut<R> {
-        self.world.get_resource_mut::<R>().unwrap()
+        self.world_mut().get_resource_mut::<R>().unwrap()
     }
 
-    fn set_state<S: States>(&mut self, state: S) -> &mut Self {
-        self.world
+    fn set_state<S: FreelyMutableState + FromWorld>(&mut self, state: S) -> &mut Self {
+        self.world_mut()
             .get_resource_mut::<NextState<S>>()
             .unwrap()
             .set(state);

@@ -61,9 +61,9 @@ mod tests {
         setup_player(&mut app);
         let door_entity = setup_door(&mut app);
 
-        let mut query = app.world.query::<&mut Window>();
+        let mut query = app.world().query::<&mut Window>();
         query
-            .single_mut(&mut app.world)
+            .single_mut(&mut app.world())
             .set_cursor_position(Some(Vec2::new(0.0, 0.0)));
 
         app.update();
@@ -99,7 +99,7 @@ mod tests {
     }
 
     fn setup_player(app: &mut App) -> Entity {
-        let player_entity = app.world.spawn(Player).id();
+        let player_entity = app.world().spawn(Player).id();
         player_entity
     }
 
