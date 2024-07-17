@@ -2,7 +2,7 @@
 mod tests {
     use std::ops::Neg;
 
-    use bevy::prelude::*;
+    use bevy_math::Vec2;
 
     #[test]
     fn test_add_two_vectors() {
