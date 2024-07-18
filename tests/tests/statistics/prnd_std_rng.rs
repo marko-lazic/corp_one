@@ -20,23 +20,12 @@ impl Default for Chance {
 }
 
 impl PseudoRandomDistribution {
-    fn new(chance: Chance) -> Self {
-        let current_chance = chance.base;
-        let mut random_seed = [0u8; 32];
-        getrandom::getrandom(&mut random_seed).expect("Unable to source entropy for seeding");
-        Self {
-            chance,
-            current_chance,
-            rng: StdRng::from_seed(random_seed),
-        }
-    }
-
-    fn new_seed(chance: Chance, seed: u64) -> Self {
+    fn new(chance: Chance, seed: Option<u64>) -> Self {
         let current_chance = chance.base;
         Self {
             chance,
             current_chance,
-            rng: StdRng::seed_from_u64(seed),
+            rng: StdRng::seed_from_u64(seed.unwrap_or_else(rand::random)),
         }
     }
 
@@ -65,13 +54,13 @@ mod tests {
     fn initial_chance() {
         let mut success = 0;
         let mut failure = 0;
-        for i in 0..100 {
-            let mut prd = PseudoRandomDistribution::new_seed(
+        for seed in 0..100 {
+            let mut prd = PseudoRandomDistribution::new(
                 Chance {
                     base: 0.2, // 20% base chance
                     ..Default::default()
                 },
-                i,
+                Some(seed),
             );
             if prd.roll() {
                 success += 1;
@@ -91,12 +80,12 @@ mod tests {
     fn periodic_chance() {
         let mut success = 0;
         let mut failure = 0;
-        let mut prd = PseudoRandomDistribution::new_seed(
+        let mut prd = PseudoRandomDistribution::new(
             Chance {
                 base: 0.2, // 20% base chance
                 ..Default::default()
             },
-            SEED,
+            Some(SEED),
         );
         for _ in 0..100 {
             if prd.roll() {
@@ -113,13 +102,16 @@ mod tests {
     }
 
     #[test]
-    fn periodic_chance_no_seed() {
+    fn periodic_chance_random_seed() {
         let mut success = 0;
         let mut failure = 0;
-        let mut prd = PseudoRandomDistribution::new(Chance {
-            base: 0.2, // 20% base chance
-            ..Default::default()
-        });
+        let mut prd = PseudoRandomDistribution::new(
+            Chance {
+                base: 0.2, // 20% base chance
+                ..Default::default()
+            },
+            None,
+        );
         for _ in 0..100 {
             if prd.roll() {
                 success += 1;
@@ -127,7 +119,7 @@ mod tests {
                 failure += 1;
             }
         }
-        println!("periodic_chance_no_seed");
+        println!("periodic_chance_random_seed");
         println!("Success: {success}");
         println!("Failure: {failure}");
     }
@@ -136,12 +128,12 @@ mod tests {
     fn increase_chance() {
         let mut success = 0;
         let mut failure = 0;
-        let mut prd = PseudoRandomDistribution::new_seed(
+        let mut prd = PseudoRandomDistribution::new(
             Chance {
                 base: 0.2, // 20% base chance
                 increase: 0.9,
             },
-            SEED,
+            Some(SEED),
         );
         for _ in 0..100 {
             if prd.roll() {

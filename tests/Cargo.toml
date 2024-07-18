@@ -13,7 +13,6 @@ unicode-segmentation = "1.9.0"
 bevy_math = "0.14.0"
 rand = "0.8.5"
 wyrand = "0.2.0"
-getrandom = "0.2.15"
 
 [[test]]
 name = "integration"
