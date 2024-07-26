@@ -14,7 +14,7 @@ bevy_asset_loader = "0.21.0"
 bevy_kira_audio = { version = "0.20.0", features = ["wav", "ogg"] }
 bevy_common_assets = { version = "0.11.0", features = ["ron"] }
 bevy_rapier3d = "0.27.0"
-bevy_dolly = { path = "../../bevy_dolly", version = "0.0.4" }
+bevy_dolly = "0.0.4"
 bevy-scene-hook = { path = "../../bevy-scene-hook", version = "11.0.0" }
 bevy_framepace = "0.17.1"
 serde = "1.0.197"
@@ -56,3 +56,7 @@ path = "examples/shader/force_field.rs"
 [[example]]
 name = "state"
 path = "examples/state/state.rs"
+
+[[example]]
+name = "observer"
+path = "examples/observer.rs"

@@ -1,9 +1,17 @@
 use rand::{Rng, SeedableRng};
 use wyrand::WyRand;
 
+enum CalculationType {
+    Linear,
+    Sigmoid,
+    Exponential,
+    Capped { limit: f32 },
+}
+
 struct Chance {
     base: f32, // Base probability (e.g., 0.2 for 20%)
     increase: f32,
+    calculation_type: CalculationType,
 }
 struct PseudoRandomDistribution {
     chance: Chance,
@@ -16,6 +24,7 @@ impl Default for Chance {
         Self {
             base: 0.1,
             increase: 0.1,
+            calculation_type: CalculationType::Linear,
         }
     }
 }
@@ -32,16 +41,36 @@ impl PseudoRandomDistribution {
 
     fn roll(&mut self) -> bool {
         let result = self.rng.gen::<f32>() < self.current_chance;
-        if result {
-            // Success: Reset chance
-            self.current_chance = self.chance.base;
-            true
+
+        if !result {
+            // If the roll failed
+            match self.chance.calculation_type {
+                CalculationType::Linear => {
+                    self.current_chance += self.chance.increase;
+                }
+                CalculationType::Sigmoid => {
+                    let balance_factor = 2.0; // Adjust this value to control steepness
+                    self.current_chance = (2.0 - 2.0 * self.chance.base)
+                        * (1.0 / (1.0 + (-balance_factor * self.current_chance).exp()))
+                        - (1.0 - 2.0 * self.chance.base);
+                }
+                CalculationType::Exponential => {
+                    let base = 2.0; // You can change the base of the exponent
+                    self.current_chance *= base;
+                }
+                CalculationType::Capped { limit } => {
+                    self.current_chance = (self.current_chance + self.chance.increase).min(limit);
+                }
+            }
+
+            // Ensure the chance doesn't exceed 100%
+            self.current_chance = self.current_chance.min(1.0);
         } else {
-            // Failure: Increase chance
-            // You'll need to decide on the specific increment logic here
-            self.current_chance += self.chance.increase; // Example: Increase by 0.1 for 10%
-            false
+            // If the roll succeeded
+            self.current_chance = self.chance.base; // Reset the chance
         }
+
+        return result; // Return whether the roll was successful
     }
 }
 
@@ -109,6 +138,7 @@ mod tests {
         let mut prd = PseudoRandomDistribution::new(
             Chance {
                 base: 0.2, // 20% base chance
+                calculation_type: CalculationType::Exponential,
                 ..Default::default()
             },
             None,
@@ -133,6 +163,7 @@ mod tests {
             Chance {
                 base: 0.2, // 20% base chance
                 increase: 0.9,
+                calculation_type: CalculationType::Linear,
             },
             Some(SEED),
         );
