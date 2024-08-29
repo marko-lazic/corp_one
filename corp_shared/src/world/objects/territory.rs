@@ -21,7 +21,7 @@ mod tests {
     use bevy::prelude::*;
 
     use crate::prelude::{
-        ControlRegistry, Faction, InteractionEvent, Inventory, MemberOf, Player, Rank, TestUtils,
+        Faction, InteractionEvent, Inventory, MemberOf, OwnershipRegistry, Player, Rank, TestUtils,
     };
 
     use super::*;
@@ -63,7 +63,7 @@ mod tests {
         faction: Faction,
         security: Security,
     ) -> Entity {
-        let mut registry = ControlRegistry::default();
+        let mut registry = OwnershipRegistry::default();
         registry.add_permanent(faction);
         let door_entity = app
             .world_mut()

@@ -149,8 +149,11 @@ fn setup_door(
                 transform: door_position,
                 ..default()
             },
-            Door::new(security),
-            ControlRegistry::new_permanent(faction),
+            DoorBundle {
+                security,
+                ..default()
+            },
+            OwnershipRegistry::new_permanent(faction),
             RigidBody::Fixed,
             Collider::cuboid(door_hs, door_hs, door_hs),
         ))
@@ -191,7 +194,7 @@ fn show_inventory_system(
 }
 
 fn door_color_change_state_system(
-    mut doors: Query<(&Door, &Handle<StandardMaterial>)>,
+    mut doors: Query<(&DoorBundle, &Handle<StandardMaterial>)>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (door, material) in &mut doors {

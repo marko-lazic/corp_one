@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-
+use bevy::prelude::Component;
 use lazy_static::lazy_static;
+use std::collections::HashMap;
 
 use crate::prelude::Rank;
 
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Component, Debug, Eq, PartialEq, Hash)]
 pub enum Security {
     Low,
     Medium,

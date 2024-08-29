@@ -1,9 +1,9 @@
-use bevy::{ecs::system::EntityCommands, log::info, prelude::Entity};
+use bevy::{ecs::system::EntityCommands, log::info, prelude::Entity, utils::default};
 use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use corp_shared::{
-    prelude::{ControlRegistry, Door, Faction, InteractionObjectType, TerritoryNodeType},
+    prelude::{DoorBundle, Faction, InteractionObjectType, OwnershipRegistry, TerritoryNodeType},
     world::{objects::territory::TerritoryNode, security::Security},
 };
 
@@ -32,11 +32,14 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             commands.insert((VortexNode, Despawn))
         }
         n if n.starts_with("BarrierField1") => {
-            let mut registry = ControlRegistry::default();
+            let mut registry = OwnershipRegistry::default();
             registry.add_permanent(Faction::EC);
             commands.insert((
                 BarrierField::new(entity, "B1"),
-                Door::new(Security::Low),
+                DoorBundle {
+                    security: Security::Low,
+                    ..default()
+                },
                 registry,
             ))
         }
@@ -49,11 +52,14 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             )),
 
         n if n.starts_with("BarrierField2") => {
-            let mut registry = ControlRegistry::default();
+            let mut registry = OwnershipRegistry::default();
             registry.add_permanent(Faction::EC);
             commands.insert((
                 BarrierField::new(entity, "B2"),
-                Door::new(Security::Low),
+                DoorBundle {
+                    security: Security::Low,
+                    ..default()
+                },
                 registry,
             ))
         }

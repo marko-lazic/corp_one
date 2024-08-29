@@ -26,12 +26,12 @@ pub struct MemberOf {
     pub rank: Rank,
 }
 
-pub enum ControlType {
+pub enum Ownership {
     Permanent(Faction),
     Hacked(Faction, Timer),
 }
 
-impl ControlType {
+impl Ownership {
     pub fn faction(&self) -> &Faction {
         match self {
             Self::Permanent(faction) => faction,
@@ -41,39 +41,39 @@ impl ControlType {
 }
 
 #[derive(Component, Default)]
-pub struct ControlRegistry {
-    pub factions: Vec<ControlType>,
+pub struct OwnershipRegistry {
+    pub factions: Vec<Ownership>,
 }
 
-impl ControlRegistry {
+impl OwnershipRegistry {
     pub fn new_permanent(faction: Faction) -> Self {
         Self {
-            factions: vec![ControlType::Permanent(faction)],
+            factions: vec![Ownership::Permanent(faction)],
         }
     }
     pub fn add_permanent(&mut self, faction: Faction) {
-        self.factions.push(ControlType::Permanent(faction));
+        self.factions.push(Ownership::Permanent(faction));
     }
 
-    pub fn add_temporary(&mut self, faction: Faction, timer: Timer) {
-        self.factions.push(ControlType::Hacked(faction, timer));
+    pub fn add(&mut self, ownership: Ownership) {
+        self.factions.push(ownership);
     }
 
-    pub fn get_control_type(&self, faction: &Faction) -> Option<&ControlType> {
+    pub fn get_control_type(&self, faction: &Faction) -> Option<&Ownership> {
         self.factions.iter().find(|f| f.faction() == faction)
     }
 
     pub fn process_temporary_factions(&mut self, time: &Time) {
         // Update temporary factions
         for faction in self.factions.iter_mut() {
-            if let ControlType::Hacked(_, timer) = faction {
+            if let Ownership::Hacked(_, timer) = faction {
                 timer.tick(time.delta());
             }
         }
 
         // Remove finished temporary factions
         self.factions.retain(|faction| {
-            if let ControlType::Hacked(_, timer) = faction {
+            if let Ownership::Hacked(_, timer) = faction {
                 !timer.finished()
             } else {
                 true
@@ -83,7 +83,7 @@ impl ControlRegistry {
 }
 
 pub fn process_temporary_faction_ownership_timers_system(
-    mut query: Query<&mut ControlRegistry>,
+    mut query: Query<&mut OwnershipRegistry>,
     time: Res<Time>,
 ) {
     for mut faction_ownership_registry in &mut query {
