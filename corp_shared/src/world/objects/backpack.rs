@@ -84,8 +84,8 @@ mod tests {
     fn one_item_is_in_backpack() {
         // given
         let (mut app, _) = setup();
-        let item_entity = app.world().spawn(HackingToolBundle::default()).id();
-        let backpack_entity = app.world().spawn(Backpack::new(vec![item_entity])).id();
+        let item_entity = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let backpack_entity = app.world_mut().spawn(Backpack::new(vec![item_entity])).id();
 
         // when
         app.update();
@@ -98,15 +98,15 @@ mod tests {
     fn player_list_items_in_backpack() {
         // given
         let (mut app, player_entity) = setup();
-        let item_entity_1 = app.world().spawn(HackingToolBundle::default()).id();
-        let item_entity_2 = app.world().spawn(HackingToolBundle::default()).id();
+        let item_entity_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let item_entity_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
         let backpack_entity = app
-            .world
+            .world_mut()
             .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
             .id();
 
         // when
-        app.world().send_event(BackpackInteractionEvent {
+        app.world_mut().send_event(BackpackInteractionEvent {
             action: BackpackAction::List,
             interactor_entity: player_entity,
             backpack_entity,
@@ -123,15 +123,15 @@ mod tests {
     fn player_take_all_items_from_backpack() {
         // given
         let (mut app, player_entity) = setup();
-        let item_entity_1 = app.world().spawn(HackingToolBundle::default()).id();
-        let item_entity_2 = app.world().spawn(HackingToolBundle::default()).id();
+        let item_entity_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let item_entity_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
         let backpack_entity = app
-            .world
+            .world_mut()
             .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
             .id();
 
         // when
-        app.world().send_event(BackpackInteractionEvent {
+        app.world_mut().send_event(BackpackInteractionEvent {
             action: BackpackAction::TakeAll,
             interactor_entity: player_entity,
             backpack_entity,
@@ -147,15 +147,15 @@ mod tests {
     fn player_take_one_item_from_backpack() {
         // given
         let (mut app, player_entity) = setup();
-        let item_entity_1 = app.world().spawn(HackingToolBundle::default()).id();
-        let item_entity_2 = app.world().spawn(HackingToolBundle::default()).id();
+        let item_entity_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let item_entity_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
         let backpack_entity = app
-            .world
+            .world_mut()
             .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
             .id();
 
         // when
-        app.world().send_event(BackpackInteractionEvent {
+        app.world_mut().send_event(BackpackInteractionEvent {
             action: BackpackAction::TakeItem(item_entity_2),
             interactor_entity: player_entity,
             backpack_entity,
@@ -183,7 +183,7 @@ mod tests {
                 Update,
                 (backpack_interaction_event_system, despawn_backpack_system).chain(),
             );
-        let player_entity = app.world().spawn((Player, Inventory::default())).id();
+        let player_entity = app.world_mut().spawn((Player, Inventory::default())).id();
         (app, player_entity)
     }
 }

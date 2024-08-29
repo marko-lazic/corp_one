@@ -39,7 +39,7 @@ mod tests {
         let e_player = setup_player(&mut app, Vec::new(), Faction::EC, Rank::R7);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             e_player,
             e_energy_node,
             UseTerritoryNodeEvent,
@@ -66,7 +66,7 @@ mod tests {
         let mut registry = ControlRegistry::default();
         registry.add_permanent(faction);
         let door_entity = app
-            .world
+            .world_mut()
             .spawn((TerritoryNode { r#type, security }, registry))
             .id();
         door_entity
@@ -74,7 +74,7 @@ mod tests {
 
     fn setup_player(app: &mut App, items: Vec<Entity>, faction: Faction, rank: Rank) -> Entity {
         let player_entity = app
-            .world
+            .world_mut()
             .spawn((Player, Inventory::new(items), MemberOf { faction, rank }))
             .id();
         player_entity

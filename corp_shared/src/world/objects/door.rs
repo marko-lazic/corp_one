@@ -232,7 +232,7 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -253,7 +253,7 @@ mod tests {
         let door_entity_2 = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity_1,
             UseDoorEvent,
@@ -276,7 +276,7 @@ mod tests {
         app.get_mut::<Door>(door_entity).state = DoorState::Open;
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -296,13 +296,13 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
         ));
         app.update_after(Duration::from_secs_f32(3.0));
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -322,13 +322,13 @@ mod tests {
         let player_entity = setup_player(&mut app, vec![], Faction::EC, Rank::R6);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
         ));
         app.update_after(Duration::from_secs_f32(0.5));
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -350,7 +350,7 @@ mod tests {
 
         // when
         for _ in 0..3 {
-            app.world().send_event(InteractionEvent::new(
+            app.world_mut().send_event(InteractionEvent::new(
                 player_entity,
                 door_entity,
                 UseDoorEvent,
@@ -374,7 +374,7 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -399,7 +399,7 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             cmg_player_entity,
             door_entity,
             UseDoorEvent,
@@ -419,7 +419,7 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::CMG, Security::High);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -441,7 +441,7 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::CMG, Security::Low);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -461,7 +461,7 @@ mod tests {
         let player_entity =
             setup_player(&mut app, vec![hacking_tool_entity], Faction::EC, Rank::R1);
         let door_entity = setup_door(&mut app, Faction::VI, Security::Medium);
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -470,7 +470,7 @@ mod tests {
         app.update_after(Duration::from_secs_f32(2.0 * 60.0));
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -490,7 +490,7 @@ mod tests {
         let player_entity =
             setup_player(&mut app, vec![hacking_tool_entity], Faction::VI, Rank::R0);
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -499,7 +499,7 @@ mod tests {
         app.update_after(Duration::from_secs_f32(HACK_DURATION_FIVE_MIN));
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -519,7 +519,7 @@ mod tests {
         let door_entity = setup_door(&mut app, Faction::EC, Security::Low);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -539,7 +539,7 @@ mod tests {
         let player_entity =
             setup_player(&mut app, vec![hacking_tool_entity], Faction::EC, Rank::R2);
         let door_entity = setup_door(&mut app, Faction::CMG, Security::Low);
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             player_entity,
             door_entity,
             UseDoorEvent,
@@ -549,7 +549,7 @@ mod tests {
         let another_player_entity = setup_player(&mut app, vec![], Faction::EC, Rank::R0);
 
         // when
-        app.world().send_event(InteractionEvent::new(
+        app.world_mut().send_event(InteractionEvent::new(
             another_player_entity,
             door_entity,
             UseDoorEvent,
@@ -583,21 +583,21 @@ mod tests {
 
     fn setup_player(app: &mut App, items: Vec<Entity>, faction: Faction, rank: Rank) -> Entity {
         let player_entity = app
-            .world
+            .world_mut()
             .spawn((Player, Inventory::new(items), MemberOf { faction, rank }))
             .id();
         player_entity
     }
 
     fn setup_hacking_tool(app: &mut App) -> Entity {
-        let item_entity = app.world().spawn(HackingToolBundle::default()).id();
+        let item_entity = app.world_mut().spawn(HackingToolBundle::default()).id();
         item_entity
     }
 
     fn setup_door(app: &mut App, faction: Faction, security: Security) -> Entity {
         let mut registry = ControlRegistry::default();
         registry.add_permanent(faction);
-        let door_entity = app.world().spawn((Door::new(security), registry)).id();
+        let door_entity = app.world_mut().spawn((Door::new(security), registry)).id();
         door_entity
     }
 }
