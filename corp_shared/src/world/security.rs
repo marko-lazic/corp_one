@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::prelude::Rank;
 
-#[derive(Component, Debug, Eq, PartialEq, Hash)]
+#[derive(Component, Eq, PartialEq, Hash)]
 pub enum SecurityLevel {
     Low,
     Medium,

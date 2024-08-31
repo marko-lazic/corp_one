@@ -4,10 +4,7 @@ use bevy::{app::AppExit, prelude::*};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
 use leafwing_input_manager::prelude::*;
 
-use corp_shared::prelude::{
-    Health, InteractionEvent, InteractionObjectType, Player, UseDoorEvent, UseEvent,
-    UseTerritoryNodeEvent,
-};
+use corp_shared::prelude::{Health, InteractionObjectType, Player, UseEvent};
 
 use crate::{
     asset::Colony,
@@ -446,13 +443,7 @@ fn create_use_event(
                 });
             }
             InteractionObjectType::TerritoryNode => {
-                commands.add(move |w: &mut World| {
-                    w.send_event(InteractionEvent::new(
-                        player,
-                        usable_entity,
-                        UseTerritoryNodeEvent,
-                    ));
-                });
+                commands.trigger_targets(UseEvent::new(player), usable_entity);
             }
         }
 

@@ -1,5 +1,5 @@
 pub mod faction;
-pub mod interactive;
+pub mod interaction;
 pub mod objects;
 pub mod player;
 pub mod security;

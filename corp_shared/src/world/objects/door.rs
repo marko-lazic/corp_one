@@ -38,7 +38,7 @@ pub struct DoorBundle {
     pub door: Door,
     pub state: DoorState,
     pub security_level: SecurityLevel,
-    pub ownership_registry: OwnershipRegistry,
+    pub ownership: OwnershipRegistry,
     pub cooldown: DoorCooldown,
 }
 
@@ -56,7 +56,7 @@ impl Default for DoorBundle {
             door: Door,
             state: DoorState::Closed,
             security_level: SecurityLevel::Low,
-            ownership_registry: OwnershipRegistry::default(),
+            ownership: OwnershipRegistry::default(),
             cooldown: DoorCooldown {
                 autoclose: Timer::from_seconds(Door::OPEN_TIME, TimerMode::Once),
                 toggle_block: toggle_cooldown,
@@ -519,7 +519,7 @@ mod tests {
             .world_mut()
             .spawn((DoorBundle {
                 security_level: security,
-                ownership_registry: registry,
+                ownership: registry,
                 ..default()
             },))
             .observe(on_use_door_event_door)

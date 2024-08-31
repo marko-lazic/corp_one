@@ -1,19 +1,27 @@
 use bevy::prelude::*;
 
-use crate::prelude::SecurityLevel;
+use crate::prelude::{OwnershipRegistry, SecurityLevel, UseEvent};
 
-pub struct UseTerritoryNodeEvent;
+#[derive(Component)]
+pub struct TerritoryNode;
 
+#[derive(Component)]
 pub enum TerritoryNodeType {
     EnergyNode,
     PowerPlant,
     ControlCenter,
 }
 
-#[derive(Component)]
-pub struct TerritoryNode {
-    pub r#type: TerritoryNodeType,
-    pub security: SecurityLevel,
+#[derive(Bundle)]
+pub struct TerritoryNodeBundle {
+    pub territory_node: TerritoryNode,
+    pub node_type: TerritoryNodeType,
+    pub security_level: SecurityLevel,
+    pub ownership: OwnershipRegistry,
+}
+
+pub fn on_use_event_territory(trigger: Trigger<UseEvent>) {
+    info!("Interaction with territory node: {:?}", trigger.entity());
 }
 
 #[cfg(test)]
@@ -21,7 +29,7 @@ mod tests {
     use bevy::prelude::*;
 
     use crate::prelude::{
-        Faction, InteractionEvent, Inventory, MemberOf, OwnershipRegistry, Player, Rank, TestUtils,
+        Faction, Inventory, MemberOf, OwnershipRegistry, Player, Rank, TestUtils, UseEvent,
     };
 
     use super::*;
@@ -39,11 +47,8 @@ mod tests {
         let e_player = setup_player(&mut app, Vec::new(), Faction::EC, Rank::R7);
 
         // when
-        app.world_mut().send_event(InteractionEvent::new(
-            e_player,
-            e_energy_node,
-            UseTerritoryNodeEvent,
-        ));
+        app.world_mut()
+            .trigger_targets(UseEvent::new(e_player), e_energy_node);
         app.update();
 
         // then
@@ -52,22 +57,25 @@ mod tests {
 
     fn setup() -> App {
         let mut app = App::new();
-        app.init_time()
-            .add_event::<InteractionEvent<UseTerritoryNodeEvent>>();
+        app.init_time();
         app
     }
 
     fn setup_territory_node(
         app: &mut App,
-        r#type: TerritoryNodeType,
+        node_type: TerritoryNodeType,
         faction: Faction,
-        security: SecurityLevel,
+        level: SecurityLevel,
     ) -> Entity {
-        let mut registry = OwnershipRegistry::default();
-        registry.add_permanent(faction);
+        let ownership = OwnershipRegistry::new_permanent(faction);
         let door_entity = app
             .world_mut()
-            .spawn((TerritoryNode { r#type, security }, registry))
+            .spawn((TerritoryNodeBundle {
+                territory_node: TerritoryNode,
+                node_type,
+                security_level: level,
+                ownership,
+            },))
             .id();
         door_entity
     }

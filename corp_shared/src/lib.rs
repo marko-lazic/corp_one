@@ -22,10 +22,10 @@ pub mod prelude {
         util::test_utils::*,
         world::{
             faction::*,
-            interactive::*,
+            interaction::*,
             objects::{backpack::*, door::*, territory::*},
             player::*,
+            security::*,
         },
     };
-    pub use crate::world::security::*;
 }

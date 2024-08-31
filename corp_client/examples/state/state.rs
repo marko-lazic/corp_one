@@ -146,7 +146,7 @@ fn setup_door(
             },
             DoorBundle {
                 security_level: level,
-                ownership_registry: OwnershipRegistry::new_permanent(owner),
+                ownership: OwnershipRegistry::new_permanent(owner),
                 ..default()
             },
             RigidBody::Fixed,
