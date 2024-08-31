@@ -4,7 +4,7 @@ use bevy_rapier3d::prelude::*;
 
 use corp_shared::{
     prelude::{DoorBundle, Faction, InteractionObjectType, OwnershipRegistry, TerritoryNodeType},
-    world::{objects::territory::TerritoryNode, security::Security},
+    world::{objects::territory::TerritoryNode, security::SecurityLevel},
 };
 
 use crate::{
@@ -37,7 +37,7 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             commands.insert((
                 BarrierField::new(entity, "B1"),
                 DoorBundle {
-                    security: Security::Low,
+                    security_level: SecurityLevel::Low,
                     ..default()
                 },
                 registry,
@@ -57,7 +57,7 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             commands.insert((
                 BarrierField::new(entity, "B2"),
                 DoorBundle {
-                    security: Security::Low,
+                    security_level: SecurityLevel::Low,
                     ..default()
                 },
                 registry,
@@ -73,7 +73,7 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
         n if n.starts_with("EnergyNode1") => commands.insert((
             TerritoryNode {
                 r#type: TerritoryNodeType::EnergyNode,
-                security: Security::Low,
+                security: SecurityLevel::Low,
             },
             PickableBundle::default(),
             InteractionObjectType::TerritoryNode,

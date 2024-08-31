@@ -27,11 +27,9 @@ fn main() {
             RapierDebugRenderPlugin::default(),
         ))
         .insert_resource(AmbientLight::default())
-        .add_event::<DoorStateEvent>()
         .add_event::<BackpackInteractionEvent>()
         .add_event::<InteractionEvent<UseDoorEvent>>()
         .add_event::<BackpackInteractionEvent>()
-        .add_event::<DoorHackEvent>()
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -40,10 +38,8 @@ fn main() {
                 process_temporary_faction_ownership_timers_system,
                 cast_ray_system,
                 interaction_system,
-                door_interaction_event_system,
                 backpack_interaction_event_system,
                 despawn_backpack_system,
-                door_hack_event_system,
                 show_inventory_system,
                 door_color_change_state_system,
             )
@@ -71,7 +67,7 @@ fn setup(
         &mut r_assets_material,
         Transform::from_xyz(0.0, 0.5, 0.0),
         Faction::EC,
-        Security::High,
+        SecurityLevel::High,
     );
 
     let _vi_door = setup_door(
@@ -80,7 +76,7 @@ fn setup(
         &mut r_assets_material,
         Transform::from_xyz(-10.0, 0.5, 0.0),
         Faction::VI,
-        Security::Low,
+        SecurityLevel::Low,
     );
 
     let _cmg_door = setup_door(
@@ -89,7 +85,7 @@ fn setup(
         &mut r_assets_material,
         Transform::from_xyz(5.0, 0.5, -5.0),
         Faction::CMG,
-        Security::Medium,
+        SecurityLevel::Medium,
     );
 
     let hacking_tool_entity = commands.spawn(HackingToolBundle::default()).id();
@@ -136,8 +132,8 @@ fn setup_door(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     door_position: Transform,
-    faction: Faction,
-    security: Security,
+    owner: Faction,
+    level: SecurityLevel,
 ) -> Entity {
     let door_size = 1.0;
     let door_hs = door_size / 2.0;
@@ -145,18 +141,20 @@ fn setup_door(
         .spawn((
             PbrBundle {
                 mesh: meshes.add(Cuboid::new(door_size, door_size, door_size)),
-                material: materials.add(endesga::SKY).into(),
+                material: materials.add(endesga::SKY),
                 transform: door_position,
                 ..default()
             },
             DoorBundle {
-                security,
+                security_level: level,
+                ownership_registry: OwnershipRegistry::new_permanent(owner),
                 ..default()
             },
-            OwnershipRegistry::new_permanent(faction),
             RigidBody::Fixed,
             Collider::cuboid(door_hs, door_hs, door_hs),
         ))
+        .observe(on_use_door_event_door)
+        .observe(on_use_door_hack_event)
         .id();
     ec_door
 }
@@ -166,11 +164,13 @@ fn interaction_system(
     r_player_entity: Res<PlayerEntity>,
     r_target_entity: Res<TargetEntity>,
     mut ev_use_door: EventWriter<InteractionEvent<UseDoorEvent>>,
+    mut commands: Commands,
 ) {
     if r_keyboard_input.just_pressed(KeyCode::KeyE) {
         if let Some(interactor) = r_player_entity.0 {
             if let Some(target) = r_target_entity.0 {
                 ev_use_door.send(InteractionEvent::new(interactor, target, UseDoorEvent));
+                commands.trigger_targets(UseEvent { user: interactor }, target);
             }
         }
     }
@@ -194,17 +194,13 @@ fn show_inventory_system(
 }
 
 fn door_color_change_state_system(
-    mut doors: Query<(&DoorBundle, &Handle<StandardMaterial>)>,
+    mut doors: Query<(&DoorState, &Handle<StandardMaterial>), With<Door>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (door, material) in &mut doors {
-        match door.state() {
-            DoorState::Open => {
-                materials.get_mut(material).unwrap().base_color = endesga::FOG.into()
-            }
-            DoorState::Closed => {
-                materials.get_mut(material).unwrap().base_color = endesga::SKY.into()
-            }
+    for (door_state, material) in &mut doors {
+        match door_state {
+            DoorState::Open => materials.get_mut(material).unwrap().base_color = endesga::FOG,
+            DoorState::Closed => materials.get_mut(material).unwrap().base_color = endesga::SKY,
         }
     }
 }

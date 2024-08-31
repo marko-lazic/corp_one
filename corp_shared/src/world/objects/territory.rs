@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::prelude::Security;
+use crate::prelude::SecurityLevel;
 
 pub struct UseTerritoryNodeEvent;
 
@@ -13,7 +13,7 @@ pub enum TerritoryNodeType {
 #[derive(Component)]
 pub struct TerritoryNode {
     pub r#type: TerritoryNodeType,
-    pub security: Security,
+    pub security: SecurityLevel,
 }
 
 #[cfg(test)]
@@ -34,7 +34,7 @@ mod tests {
             &mut app,
             TerritoryNodeType::EnergyNode,
             Faction::EC,
-            Security::Low,
+            SecurityLevel::Low,
         );
         let e_player = setup_player(&mut app, Vec::new(), Faction::EC, Rank::R7);
 
@@ -61,7 +61,7 @@ mod tests {
         app: &mut App,
         r#type: TerritoryNodeType,
         faction: Faction,
-        security: Security,
+        security: SecurityLevel,
     ) -> Entity {
         let mut registry = OwnershipRegistry::default();
         registry.add_permanent(faction);

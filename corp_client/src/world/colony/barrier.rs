@@ -38,7 +38,7 @@ pub struct BarrierPlugin;
 impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<InteractionEvent<UseDoorEvent>>()
-            .add_event::<DoorHackEvent>()
+            .add_event::<UseDoorHackEvent>()
             .add_systems(
                 Update,
                 (change_barrier_field_visibility_and_collision,)
