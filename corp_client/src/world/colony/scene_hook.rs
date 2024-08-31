@@ -2,11 +2,6 @@ use bevy::{ecs::system::EntityCommands, log::info, prelude::Entity, utils::defau
 use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use corp_shared::{
-    prelude::{DoorBundle, Faction, InteractionObjectType, OwnershipRegistry, TerritoryNodeType},
-    world::{objects::territory::TerritoryNode, security::SecurityLevel},
-};
-
 use crate::{
     state::Despawn,
     world::{
@@ -16,6 +11,13 @@ use crate::{
         },
         physics,
     },
+};
+use corp_shared::{
+    prelude::{
+        on_use_door_event_door, on_use_door_hack_event, DoorBundle, Faction, InteractionObjectType,
+        OwnershipRegistry, TerritoryNodeType,
+    },
+    world::{objects::territory::TerritoryNode, security::SecurityLevel},
 };
 
 pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut EntityCommands) {
@@ -32,16 +34,18 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             commands.insert((VortexNode, Despawn))
         }
         n if n.starts_with("BarrierField1") => {
-            let mut registry = OwnershipRegistry::default();
-            registry.add_permanent(Faction::EC);
-            commands.insert((
-                BarrierField::new(entity, "B1"),
-                DoorBundle {
-                    security_level: SecurityLevel::Low,
-                    ..default()
-                },
-                registry,
-            ))
+            let ownership = OwnershipRegistry::new_permanent(Faction::EC);
+            commands
+                .insert((
+                    BarrierField::new(entity, "B1"),
+                    DoorBundle {
+                        security_level: SecurityLevel::Low,
+                        ownership_registry: ownership,
+                        ..default()
+                    },
+                ))
+                .observe(on_use_door_event_door)
+                .observe(on_use_door_hack_event)
         }
         n if n.starts_with("BarrierControl11") | n.starts_with("BarrierControl12") => commands
             .insert((
@@ -52,16 +56,18 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             )),
 
         n if n.starts_with("BarrierField2") => {
-            let mut registry = OwnershipRegistry::default();
-            registry.add_permanent(Faction::EC);
-            commands.insert((
-                BarrierField::new(entity, "B2"),
-                DoorBundle {
-                    security_level: SecurityLevel::Low,
-                    ..default()
-                },
-                registry,
-            ))
+            let ownership = OwnershipRegistry::new_permanent(Faction::EC);
+            commands
+                .insert((
+                    BarrierField::new(entity, "B2"),
+                    DoorBundle {
+                        security_level: SecurityLevel::Low,
+                        ownership_registry: ownership,
+                        ..default()
+                    },
+                ))
+                .observe(on_use_door_event_door)
+                .observe(on_use_door_hack_event)
         }
         n if n.starts_with("BarrierControl21") | n.starts_with("BarrierControl22") => commands
             .insert((

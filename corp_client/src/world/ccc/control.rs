@@ -5,7 +5,8 @@ use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
 use leafwing_input_manager::prelude::*;
 
 use corp_shared::prelude::{
-    Health, InteractionEvent, InteractionObjectType, Player, UseDoorEvent, UseTerritoryNodeEvent,
+    Health, InteractionEvent, InteractionObjectType, Player, UseDoorEvent, UseEvent,
+    UseTerritoryNodeEvent,
 };
 
 use crate::{
@@ -432,11 +433,7 @@ fn create_use_event(
                             .map(|&bf| bf.entity);
 
                         if let Some(target_entity) = target_entity {
-                            w.send_event(InteractionEvent::new(
-                                player,
-                                target_entity,
-                                UseDoorEvent,
-                            ));
+                            w.trigger_targets(UseEvent::new(player), target_entity);
                         } else {
                             warn!(
                                 "Didn't find any barrier field with name: {}",

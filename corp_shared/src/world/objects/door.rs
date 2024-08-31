@@ -100,20 +100,20 @@ pub fn on_use_door_event_door(
         (
             &mut DoorCooldown,
             &mut DoorState,
-            &SecurityLevel,
             &OwnershipRegistry,
+            &SecurityLevel,
         ),
         With<Door>,
     >,
 ) {
     if let Ok(member_of) = q_member.get(trigger.event().user) {
-        if let Ok((mut door_cooldown, mut door_state, security, control_registry)) =
+        if let Ok((mut door_cooldown, mut door_state, control_registry, security_level)) =
             q_door.get_mut(trigger.entity())
         {
             if let Some(control_type) = control_registry.get_control_type(&member_of.faction) {
                 match control_type {
                     Ownership::Permanent(_) => {
-                        if Some(&member_of.rank) >= REQUIRED_RANK_BY_SECURITY.get(security) {
+                        if Some(&member_of.rank) >= REQUIRED_RANK_BY_SECURITY.get(security_level) {
                             door_state.toggle(&mut door_cooldown);
                         }
                     }
@@ -136,11 +136,11 @@ pub fn on_use_door_event_door(
 pub fn on_use_door_hack_event(
     trigger: Trigger<UseDoorHackEvent>,
     mut commands: Commands,
-    mut q_door: Query<(&mut DoorState, &mut OwnershipRegistry, &mut DoorCooldown)>,
+    mut q_door: Query<(&mut DoorCooldown, &mut DoorState, &mut OwnershipRegistry)>,
     mut q_player: Query<(&mut Inventory, &MemberOf), With<Player>>,
     q_hacking_tool: Query<&HackingTool>,
 ) {
-    if let Ok((mut door_state, mut ownership_registry, mut door_cooldown)) =
+    if let Ok((mut door_cooldown, mut door_state, mut ownership_registry)) =
         q_door.get_mut(trigger.entity())
     {
         if let Ok((mut inventory, member_of)) = q_player.get_mut(trigger.event().hacker) {
@@ -486,7 +486,6 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time();
-        app.add_event::<InteractionEvent<UseDoorEvent>>();
         app.add_event::<BackpackInteractionEvent>();
         app.add_event::<UseDoorHackEvent>();
         app.add_systems(

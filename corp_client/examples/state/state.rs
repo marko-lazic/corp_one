@@ -28,7 +28,6 @@ fn main() {
         ))
         .insert_resource(AmbientLight::default())
         .add_event::<BackpackInteractionEvent>()
-        .add_event::<InteractionEvent<UseDoorEvent>>()
         .add_event::<BackpackInteractionEvent>()
         .add_systems(Startup, setup)
         .add_systems(
@@ -163,13 +162,11 @@ fn interaction_system(
     r_keyboard_input: Res<ButtonInput<KeyCode>>,
     r_player_entity: Res<PlayerEntity>,
     r_target_entity: Res<TargetEntity>,
-    mut ev_use_door: EventWriter<InteractionEvent<UseDoorEvent>>,
     mut commands: Commands,
 ) {
     if r_keyboard_input.just_pressed(KeyCode::KeyE) {
         if let Some(interactor) = r_player_entity.0 {
             if let Some(target) = r_target_entity.0 {
-                ev_use_door.send(InteractionEvent::new(interactor, target, UseDoorEvent));
                 commands.trigger_targets(UseEvent { user: interactor }, target);
             }
         }

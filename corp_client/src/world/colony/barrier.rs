@@ -37,25 +37,19 @@ pub struct BarrierPlugin;
 
 impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<InteractionEvent<UseDoorEvent>>()
-            .add_event::<UseDoorHackEvent>()
-            .add_systems(
-                Update,
-                (change_barrier_field_visibility_and_collision,)
-                    .run_if(in_state(GameState::Playing)),
+        app.add_systems(
+            Update,
+            (change_barrier_field_visibility_and_collision,).run_if(in_state(GameState::Playing)),
+        )
+        .add_systems(
+            Update,
+            (
+                door_cooldown_system,
+                process_temporary_faction_ownership_timers_system,
             )
-            .add_systems(
-                Update,
-                (
-                    door_cooldown_system,
-                    process_temporary_faction_ownership_timers_system,
-                    door_interaction_event_system
-                        .run_if(on_event::<InteractionEvent<UseDoorEvent>>()),
-                    door_hack_event_system,
-                )
-                    .chain()
-                    .run_if(in_state(GameState::Playing)),
-            );
+                .chain()
+                .run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
