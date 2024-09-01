@@ -4,7 +4,7 @@ use bevy::{app::AppExit, prelude::*};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
 use leafwing_input_manager::prelude::*;
 
-use corp_shared::prelude::{Health, InteractionObjectType, Player, UseEvent};
+use corp_shared::prelude::{Health, InteractionObjectType, Inventory, Player, UseEvent};
 
 use crate::{
     asset::Colony,
@@ -88,6 +88,7 @@ pub enum PlayerAction {
     Aim,
     OrientationMode,
     Use,
+    Inventory,
     Shoot,
     CameraZoomIn,
     CameraZoomOut,
@@ -111,6 +112,8 @@ impl PlayerAction {
             .insert(PlayerAction::Use, KeyCode::KeyE)
             .insert(PlayerAction::Kill, KeyCode::KeyK)
             .insert(PlayerAction::Shoot, MouseButton::Left)
+            // User Interface
+            .insert(PlayerAction::Inventory, KeyCode::KeyI)
             // Options
             .insert(PlayerAction::OrientationMode, KeyCode::Space)
             .insert(PlayerAction::CameraZoomIn, KeyCode::Equal)
@@ -143,6 +146,7 @@ impl Plugin for ControlPlugin {
                     detect_interactable_objects,
                     create_use_event,
                     kill,
+                    log_inventory,
                     toggle_window_cursor_visible,
                 )
                     .chain()
@@ -468,6 +472,29 @@ fn kill(
     if action_state.just_pressed(&PlayerAction::Kill) {
         if let Some(mut health) = q_player_health.iter_mut().next() {
             health.kill_mut();
+        }
+    }
+}
+
+fn log_inventory(
+    q_inventory: Query<&Inventory, With<Player>>,
+    q_name: Query<&Name>,
+    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
+) {
+    let Ok(action_state) = q_action_state.get_single() else {
+        warn!("PlayerAction state is missing.");
+        return;
+    };
+    if action_state.just_pressed(&PlayerAction::Inventory) {
+        if let Ok(inventory) = q_inventory.get_single() {
+            let item_names: Vec<String> = inventory
+                .items
+                .iter()
+                .filter_map(|&item| q_name.get(item).ok().map(|name| name.to_string()))
+                .collect();
+
+            let output = format!("Inventory: [{}]", item_names.join(", "));
+            info!("{}", output);
         }
     }
 }
