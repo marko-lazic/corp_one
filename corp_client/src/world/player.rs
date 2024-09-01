@@ -95,10 +95,7 @@ pub fn setup_player(
     let player = commands
         .spawn((
             Name::new("Player"),
-            InputManagerBundle {
-                input_map: PlayerAction::player_input_map(),
-                ..default()
-            },
+            InputManagerBundle::with_map(PlayerAction::player_input_map()),
             SpatialBundle::from_transform(player_spawn_position),
             Player,
             MovementBundle::default(),

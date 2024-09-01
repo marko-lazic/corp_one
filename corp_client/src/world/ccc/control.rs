@@ -69,12 +69,13 @@ pub enum UIAction {
 
 impl UIAction {
     fn ui_input_map() -> InputMap<UIAction> {
+        use UIAction::*;
         let mut input = InputMap::default();
         input
-            .insert(UIAction::Escape, KeyCode::Escape)
-            .insert(UIAction::ColonyIris, KeyCode::KeyI)
-            .insert(UIAction::ColonyPlayground, KeyCode::KeyP)
-            .insert(UIAction::ColonyLiberte, KeyCode::KeyL);
+            .insert(Escape, KeyCode::Escape)
+            .insert(ColonyIris, KeyCode::KeyI)
+            .insert(ColonyPlayground, KeyCode::KeyP)
+            .insert(ColonyLiberte, KeyCode::KeyL);
         input
     }
 }
@@ -99,27 +100,28 @@ pub enum PlayerAction {
 
 impl PlayerAction {
     pub fn player_input_map() -> InputMap<PlayerAction> {
+        use PlayerAction::*;
         let mut input = InputMap::default();
         input
             // Movement
-            .insert(PlayerAction::Forward, KeyCode::KeyW)
-            .insert(PlayerAction::Backward, KeyCode::KeyS)
-            .insert(PlayerAction::Left, KeyCode::KeyA)
-            .insert(PlayerAction::Right, KeyCode::KeyD)
+            .insert(Forward, KeyCode::KeyW)
+            .insert(Backward, KeyCode::KeyS)
+            .insert(Left, KeyCode::KeyA)
+            .insert(Right, KeyCode::KeyD)
             // Weapon
-            .insert(PlayerAction::Aim, MouseButton::Right)
+            .insert(Aim, MouseButton::Right)
             // Abilities
-            .insert(PlayerAction::Use, KeyCode::KeyE)
-            .insert(PlayerAction::Kill, KeyCode::KeyK)
-            .insert(PlayerAction::Shoot, MouseButton::Left)
+            .insert(Use, KeyCode::KeyE)
+            .insert(Kill, KeyCode::KeyK)
+            .insert(Shoot, MouseButton::Left)
             // User Interface
-            .insert(PlayerAction::Inventory, KeyCode::KeyI)
+            .insert(Inventory, KeyCode::KeyI)
             // Options
-            .insert(PlayerAction::OrientationMode, KeyCode::Space)
-            .insert(PlayerAction::CameraZoomIn, KeyCode::Equal)
-            .insert(PlayerAction::CameraZoomOut, KeyCode::Minus)
-            .insert(PlayerAction::CameraRotateClockwise, KeyCode::KeyZ)
-            .insert(PlayerAction::CameraRotateCounterClockwise, KeyCode::KeyC);
+            .insert(OrientationMode, KeyCode::Space)
+            .insert(CameraZoomIn, KeyCode::Equal)
+            .insert(CameraZoomOut, KeyCode::Minus)
+            .insert(CameraRotateClockwise, KeyCode::KeyZ)
+            .insert(CameraRotateCounterClockwise, KeyCode::KeyC);
 
         input
     }
