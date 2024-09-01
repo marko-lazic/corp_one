@@ -4,7 +4,7 @@ use bevy_kira_audio::AudioSource;
 use serde::Deserialize;
 
 use crate::{
-    asset::prelude::{ASSET_PATH, ColonyConfig},
+    asset::prelude::{ColonyConfig, ASSET_PATH},
     state::{Despawn, GameState},
 };
 
@@ -52,7 +52,10 @@ pub struct AudioAssets {
 }
 
 #[derive(Resource, AssetCollection)]
-pub struct MeshAssets {}
+pub struct MeshAssets {
+    #[asset(path = "mesh/low_poly_backpack.glb#Scene0")]
+    pub low_poly_backpack: Handle<Scene>,
+}
 
 #[derive(Resource, AssetCollection)]
 pub struct PlayerAssets {

@@ -103,6 +103,7 @@ pub fn setup_player(
             Player,
             MovementBundle::default(),
             MainCameraFollow,
+            Inventory::default(),
             MemberOf {
                 faction: Faction::EC,
                 rank: Rank::R6,

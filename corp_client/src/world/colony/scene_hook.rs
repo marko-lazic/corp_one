@@ -14,7 +14,7 @@ use crate::{
 };
 use corp_shared::{
     prelude::{
-        on_use_door_event_door, on_use_door_hack_event, on_use_event_territory, DoorBundle,
+        on_use_door_event, on_use_door_hack_event, on_use_territory_node_event, DoorBundle,
         Faction, InteractionObjectType, OwnershipRegistry, TerritoryNode, TerritoryNodeType,
     },
     world::{objects::territory::TerritoryNodeBundle, security::SecurityLevel},
@@ -42,7 +42,7 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
                     ..default()
                 },
             ))
-            .observe(on_use_door_event_door)
+            .observe(on_use_door_event)
             .observe(on_use_door_hack_event),
         n if n.starts_with("BarrierControl11") | n.starts_with("BarrierControl12") => commands
             .insert((
@@ -61,7 +61,7 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
                     ..default()
                 },
             ))
-            .observe(on_use_door_event_door)
+            .observe(on_use_door_event)
             .observe(on_use_door_hack_event),
         n if n.starts_with("BarrierControl21") | n.starts_with("BarrierControl22") => commands
             .insert((
@@ -82,7 +82,7 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
                 InteractionObjectType::TerritoryNode,
                 Despawn,
             ))
-            .observe(on_use_event_territory),
+            .observe(on_use_territory_node_event),
         n if n.starts_with("Plant Tree") => commands.insert(Despawn),
         _ => commands,
     };

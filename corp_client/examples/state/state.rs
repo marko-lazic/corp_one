@@ -27,8 +27,6 @@ fn main() {
             RapierDebugRenderPlugin::default(),
         ))
         .insert_resource(AmbientLight::default())
-        .add_event::<BackpackInteractionEvent>()
-        .add_event::<BackpackInteractionEvent>()
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -37,8 +35,7 @@ fn main() {
                 process_temporary_faction_ownership_timers_system,
                 cast_ray_system,
                 interaction_system,
-                backpack_interaction_event_system,
-                despawn_backpack_system,
+                despawn_empty_backpack_system,
                 show_inventory_system,
                 door_color_change_state_system,
             )
@@ -152,7 +149,7 @@ fn setup_door(
             RigidBody::Fixed,
             Collider::cuboid(door_hs, door_hs, door_hs),
         ))
-        .observe(on_use_door_event_door)
+        .observe(on_use_door_event)
         .observe(on_use_door_hack_event)
         .id();
     ec_door

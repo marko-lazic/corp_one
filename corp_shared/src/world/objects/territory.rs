@@ -20,7 +20,7 @@ pub struct TerritoryNodeBundle {
     pub ownership: OwnershipRegistry,
 }
 
-pub fn on_use_event_territory(trigger: Trigger<UseEvent>) {
+pub fn on_use_territory_node_event(trigger: Trigger<UseEvent>) {
     info!("Interaction with territory node: {:?}", trigger.entity());
 }
 

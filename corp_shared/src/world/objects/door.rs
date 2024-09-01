@@ -92,7 +92,7 @@ pub fn door_cooldown_system(
     }
 }
 
-pub fn on_use_door_event_door(
+pub fn on_use_door_event(
     trigger: Trigger<UseEvent>,
     mut commands: Commands,
     q_member: Query<&MemberOf>,
@@ -144,14 +144,14 @@ pub fn on_use_door_hack_event(
         q_door.get_mut(trigger.entity())
     {
         if let Ok((mut inventory, member_of)) = q_player.get_mut(trigger.event().hacker) {
-            if let Some(hacking_tool_entity) = inventory
+            if let Some(e_hacking_tool) = inventory
                 .items
                 .iter()
                 .find(|&&item_entity| q_hacking_tool.get(item_entity).is_ok())
                 .copied()
             {
-                inventory.remove_item(hacking_tool_entity);
-                commands.entity(hacking_tool_entity).despawn_recursive();
+                inventory.remove(e_hacking_tool);
+                commands.entity(e_hacking_tool).despawn_recursive();
                 ownership_registry.add(Ownership::Hacked(
                     member_of.faction,
                     Timer::new(
@@ -486,7 +486,7 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time();
-        app.add_event::<BackpackInteractionEvent>();
+        app.add_event::<UseBackpackEvent>();
         app.add_event::<UseDoorHackEvent>();
         app.add_systems(
             Update,
@@ -522,7 +522,7 @@ mod tests {
                 ownership: registry,
                 ..default()
             },))
-            .observe(on_use_door_event_door)
+            .observe(on_use_door_event)
             .observe(on_use_door_hack_event)
             .id();
         door_entity

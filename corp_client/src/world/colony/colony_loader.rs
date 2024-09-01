@@ -1,3 +1,12 @@
+use crate::{
+    asset::{Colony, ColonyConfig, MaterialAssets, MeshAssets, SceneAssets},
+    state::{Despawn, GameState},
+    world::{
+        colony::{prelude::Zone, scene_hook},
+        prelude::{CollideGroups, PhysicsSystems, PlayerSpawnEvent},
+        shader::ForceFieldMaterial,
+    },
+};
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
@@ -5,23 +14,17 @@ use bevy::{
 };
 use bevy_mod_picking::{
     events::{Click, Pointer},
-    PickableBundle,
     prelude::{Listener, On},
+    PickableBundle,
 };
 use bevy_rapier3d::{
     dynamics::RigidBody,
     geometry::{Collider, Sensor},
 };
 use bevy_scene_hook::{HookedSceneBundle, SceneHook};
-
-use crate::{
-    asset::{Colony, ColonyConfig, MaterialAssets, SceneAssets},
-    state::{Despawn, GameState},
-    world::{
-        colony::{prelude::Zone, scene_hook},
-        prelude::{CollideGroups, PhysicsSystems, PlayerSpawnEvent},
-        shader::ForceFieldMaterial,
-    },
+use corp_shared::prelude::{
+    on_use_backpack_action_event, on_use_backpack_event, BackpackBundle, HackingToolBundle,
+    InteractionObjectType,
 };
 
 #[derive(Event)]
@@ -63,6 +66,7 @@ fn load_colony_event(
     r_scene_assets: Res<SceneAssets>,
     mut r_meshes: ResMut<Assets<Mesh>>,
     mut r_materials: ResMut<Assets<StandardMaterial>>,
+    r_mesh_assets: Res<MeshAssets>,
     r_material_assets: Res<MaterialAssets>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
     mut commands: Commands,
@@ -102,13 +106,32 @@ fn load_colony_event(
 
     commands.insert_resource(ColonyScene(colony_scene));
 
+    let e_hacking_tool = commands.spawn(HackingToolBundle::default()).id();
+
+    commands
+        .spawn((
+            Name::new("Backpack"),
+            SceneBundle {
+                scene: r_mesh_assets.low_poly_backpack.clone(),
+                transform: Transform::from_xyz(6.0, 0.5, -3.0).with_scale(Vec3::splat(0.2)),
+                ..default()
+            },
+            BackpackBundle::with_items(vec![e_hacking_tool]),
+            PickableBundle::default(),
+            InteractionObjectType::Backpack,
+            Collider::cuboid(1.5, 3.5, 1.5),
+            Despawn,
+        ))
+        .observe(on_use_backpack_event)
+        .observe(on_use_backpack_action_event);
+
     commands.spawn((
         Name::new("Debug Cube"),
         MaterialMeshBundle {
             mesh: r_meshes.add(Cuboid::new(5.0, 5.0, 5.0)),
             material: r_force_field_materials.add(ForceFieldMaterial {}),
             transform: Transform::from_xyz(10., 0., 0.),
-            ..Default::default()
+            ..default()
         },
         NotShadowReceiver,
         NotShadowCaster,
@@ -130,9 +153,9 @@ fn load_colony_event(
                 perceptual_roughness: 0.0,
                 reflectance: 0.0,
                 metallic: 0.0,
-                ..Default::default()
+                ..default()
             }),
-            ..Default::default()
+            ..default()
         },
         RigidBody::Fixed,
         Collider::cuboid(100.0, 0.01, 100.0),
@@ -151,7 +174,7 @@ fn load_colony_event(
                 ),
                 transform: Transform::from_translation(zone_asset.position),
                 material: r_material_assets.get_material(&zone_asset.material),
-                ..Default::default()
+                ..default()
             },
             Sensor,
             Collider::cuboid(0.5, 1.0, 0.5),

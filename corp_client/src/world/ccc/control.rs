@@ -360,13 +360,16 @@ fn detect_interactable_objects(
                     bevy::color::palettes::tailwind::RED_700,
                 );
 
-                let Ok(parent) = q_parent.get(entity) else {
-                    warn!("Failed to retrieve parent for entity {entity:?}");
-                    return;
+                let parent_entity = match q_parent.get(entity) {
+                    Ok(parent) => parent.get(),
+                    Err(_) => {
+                        // Parent not found for entity {entity:?}, using entity itself.
+                        entity
+                    }
                 };
 
-                let Ok(transform) = q_transform.get(parent.get()) else {
-                    warn!("Failed to retrieve transform for entity {entity:?}");
+                let Ok(transform) = q_transform.get(parent_entity) else {
+                    warn!("Failed to retrieve transform for entity {parent_entity:?}");
                     return;
                 };
                 r_use_entity
@@ -443,6 +446,9 @@ fn create_use_event(
                 });
             }
             InteractionObjectType::TerritoryNode => {
+                commands.trigger_targets(UseEvent::new(player), usable_entity);
+            }
+            InteractionObjectType::Backpack => {
                 commands.trigger_targets(UseEvent::new(player), usable_entity);
             }
         }

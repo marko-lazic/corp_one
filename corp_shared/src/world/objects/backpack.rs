@@ -3,24 +3,22 @@ use bevy::prelude::*;
 use crate::prelude::*;
 
 #[derive(Component)]
-pub struct Backpack {
-    pub items: Vec<Entity>,
+pub struct Backpack;
+
+#[derive(Bundle)]
+pub struct BackpackBundle {
+    backpack: Backpack,
+    inventory: Inventory,
 }
 
-impl Backpack {
-    pub fn new(items: Vec<Entity>) -> Self {
-        Self { items }
-    }
-
-    pub fn items(&self) -> &[Entity] {
-        &self.items
-    }
-
-    pub fn take_all(&mut self) -> Vec<Entity> {
-        std::mem::take(&mut self.items)
+impl BackpackBundle {
+    pub fn with_items(items: Vec<Entity>) -> Self {
+        BackpackBundle {
+            backpack: Backpack,
+            inventory: Inventory { items },
+        }
     }
 }
-
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum BackpackAction {
     List,
@@ -28,49 +26,58 @@ pub enum BackpackAction {
     TakeItem(Entity),
 }
 
-#[derive(Event)]
-pub struct BackpackInteractionEvent {
+#[derive(Debug, Event)]
+pub struct UseBackpackEvent {
+    pub user: Entity,
     pub action: BackpackAction,
-    pub interactor_entity: Entity,
-    pub backpack_entity: Entity,
 }
 
-pub fn backpack_interaction_event_system(
-    mut ev_backpack_interaction_event: EventReader<BackpackInteractionEvent>,
-    mut q_inventory: Query<&mut Inventory, With<Player>>,
-    mut q_backpack: Query<&mut Backpack>,
-    q_item: Query<&Item>,
+pub fn on_use_backpack_event(trigger: Trigger<UseEvent>, mut commands: Commands) {
+    commands.trigger_targets(
+        UseBackpackEvent {
+            user: trigger.event().user,
+            action: BackpackAction::TakeAll,
+        },
+        trigger.entity(),
+    );
+}
+
+pub fn on_use_backpack_action_event(
+    trigger: Trigger<UseBackpackEvent>,
+    mut q_inventory: Query<&mut Inventory>,
 ) {
-    for event in &mut ev_backpack_interaction_event.read() {
-        if let Ok(mut inventory) = q_inventory.get_mut(event.interactor_entity) {
-            if let Ok(mut backpack) = q_backpack.get_mut(event.backpack_entity) {
-                match event.action {
-                    BackpackAction::List => {
-                        let mut items: Vec<String> = Vec::new();
-                        for backpack_item in backpack.items() {
-                            items.push(q_item.get(*backpack_item).unwrap().name.clone());
-                        }
-                    }
-                    BackpackAction::TakeAll => {
-                        inventory.add_all(backpack.take_all());
-                    }
-                    BackpackAction::TakeItem(item_entity) => {
-                        if let Some(item) = backpack.items.iter().position(|&i| i == item_entity) {
-                            inventory.add(backpack.items.remove(item));
-                        }
-                    }
-                }
+    let e_user = trigger.event().user;
+    let e_backpack = trigger.entity();
+
+    let Ok([mut user_inventory, mut backpack]) = q_inventory.get_many_mut([e_user, e_backpack])
+    else {
+        warn!("Could not find user_inventory and backpack entities");
+        return;
+    };
+
+    match trigger.event().action {
+        BackpackAction::List => {
+            for backpack_item in backpack.items() {
+                info!("{:?}", backpack_item);
+            }
+        }
+        BackpackAction::TakeAll => {
+            user_inventory.add_all(backpack.remove_all());
+        }
+        BackpackAction::TakeItem(item_entity) => {
+            if let Some(backpack_item) = backpack.remove(item_entity) {
+                user_inventory.add(backpack_item);
             }
         }
     }
 }
 
-pub fn despawn_backpack_system(
+pub fn despawn_empty_backpack_system(
     mut commands: Commands,
-    mut q_entity_backpack: Query<(Entity, &Backpack), Changed<Backpack>>,
+    mut q_entity_backpack: Query<(Entity, &Inventory), (Changed<Inventory>, With<Backpack>)>,
 ) {
-    for (entity, backpack) in &mut q_entity_backpack {
-        if backpack.items().is_empty() {
+    for (entity, inventory) in &mut q_entity_backpack {
+        if inventory.items().count() == 0 {
             commands.entity(entity).despawn_recursive();
         }
     }
@@ -84,105 +91,108 @@ mod tests {
     fn one_item_is_in_backpack() {
         // given
         let (mut app, _) = setup();
-        let item_entity = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let backpack_entity = app.world_mut().spawn(Backpack::new(vec![item_entity])).id();
+        let e_item = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_backpack = setup_backpack(&mut app, vec![e_item]);
 
         // when
         app.update();
 
         // then
-        assert_eq!(app.get::<Backpack>(backpack_entity).items().len(), 1);
+        assert_eq!(app.get::<Inventory>(e_backpack).items().count(), 1);
     }
 
     #[test]
     fn player_list_items_in_backpack() {
         // given
-        let (mut app, player_entity) = setup();
-        let item_entity_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let item_entity_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let backpack_entity = app
-            .world_mut()
-            .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
-            .id();
+        let (mut app, e_player) = setup();
+        let e_item_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_item_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_backpack = setup_backpack(&mut app, vec![e_item_1, e_item_2]);
 
         // when
-        app.world_mut().send_event(BackpackInteractionEvent {
-            action: BackpackAction::List,
-            interactor_entity: player_entity,
-            backpack_entity,
-        });
+        app.world_mut().trigger_targets(
+            UseBackpackEvent {
+                user: e_player,
+                action: BackpackAction::List,
+            },
+            e_backpack,
+        );
 
         app.update();
 
         // then
-        assert_eq!(app.get::<Inventory>(player_entity).items().len(), 0);
-        assert_eq!(app.get::<Backpack>(backpack_entity).items().len(), 2);
+        assert_eq!(app.get::<Inventory>(e_player).items().count(), 0);
+        assert_eq!(app.get::<Inventory>(e_backpack).items().count(), 2);
     }
 
     #[test]
     fn player_take_all_items_from_backpack() {
         // given
-        let (mut app, player_entity) = setup();
-        let item_entity_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let item_entity_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let backpack_entity = app
-            .world_mut()
-            .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
-            .id();
+        let (mut app, e_player) = setup();
+        let e_item_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_item_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_backpack = setup_backpack(&mut app, vec![e_item_1, e_item_2]);
 
         // when
-        app.world_mut().send_event(BackpackInteractionEvent {
-            action: BackpackAction::TakeAll,
-            interactor_entity: player_entity,
-            backpack_entity,
-        });
+        app.update();
+        app.world_mut().trigger_targets(
+            UseBackpackEvent {
+                user: e_player,
+                action: BackpackAction::TakeAll,
+            },
+            e_backpack,
+        );
         app.update();
 
         // then
-        assert!(!app.has_component::<Backpack>(backpack_entity));
-        assert_eq!(app.get::<Inventory>(player_entity).items().len(), 2);
+        assert_eq!(app.get::<Inventory>(e_player).items().count(), 2);
+        assert!(!app.has_component::<Backpack>(e_backpack));
     }
 
     #[test]
     fn player_take_one_item_from_backpack() {
         // given
-        let (mut app, player_entity) = setup();
-        let item_entity_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let item_entity_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let backpack_entity = app
-            .world_mut()
-            .spawn(Backpack::new(vec![item_entity_1, item_entity_2]))
-            .id();
+        let (mut app, e_player) = setup();
+        let e_item_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_item_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_backpack = setup_backpack(&mut app, vec![e_item_1, e_item_2]);
 
         // when
-        app.world_mut().send_event(BackpackInteractionEvent {
-            action: BackpackAction::TakeItem(item_entity_2),
-            interactor_entity: player_entity,
-            backpack_entity,
-        });
+        app.update();
+        app.world_mut().trigger_targets(
+            UseBackpackEvent {
+                user: e_player,
+                action: BackpackAction::TakeItem(e_item_2),
+            },
+            e_backpack,
+        );
         app.update();
 
         // then
-        assert_eq!(app.get::<Backpack>(backpack_entity).items().len(), 1);
-        assert_eq!(app.get::<Inventory>(player_entity).items().len(), 1);
+        assert_eq!(app.get::<Inventory>(e_backpack).items().count(), 1);
+        assert_eq!(app.get::<Inventory>(e_player).items().count(), 1);
         assert_eq!(
-            app.get::<Backpack>(backpack_entity).items()[0],
-            item_entity_1,
+            app.get::<Inventory>(e_backpack).items().next(),
+            Some(&e_item_1),
         );
         assert_eq!(
-            app.get::<Inventory>(player_entity).items()[0],
-            item_entity_2
+            app.get::<Inventory>(e_player).items().next(),
+            Some(&e_item_2)
         );
+    }
+
+    fn setup_backpack(app: &mut App, items: Vec<Entity>) -> Entity {
+        app.world_mut()
+            .spawn(BackpackBundle::with_items(items))
+            .observe(on_use_backpack_event)
+            .observe(on_use_backpack_action_event)
+            .id()
     }
 
     fn setup() -> (App, Entity) {
         let mut app = App::new();
         app.init_time()
-            .add_event::<BackpackInteractionEvent>()
-            .add_systems(
-                Update,
-                (backpack_interaction_event_system, despawn_backpack_system).chain(),
-            );
+            .add_systems(Update, despawn_empty_backpack_system.chain());
         let player_entity = app.world_mut().spawn((Player, Inventory::default())).id();
         (app, player_entity)
     }

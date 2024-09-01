@@ -44,7 +44,7 @@ impl Plugin for DebugGuiPlugin {
             .add_event::<DebugGuiEvent>()
             .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(
-                Update,
+                FixedUpdate,
                 (
                     update_interaction_text,
                     update_player_position_text,
