@@ -216,7 +216,6 @@ mod tests {
         // when
         app.world_mut()
             .trigger_targets(UseEvent::new(player_entity), door_entity);
-        app.update();
 
         // then
         let result = app.get::<DoorState>(door_entity);
@@ -274,7 +273,6 @@ mod tests {
         app.update_after(Duration::from_secs_f32(3.0));
         app.world_mut()
             .trigger_targets(UseEvent::new(player_entity), door_entity);
-        app.update();
 
         // then
         let result = app.get::<DoorState>(door_entity);
@@ -447,13 +445,11 @@ mod tests {
         let e_door_ec = setup_door(&mut app, Faction::EC, SecurityLevel::Low);
         app.world_mut()
             .trigger_targets(UseEvent::new(e_player_vi), e_door_ec);
-        app.update();
         app.update_after(Duration::from_secs_f32(Door::HACK_DURATION));
 
         // when
         app.world_mut()
             .trigger_targets(UseEvent::new(e_player_vi), e_door_ec);
-        app.update();
 
         // then
         let result = app.get::<DoorState>(e_door_ec);
@@ -470,7 +466,6 @@ mod tests {
         // when
         app.world_mut()
             .trigger_targets(UseEvent::new(e_player_ec), e_door_ec);
-        app.update();
 
         // then
         let result = app.get::<DoorState>(e_door_ec);

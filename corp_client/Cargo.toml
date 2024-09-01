@@ -6,7 +6,8 @@ edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-bevy = { workspace = true, features = ["wav"] }
+bevy = { workspace = true, features = ["dynamic_linking", "wav"] }
+log = { version = "*", features = ["max_level_debug", "release_max_level_warn"] }
 leafwing-input-manager = "0.14.0"
 bevy_mod_picking = { version = "0.20.0", default-features = false, features = ["backend_rapier"] }
 bevy-inspector-egui = "0.25.0"
