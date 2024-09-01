@@ -386,18 +386,17 @@ mod tests {
     fn ec_player_hacks_cmg_door_with_hacking_tool() {
         // given
         let mut app = setup();
-        let hacking_tool_entity = setup_hacking_tool(&mut app);
-        let player_entity =
-            setup_player(&mut app, vec![hacking_tool_entity], Faction::EC, Rank::R3);
-        let door_entity = setup_door(&mut app, Faction::CMG, SecurityLevel::Low);
+        let e_hacking_tool = setup_hacking_tool(&mut app);
+        let e_player_ec = setup_player(&mut app, vec![e_hacking_tool], Faction::EC, Rank::R3);
+        let e_door_cmg_low = setup_door(&mut app, Faction::CMG, SecurityLevel::Low);
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseEvent::new(e_player_ec), e_door_cmg_low);
         app.update();
 
         // then
-        let result = app.get::<DoorState>(door_entity);
+        let result = app.get::<DoorState>(e_door_cmg_low);
         assert_eq!(*result, DoorState::Open);
     }
 
@@ -407,19 +406,36 @@ mod tests {
         let mut app = setup();
         let e_hacking_tool = setup_hacking_tool(&mut app);
         let e_player_ec = setup_player(&mut app, vec![e_hacking_tool], Faction::EC, Rank::R1);
-        let e_door_vi = setup_door(&mut app, Faction::VI, SecurityLevel::Medium);
-        app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_ec), e_door_vi);
-        app.update();
+        let e_door_vi_medium = setup_door(&mut app, Faction::VI, SecurityLevel::Medium);
 
-        // when
-        app.update_after(Duration::from_secs_f32(2.0 * 60.0));
+        // when - EC player hacks VI door.
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_ec), e_door_vi);
+            .trigger_targets(UseEvent::new(e_player_ec), e_door_vi_medium);
         app.update();
+        assert_eq!(
+            *app.get::<DoorState>(e_door_vi_medium),
+            DoorState::Open,
+            "Door is hacked and open."
+        );
+
+        // and when - EC player opens VI door after 2 minutes.
+        app.update_after(Duration::from_secs_f32(2.0 * 60.0));
+
+        assert_eq!(
+            *app.get::<DoorState>(e_door_vi_medium),
+            DoorState::Closed,
+            "Door is autoclosed after some time."
+        );
+
+        app.world_mut()
+            .trigger_targets(UseEvent::new(e_player_ec), e_door_vi_medium);
 
         // then
-        assert_eq!(*app.get::<DoorState>(e_door_vi), DoorState::Open);
+        assert_eq!(
+            *app.get::<DoorState>(e_door_vi_medium),
+            DoorState::Open,
+            "Re-open hacked doors after they autoclosed."
+        );
     }
 
     #[test]
@@ -470,14 +486,12 @@ mod tests {
         let e_door_cmg = setup_door(&mut app, Faction::CMG, SecurityLevel::Low);
         app.world_mut()
             .trigger_targets(UseEvent::new(e_player_ec), e_door_cmg);
-        app.update();
         app.update_after(Duration::from_secs_f32(10.0));
         let e_other_player_ec = setup_player(&mut app, vec![], Faction::EC, Rank::R0);
 
         // when
         app.world_mut()
             .trigger_targets(UseEvent::new(e_other_player_ec), e_door_cmg);
-        app.update();
 
         // then
         assert_eq!(*app.get::<DoorState>(e_door_cmg), DoorState::Open);
