@@ -1,10 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{
-    asset::FontAssets,
-    state::{Despawn, GameState},
-    world::prelude::UseEntity,
-};
+use crate::{asset::FontAssets, state::GameState, world::prelude::UseEntity};
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorUi(Vec2);
@@ -35,7 +31,7 @@ fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
         )
         .with_text_justify(JustifyText::Center),
         UseText,
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
 }
 

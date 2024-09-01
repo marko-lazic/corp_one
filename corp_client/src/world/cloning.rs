@@ -5,7 +5,7 @@ use corp_shared::prelude::*;
 
 use crate::{
     asset::{Colony, ColonyConfigAssets, MeshAssets},
-    state::{Despawn, GameState},
+    state::GameState,
     world::{
         ccc::PlayerEntity,
         colony::prelude::{ColonyLoadEvent, VortInEvent},
@@ -55,7 +55,7 @@ fn player_loot_drop(
                 PickableBundle::default(),
                 InteractionObjectType::Backpack,
                 Collider::cuboid(1.5, 3.5, 1.5),
-                Despawn,
+                StateScoped(GameState::Playing),
             ))
             .observe(on_use_backpack_event)
             .observe(on_use_backpack_action_event);

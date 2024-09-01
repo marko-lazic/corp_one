@@ -5,7 +5,7 @@ use serde::Deserialize;
 
 use crate::{
     asset::prelude::{ColonyConfig, ASSET_PATH},
-    state::{Despawn, GameState},
+    state::GameState,
 };
 
 /// Exported using Blender export glTF 2.0 with settings enabled
@@ -132,7 +132,7 @@ impl Plugin for AssetLoadingPlugin {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((Camera2dBundle::default(), Despawn));
+    commands.spawn((Camera2dBundle::default(), StateScoped(GameState::Loading)));
 
     commands.spawn((
         TextBundle {
@@ -146,7 +146,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ),
             ..Default::default()
         },
-        Despawn,
+        StateScoped(GameState::Loading),
     ));
 }
 

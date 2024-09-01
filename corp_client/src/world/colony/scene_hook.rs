@@ -1,9 +1,14 @@
-use bevy::{ecs::system::EntityCommands, log::info, prelude::Entity, utils::default};
+use bevy::{
+    ecs::system::EntityCommands,
+    log::info,
+    prelude::{Entity, StateScoped},
+    utils::default,
+};
 use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use crate::{
-    state::Despawn,
+    state::GameState,
     world::{
         colony::{
             barrier::{BarrierControl, BarrierField},
@@ -27,11 +32,11 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
             Sensor,
             Collider::cuboid(0.5, 1.0, 0.5),
             physics::CollideGroups::vortex_gate(),
-            Despawn,
+            StateScoped(GameState::Playing),
         )),
         n if n.starts_with("VortexNode") => {
             info!("Insert vortex node: {}", n);
-            commands.insert((VortexNode, Despawn))
+            commands.insert((VortexNode, StateScoped(GameState::Playing)))
         }
         n if n.starts_with("BarrierField1") => commands
             .insert((
@@ -49,7 +54,7 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
                 BarrierControl::new("B1"),
                 PickableBundle::default(),
                 InteractionObjectType::DoorControl,
-                Despawn,
+                StateScoped(GameState::Playing),
             )),
 
         n if n.starts_with("BarrierField2") => commands
@@ -68,7 +73,7 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
                 BarrierControl::new("B2"),
                 PickableBundle::default(),
                 InteractionObjectType::DoorControl,
-                Despawn,
+                StateScoped(GameState::Playing),
             )),
         n if n.starts_with("EnergyNode1") => commands
             .insert((
@@ -80,10 +85,10 @@ pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut E
                 },
                 PickableBundle::default(),
                 InteractionObjectType::TerritoryNode,
-                Despawn,
+                StateScoped(GameState::Playing),
             ))
             .observe(on_use_territory_node_event),
-        n if n.starts_with("Plant Tree") => commands.insert(Despawn),
+        n if n.starts_with("Plant Tree") => commands.insert(StateScoped(GameState::Playing)),
         _ => commands,
     };
 }

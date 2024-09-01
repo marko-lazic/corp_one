@@ -1,6 +1,6 @@
 use crate::{
     asset::{Colony, ColonyConfig, MaterialAssets, MeshAssets, SceneAssets},
-    state::{Despawn, GameState},
+    state::GameState,
     world::{
         colony::{prelude::Zone, scene_hook},
         prelude::{CollideGroups, PhysicsSystems, PlayerSpawnEvent},
@@ -100,13 +100,18 @@ fn load_colony_event(
                     }
                 }),
             },
-            Despawn,
+            StateScoped(GameState::Playing),
         ))
         .id();
 
     commands.insert_resource(ColonyScene(colony_scene));
 
-    let e_hacking_tool = commands.spawn(HackingToolBundle::default()).id();
+    let e_hacking_tool = commands
+        .spawn((
+            HackingToolBundle::default(),
+            StateScoped(GameState::Playing),
+        ))
+        .id();
 
     commands
         .spawn((
@@ -120,7 +125,7 @@ fn load_colony_event(
             PickableBundle::default(),
             InteractionObjectType::Backpack,
             Collider::cuboid(1.5, 3.5, 1.5),
-            Despawn,
+            StateScoped(GameState::Playing),
         ))
         .observe(on_use_backpack_event)
         .observe(on_use_backpack_action_event);
@@ -140,7 +145,7 @@ fn load_colony_event(
         On::<Pointer<Click>>::run(|event: Listener<Pointer<Click>>| {
             info!("Clicked on entity {:?}", event.target);
         }),
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
 
     commands.spawn((
@@ -159,7 +164,7 @@ fn load_colony_event(
         },
         RigidBody::Fixed,
         Collider::cuboid(100.0, 0.01, 100.0),
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
 
     // spawn zones
@@ -180,7 +185,7 @@ fn load_colony_event(
             Collider::cuboid(0.5, 1.0, 0.5),
             Zone::from(*zone_asset),
             CollideGroups::zone(),
-            Despawn,
+            StateScoped(GameState::Playing),
         ));
     }
 }

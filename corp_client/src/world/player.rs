@@ -7,7 +7,7 @@ use corp_shared::prelude::*;
 
 use crate::{
     asset::PlayerAssets,
-    state::{Despawn, GameState},
+    state::GameState,
     world::{
         ccc::{MainCameraBundle, MainCameraFollow, MovementBundle, PlayerAction, PlayerEntity},
         cloning::CloningPlugin,
@@ -117,7 +117,7 @@ pub fn setup_player(
                 collide_groups: CollideGroups::player(),
                 active_events: ActiveEvents::COLLISION_EVENTS,
             },
-            Despawn,
+            StateScoped(GameState::Playing),
         ))
         .with_children(|child_builder| {
             child_builder.spawn(SceneBundle {

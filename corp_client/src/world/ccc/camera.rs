@@ -11,10 +11,7 @@ use leafwing_input_manager::action_state::ActionState;
 
 use corp_shared::prelude::Player;
 
-use crate::{
-    state::{Despawn, GameState},
-    world::ccc::PlayerAction,
-};
+use crate::{state::GameState, world::ccc::PlayerAction};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CameraSet {
@@ -38,7 +35,7 @@ pub struct MainCameraBundle {
     bloom: BloomSettings,
     main_camera: MainCamera,
     rig: Rig,
-    despawn: Despawn,
+    despawn: StateScoped<GameState>,
 }
 
 impl MainCameraBundle {
@@ -71,7 +68,7 @@ impl MainCameraBundle {
                 .with(Smooth::new_rotation(0.3))
                 .with(Arm::new(Vec3::Z * 18.0))
                 .build(),
-            despawn: Despawn,
+            despawn: StateScoped(GameState::Playing),
         }
     }
 }

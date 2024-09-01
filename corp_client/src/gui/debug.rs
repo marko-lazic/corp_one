@@ -3,10 +3,7 @@ use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use corp_shared::prelude::*;
 
 use crate::{
-    asset::FontAssets,
-    gui::cursor_ui::CursorUi,
-    state::{Despawn, GameState},
-    world::prelude::CursorWorld,
+    asset::FontAssets, gui::cursor_ui::CursorUi, state::GameState, world::prelude::CursorWorld,
 };
 
 #[derive(Event)]
@@ -67,32 +64,32 @@ fn setup(
     commands.spawn((
         text(font_assets.default_font.clone(), 5.0, 10.0),
         InteractionText,
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
     commands.spawn((
         text(font_assets.default_font.clone(), 25.0, 10.0),
         PlayerPositionText,
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
     commands.spawn((
         text(font_assets.default_font.clone(), 45.0, 10.0),
         MouseScreenPositionText,
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
     commands.spawn((
         text(font_assets.default_font.clone(), 65.0, 10.0),
         MouseWorldPositionText,
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
     commands.spawn((
         text(font_assets.default_font.clone(), 85.0, 10.0),
         CameraDebugText,
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
     commands.spawn((
         text(font_assets.default_font.clone(), 105.0, 10.0),
         PlayerHealthText,
-        Despawn,
+        StateScoped(GameState::Playing),
     ));
 
     let (debug_gizmo_config, _) = config_store.config_mut::<DebugGizmos>();

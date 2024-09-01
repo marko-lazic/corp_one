@@ -1,4 +1,4 @@
-use bevy::{log::info, prelude::*};
+use bevy::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum GameState {
@@ -10,30 +10,11 @@ pub enum GameState {
     Playing,
 }
 
-#[derive(Component)]
-pub struct Despawn;
-
-#[derive(Component)]
-pub struct Persistent;
-
 pub struct GameStatePlugin;
 
 impl Plugin for GameStatePlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<GameState>()
-            .add_systems(OnExit(GameState::Loading), teardown)
-            .add_systems(OnExit(GameState::Playing), teardown)
-            .add_systems(OnExit(GameState::StarMap), teardown);
-    }
-}
-
-fn teardown(
-    game_state: Res<State<GameState>>,
-    mut commands: Commands,
-    entities: Query<Entity, With<Despawn>>,
-) {
-    info!("Teardown {:?}", game_state);
-    for entity in entities.iter() {
-        commands.entity(entity).despawn_recursive();
+            .enable_state_scoped_entities::<GameState>();
     }
 }
