@@ -278,13 +278,13 @@ mod tests {
                     CameraSet::Update.after(CharacterSet::Movement),
                 ),
             );
-        app.world().spawn(Window::default());
+        app.world_mut().spawn(Window::default());
         app
     }
 
     fn setup_player(app: &mut App, transform: Transform) -> Entity {
         let player_entity = app
-            .world()
+            .world_mut()
             .spawn((
                 TransformBundle::from_transform(transform),
                 Player,
@@ -297,7 +297,7 @@ mod tests {
                 MovementBundle::default(),
             ))
             .id();
-        app.world()
+        app.world_mut()
             .spawn(MainCameraBundle::new(transform.translation));
         player_entity
     }
@@ -309,7 +309,7 @@ mod tests {
     }
 
     fn get_camera_entity(app: &mut App) -> Entity {
-        app.world()
+        app.world_mut()
             .query_filtered::<Entity, With<MainCamera>>()
             .iter(&mut app.world())
             .next()

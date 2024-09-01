@@ -1,11 +1,13 @@
 use bevy::prelude::*;
-
+use bevy_mod_picking::PickableBundle;
+use bevy_rapier3d::geometry::Collider;
 use corp_shared::prelude::*;
 
 use crate::{
-    asset::{Colony, ColonyConfigAssets},
-    state::GameState,
+    asset::{Colony, ColonyConfigAssets, MeshAssets},
+    state::{Despawn, GameState},
     world::{
+        ccc::PlayerEntity,
         colony::prelude::{ColonyLoadEvent, VortInEvent},
         player::PlayerStore,
     },
@@ -18,20 +20,63 @@ impl Plugin for CloningPlugin {
         app.add_systems(OnEnter(GameState::StarMap), vort_in_dead_player_to_cloning)
             .add_systems(
                 Update,
-                check_if_dead_and_go_to_cloning.run_if(in_state(GameState::Playing)),
-            );
+                dead_player_system.run_if(in_state(GameState::Playing)),
+            )
+            .observe(player_loot_drop);
     }
 }
 
-fn check_if_dead_and_go_to_cloning(
+#[derive(Event)]
+struct PlayerDeadEvent {
+    dead_player: Entity,
+}
+
+fn player_loot_drop(
+    trigger: Trigger<PlayerDeadEvent>,
+    mut q_player: Query<(&Transform, &mut Inventory), With<Player>>,
+    mut commands: Commands,
+    r_mesh_assets: Res<MeshAssets>,
+) {
+    if let Ok((transform, mut inventory)) = q_player.get_mut(trigger.event().dead_player) {
+        if inventory.items.is_empty() {
+            return;
+        }
+
+        commands
+            .spawn((
+                Name::new("Loot Bag"),
+                SceneBundle {
+                    scene: r_mesh_assets.low_poly_backpack.clone(),
+                    transform: Transform::from_translation(transform.translation)
+                        .with_scale(Vec3::splat(0.2)),
+                    ..default()
+                },
+                BackpackBundle::with_items(inventory.remove_all()),
+                PickableBundle::default(),
+                InteractionObjectType::Backpack,
+                Collider::cuboid(1.5, 3.5, 1.5),
+                Despawn,
+            ))
+            .observe(on_use_backpack_event)
+            .observe(on_use_backpack_action_event);
+    }
+}
+
+fn dead_player_system(
     r_colony_config_assets: Res<ColonyConfigAssets>,
     r_time: Res<Time>,
+    mut r_player_entity: ResMut<PlayerEntity>,
     mut ev_colony_load: EventWriter<ColonyLoadEvent>,
-    mut q_health: Query<&mut Health, With<Player>>,
+    mut q_health: Query<(Entity, &mut Health), With<Player>>,
     mut r_next_state: ResMut<NextState<GameState>>,
+    mut commands: Commands,
 ) {
-    if let Some(mut health) = q_health.iter_mut().next() {
+    if let Some((e_player, mut health)) = q_health.iter_mut().next() {
         if health.is_dead() {
+            r_player_entity.0 = None;
+            commands.trigger(PlayerDeadEvent {
+                dead_player: e_player,
+            });
             health.cloning_cooldown.tick(r_time.delta());
             if health.cloning_cooldown.finished() {
                 ev_colony_load.send(ColonyLoadEvent(r_colony_config_assets.cloning.clone()));
@@ -70,18 +115,15 @@ mod tests {
         let mut app = App::new();
         init_time(&mut app);
         app.init_state::<GameState>();
-        app.add_systems(
-            Update,
-            (kill_player, check_if_dead_and_go_to_cloning).chain(),
-        );
+        app.add_systems(Update, (kill_player, dead_player_system).chain());
         app.insert_resource(create_colony_assets());
-        let setup_player = app.world().register_system(setup_player);
+        let setup_player = app.world_mut().register_system(setup_player);
         app.insert_resource(PlayerStore {
             health: Health::default(),
             setup_player,
         });
         app.add_event::<ColonyLoadEvent>();
-        let player_entity = app.world().spawn((Player, Health::default())).id();
+        let player_entity = app.world_mut().spawn((Player, Health::default())).id();
 
         // when
         app.update();
@@ -134,7 +176,7 @@ mod tests {
         app.init_resource::<Time>();
         let mut time = Time::default();
         time.update();
-        app.world().insert_resource(time);
+        app.world_mut().insert_resource(time);
     }
 
     fn create_colony_assets() -> ColonyConfigAssets {

@@ -15,7 +15,7 @@ pub struct Health {
 impl Default for Health {
     fn default() -> Self {
         Health {
-            cloning_cooldown: Timer::new(Duration::from_secs(1), TimerMode::Once),
+            cloning_cooldown: Timer::new(Duration::from_secs(5), TimerMode::Once),
             hit_points: MAX_HEALTH,
         }
     }

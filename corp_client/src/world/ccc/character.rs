@@ -113,7 +113,7 @@ mod tests {
     use approx::assert_relative_eq;
     use bevy::input::InputPlugin;
     use bevy_dolly::prelude::{Rig, YawPitch};
-    use leafwing_input_manager::{InputManagerBundle, prelude::MockInput};
+    use leafwing_input_manager::{prelude::MockInput, InputManagerBundle};
 
     use corp_shared::prelude::{Player, TestUtils};
 
@@ -243,7 +243,7 @@ mod tests {
     }
 
     fn setup_player(app: &mut App) -> Entity {
-        app.world()
+        app.world_mut()
             .spawn((
                 TransformBundle::default(),
                 Player,
@@ -258,7 +258,10 @@ mod tests {
     }
 
     fn setup_camera(app: &mut App) -> Entity {
-        let camera = app.world().spawn(MainCameraBundle::new(Vec3::ZERO)).id();
+        let camera = app
+            .world_mut()
+            .spawn(MainCameraBundle::new(Vec3::ZERO))
+            .id();
         app.get_mut::<Rig>(camera)
             .driver_mut::<YawPitch>()
             .rotate_yaw_pitch(-45.0, 0.0);
