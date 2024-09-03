@@ -14,7 +14,7 @@ impl Plugin for CloningPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::StarMap), vort_in_dead_player_to_cloning)
             .add_systems(
-                Update,
+                FixedUpdate,
                 dead_player_system.run_if(in_state(GameState::Playing)),
             )
             .observe(player_loot_drop);

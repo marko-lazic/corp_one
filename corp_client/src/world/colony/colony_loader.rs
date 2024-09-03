@@ -1,5 +1,5 @@
 use crate::{
-    asset::{Colony, ColonyConfig, MaterialAssets, MeshAssets, SceneAssets},
+    asset::{Colony, ColonyConfig, MeshAssets, SceneAssets},
     state::GameState,
     world::{colony::scene_hook, prelude::*},
 };
@@ -23,7 +23,7 @@ pub fn colony_loader_plugin(app: &mut App) {
     app.add_event::<ColonyLoadEvent>()
         .add_systems(OnEnter(GameState::LoadColony), load_colony_event)
         .add_systems(
-            Update,
+            FixedUpdate,
             check_colony_loaded
                 .run_if(in_state(GameState::LoadColony))
                 .run_if(resource_exists::<ColonyScene>),
@@ -53,7 +53,6 @@ fn load_colony_event(
     mut r_meshes: ResMut<Assets<Mesh>>,
     mut r_materials: ResMut<Assets<StandardMaterial>>,
     r_mesh_assets: Res<MeshAssets>,
-    r_material_assets: Res<MaterialAssets>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
     mut commands: Commands,
 ) {
@@ -159,19 +158,12 @@ fn load_colony_event(
     for zone_asset in &current_colony.zones {
         commands.spawn((
             Name::new(format!("Zone {:?}", zone_asset.zone_type)),
-            PbrBundle {
-                mesh: r_meshes.add(
-                    Plane3d::default()
-                        .mesh()
-                        .size(zone_asset.size, zone_asset.size),
-                ),
-                transform: Transform::from_translation(zone_asset.position),
-                material: r_material_assets.get_material(&zone_asset.material),
-                ..default()
-            },
-            Sensor,
-            Collider::cuboid(zone_asset.size, 4.0, zone_asset.size),
             Zone::from(*zone_asset),
+            Sensor,
+            Collider::cuboid(zone_asset.size, 2.0, zone_asset.size),
+            SpatialBundle::from_transform(Transform::from_translation(
+                zone_asset.position + Vec3::Y,
+            )),
             CollisionLayers::new([Layer::Zone], [Layer::Player]),
             StateScoped(GameState::Playing),
         ));

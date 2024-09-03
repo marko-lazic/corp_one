@@ -30,7 +30,7 @@ impl Plugin for PlayerPlugin {
         .add_event::<PlayerSpawnEvent>()
         .add_systems(Startup, setup)
         .add_systems(
-            Update,
+            FixedUpdate,
             player_spawn_event_reader.run_if(in_state(GameState::LoadColony)),
         );
     }

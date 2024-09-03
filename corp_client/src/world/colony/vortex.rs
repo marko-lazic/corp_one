@@ -34,13 +34,13 @@ impl Plugin for VortexPlugin {
         app.add_event::<VortInEvent>()
             .add_event::<VortOutEvent>()
             .add_systems(
-                Update,
+                FixedUpdate,
                 (debug_vort_in, vort_in_event_reader)
                     .chain()
                     .run_if(in_state(GameState::StarMap)),
             )
             .add_systems(
-                Update,
+                FixedUpdate,
                 (vort_out_event_reader, animate_nodes, vortex_gate_collider)
                     .chain()
                     .run_if(in_state(GameState::Playing)),
@@ -93,7 +93,7 @@ fn vort_in_event_reader(
     }
 }
 
-fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<Time>) {
+fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<Time<Fixed>>) {
     for mut transform in nodes.iter_mut() {
         transform.rotate(Quat::from_rotation_y(time.delta_seconds() * 0.2));
     }

@@ -1,13 +1,13 @@
 use crate::{
     asset::{ZoneConfig, ZoneType},
     state::GameState,
-    world::physics::Layer,
+    world::prelude::*,
 };
 use avian3d::prelude::*;
 use bevy::{prelude::*, utils::hashbrown::HashSet};
 use corp_shared::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Zone {
     zone_type: ZoneType,
     value: f32,
@@ -35,7 +35,7 @@ pub struct ZonePlugin;
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            FixedUpdate,
             (handle_health_in_zones, zone_collider)
                 .chain()
                 .run_if(in_state(GameState::Playing)),
@@ -66,13 +66,13 @@ fn handle_health_in_zones(
 }
 
 fn zone_collider(mut zones: Query<(&mut Zone, &Transform, &Collider)>, q_spatial: SpatialQuery) {
-    for (mut zone, t_zone, shape) in zones.iter_mut() {
+    for (mut zone, t_zone, c_zone) in zones.iter_mut() {
         zone.entities.clear();
         q_spatial.shape_intersections_callback(
-            shape,
+            c_zone,
             t_zone.translation,
             t_zone.rotation,
-            SpatialQueryFilter::from_mask(Layer::Player),
+            SpatialQueryFilter::default().with_mask(Layer::Player),
             |entity| {
                 zone.add(entity);
                 // Match all intersections, not just the first one

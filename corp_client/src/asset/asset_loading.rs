@@ -1,7 +1,6 @@
-use bevy::{color::palettes::tailwind, prelude::*};
+use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_kira_audio::AudioSource;
-use serde::Deserialize;
 
 use crate::{
     asset::prelude::{ColonyConfig, ASSET_PATH},
@@ -73,45 +72,6 @@ pub struct TextureAssets {
     pub nebula: Handle<Image>,
 }
 
-#[derive(Debug, Deserialize, Copy, Clone)]
-pub enum MaterialAsset {
-    Green,
-    Blue,
-    SkyBlue,
-    OrangeRed,
-    SeaGreen,
-    Unknown,
-}
-
-impl Default for MaterialAsset {
-    fn default() -> Self {
-        Self::Unknown
-    }
-}
-
-#[derive(Resource)]
-pub struct MaterialAssets {
-    pub green_material: Handle<StandardMaterial>,
-    pub blue_material: Handle<StandardMaterial>,
-    pub sky_blue_material: Handle<StandardMaterial>,
-    pub pink_material: Handle<StandardMaterial>,
-    pub orange_red_material: Handle<StandardMaterial>,
-    pub sea_green_material: Handle<StandardMaterial>,
-}
-
-impl MaterialAssets {
-    pub fn get_material(&self, asset_material: &MaterialAsset) -> Handle<StandardMaterial> {
-        match asset_material {
-            MaterialAsset::Green => self.green_material.clone(),
-            MaterialAsset::Blue => self.blue_material.clone(),
-            MaterialAsset::SkyBlue => self.sky_blue_material.clone(),
-            MaterialAsset::OrangeRed => self.orange_red_material.clone(),
-            MaterialAsset::SeaGreen => self.sea_green_material.clone(),
-            MaterialAsset::Unknown => self.pink_material.clone(),
-        }
-    }
-}
-
 pub struct AssetLoadingPlugin;
 
 impl Plugin for AssetLoadingPlugin {
@@ -127,7 +87,7 @@ impl Plugin for AssetLoadingPlugin {
                 .load_collection::<ColonyConfigAssets>()
                 .load_collection::<SceneAssets>(),
         )
-        .add_systems(OnEnter(GameState::Loading), (setup, start_loading).chain());
+        .add_systems(OnEnter(GameState::Loading), setup.chain());
     }
 }
 
@@ -148,15 +108,4 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         StateScoped(GameState::Loading),
     ));
-}
-
-fn start_loading(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
-    commands.insert_resource(MaterialAssets {
-        green_material: materials.add(Color::srgb(0.1, 0.2, 0.1)),
-        blue_material: materials.add(Color::srgb(0.1, 0.4, 0.8)),
-        sky_blue_material: materials.add(Color::srgb(0.55, 0.71, 0.73)),
-        pink_material: materials.add(Color::from(tailwind::PINK_700)),
-        orange_red_material: materials.add(Color::from(tailwind::ORANGE_700)),
-        sea_green_material: materials.add(Color::from(tailwind::GREEN_700)),
-    });
 }

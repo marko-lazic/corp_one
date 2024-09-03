@@ -1,8 +1,6 @@
 use bevy::{prelude::*, reflect::TypePath};
 use serde::Deserialize;
 
-use crate::asset::MaterialAsset;
-
 #[derive(Asset, Clone, Default, Deserialize, Debug, TypePath)]
 pub struct ColonyConfig {
     pub name: Colony,
@@ -18,7 +16,6 @@ pub struct ZoneConfig {
     pub second: f32,
     pub zone_type: ZoneType,
     pub size: f32,
-    pub material: MaterialAsset,
 }
 
 #[derive(Copy, Clone, Debug, Deserialize)]

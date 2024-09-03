@@ -139,13 +139,18 @@ impl Plugin for ControlPlugin {
                     update_cursor_world,
                     player_control_movement,
                     player_control_orientation,
-                    detect_interactable_objects,
                     create_use_event,
                     kill,
                     log_inventory,
                     toggle_window_cursor_visible,
                 )
                     .chain()
+                    .in_set(ControlSet::PlayingInput)
+                    .run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(
+                FixedUpdate,
+                detect_interactable_objects
                     .in_set(ControlSet::PlayingInput)
                     .run_if(in_state(GameState::Playing)),
             )
