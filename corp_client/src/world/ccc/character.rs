@@ -1,9 +1,7 @@
+use crate::{state::GameState, world::prelude::*};
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::KinematicCharacterController;
-
-use corp_shared::prelude::Health;
-
-use crate::world::ccc::{CharacterMovement, ControlMovement, OrientationMode};
+use bevy_tnua::{builtins::TnuaBuiltinWalk, prelude::TnuaController};
+use corp_shared::prelude::{Health, Player};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CharacterSet {
@@ -19,10 +17,11 @@ impl Plugin for CharacterPlugin {
             (
                 is_movement_enabled,
                 calculate_character_movement,
-                move_character,
+                apply_controller_controls,
                 rotate_character,
             )
                 .chain()
+                .run_if(in_state(GameState::Playing))
                 .in_set(CharacterSet::Movement),
         );
     }
@@ -49,18 +48,29 @@ fn calculate_character_movement(
     }
 }
 
-fn move_character(
-    time: Res<Time>,
-    mut controllers: Query<
-        (&mut KinematicCharacterController, &CharacterMovement),
-        Changed<CharacterMovement>,
-    >,
+fn apply_controller_controls(
+    q_movement: Query<&CharacterMovement, With<Player>>,
+    mut q_tnua: Query<&mut TnuaController>,
 ) {
-    let delta_seconds = time.delta_seconds();
-    for (mut controller, character_movement) in &mut controllers {
-        let new_position = character_movement.velocity * delta_seconds;
-        controller.translation = Some(new_position);
-    }
+    let Ok(mut controller) = q_tnua.get_single_mut() else {
+        warn!("Failed to get tnua controller");
+        return;
+    };
+
+    let Ok(movement) = q_movement.get_single() else {
+        return;
+    };
+
+    controller.basis(TnuaBuiltinWalk {
+        // The `desired_velocity` determines how the character will move.
+        desired_velocity: movement.velocity,
+        // The `float_height` must be greater (even if by little) from the distance between the
+        // character's center and the lowest point of its collider.
+        float_height: 1.5,
+        // `TnuaBuiltinWalk` has many other fields for customizing the movement - but they have
+        // sensible defaults. Refer to the `TnuaBuiltinWalk`'s documentation to learn what they do.
+        ..Default::default()
+    });
 }
 
 fn rotate_character(

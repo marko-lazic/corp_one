@@ -1,13 +1,11 @@
-use bevy::{prelude::*, utils::hashbrown::HashSet};
-use bevy_rapier3d::prelude::*;
-
-use corp_shared::prelude::*;
-
 use crate::{
     asset::{ZoneConfig, ZoneType},
-    state::GameState
-    ,
+    state::GameState,
+    world::physics::Layer,
 };
+use avian3d::prelude::*;
+use bevy::{prelude::*, utils::hashbrown::HashSet};
+use corp_shared::prelude::*;
 
 #[derive(Component)]
 pub struct Zone {
@@ -67,19 +65,14 @@ fn handle_health_in_zones(
     }
 }
 
-fn zone_collider(
-    mut zones: Query<(&mut Zone, &Transform, &Collider)>,
-    rapier_context: Res<RapierContext>,
-) {
-    let filter = QueryFilter::only_kinematic();
-
-    for (mut zone, t_zone, collider) in zones.iter_mut() {
+fn zone_collider(mut zones: Query<(&mut Zone, &Transform, &Collider)>, q_spatial: SpatialQuery) {
+    for (mut zone, t_zone, shape) in zones.iter_mut() {
         zone.entities.clear();
-        rapier_context.intersections_with_shape(
+        q_spatial.shape_intersections_callback(
+            shape,
             t_zone.translation,
             t_zone.rotation,
-            collider,
-            filter,
+            SpatialQueryFilter::from_mask(Layer::Player),
             |entity| {
                 zone.add(entity);
                 // Match all intersections, not just the first one

@@ -1,13 +1,11 @@
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::{Collider, QueryFilter, RapierContext};
-
-use corp_shared::prelude::*;
-
 use crate::{
     asset::prelude::{Colony, ColonyConfigAssets},
     state::GameState,
-    world::{ccc::PlayerEntity, colony::prelude::ColonyLoadEvent, player::PlayerStore},
+    world::prelude::*,
 };
+use avian3d::prelude::*;
+use bevy::prelude::*;
+use corp_shared::prelude::*;
 
 #[derive(Event)]
 pub struct VortOutEvent;
@@ -102,25 +100,23 @@ fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<T
 }
 
 fn vortex_gate_collider(
-    q_vortex_gate_tr_co: Query<(&Transform, &Collider), With<VortexGate>>,
-    rapier_context: Res<RapierContext>,
+    q_vortex_gate: Query<(&Transform, &Collider), With<VortexGate>>,
+    q_spatial: SpatialQuery,
     mut ev_vort_out: EventWriter<VortOutEvent>,
 ) {
-    let filter = QueryFilter::only_kinematic();
-
-    for (transform, collider) in q_vortex_gate_tr_co.iter() {
+    for (transform, collider) in &q_vortex_gate {
         let shape_rot = transform.rotation;
         let shape_pos = transform.translation;
-        rapier_context.intersections_with_shape(
+        q_spatial.shape_intersections_callback(
+            collider,
             shape_pos,
             shape_rot,
-            collider,
-            filter,
-            |_entity| {
-                info!("Vortex gate collision: going to StarMap");
+            SpatialQueryFilter::from_mask(Layer::Player),
+            |entity| {
+                info!("Vort {entity} to star map.");
                 ev_vort_out.send(VortOutEvent);
                 false
             },
-        );
+        )
     }
 }

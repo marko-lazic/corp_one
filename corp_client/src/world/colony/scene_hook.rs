@@ -1,3 +1,4 @@
+use avian3d::prelude::*;
 use bevy::{
     ecs::system::EntityCommands,
     log::info,
@@ -5,33 +6,17 @@ use bevy::{
     utils::default,
 };
 use bevy_mod_picking::prelude::*;
-use bevy_rapier3d::prelude::*;
 
-use crate::{
-    state::GameState,
-    world::{
-        colony::{
-            barrier::{BarrierControl, BarrierField},
-            vortex::{VortexGate, VortexNode},
-        },
-        physics,
-    },
-};
-use corp_shared::{
-    prelude::{
-        on_use_door_event, on_use_door_hack_event, on_use_territory_node_event, DoorBundle,
-        Faction, InteractionObjectType, OwnershipRegistry, TerritoryNode, TerritoryNodeType,
-    },
-    world::{objects::territory::TerritoryNodeBundle, security::SecurityLevel},
-};
+use crate::{state::GameState, world::prelude::*};
+use corp_shared::prelude::*;
 
 pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut EntityCommands) {
     match name {
         n if n.starts_with("VortexGate") => commands.insert((
             VortexGate,
             Sensor,
-            Collider::cuboid(0.5, 1.0, 0.5),
-            physics::CollideGroups::vortex_gate(),
+            Collider::cuboid(1.0, 1.0, 1.0),
+            CollisionLayers::new([Layer::VortexGate], [Layer::Player]),
             StateScoped(GameState::Playing),
         )),
         n if n.starts_with("VortexNode") => {

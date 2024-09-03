@@ -1,17 +1,12 @@
-use bevy::prelude::*;
-use bevy_mod_picking::PickableBundle;
-use bevy_rapier3d::geometry::Collider;
-use corp_shared::prelude::*;
-
 use crate::{
     asset::{Colony, ColonyConfigAssets, MeshAssets},
     state::GameState,
-    world::{
-        ccc::PlayerEntity,
-        colony::prelude::{ColonyLoadEvent, VortInEvent},
-        player::PlayerStore,
-    },
+    world::prelude::*,
 };
+use avian3d::prelude::*;
+use bevy::prelude::*;
+use bevy_mod_picking::PickableBundle;
+use corp_shared::prelude::*;
 
 pub struct CloningPlugin;
 
@@ -54,7 +49,8 @@ fn player_loot_drop(
                 BackpackBundle::with_items(inventory.remove_all()),
                 PickableBundle::default(),
                 InteractionObjectType::Backpack,
-                Collider::cuboid(1.5, 3.5, 1.5),
+                RigidBody::Dynamic,
+                Collider::cuboid(1.5, 1.5, 1.5),
                 StateScoped(GameState::Playing),
             ))
             .observe(on_use_backpack_event)

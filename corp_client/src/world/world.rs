@@ -1,14 +1,5 @@
+use crate::world::prelude::*;
 use bevy::prelude::*;
-
-use crate::world::{
-    animator::AnimatorPlugin,
-    ccc::{CameraSet, CharacterPlugin, CharacterSet, ControlPlugin, ControlSet, MainCameraPlugin},
-    colony::prelude::{ColonyPlugin, ZonePlugin},
-    physics::PhysicsPlugin,
-    player::PlayerPlugin,
-    shader::ShaderPlugin,
-    star_map::StarMapPlugin,
-};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 enum WorldSystemSet {
@@ -30,7 +21,7 @@ impl Plugin for WorldPlugin {
         })
         .add_plugins((
             ShaderPlugin,
-            PhysicsPlugin,
+            WorldPhysicsPlugin,
             ColonyPlugin,
             AnimatorPlugin,
             StarMapPlugin,
@@ -39,6 +30,7 @@ impl Plugin for WorldPlugin {
             MainCameraPlugin,
             ZonePlugin,
             PlayerPlugin,
+            CloningPlugin,
         ))
         .configure_sets(
             Update,

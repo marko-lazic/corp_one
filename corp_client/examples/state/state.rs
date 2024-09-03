@@ -1,9 +1,7 @@
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
-
-use corp_shared::{asset::endesga, prelude::*};
-
 use crate::ray::cast_ray_system;
+use avian3d::prelude::*;
+use bevy::prelude::*;
+use corp_shared::prelude::*;
 
 mod ray;
 
@@ -23,8 +21,8 @@ fn main() {
         .init_resource::<TargetEntity>()
         .add_plugins((
             DefaultPlugins,
-            RapierPhysicsPlugin::<NoUserData>::default(),
-            RapierDebugRenderPlugin::default(),
+            PhysicsPlugins::default(),
+            PhysicsDebugPlugin::default(),
         ))
         .insert_resource(AmbientLight::default())
         .add_systems(Startup, setup)
@@ -146,7 +144,7 @@ fn setup_door(
                 ownership: OwnershipRegistry::new_permanent(owner),
                 ..default()
             },
-            RigidBody::Fixed,
+            RigidBody::Static,
             Collider::cuboid(door_hs, door_hs, door_hs),
         ))
         .observe(on_use_door_event)
@@ -173,14 +171,14 @@ fn interaction_system(
 fn show_inventory_system(
     mut inventory_text_query: Query<&mut Text, With<InventoryText>>,
     mut inventories: Query<&mut Inventory, Changed<Inventory>>,
-    item_query: Query<&Item>,
+    q_name: Query<&Name>,
     r_player_entity: Res<PlayerEntity>,
 ) {
     for mut text in &mut inventory_text_query {
         if let Ok(inventory) = inventories.get_mut(r_player_entity.0.unwrap()) {
             let mut items: Vec<String> = Vec::new();
             for inventory_item in inventory.items() {
-                items.push(item_query.get(*inventory_item).unwrap().name.clone());
+                items.push(q_name.get(*inventory_item).unwrap().to_string().clone());
             }
             text.sections[0].value = format!("Inventory {:?}", items);
         }

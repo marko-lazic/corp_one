@@ -17,6 +17,7 @@ pub const CLONING_SPAWN_POSITION: Vec3 = Vec3::from_array([0.; 3]);
 
 pub mod prelude {
     pub use crate::{
+        asset::*,
         items::{inventory::*, item::*},
         stats::health::*,
         util::test_utils::*,

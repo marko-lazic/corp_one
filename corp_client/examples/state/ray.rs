@@ -1,10 +1,9 @@
-use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_rapier3d::prelude::*;
-
 use crate::TargetEntity;
+use avian3d::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
 
 pub fn cast_ray_system(
-    r_rapier_context: Res<RapierContext>,
+    q_spatial: SpatialQuery,
     mut r_target_entity: ResMut<TargetEntity>,
     q_windows: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
@@ -23,16 +22,14 @@ pub fn cast_ray_system(
         };
 
         // Then cast the ray.
-        let hit = r_rapier_context.cast_ray(
+        if let Some(hit_data) = q_spatial.cast_ray(
             ray.origin,
             ray.direction.into(),
             f32::MAX,
             true,
-            QueryFilter::only_fixed(),
-        );
-
-        if let Some((entity, _toi)) = hit {
-            r_target_entity.0 = Some(entity);
+            SpatialQueryFilter::default(),
+        ) {
+            r_target_entity.0 = Some(hit_data.entity);
         } else {
             r_target_entity.0 = None;
         }
@@ -41,10 +38,11 @@ pub fn cast_ray_system(
 
 #[cfg(test)]
 mod tests {
+    use avian3d::PhysicsPlugins;
     use bevy::{
         render::{
-            RenderPlugin,
             settings::{RenderCreation, WgpuSettings},
+            RenderPlugin,
         },
         scene::ScenePlugin,
         time::TimePlugin,
@@ -79,7 +77,7 @@ mod tests {
             HeadlessRenderPlugin,
             TransformPlugin,
             TimePlugin,
-            RapierPhysicsPlugin::<NoUserData>::default(),
+            PhysicsPlugins::default(),
         ))
         .init_resource::<TargetEntity>()
         .add_systems(Update, cast_ray_system);
@@ -88,7 +86,7 @@ mod tests {
 
     fn setup_camera(app: &mut App) -> Entity {
         let entity = app
-            .world
+            .world_mut()
             .spawn(Camera3dBundle {
                 transform: Transform::from_xyz(0.0, 0.0, 1.0)
                     .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
@@ -104,13 +102,13 @@ mod tests {
     }
 
     fn setup_door(app: &mut App) -> Entity {
-        let half_size: Real = 1.0;
+        let length = 1.0;
         let entity = app
-            .world
+            .world_mut()
             .spawn((
                 TransformBundle::from(Transform::from_xyz(0.0, 0.0, 0.0)),
-                RigidBody::Fixed,
-                Collider::cuboid(half_size, half_size, half_size),
+                RigidBody::Static,
+                Collider::cuboid(length, length, length),
             ))
             .id();
         entity

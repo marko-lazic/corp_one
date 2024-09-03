@@ -1,21 +1,15 @@
-use std::f32::consts::PI;
-
-use bevy::{app::AppExit, prelude::*};
-use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
-use leafwing_input_manager::prelude::*;
-
-use corp_shared::prelude::{Health, InteractionObjectType, Inventory, Player, UseEvent};
-
 use crate::{
     asset::Colony,
     gui::prelude::{DebugGizmos, DebugGuiEvent},
     sound::InteractionSoundEvent,
     state::GameState,
-    world::{
-        ccc::{ControlMovement, DoubleTap, MainCamera, MainCameraFollow, OrientationMode},
-        colony::prelude::{BarrierControl, BarrierField, VortInEvent},
-    },
+    world::prelude::*,
 };
+use avian3d::prelude::*;
+use bevy::{app::AppExit, prelude::*};
+use corp_shared::prelude::{Health, InteractionObjectType, Inventory, Player, UseEvent};
+use leafwing_input_manager::prelude::*;
+use std::f32::consts::PI;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ControlSet {
@@ -299,7 +293,7 @@ fn detect_interactable_objects(
     mut r_use_entity: ResMut<UseEntity>,
     q_transform: Query<&Transform>,
     q_parent: Query<&Parent>,
-    r_rapier_context: Res<RapierContext>,
+    q_spatial: SpatialQuery,
     q_object_type: Query<&InteractionObjectType>,
     mut e_debug_gui: EventWriter<DebugGuiEvent>,
     r_cursor_world: Res<CursorWorld>,
@@ -315,7 +309,8 @@ fn detect_interactable_objects(
 
     let mut rays = Vec::new();
     // Cast FOV rays
-    let origin = t_player.translation;
+    let offset_height = Vec3::Y / 2.0; // Adjustable height of rays origin
+    let origin = t_player.translation - offset_height;
     for i in 0..NUM_RAYS {
         // Calculate the horizontal angle for the current ray
         let ray_angle = (i as f32 * RAY_SPACING) - (HORIZONTAL_FOV / 2.0);
@@ -352,25 +347,25 @@ fn detect_interactable_objects(
     r_use_entity.0.clear();
     // Collect usable objects
     for ray in rays {
-        if let Some((entity, real)) = r_rapier_context.cast_ray(
+        if let Some(ray_hit_data) = q_spatial.cast_ray(
             ray.origin,
             ray.direction.into(),
             LOOKUP_RANGE,
             true,
-            QueryFilter::only_fixed().exclude_sensors(),
+            SpatialQueryFilter::from_mask([Layer::Fixed]),
         ) {
-            if let Ok(_) = q_object_type.get(entity.clone()) {
+            if let Ok(_) = q_object_type.get(ray_hit_data.entity) {
                 gizmos.ray(
                     ray.origin,
-                    (ray.origin + ray.direction * real) - ray.origin,
+                    (ray.origin + ray.direction * ray_hit_data.time_of_impact) - ray.origin,
                     bevy::color::palettes::tailwind::RED_700,
                 );
 
-                let parent_entity = match q_parent.get(entity) {
+                let parent_entity = match q_parent.get(ray_hit_data.entity) {
                     Ok(parent) => parent.get(),
                     Err(_) => {
                         // Parent not found for entity {entity:?}, using entity itself.
-                        entity
+                        ray_hit_data.entity
                     }
                 };
 
@@ -378,14 +373,15 @@ fn detect_interactable_objects(
                     warn!("Failed to retrieve transform for entity {parent_entity:?}");
                     return;
                 };
-                r_use_entity
-                    .0
-                    .push(UsableEntity::new(entity, transform.translation));
-                e_debug_gui.send(DebugGuiEvent::Interaction(entity));
+                r_use_entity.0.push(UsableEntity::new(
+                    ray_hit_data.entity,
+                    transform.translation,
+                ));
+                e_debug_gui.send(DebugGuiEvent::Interaction(ray_hit_data.entity));
             } else {
                 gizmos.ray(
                     ray.origin,
-                    (ray.origin + ray.direction * real) - ray.origin,
+                    (ray.origin + ray.direction * ray_hit_data.time_of_impact) - ray.origin,
                     bevy::color::palettes::tailwind::RED_700,
                 );
             }

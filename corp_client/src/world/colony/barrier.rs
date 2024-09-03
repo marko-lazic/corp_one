@@ -1,9 +1,7 @@
+use crate::{state::GameState, world::prelude::*};
+use avian3d::{collision::CollisionLayers, prelude::LayerMask};
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::ColliderDisabled;
-
 use corp_shared::prelude::*;
-
-use crate::state::GameState;
 
 #[derive(Component, Default, Debug)]
 pub struct BarrierControl {
@@ -62,10 +60,14 @@ fn change_barrier_field_visibility_and_collision(
         if let Ok(mut visible) = q_barrier_field_visibility.get_mut(e_door) {
             if *door_state == DoorState::Open {
                 *visible = Visibility::Hidden;
-                commands.entity(e_door).insert(ColliderDisabled);
+                commands
+                    .entity(e_door)
+                    .insert(CollisionLayers::new([Layer::Sensor], [LayerMask::NONE]));
             } else if *door_state == DoorState::Closed {
                 *visible = Visibility::Visible;
-                commands.entity(e_door).remove::<ColliderDisabled>();
+                commands
+                    .entity(e_door)
+                    .insert(CollisionLayers::new([LayerMask::ALL], [LayerMask::ALL]));
             }
         }
     }

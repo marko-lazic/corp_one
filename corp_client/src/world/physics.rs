@@ -1,26 +1,31 @@
+use crate::{util::mesh_extension::MeshExt, world::shader::ForceFieldMaterial};
+use avian3d::prelude::*;
 use bevy::{
     ecs::system::SystemId,
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
 };
-use bevy_rapier3d::prelude::*;
 
-use crate::{util::mesh_extension::MeshExt, world::shader::ForceFieldMaterial};
+#[derive(PhysicsLayer, Clone, Copy, Debug)]
+pub enum Layer {
+    Player = 0b0001,
+    Zone = 0b0010,
+    VortexGate = 0b0011,
+    Sensor = 0b0100,
+    Fixed = 0b0101,
+}
 
 #[derive(Resource)]
 pub struct PhysicsSystems {
     pub setup_colliders: SystemId,
 }
 
-pub struct PhysicsPlugin;
+pub struct WorldPhysicsPlugin;
 
-impl Plugin for PhysicsPlugin {
+impl Plugin for WorldPhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            RapierPhysicsPlugin::<NoUserData>::default(),
-            RapierDebugRenderPlugin::default(),
-        ))
-        .add_systems(Startup, setup);
+        app.add_plugins((PhysicsPlugins::default(), PhysicsDebugPlugin::default()))
+            .add_systems(Startup, setup);
     }
 }
 
@@ -42,28 +47,26 @@ fn setup_colliders(
             .iter()
             .any(|&s| name.to_lowercase().contains(s))
         {
-            for (collider_entity, collider_mesh) in
+            for (collider_entity, mesh) in
                 Mesh::search_in_children(entity, &q_children, &r_meshes, &r_mesh_handles)
             {
-                let rapier_collider =
-                    Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
-                        .expect("Failed to initialize a collider with a Mesh.");
+                let collider = Collider::trimesh_from_mesh(&mesh)
+                    .expect("Failed to initialize a collider with a Mesh.");
 
                 commands
                     .entity(collider_entity)
-                    .insert((RigidBody::Fixed, rapier_collider));
+                    .insert((RigidBody::Static, collider));
             }
         } else if name.to_lowercase().contains("barrierfield") {
-            for (collider_entity, collider_mesh) in
+            for (collider_entity, mesh) in
                 Mesh::search_in_children(entity, &q_children, &r_meshes, &r_mesh_handles)
             {
-                let rapier_collider =
-                    Collider::from_bevy_mesh(collider_mesh, &ComputedColliderShape::TriMesh)
-                        .expect("Failed to initialize a collider with a Mesh.");
+                let rapier_collider = Collider::trimesh_from_mesh(&mesh)
+                    .expect("Failed to initialize a collider with a Mesh.");
 
                 commands
                     .entity(collider_entity)
-                    .insert((RigidBody::KinematicPositionBased, rapier_collider));
+                    .insert((RigidBody::Kinematic, rapier_collider));
 
                 // Shaders should be refactored out of physics plugin
                 commands.entity(collider_entity).insert((
@@ -79,35 +82,6 @@ fn setup_colliders(
                     .entity(collider_entity)
                     .remove::<Handle<StandardMaterial>>();
             }
-        }
-    }
-}
-
-pub struct CollideGroups;
-
-impl CollideGroups {
-    const PLAYER: Group = Group::GROUP_1;
-    const ZONE: Group = Group::GROUP_2;
-    const VORTEX_GATE: Group = Group::GROUP_3;
-
-    pub fn player() -> CollisionGroups {
-        CollisionGroups {
-            memberships: Self::PLAYER,
-            filters: Self::VORTEX_GATE | Self::ZONE,
-        }
-    }
-
-    pub fn zone() -> CollisionGroups {
-        CollisionGroups {
-            memberships: Self::ZONE,
-            filters: Self::PLAYER,
-        }
-    }
-
-    pub fn vortex_gate() -> CollisionGroups {
-        CollisionGroups {
-            memberships: Self::VORTEX_GATE,
-            filters: Self::PLAYER,
         }
     }
 }

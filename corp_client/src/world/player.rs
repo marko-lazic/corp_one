@@ -1,35 +1,16 @@
+use crate::{asset::PlayerAssets, state::GameState, world::prelude::*};
+use avian3d::prelude::*;
 use bevy::{ecs::system::SystemId, prelude::*};
-use bevy_rapier3d::prelude::*;
+use bevy_tnua::prelude::*;
+use bevy_tnua_avian3d::TnuaAvian3dPlugin;
+use corp_shared::prelude::*;
 use leafwing_input_manager::InputManagerBundle;
 use rand::seq::SliceRandom;
-
-use corp_shared::prelude::*;
-
-use crate::{
-    asset::PlayerAssets,
-    state::GameState,
-    world::{
-        ccc::{MainCameraBundle, MainCameraFollow, MovementBundle, PlayerAction, PlayerEntity},
-        cloning::CloningPlugin,
-        colony::prelude::VortexNode,
-        physics::CollideGroups,
-    },
-};
 
 #[derive(Resource)]
 pub struct PlayerStore {
     pub health: Health,
     pub setup_player: SystemId,
-}
-
-#[derive(Bundle)]
-struct PlayerPhysicsBundle {
-    rigid_body: RigidBody,
-    kcc: KinematicCharacterController,
-    collider: Collider,
-    locked_axis: LockedAxes,
-    collide_groups: CollisionGroups,
-    active_events: ActiveEvents,
 }
 
 #[derive(Event)]
@@ -42,13 +23,16 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(CloningPlugin)
-            .add_event::<PlayerSpawnEvent>()
-            .add_systems(Startup, setup)
-            .add_systems(
-                Update,
-                player_spawn_event_reader.run_if(in_state(GameState::LoadColony)),
-            );
+        app.add_plugins((
+            TnuaControllerPlugin::default(),
+            TnuaAvian3dPlugin::default(),
+        ))
+        .add_event::<PlayerSpawnEvent>()
+        .add_systems(Startup, setup)
+        .add_systems(
+            Update,
+            player_spawn_event_reader.run_if(in_state(GameState::LoadColony)),
+        );
     }
 }
 
@@ -106,24 +90,24 @@ pub fn setup_player(
                 rank: Rank::R6,
             },
             r_player_store.health.clone(),
-            PlayerPhysicsBundle {
-                rigid_body: RigidBody::KinematicPositionBased,
-                kcc: KinematicCharacterController {
-                    offset: CharacterLength::Absolute(0.01),
-                    ..default()
-                },
-                collider: Collider::capsule_y(0.65, 0.25),
-                locked_axis: LockedAxes::ROTATION_LOCKED,
-                collide_groups: CollideGroups::player(),
-                active_events: ActiveEvents::COLLISION_EVENTS,
-            },
             StateScoped(GameState::Playing),
+            // Physics
+            (
+                RigidBody::Dynamic,
+                TnuaControllerBundle::default(),
+                Collider::capsule(0.3, 0.75),
+                LockedAxes::ROTATION_LOCKED,
+                CollisionLayers::new(
+                    [Layer::Player],
+                    [Layer::VortexGate, Layer::Zone, Layer::Sensor],
+                ),
+            ),
         ))
         .with_children(|child_builder| {
             child_builder.spawn(SceneBundle {
                 scene: r_player_assets.mannequiny.clone(),
                 // Offset the mesh y position by capsule total height
-                transform: Transform::from_xyz(0.0, -1.0, 0.0),
+                transform: Transform::from_xyz(0.0, -1.5, 0.0),
                 ..default()
             });
         })

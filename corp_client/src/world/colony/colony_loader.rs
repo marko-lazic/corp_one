@@ -1,31 +1,17 @@
 use crate::{
     asset::{Colony, ColonyConfig, MaterialAssets, MeshAssets, SceneAssets},
     state::GameState,
-    world::{
-        colony::{prelude::Zone, scene_hook},
-        prelude::{CollideGroups, PhysicsSystems, PlayerSpawnEvent},
-        shader::ForceFieldMaterial,
-    },
+    world::{colony::scene_hook, prelude::*},
 };
+use avian3d::prelude::*;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     scene::SceneInstanceReady,
 };
-use bevy_mod_picking::{
-    events::{Click, Pointer},
-    prelude::{Listener, On},
-    PickableBundle,
-};
-use bevy_rapier3d::{
-    dynamics::RigidBody,
-    geometry::{Collider, Sensor},
-};
+use bevy_mod_picking::prelude::*;
 use bevy_scene_hook::{HookedSceneBundle, SceneHook};
-use corp_shared::prelude::{
-    on_use_backpack_action_event, on_use_backpack_event, BackpackBundle, HackingToolBundle,
-    InteractionObjectType,
-};
+use corp_shared::prelude::*;
 
 #[derive(Event)]
 pub struct ColonyLoadEvent(pub Handle<ColonyConfig>);
@@ -124,7 +110,8 @@ fn load_colony_event(
             BackpackBundle::with_items(vec![e_hacking_tool]),
             PickableBundle::default(),
             InteractionObjectType::Backpack,
-            Collider::cuboid(1.5, 3.5, 1.5),
+            Collider::cuboid(3.0, 12.0, 3.0),
+            Sensor,
             StateScoped(GameState::Playing),
         ))
         .observe(on_use_backpack_event)
@@ -140,7 +127,8 @@ fn load_colony_event(
         },
         NotShadowReceiver,
         NotShadowCaster,
-        Collider::cuboid(2.6, 2.6, 2.6),
+        RigidBody::Static,
+        Collider::cuboid(5.0, 5.0, 5.0),
         PickableBundle::default(),
         On::<Pointer<Click>>::run(|event: Listener<Pointer<Click>>| {
             info!("Clicked on entity {:?}", event.target);
@@ -162,7 +150,7 @@ fn load_colony_event(
             }),
             ..default()
         },
-        RigidBody::Fixed,
+        RigidBody::Static,
         Collider::cuboid(100.0, 0.01, 100.0),
         StateScoped(GameState::Playing),
     ));
@@ -182,9 +170,9 @@ fn load_colony_event(
                 ..default()
             },
             Sensor,
-            Collider::cuboid(0.5, 1.0, 0.5),
+            Collider::cuboid(zone_asset.size, 4.0, zone_asset.size),
             Zone::from(*zone_asset),
-            CollideGroups::zone(),
+            CollisionLayers::new([Layer::Zone], [Layer::Player]),
             StateScoped(GameState::Playing),
         ));
     }
