@@ -10,7 +10,7 @@ use bevy_mod_picking::prelude::*;
 use crate::{state::GameState, world::prelude::*};
 use corp_shared::prelude::*;
 
-pub fn scene_hook_insert_components(entity: Entity, name: &str, commands: &mut EntityCommands) {
+pub fn components(entity: Entity, name: &str, commands: &mut EntityCommands) {
     match name {
         n if n.starts_with("VortexGate") => commands.insert((
             VortexGate,

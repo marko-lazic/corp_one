@@ -102,6 +102,7 @@ fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<T
 fn vortex_gate_collider(
     q_vortex_gate: Query<(&Transform, &Collider), With<VortexGate>>,
     q_spatial: SpatialQuery,
+    mut already_vorted: Local<bool>,
     mut ev_vort_out: EventWriter<VortOutEvent>,
 ) {
     for (transform, collider) in &q_vortex_gate {
@@ -113,8 +114,11 @@ fn vortex_gate_collider(
             shape_rot,
             SpatialQueryFilter::from_mask(Layer::Player),
             |entity| {
-                info!("Vort {entity} to star map.");
-                ev_vort_out.send(VortOutEvent);
+                if *already_vorted == false {
+                    info!("Vort {entity} to star map.");
+                    ev_vort_out.send(VortOutEvent);
+                    *already_vorted = true;
+                }
                 false
             },
         )

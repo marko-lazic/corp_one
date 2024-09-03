@@ -81,7 +81,7 @@ fn load_colony_event(
                 },
                 hook: SceneHook::new(move |entity_ref, commands| {
                     if let Some(name) = entity_ref.get::<Name>().map(|t| t.as_str()) {
-                        scene_hook::scene_hook_insert_components(entity_ref.id(), name, commands)
+                        scene_hook::components(entity_ref.id(), name, commands)
                     }
                 }),
             },
