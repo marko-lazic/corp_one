@@ -1,3 +1,0 @@
-[core]
-    path = "./db"
-    schema = "full"

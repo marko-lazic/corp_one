@@ -1,0 +1,9 @@
+# cargo make run_all
+# cargo watch -x 'run -p corp_client' -x 'run -p corp_server'
+[tasks.run_all]
+description = "Run all services concurrently"
+run_in_background = true
+script = [
+    { name = "game_client", script = "cargo run -p corp_client" },
+    { name = "game_server", script = "cargo run -p corp_server" }
+]

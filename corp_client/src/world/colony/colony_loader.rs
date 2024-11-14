@@ -1,7 +1,10 @@
 use crate::{
     asset::{Colony, ColonyConfig, MeshAssets, SceneAssets},
     state::GameState,
-    world::{colony::scene_hook, prelude::*},
+    world::{
+        colony::{scene_hook, scene_hook::scene_hook},
+        prelude::*,
+    },
 };
 use avian3d::prelude::*;
 use bevy::{
@@ -24,7 +27,7 @@ pub fn colony_loader_plugin(app: &mut App) {
         .add_systems(OnEnter(GameState::LoadColony), load_colony_event)
         .add_systems(
             FixedUpdate,
-            check_colony_loaded
+            (check_colony_loaded, scene_hook)
                 .run_if(in_state(GameState::LoadColony))
                 .run_if(resource_exists::<ColonyScene>),
         )
@@ -74,16 +77,9 @@ fn load_colony_event(
     let colony_scene = commands
         .spawn((
             Name::new("Colony"),
-            HookedSceneBundle {
-                scene: SceneBundle {
-                    scene: colony_scene,
-                    ..default()
-                },
-                hook: SceneHook::new(move |entity_ref, commands| {
-                    if let Some(name) = entity_ref.get::<Name>().map(|t| t.as_str()) {
-                        scene_hook::components(entity_ref.id(), name, commands)
-                    }
-                }),
+            SceneBundle {
+                scene: colony_scene,
+                ..default()
             },
             StateScoped(GameState::Playing),
         ))

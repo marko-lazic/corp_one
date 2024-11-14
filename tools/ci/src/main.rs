@@ -51,7 +51,7 @@ fn main() {
 
     let what_to_run = if let Some(arg) = std::env::args().nth(1).as_deref() {
         if let Some((_, check)) = arguments.iter().find(|(str, _)| *str == arg) {
-            *check
+            check
         } else {
             println!(
                 "Invalid argument: {arg:?}.\nEnter one of: {}.",
@@ -63,7 +63,7 @@ fn main() {
             return;
         }
     } else {
-        Check::all()
+        &Check::all()
     };
 
     let sh = Shell::new().unwrap();
