@@ -33,7 +33,7 @@ impl Plugin for WorldPlugin {
             CloningPlugin,
         ))
         .configure_sets(
-            Update,
+            FixedUpdate,
             (
                 ControlSet::PlayingInput.before(CharacterSet::Movement),
                 CameraSet::Update.after(CharacterSet::Movement),

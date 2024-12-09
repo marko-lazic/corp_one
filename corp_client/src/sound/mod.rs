@@ -31,7 +31,7 @@ impl Plugin for SoundPlugin {
                 (setup_walk_sound, setup_background_music),
             )
             .add_systems(
-                Update,
+                FixedUpdate,
                 (walk_sound, play_interaction_event).run_if(in_state(GameState::Playing)),
             )
             .add_systems(OnExit(GameState::Playing), pause_loops);

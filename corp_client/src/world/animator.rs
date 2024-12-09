@@ -25,13 +25,13 @@ impl Plugin for AnimatorPlugin {
         // Loading needs to be split into loading for resources and data setup
         app.add_systems(OnExit(GameState::Loading), setup_animation_graph)
             .add_systems(
-                Update,
+                FixedUpdate,
                 setup_scene_once_loaded
                     .before(animate_targets)
                     .run_if(in_state(GameState::Playing)),
             )
             .add_systems(
-                Update,
+                FixedUpdate,
                 animation_control.run_if(in_state(GameState::Playing)),
             );
     }

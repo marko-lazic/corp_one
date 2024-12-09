@@ -13,7 +13,7 @@ pub struct CharacterPlugin;
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            FixedUpdate,
             (
                 is_movement_enabled,
                 calculate_character_movement,
@@ -242,7 +242,7 @@ mod tests {
                 MainCameraPlugin,
             ))
             .configure_sets(
-                Update,
+                FixedUpdate,
                 (
                     ControlSet::PlayingInput.before(CharacterSet::Movement),
                     CameraSet::Update.after(CharacterSet::Movement),

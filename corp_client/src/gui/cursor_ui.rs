@@ -15,7 +15,10 @@ impl Plugin for CursorPlugin {
         app.init_resource::<CursorUi>()
             .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(First, update_cursor_ui_position)
-            .add_systems(Update, update_use_text.run_if(in_state(GameState::Playing)));
+            .add_systems(
+                FixedUpdate,
+                update_use_text.run_if(in_state(GameState::Playing)),
+            );
     }
 }
 

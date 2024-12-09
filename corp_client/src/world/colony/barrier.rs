@@ -36,11 +36,11 @@ pub struct BarrierPlugin;
 impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            FixedUpdate,
             (change_barrier_field_visibility_and_collision,).run_if(in_state(GameState::Playing)),
         )
         .add_systems(
-            Update,
+            FixedUpdate,
             (
                 door_cooldown_system,
                 process_temporary_faction_ownership_timers_system,

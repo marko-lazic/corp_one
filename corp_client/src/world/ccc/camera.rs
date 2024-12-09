@@ -76,7 +76,7 @@ impl MainCameraBundle {
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Msaa::Sample4).add_systems(
-            Update,
+            FixedUpdate,
             (update_camera, Dolly::<MainCamera>::update_active)
                 .chain()
                 .in_set(CameraSet::Update)
@@ -87,7 +87,7 @@ impl Plugin for MainCameraPlugin {
 
 fn update_camera(
     q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
-    time: Res<Time>,
+    time: Res<Time<Fixed>>,
     mut rig_q: Query<&mut Rig>,
     q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
     windows: Query<&Window>,
@@ -269,7 +269,7 @@ mod tests {
                 MainCameraPlugin,
             ))
             .configure_sets(
-                Update,
+                FixedUpdate,
                 (
                     ControlSet::PlayingInput.before(CharacterSet::Movement),
                     CameraSet::Update.after(CharacterSet::Movement),

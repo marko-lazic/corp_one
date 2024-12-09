@@ -60,7 +60,7 @@ fn player_loot_drop(
 
 fn dead_player_system(
     r_colony_config_assets: Res<ColonyConfigAssets>,
-    r_time: Res<Time>,
+    r_time: Res<Time<Fixed>>,
     mut r_player_entity: ResMut<PlayerEntity>,
     mut ev_colony_load: EventWriter<ColonyLoadEvent>,
     mut q_health: Query<(Entity, &mut Health), With<Player>>,
@@ -111,7 +111,7 @@ mod tests {
         let mut app = App::new();
         init_time(&mut app);
         app.init_state::<GameState>();
-        app.add_systems(Update, (kill_player, dead_player_system).chain());
+        app.add_systems(FixedUpdate, (kill_player, dead_player_system).chain());
         app.insert_resource(create_colony_assets());
         let setup_player = app.world_mut().register_system(setup_player);
         app.insert_resource(PlayerStore {

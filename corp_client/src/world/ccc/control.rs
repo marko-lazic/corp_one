@@ -132,9 +132,9 @@ impl Plugin for ControlPlugin {
             .add_plugins(InputManagerPlugin::<UIAction>::default())
             .init_resource::<ActionState<UIAction>>()
             .insert_resource(UIAction::ui_input_map())
-            .add_systems(Update, double_tap_to_exit)
+            .add_systems(FixedUpdate, double_tap_to_exit)
             .add_systems(
-                Update,
+                FixedUpdate,
                 (
                     update_cursor_world,
                     player_control_movement,
@@ -156,7 +156,7 @@ impl Plugin for ControlPlugin {
             )
             .add_systems(OnExit(GameState::Playing), enable_cursor_visible)
             .add_systems(
-                Update,
+                FixedUpdate,
                 starmap_keyboard
                     .in_set(ControlSet::StarmapInput)
                     .run_if(in_state(GameState::StarMap)),
@@ -166,7 +166,7 @@ impl Plugin for ControlPlugin {
 
 fn double_tap_to_exit(
     action_state: Res<ActionState<UIAction>>,
-    r_time: Res<Time>,
+    r_time: Res<Time<Fixed>>,
     mut ev_exit_app: EventWriter<AppExit>,
     mut l_double_tap: Local<DoubleTap>,
 ) {

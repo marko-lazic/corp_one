@@ -104,12 +104,12 @@ pub fn setup_player(
             ),
         ))
         .with_children(|child_builder| {
-            child_builder.spawn(SceneBundle {
+            child_builder.spawn((SceneBundle {
                 scene: r_player_assets.mannequiny.clone(),
                 // Offset the mesh y position by capsule total height
                 transform: Transform::from_xyz(0.0, -1.5, 0.0),
                 ..default()
-            });
+            },));
         })
         .id();
 

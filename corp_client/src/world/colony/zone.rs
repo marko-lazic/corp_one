@@ -44,7 +44,7 @@ impl Plugin for ZonePlugin {
 }
 
 fn handle_health_in_zones(
-    time: Res<Time>,
+    time: Res<Time<Fixed>>,
     mut zones: Query<&mut Zone>,
     mut healths: Query<&mut Health>,
 ) {
