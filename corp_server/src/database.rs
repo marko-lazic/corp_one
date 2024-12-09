@@ -1,5 +1,6 @@
 use crate::{table, ServerState};
 use bevy::{prelude::*, tasks::IoTaskPool};
+use directories::BaseDirs;
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use std::sync::Arc;
 
@@ -13,10 +14,19 @@ impl Plugin for DbPlugin {
 }
 
 fn database_setup(/*mut commands: Commands*/) {
+    let Some(base_dirs) = BaseDirs::new() else {
+        error!("Couldn't get BaseDirs");
+        return;
+    };
+    let database_path_buf = base_dirs
+        .data_local_dir()
+        .join("corp_server")
+        .join("database.sqlite");
+    let database_url = format!("sqlite:{}", database_path_buf.display());
     let pool = Arc::new(
         SqlitePoolOptions::new()
             .max_connections(5)
-            .connect_lazy("sqlite:corp_server/db/database.sqlite")
+            .connect_lazy(&database_url)
             .expect("Failed to create database pool"),
     );
 

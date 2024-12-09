@@ -10,3 +10,4 @@ bevy = { workspace = true, features = ["bevy_state", "bevy_color", "async-io", "
 serde = { version = "1", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
 sqlx = { version = "0.8", features = ["runtime-async-std", "sqlite", "chrono"] }
+directories = "5.0.1"
