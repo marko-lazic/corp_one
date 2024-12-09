@@ -4,6 +4,7 @@ use crate::database::DbPlugin;
 use bevy::{app::ScheduleRunnerPlugin, log::LogPlugin, prelude::*, state::app::StatesPlugin};
 
 mod database;
+mod dirs;
 mod table;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]

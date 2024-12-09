@@ -1,6 +1,5 @@
-use crate::{table, ServerState};
+use crate::{dirs::Dirs, table, ServerState};
 use bevy::{prelude::*, tasks::IoTaskPool};
-use directories::BaseDirs;
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use std::sync::Arc;
 
@@ -14,15 +13,12 @@ impl Plugin for DbPlugin {
 }
 
 fn database_setup(/*mut commands: Commands*/) {
-    let Some(base_dirs) = BaseDirs::new() else {
-        error!("Couldn't get BaseDirs");
-        return;
-    };
-    let database_path_buf = base_dirs
-        .data_local_dir()
-        .join("corp_server")
-        .join("database.sqlite");
-    let database_url = format!("sqlite:{}", database_path_buf.display());
+    let dirs = Dirs::new("corp_server");
+    let database_path_buf = dirs.data_dir.join("database.sqlite");
+    let database_path_str = database_path_buf
+        .to_str()
+        .expect("Path is not valid UTF-8, cannot form database URL");
+    let database_url = format!("sqlite:{}", database_path_str);
     let pool = Arc::new(
         SqlitePoolOptions::new()
             .max_connections(5)
