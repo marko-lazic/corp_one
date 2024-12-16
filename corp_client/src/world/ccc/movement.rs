@@ -26,13 +26,17 @@ impl CharacterMovement {
     }
 }
 
+/// 1.42 meters per second (m/s
+const WALKING_SPEED_MS: f32 = 1.42;
+/// 4x walking speed (~5.68 m/s)
+const MODERATE_RUNNING: f32 = WALKING_SPEED_MS * 4.0;
 impl Default for CharacterMovement {
     fn default() -> Self {
         Self {
             can_move: true,
             direction: Vec3::ZERO,
             velocity: Vec3::ZERO,
-            speed: 1.42 * 3.0,
+            speed: MODERATE_RUNNING,
         }
     }
 }

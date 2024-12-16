@@ -1,8 +1,7 @@
 use crate::{asset::PlayerAssets, state::GameState, world::prelude::*};
 use avian3d::prelude::*;
 use bevy::{ecs::system::SystemId, prelude::*};
-use bevy_tnua::prelude::*;
-use bevy_tnua_avian3d::TnuaAvian3dPlugin;
+use bevy_tnua::prelude::TnuaControllerBundle;
 use corp_shared::prelude::*;
 use leafwing_input_manager::InputManagerBundle;
 use rand::seq::SliceRandom;
@@ -23,16 +22,12 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            TnuaControllerPlugin::default(),
-            TnuaAvian3dPlugin::default(),
-        ))
-        .add_event::<PlayerSpawnEvent>()
-        .add_systems(Startup, setup)
-        .add_systems(
-            FixedUpdate,
-            player_spawn_event_reader.run_if(in_state(GameState::LoadColony)),
-        );
+        app.add_event::<PlayerSpawnEvent>()
+            .add_systems(Startup, setup)
+            .add_systems(
+                FixedUpdate,
+                player_spawn_event_reader.run_if(in_state(GameState::LoadColony)),
+            );
     }
 }
 

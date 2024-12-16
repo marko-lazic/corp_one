@@ -5,6 +5,8 @@ use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
 };
+use bevy_tnua::prelude::*;
+use bevy_tnua_avian3d::TnuaAvian3dPlugin;
 
 #[derive(PhysicsLayer, Clone, Copy, Debug)]
 pub enum Layer {
@@ -24,8 +26,13 @@ pub struct WorldPhysicsPlugin;
 
 impl Plugin for WorldPhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((PhysicsPlugins::default(), PhysicsDebugPlugin::default()))
-            .add_systems(Startup, setup);
+        app.add_plugins((
+            PhysicsPlugins::new(FixedUpdate),
+            PhysicsDebugPlugin::new(FixedUpdate),
+            TnuaControllerPlugin::new(FixedUpdate),
+            TnuaAvian3dPlugin::new(FixedUpdate),
+        ))
+        .add_systems(Startup, setup);
     }
 }
 

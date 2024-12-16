@@ -27,8 +27,8 @@ fn database_setup(/*mut commands: Commands*/) {
     );
 
     // commands.insert_resource(pool.clone());
-
-    IoTaskPool::get()
+    let io_pool = IoTaskPool::get();
+    io_pool
         .spawn(async move {
             match fetch_players(pool).await {
                 Ok(players) => {
