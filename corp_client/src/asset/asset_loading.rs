@@ -3,7 +3,7 @@ use bevy_asset_loader::prelude::*;
 use bevy_kira_audio::AudioSource;
 
 use crate::{
-    asset::prelude::{ColonyConfig, ASSET_PATH},
+    asset::prelude::ColonyConfig,
     state::GameState,
 };
 
@@ -86,26 +86,6 @@ impl Plugin for AssetLoadingPlugin {
                 .load_collection::<FontAssets>()
                 .load_collection::<ColonyConfigAssets>()
                 .load_collection::<SceneAssets>(),
-        )
-        .add_systems(OnEnter(GameState::Loading), setup.chain());
+        );
     }
-}
-
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((Camera2dBundle::default(), StateScoped(GameState::Loading)));
-
-    commands.spawn((
-        TextBundle {
-            text: Text::from_section(
-                "Loading",
-                TextStyle {
-                    font: asset_server.load(ASSET_PATH.default_font),
-                    font_size: 40.0,
-                    color: Color::srgb(0.9, 0.9, 0.9),
-                },
-            ),
-            ..Default::default()
-        },
-        StateScoped(GameState::Loading),
-    ));
 }

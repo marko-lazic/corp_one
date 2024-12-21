@@ -1,6 +1,5 @@
 use bevy::app::{App, Plugin};
 use bevy_common_assets::ron::RonAssetPlugin;
-use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_scene_hook::HookPlugin;
 
 use crate::{
@@ -20,7 +19,6 @@ impl Plugin for ColonyPlugin {
             ObjectInteractionPlugin,
             HookPlugin,
             RonAssetPlugin::<ColonyConfig>::new(&["colony"]),
-            DefaultPickingPlugins,
             colony_loader_plugin,
         ));
     }

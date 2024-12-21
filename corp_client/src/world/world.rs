@@ -20,7 +20,6 @@ impl Plugin for WorldPlugin {
             ..default()
         })
         .add_plugins((
-            ShaderPlugin,
             WorldPhysicsPlugin,
             ColonyPlugin,
             AnimatorPlugin,

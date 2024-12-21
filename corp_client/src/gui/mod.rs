@@ -1,7 +1,7 @@
 mod cursor_ui;
 mod debug;
-pub mod gui;
+mod gui;
 
 pub mod prelude {
-    pub use super::debug::*;
+    pub use super::{debug::*, gui::*};
 }

@@ -5,6 +5,10 @@ use corp_shared::prelude::*;
 
 use crate::{asset::AudioAssets, state::GameState, world::prelude::CharacterMovement};
 
+pub mod prelude {
+    pub use super::*;
+}
+
 #[derive(Resource)]
 struct BackgroundMusic;
 
