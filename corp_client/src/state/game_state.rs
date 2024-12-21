@@ -6,7 +6,6 @@ pub enum GameState {
     Loading,
     StarMap,
     LoadColony,
-    SpawnPlayer,
     Playing,
 }
 
