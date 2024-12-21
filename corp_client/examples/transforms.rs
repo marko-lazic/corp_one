@@ -18,7 +18,7 @@ fn setup(
     // plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3)),
+        material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
         ..Default::default()
     });
 
@@ -26,7 +26,7 @@ fn setup(
     commands
         .spawn(PbrBundle {
             mesh: meshes.add(Cuboid::default()),
-            material: materials.add(Color::rgb(0.8, 0.7, 0.6)),
+            material: materials.add(Color::srgb(0.8, 0.7, 0.6)),
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
             ..Default::default()
         })
@@ -37,7 +37,7 @@ fn setup(
         .spawn(PbrBundle {
             mesh: meshes.add(Sphere::new(0.45).mesh().ico(32).unwrap()),
             material: materials.add(StandardMaterial {
-                base_color: Color::hex("ffd891").unwrap(),
+                base_color: Color::Srgba(Srgba::hex("ffd891").unwrap()),
                 ..Default::default()
             }),
             transform: Transform::from_xyz(3.0, 0.5, 0.0),
@@ -47,7 +47,7 @@ fn setup(
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh: meshes.add(Sphere::new(0.10).mesh().ico(6).unwrap()),
-                material: materials.add(Color::rgb(0.8, 0.7, 0.6)),
+                material: materials.add(Color::srgb(0.8, 0.7, 0.6)),
                 transform: Transform::from_xyz(0.7, 0.0, 0.0),
                 ..Default::default()
             });
@@ -56,7 +56,7 @@ fn setup(
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
-            color: Color::rgb(1.0, 1.0, 1.0),
+            color: Color::srgb(1.0, 1.0, 1.0),
             intensity: 200.0,
             range: 20.0,
             ..Default::default()

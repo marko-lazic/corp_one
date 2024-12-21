@@ -1,15 +1,16 @@
-[unstable]
-#codegen-backend = true # Enable cranelift
+# [unstable]
+# codegen-backend = true # Enable cranelift
 
 # Enable a small amount of optimization in dev mode
 [profile.dev]
-opt-level = 1
+opt-level = 0
+codegen-units = 32
 incremental = true
-#codegen-backend = "cranelift"  # Enable cranelift
+# codegen-backend = "cranelift"  # Enable cranelift
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
-#codegen-backend = "llvm"   # Enable cranelift
+# codegen-backend = "llvm"   # Enable cranelift
 opt-level = 3
 
 [profile.debugging]
@@ -23,4 +24,10 @@ codegen-units = 1
 
 [build]
 rustc-wrapper = "/opt/homebrew/bin/sccache"
-rustflags = ["-Z", "threads=0", "-Z", "share-generics=y"]
+rustflags = ["-Z", "share-generics=y", "-C", "debuginfo=2"]
+
+[env]
+RUST_BACKTRACE = "1"
+
+[term]
+color = "always"

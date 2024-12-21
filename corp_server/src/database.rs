@@ -15,6 +15,8 @@ impl Plugin for DbPlugin {
 fn database_setup(/*mut commands: Commands*/) {
     let dirs = Dirs::new("corp_server");
     let database_path_buf = dirs.data_dir.join("database.sqlite");
+    let _ignored = dirs.config_dir;
+    let _ignored = dirs.cache_dir;
     let database_path_str = database_path_buf
         .to_str()
         .expect("Path is not valid UTF-8, cannot form database URL");

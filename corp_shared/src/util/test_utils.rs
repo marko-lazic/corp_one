@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{app::App, prelude::*, state::state::FreelyMutableState};
+use bevy::{app::App, prelude::*};
 
 pub trait TestUtils {
     fn init_time(&mut self) -> &mut Self;
@@ -11,7 +11,6 @@ pub trait TestUtils {
 
     fn get_resource<R: Resource>(&self) -> &R;
     fn get_resource_mut<R: Resource>(&mut self) -> Mut<R>;
-    fn set_state<S: FreelyMutableState + FromWorld>(&mut self, state: S) -> &mut Self;
 }
 
 impl TestUtils for App {
@@ -60,14 +59,5 @@ impl TestUtils for App {
 
     fn get_resource_mut<R: Resource>(&mut self) -> Mut<R> {
         self.world_mut().get_resource_mut::<R>().unwrap()
-    }
-
-    fn set_state<S: FreelyMutableState + FromWorld>(&mut self, state: S) -> &mut Self {
-        self.world_mut()
-            .get_resource_mut::<NextState<S>>()
-            .unwrap()
-            .set(state);
-        self.update();
-        self
     }
 }

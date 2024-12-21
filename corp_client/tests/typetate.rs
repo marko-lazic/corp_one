@@ -67,21 +67,3 @@ impl HttpResponse<Headers> {
         println!("Contents {} ", contents);
     }
 }
-
-// trait SendingState {}
-//
-// impl SendingState for Headers {}
-// // other states could go here
-//
-// impl<S> HttpResponse<S>
-//     where S: SendingState
-// {
-//     fn spam_spam_spam(&mut self) {
-//         todo!();
-//     }
-// }
-
-// /// These operations are available in any state.
-// impl<S> HttpResponse<S> {
-//     fn bytes_so_far(&self) -> usize { /* ... */ }
-// }

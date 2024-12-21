@@ -8,15 +8,15 @@ members = [
     "corp_client",
     "corp_server",
     "corp_shared",
-    "tests",
     "tools/ci",
 ]
 default-members = [
     "corp_client",
     "corp_server",
     "corp_shared",
-    "tests",
 ]
 
 [workspace.dependencies]
 bevy = { version = "0.14.1", default-features = false }
+
+

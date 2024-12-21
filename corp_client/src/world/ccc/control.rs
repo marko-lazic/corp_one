@@ -544,7 +544,8 @@ mod tests {
         let mut app = setup();
 
         // when
-        app.send_input(KeyCode::Escape);
+        KeyCode::Escape.press(app.world_mut());
+
         app.update();
 
         // then
@@ -557,7 +558,6 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time()
-            .init_state::<GameState>()
             .add_plugins(MinimalPlugins)
             .add_plugins((InputPlugin, ControlPlugin));
         app

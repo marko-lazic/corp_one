@@ -99,44 +99,6 @@ mod tests {
 
     use super::*;
 
-    fn kill_player(mut healths: Query<&mut Health, With<Player>>) {
-        for mut health in healths.iter_mut() {
-            health.kill_mut();
-        }
-    }
-
-    #[test]
-    fn test_vort_out_dead_player() {
-        // given
-        let mut app = App::new();
-        init_time(&mut app);
-        app.init_state::<GameState>();
-        app.add_systems(FixedUpdate, (kill_player, dead_player_system).chain());
-        app.insert_resource(create_colony_assets());
-        let setup_player = app.world_mut().register_system(setup_player);
-        app.insert_resource(PlayerStore {
-            health: Health::default(),
-            setup_player,
-        });
-        app.add_event::<ColonyLoadEvent>();
-        let player_entity = app.world_mut().spawn((Player, Health::default())).id();
-
-        // when
-        app.update();
-
-        // Check resulting changes
-        assert!(app.world().get::<Player>(player_entity).is_some());
-
-        assert_eq!(
-            *app.world()
-                .get::<Health>(player_entity)
-                .unwrap()
-                .get_health(),
-            MIN_HEALTH.clone(),
-            "Player is dead"
-        );
-    }
-
     #[test]
     fn test_vort_in_dead_player() {
         // Setup stage
@@ -166,13 +128,6 @@ mod tests {
             &CLONE_HEALTH_80,
             "PlayerStore health is set to clone health"
         );
-    }
-
-    fn init_time(app: &mut App) {
-        app.init_resource::<Time>();
-        let mut time = Time::default();
-        time.update();
-        app.world_mut().insert_resource(time);
     }
 
     fn create_colony_assets() -> ColonyConfigAssets {

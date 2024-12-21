@@ -43,9 +43,9 @@ fn draw_distance_vec(
     let zero = Vec3::ZERO;
     let a = Vec3::new(3., 2., 0.);
     let b = Vec3::new(-5., 3., 0.);
-    let red = Color::RED;
-    let green = Color::GREEN;
-    let blue = Color::BLUE;
+    let red = Color::LinearRgba(LinearRgba::RED);
+    let green = Color::LinearRgba(LinearRgba::GREEN);
+    let blue = Color::LinearRgba(LinearRgba::BLUE);
 
     let a_to_b = b - a; // to point (b) minus (-) from point (a)
     let a_to_b_dir = a_to_b.normalize();
@@ -77,7 +77,7 @@ fn setup(
         .spawn(PbrBundle {
             mesh: meshes.add(Sphere::new(0.1).mesh().ico(7).unwrap()),
             material: materials.add(StandardMaterial {
-                base_color: Color::LIME_GREEN,
+                base_color: Color::LinearRgba(LinearRgba::GREEN),
                 ..Default::default()
             }),
             transform: Transform::from_xyz(1.5, 1.0, 1.5),
