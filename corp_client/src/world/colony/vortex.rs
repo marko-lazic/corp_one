@@ -1,8 +1,4 @@
-use crate::{
-    asset::prelude::{Colony, ColonyConfigAssets},
-    state::GameState,
-    world::prelude::*,
-};
+use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
@@ -31,8 +27,8 @@ pub struct VortexPlugin;
 
 impl Plugin for VortexPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<VortInEvent>()
-            .add_event::<VortOutEvent>()
+        app.add_state_scoped_event::<VortInEvent>(GameState::StarMap)
+            .add_state_scoped_event::<VortOutEvent>(GameState::Playing)
             .add_systems(
                 FixedUpdate,
                 (debug_vort_in, vort_in_event_reader)
@@ -57,7 +53,7 @@ fn debug_vort_in(mut ev_vort_in: EventWriter<VortInEvent>, mut run_once: Local<b
 }
 
 fn vort_out_event_reader(
-    mut r_player_store: ResMut<PlayerStore>,
+    mut r_player_store: ResMut<PlayerData>,
     r_player_entity: Res<PlayerEntity>,
     mut r_next_state: ResMut<NextState<GameState>>,
     mut ev_vort_out: EventReader<VortOutEvent>,
@@ -95,14 +91,13 @@ fn vort_in_event_reader(
 
 fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<Time<Fixed>>) {
     for mut transform in nodes.iter_mut() {
-        transform.rotate(Quat::from_rotation_y(time.delta_seconds() * 0.2));
+        transform.rotate(Quat::from_rotation_y(time.delta_secs() * 0.2));
     }
 }
 
 fn vortex_gate_collider(
     q_vortex_gate: Query<(&Transform, &Collider), With<VortexGate>>,
     q_spatial: SpatialQuery,
-    mut already_vorted: Local<bool>,
     mut ev_vort_out: EventWriter<VortOutEvent>,
 ) {
     for (transform, collider) in &q_vortex_gate {
@@ -112,13 +107,10 @@ fn vortex_gate_collider(
             collider,
             shape_pos,
             shape_rot,
-            SpatialQueryFilter::from_mask(Layer::Player),
+            &SpatialQueryFilter::from_mask(GameLayer::Player),
             |entity| {
-                if *already_vorted == false {
-                    info!("Vort {entity} to star map.");
-                    ev_vort_out.send(VortOutEvent);
-                    *already_vorted = true;
-                }
+                info!("Vort {entity} to star map.");
+                ev_vort_out.send(VortOutEvent);
                 false
             },
         )

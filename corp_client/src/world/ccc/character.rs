@@ -1,4 +1,4 @@
-use crate::{state::GameState, world::prelude::*};
+use crate::prelude::*;
 use bevy::prelude::*;
 use bevy_tnua::{builtins::TnuaBuiltinWalk, prelude::TnuaController};
 use corp_shared::prelude::{Health, Player};
@@ -89,7 +89,7 @@ fn rotate_character(
                     character_movement.direction.x,
                     character_movement.direction.z,
                 );
-                let rotation_angle = std::f32::consts::PI + direction_2d.angle_between(Vec2::Y);
+                let rotation_angle = std::f32::consts::PI + direction_2d.angle_to(Vec2::Y);
 
                 let current_rotation = transform.rotation;
                 let target_rotation = Quat::from_rotation_y(rotation_angle);

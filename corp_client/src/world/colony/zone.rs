@@ -1,8 +1,4 @@
-use crate::{
-    asset::{ZoneConfig, ZoneType},
-    state::GameState,
-    world::prelude::*,
-};
+use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::{prelude::*, utils::hashbrown::HashSet};
 use corp_shared::prelude::*;
@@ -72,7 +68,7 @@ fn zone_collider(mut zones: Query<(&mut Zone, &Transform, &Collider)>, q_spatial
             c_zone,
             t_zone.translation,
             t_zone.rotation,
-            SpatialQueryFilter::default().with_mask(Layer::Player),
+            &SpatialQueryFilter::default().with_mask(GameLayer::Player),
             |entity| {
                 zone.add(entity);
                 // Match all intersections, not just the first one

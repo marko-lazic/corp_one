@@ -1,23 +1,17 @@
-use crate::{
-    asset::Colony,
-    gui::prelude::{DebugGizmos, DebugGuiEvent},
-    sound::InteractionSoundEvent,
-    state::GameState,
-    world::prelude::*,
-};
+use crate::prelude::*;
 use avian3d::prelude::*;
-use bevy::{app::AppExit, prelude::*};
+use bevy::{app::AppExit, prelude::*, utils::HashSet};
 use corp_shared::prelude::{Health, InteractionObjectType, Inventory, Player, UseEvent};
 use leafwing_input_manager::prelude::*;
-use std::f32::consts::PI;
+use std::{f32::consts::PI, hash::Hash};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum ControlSet {
     PlayingInput,
-    StarmapInput,
+    StarMapInput,
 }
 
-#[derive(Resource, Default, Deref, DerefMut)]
+#[derive(Resource, Default, Debug, Deref, DerefMut)]
 pub struct PlayerEntity(pub Option<Entity>);
 
 impl PlayerEntity {
@@ -32,23 +26,29 @@ impl From<Entity> for PlayerEntity {
     }
 }
 
-pub struct UsableEntity {
-    entity: Entity,
-    hit_point: Vec3,
+#[derive(Debug, Clone)]
+pub struct UsableTarget {
+    pub entity: Entity,
+    /// Position of targeted usable entity.
+    pub hit_point: Vec3,
 }
 
-impl UsableEntity {
-    pub fn new(entity: Entity, hit_point: Vec3) -> Self {
-        Self { entity, hit_point }
-    }
-
-    pub fn get(&self) -> (Entity, Vec3) {
-        (self.entity, self.hit_point)
+impl PartialEq for UsableTarget {
+    fn eq(&self, other: &Self) -> bool {
+        self.entity == other.entity
     }
 }
 
-#[derive(Resource, Default)]
-pub struct UseEntity(pub Vec<UsableEntity>);
+impl Eq for UsableTarget {}
+
+impl Hash for UsableTarget {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.entity.hash(state);
+    }
+}
+
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct HoverEntities(pub HashSet<UsableTarget>);
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorWorld(Vec3);
@@ -128,7 +128,7 @@ impl Plugin for ControlPlugin {
         app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .init_resource::<PlayerEntity>()
             .init_resource::<CursorWorld>()
-            .init_resource::<UseEntity>()
+            .init_resource::<HoverEntities>()
             .add_plugins(InputManagerPlugin::<UIAction>::default())
             .init_resource::<ActionState<UIAction>>()
             .insert_resource(UIAction::ui_input_map())
@@ -158,7 +158,7 @@ impl Plugin for ControlPlugin {
             .add_systems(
                 FixedUpdate,
                 starmap_keyboard
-                    .in_set(ControlSet::StarmapInput)
+                    .in_set(ControlSet::StarMapInput)
                     .run_if(in_state(GameState::StarMap)),
             );
     }
@@ -196,7 +196,7 @@ fn update_cursor_world(
     let ray = q_windows
         .single()
         .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
         .unwrap_or_else(|| Ray3d {
             origin: follow_pos.translation,
             direction: follow_pos.down(),
@@ -295,7 +295,7 @@ const LOOKUP_RANGE: f32 = 2.0; // Range of rays
 
 fn detect_interactable_objects(
     r_player_entity: Res<PlayerEntity>,
-    mut r_use_entity: ResMut<UseEntity>,
+    mut r_hover_entities: ResMut<HoverEntities>,
     q_transform: Query<&Transform>,
     q_parent: Query<&Parent>,
     q_spatial: SpatialQuery,
@@ -329,11 +329,13 @@ fn detect_interactable_objects(
         // Calculate the endpoint of the ray
         let ray_end = origin + ray_direction * LOOKUP_RANGE;
 
-        let direction = ray_end - origin;
+        let Ok(direction) = Dir3::new(ray_end - origin) else {
+            continue;
+        };
 
-        if direction == Vec3::ZERO {
+        if direction.as_vec3() == Vec3::ZERO {
             warn!("FOV ray direction is zero");
-            return;
+            continue;
         }
 
         let ray = Ray3d::new(origin, direction);
@@ -341,15 +343,17 @@ fn detect_interactable_objects(
     }
     // Cast cursor ray
     let cursor = r_cursor_world.0;
-    let direction = Vec3::new(cursor.x, origin.y, cursor.z) - origin;
-    if direction == Vec3::ZERO {
+    let Ok(direction) = Dir3::new(Vec3::new(cursor.x, origin.y, cursor.z) - origin) else {
+        return;
+    };
+    if direction.as_vec3() == Vec3::ZERO {
         return;
     }
-    let ray = Ray3d::new(origin, direction);
+    let ray = Ray3d::new(origin, Dir3::from(direction));
     rays.push(ray);
 
     // Clear any previously selected entities
-    r_use_entity.0.clear();
+    r_hover_entities.clear();
     // Collect usable objects
     for ray in rays {
         if let Some(ray_hit_data) = q_spatial.cast_ray(
@@ -357,12 +361,12 @@ fn detect_interactable_objects(
             ray.direction.into(),
             LOOKUP_RANGE,
             true,
-            SpatialQueryFilter::from_mask([Layer::Fixed]),
+            &SpatialQueryFilter::from_mask([GameLayer::Fixed, GameLayer::Sensor]),
         ) {
             if let Ok(_) = q_object_type.get(ray_hit_data.entity) {
                 gizmos.ray(
                     ray.origin,
-                    (ray.origin + ray.direction * ray_hit_data.time_of_impact) - ray.origin,
+                    (ray.origin + ray.direction * ray_hit_data.distance) - ray.origin,
                     bevy::color::palettes::tailwind::RED_700,
                 );
 
@@ -378,15 +382,15 @@ fn detect_interactable_objects(
                     warn!("Failed to retrieve transform for entity {parent_entity:?}");
                     return;
                 };
-                r_use_entity.0.push(UsableEntity::new(
-                    ray_hit_data.entity,
-                    transform.translation,
-                ));
+                r_hover_entities.insert(UsableTarget {
+                    entity: ray_hit_data.entity,
+                    hit_point: transform.translation,
+                });
                 e_debug_gui.send(DebugGuiEvent::Interaction(ray_hit_data.entity));
             } else {
                 gizmos.ray(
                     ray.origin,
-                    (ray.origin + ray.direction * ray_hit_data.time_of_impact) - ray.origin,
+                    (ray.origin + ray.direction * ray_hit_data.distance) - ray.origin,
                     bevy::color::palettes::tailwind::RED_700,
                 );
             }
@@ -402,7 +406,7 @@ fn detect_interactable_objects(
 
 fn create_use_event(
     mut commands: Commands,
-    r_use_entity: Res<UseEntity>,
+    r_use_entity: Res<HoverEntities>,
     r_player_entity: Res<PlayerEntity>,
     q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
     q_interaction_object: Query<&InteractionObjectType>,
@@ -427,7 +431,7 @@ fn create_use_event(
 
         match interaction_object {
             InteractionObjectType::DoorControl => {
-                commands.add(move |w: &mut World| {
+                commands.queue(move |w: &mut World| {
                     let barrier_fields = {
                         let fields = w.query::<&BarrierField>().iter(&w).collect::<Vec<_>>();
                         fields
@@ -508,13 +512,13 @@ fn toggle_window_cursor_visible(
 ) {
     if action_state.just_pressed(&UIAction::Escape) {
         let mut window = q_windows.single_mut();
-        window.cursor.visible = !window.cursor.visible;
+        window.cursor_options.visible = !window.cursor_options.visible;
     }
 }
 
 fn enable_cursor_visible(mut q_windows: Query<&mut Window>) {
     let mut window = q_windows.single_mut();
-    window.cursor.visible = true;
+    window.cursor_options.visible = true;
 }
 
 fn starmap_keyboard(

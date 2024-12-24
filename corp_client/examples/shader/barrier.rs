@@ -45,20 +45,18 @@ fn setup(
         MainCamera,
     ));
     // cube
-    commands.spawn(MaterialMeshBundle {
-        mesh: meshes.add(Cuboid::default()),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        material: custom_materials.add(CustomMaterial {
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::default())),
+        MeshMaterial3d(custom_materials.add(CustomMaterial {
             alpha_mode: AlphaMode::Blend,
-        }),
-        ..default()
-    });
+        })),
+        Transform::from_xyz(0.0, 0.5, 0.0),
+    ));
     // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
-        material: standard_materials.add(Color::srgb(0.3, 0.5, 0.3)),
-        ..default()
-    });
+    commands.spawn((
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(5.0, 5.0))),
+        MeshMaterial3d(standard_materials.add(Color::srgb(0.3, 0.5, 0.3))),
+    ));
 }
 
 fn rotate_camera(
@@ -71,7 +69,7 @@ fn rotate_camera(
 
         cam_transform.rotate_around(
             Vec3::ZERO,
-            Quat::from_axis_angle(Vec3::Y, 45f32.to_radians() * time.delta_seconds()),
+            Quat::from_axis_angle(Vec3::Y, 45f32.to_radians() * time.delta_secs()),
         );
         cam_transform.look_at(Vec3::ZERO, Vec3::Y);
     }

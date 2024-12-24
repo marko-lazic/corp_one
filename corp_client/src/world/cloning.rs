@@ -1,11 +1,6 @@
-use crate::{
-    asset::{Colony, ColonyConfigAssets, MeshAssets},
-    state::GameState,
-    world::prelude::*,
-};
+use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy_mod_picking::PickableBundle;
 use corp_shared::prelude::*;
 
 pub struct CloningPlugin;
@@ -17,7 +12,7 @@ impl Plugin for CloningPlugin {
                 FixedUpdate,
                 dead_player_system.run_if(in_state(GameState::Playing)),
             )
-            .observe(player_loot_drop);
+            .add_observer(player_loot_drop);
     }
 }
 
@@ -40,14 +35,9 @@ fn player_loot_drop(
         commands
             .spawn((
                 Name::new("Loot Bag"),
-                SceneBundle {
-                    scene: r_mesh_assets.low_poly_backpack.clone(),
-                    transform: Transform::from_translation(transform.translation)
-                        .with_scale(Vec3::splat(0.2)),
-                    ..default()
-                },
+                SceneRoot(r_mesh_assets.low_poly_backpack.clone()),
+                Transform::from_translation(transform.translation).with_scale(Vec3::splat(0.2)),
                 BackpackBundle::with_items(inventory.remove_all()),
-                PickableBundle::default(),
                 InteractionObjectType::Backpack,
                 RigidBody::Dynamic,
                 Collider::cuboid(1.5, 1.5, 1.5),
@@ -83,7 +73,7 @@ fn dead_player_system(
 }
 
 fn vort_in_dead_player_to_cloning(
-    mut r_player_store: ResMut<PlayerStore>,
+    mut r_player_store: ResMut<PlayerData>,
     mut ev_vort_in: EventWriter<VortInEvent>,
 ) {
     if r_player_store.health.is_dead() {
@@ -111,9 +101,11 @@ mod tests {
         let _player_entity = world.spawn((Player, Health::default())).id();
 
         let setup_player = world.register_system(setup_player);
-        let mut player_store = PlayerStore {
+        let setup_camera = world.register_system(setup_camera);
+        let mut player_store = PlayerData {
             health: Health::default(),
             setup_player,
+            setup_camera,
         };
         player_store.health.kill_mut();
         world.insert_resource(player_store);
@@ -124,7 +116,7 @@ mod tests {
         schedule.run(&mut world);
 
         assert_eq!(
-            world.resource::<PlayerStore>().health.get_health(),
+            world.resource::<PlayerData>().health.get_health(),
             &CLONE_HEALTH_80,
             "PlayerStore health is set to clone health"
         );

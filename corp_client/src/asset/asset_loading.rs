@@ -1,11 +1,7 @@
+use crate::prelude::*;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_kira_audio::AudioSource;
-
-use crate::{
-    asset::prelude::ColonyConfig,
-    state::GameState,
-};
 
 /// Exported using Blender export glTF 2.0 with settings enabled
 ///

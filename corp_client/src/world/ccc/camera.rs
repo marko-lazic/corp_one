@@ -1,17 +1,15 @@
+use crate::prelude::*;
 use bevy::{
     core_pipeline::{
-        bloom::BloomSettings,
+        bloom::Bloom,
         prepass::{DepthPrepass, MotionVectorPrepass, NormalPrepass},
     },
     prelude::*,
     render::camera::{Exposure, PhysicalCameraParameters},
 };
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
-use leafwing_input_manager::action_state::ActionState;
-
 use corp_shared::prelude::Player;
-
-use crate::{state::GameState, world::ccc::PlayerAction};
+use leafwing_input_manager::action_state::ActionState;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CameraSet {
@@ -26,56 +24,9 @@ pub struct MainCameraFollow;
 
 pub struct MainCameraPlugin;
 
-#[derive(Bundle)]
-pub struct MainCameraBundle {
-    camera: Camera3dBundle,
-    depth_prepass: DepthPrepass,
-    normal_prepass: NormalPrepass,
-    motion_vector_prepass: MotionVectorPrepass,
-    bloom: BloomSettings,
-    main_camera: MainCamera,
-    rig: Rig,
-    despawn: StateScoped<GameState>,
-}
-
-impl MainCameraBundle {
-    pub fn new(position: Vec3) -> Self {
-        Self {
-            camera: Camera3dBundle {
-                camera: Camera {
-                    hdr: true,
-                    ..default()
-                },
-                exposure: Exposure::from_physical_camera(PhysicalCameraParameters {
-                    aperture_f_stops: 1.0,
-                    shutter_speed_s: 1.0 / 125.0,
-                    sensitivity_iso: 100.0,
-                    sensor_height: 0.01866,
-                }),
-                ..default()
-            },
-            depth_prepass: DepthPrepass,
-            // This will generate a texture containing world normals (with normal maps applied)
-            normal_prepass: NormalPrepass,
-            // This will generate a texture containing screen space pixel motion vectors
-            motion_vector_prepass: MotionVectorPrepass,
-            bloom: BloomSettings::NATURAL,
-            main_camera: MainCamera,
-            rig: Rig::builder()
-                .with(Position::new(position))
-                .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-65.0))
-                .with(Smooth::new_position(0.3))
-                .with(Smooth::new_rotation(0.3))
-                .with(Arm::new(Vec3::Z * 18.0))
-                .build(),
-            despawn: StateScoped(GameState::Playing),
-        }
-    }
-}
-
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Msaa::Sample4).add_systems(
+        app.add_systems(
             FixedUpdate,
             (update_camera, Dolly::<MainCamera>::update_active)
                 .chain()
@@ -83,6 +34,39 @@ impl Plugin for MainCameraPlugin {
                 .run_if(in_state(GameState::Playing)),
         );
     }
+}
+
+pub fn setup_camera(mut commands: Commands, q_player_transform: Single<&Transform, With<Player>>) {
+    info!("Setup Camera");
+    let position = q_player_transform.translation;
+    commands.spawn((
+        MainCamera,
+        Camera3d::default(),
+        Rig::builder()
+            .with(Position::new(position))
+            .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-65.0))
+            .with(Smooth::new_position(0.3))
+            .with(Smooth::new_rotation(0.3))
+            .with(Arm::new(Vec3::Z * 18.0))
+            .build(),
+        Camera {
+            hdr: true,
+            ..default()
+        },
+        Exposure::from_physical_camera(PhysicalCameraParameters {
+            aperture_f_stops: 1.0,
+            shutter_speed_s: 1.0 / 125.0,
+            sensitivity_iso: 100.0,
+            sensor_height: 0.01866,
+        }),
+        DepthPrepass,
+        // This will generate a texture containing world normals (with normal maps applied)
+        NormalPrepass,
+        // This will generate a texture containing screen space pixel motion vectors
+        MotionVectorPrepass,
+        Bloom::NATURAL,
+        StateScoped(GameState::Playing),
+    ));
 }
 
 fn update_camera(
@@ -114,7 +98,7 @@ fn update_camera(
     if action_state.pressed(&PlayerAction::CameraZoomIn) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
-            xz.z = (xz.z - 4.0 * time.delta_seconds()).abs();
+            xz.z = (xz.z - 4.0 * time.delta_secs()).abs();
             arm.offset = xz.clamp_length_min(6.0);
         }
     }
@@ -122,7 +106,7 @@ fn update_camera(
     if action_state.pressed(&PlayerAction::CameraZoomOut) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
-            xz.z = (xz.z + 4.0 * time.delta_seconds()).abs();
+            xz.z = (xz.z + 4.0 * time.delta_secs()).abs();
             arm.offset = xz.clamp_length_max(18.0);
         }
     }
@@ -145,7 +129,7 @@ fn update_camera(
 
     let ray = window
         .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
         .unwrap_or_else(|| Ray3d {
             origin: follow_pos.translation,
             direction: follow_pos.down(),

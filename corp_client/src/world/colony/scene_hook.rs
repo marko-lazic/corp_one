@@ -1,13 +1,6 @@
+use crate::prelude::*;
 use avian3d::prelude::*;
-use bevy::{
-    ecs::system::EntityCommands,
-    log::info,
-    prelude::{Entity, StateScoped},
-    utils::default,
-};
-use bevy_mod_picking::prelude::*;
-
-use crate::{state::GameState, world::prelude::*};
+use bevy::prelude::*;
 use corp_shared::prelude::*;
 
 pub fn components(entity: Entity, name: &str, commands: &mut EntityCommands) {
@@ -16,7 +9,7 @@ pub fn components(entity: Entity, name: &str, commands: &mut EntityCommands) {
             VortexGate,
             Sensor,
             Collider::cuboid(1.0, 1.0, 1.0),
-            CollisionLayers::new([Layer::VortexGate], [Layer::Player]),
+            CollisionLayers::new([GameLayer::Sensor], [GameLayer::Player]),
             StateScoped(GameState::Playing),
         )),
         n if n.starts_with("VortexNode") => {
@@ -37,10 +30,12 @@ pub fn components(entity: Entity, name: &str, commands: &mut EntityCommands) {
         n if n.starts_with("BarrierControl11") | n.starts_with("BarrierControl12") => commands
             .insert((
                 BarrierControl::new("B1"),
-                PickableBundle::default(),
                 InteractionObjectType::DoorControl,
                 StateScoped(GameState::Playing),
-            )),
+            ))
+            .observe(|over: Trigger<Pointer<Over>>| {
+                info!("Over barrier control: {:?}", over);
+            }),
 
         n if n.starts_with("BarrierField2") => commands
             .insert((
@@ -56,10 +51,12 @@ pub fn components(entity: Entity, name: &str, commands: &mut EntityCommands) {
         n if n.starts_with("BarrierControl21") | n.starts_with("BarrierControl22") => commands
             .insert((
                 BarrierControl::new("B2"),
-                PickableBundle::default(),
                 InteractionObjectType::DoorControl,
                 StateScoped(GameState::Playing),
-            )),
+            ))
+            .observe(|over: Trigger<Pointer<Over>>| {
+                info!("Over barrier control: {:?}", over);
+            }),
         n if n.starts_with("EnergyNode1") => commands
             .insert((
                 TerritoryNodeBundle {
@@ -68,10 +65,12 @@ pub fn components(entity: Entity, name: &str, commands: &mut EntityCommands) {
                     security_level: SecurityLevel::Low,
                     ownership: OwnershipRegistry::new_permanent(Faction::EC),
                 },
-                PickableBundle::default(),
                 InteractionObjectType::TerritoryNode,
                 StateScoped(GameState::Playing),
             ))
+            .observe(|over: Trigger<Pointer<Over>>| {
+                info!("Over energy node: {:?}", over);
+            })
             .observe(on_use_territory_node_event),
         n if n.starts_with("Plant Tree") => commands.insert(StateScoped(GameState::Playing)),
         _ => commands,

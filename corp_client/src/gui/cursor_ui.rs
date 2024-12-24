@@ -1,12 +1,11 @@
+use crate::prelude::*;
 use bevy::prelude::*;
-
-use crate::{asset::FontAssets, state::GameState, world::prelude::UseEntity};
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorUi(Vec2);
 
 #[derive(Component)]
-struct UseText;
+struct UseLabelComponent;
 
 pub struct CursorPlugin;
 
@@ -24,16 +23,11 @@ impl Plugin for CursorPlugin {
 
 fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
     commands.spawn((
-        TextBundle::from_section(
-            "[E] Use",
-            TextStyle {
-                font: font_assets.default_font.clone(),
-                font_size: 20.0,
-                color: Color::WHITE,
-            },
-        )
-        .with_text_justify(JustifyText::Center),
-        UseText,
+        Text::new("[E] Use"),
+        UseLabelComponent,
+        TextFont::from_font(font_assets.default_font.clone()).with_font_size(20.0),
+        TextColor::WHITE,
+        TextLayout::new_with_justify(JustifyText::Center),
         StateScoped(GameState::Playing),
     ));
 }
@@ -49,25 +43,27 @@ fn update_cursor_ui_position(primary_query: Query<&Window>, mut cursor: ResMut<C
 }
 
 fn update_use_text(
-    r_use_entity: Res<UseEntity>,
+    r_hover_entities: Res<HoverEntities>,
     camera: Query<(&Camera, &GlobalTransform)>,
-    mut q_use_text: Query<(&mut Style, &mut Visibility), With<UseText>>,
+    mut q_use_text: Query<(&mut Node, &mut Visibility), With<UseLabelComponent>>,
 ) {
-    let Ok((camera, camera_transform)) = camera.get_single() else {
+    let Ok((camera, gt_camera)) = camera.get_single() else {
         return;
     };
-    if let Some(usable_entity) = r_use_entity.0.iter().last() {
-        let (_, hit_point) = usable_entity.get();
-        for (mut style, mut visibility) in &mut q_use_text {
+
+    if let Some(usable_entity) = r_hover_entities.iter().last() {
+        for (mut node, mut visibility) in &mut q_use_text {
             *visibility = Visibility::Visible;
-            if let Some(hit_point_screen) = camera.world_to_viewport(camera_transform, hit_point) {
-                style.left = Val::Px(hit_point_screen.x);
-                style.top = Val::Px(hit_point_screen.y);
+            if let Ok(hit_point_screen) =
+                camera.world_to_viewport(gt_camera, usable_entity.hit_point)
+            {
+                node.left = Val::Px(hit_point_screen.x);
+                node.top = Val::Px(hit_point_screen.y);
             }
         }
     }
 
-    if r_use_entity.0.is_empty() {
+    if r_hover_entities.is_empty() {
         let result = q_use_text.get_single_mut();
         if let Ok((_, mut visibility)) = result {
             *visibility = Visibility::Hidden;

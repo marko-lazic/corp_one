@@ -1,8 +1,4 @@
-use crate::{
-    asset::prelude::ASSET_PATH,
-    gui::{cursor_ui::CursorPlugin, debug::DebugGuiPlugin},
-    state::GameState,
-};
+use crate::{gui::cursor_ui::CursorPlugin, prelude::*};
 use bevy::prelude::*;
 
 pub struct GuiPlugin;
@@ -15,20 +11,11 @@ impl Plugin for GuiPlugin {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((Camera2dBundle::default(), StateScoped(GameState::Loading)));
-
+    commands.spawn((Camera2d, StateScoped(GameState::Loading)));
     commands.spawn((
-        TextBundle {
-            text: Text::from_section(
-                "Loading",
-                TextStyle {
-                    font: asset_server.load(ASSET_PATH.default_font),
-                    font_size: 40.0,
-                    color: Color::srgb(0.9, 0.9, 0.9),
-                },
-            ),
-            ..Default::default()
-        },
+        Text::new("Loading"),
+        TextFont::from_font(asset_server.load(ASSET_PATH.default_font)).with_font_size(40.0),
+        TextColor::from(Color::srgb(0.9, 0.9, 0.9)),
         StateScoped(GameState::Loading),
     ));
 }

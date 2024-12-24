@@ -5,8 +5,8 @@ use corp_shared::prelude::*;
 
 mod ray;
 
-#[derive(Resource, Default)]
-struct PlayerEntity(Option<Entity>);
+#[derive(Resource, Deref)]
+struct PlayerEntity(Entity);
 
 #[derive(Resource, Default)]
 pub struct TargetEntity(pub Option<Entity>);
@@ -16,8 +16,6 @@ struct InventoryText;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa::Sample4)
-        .init_resource::<PlayerEntity>()
         .init_resource::<TargetEntity>()
         .add_plugins((
             DefaultPlugins,
@@ -44,15 +42,14 @@ fn main() {
 
 fn setup(
     mut commands: Commands,
-    mut r_player_entity: ResMut<PlayerEntity>,
     r_asset_server: Res<AssetServer>,
     mut r_assets_mesh: ResMut<Assets<Mesh>>,
     mut r_assets_material: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(5.0, 5.0, 8.0).looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
-        ..Default::default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(5.0, 5.0, 8.0).looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
+    ));
 
     // spawn door
     let _ec_door = setup_door(
@@ -87,37 +84,29 @@ fn setup(
     // spawn player
     let player_entity = commands
         .spawn((
-            Transform::from_xyz(0.0, 0.0, 0.0),
-            GlobalTransform::default(),
             Player,
             Inventory::new(vec![hacking_tool_entity]),
             MemberOf {
                 faction: Faction::EC,
                 rank: Rank::R7,
             },
+            Transform::from_xyz(0.0, 0.0, 0.0),
         ))
         .id();
-    r_player_entity.0 = Some(player_entity);
+
+    commands.insert_resource(PlayerEntity(player_entity));
 
     // print inventory
     commands.spawn((
-        TextBundle {
-            text: Text::from_section(
-                "null",
-                TextStyle {
-                    font: r_asset_server.load("fonts/FiraMono-Medium.ttf"),
-                    font_size: 30.0,
-                    color: endesga::AQUA,
-                },
-            ),
-            style: Style {
-                left: Val::Px(100.0),
-                top: Val::Px(50.0),
-                ..default()
-            },
-            ..Default::default()
-        },
         InventoryText,
+        Text::new("null"),
+        Node {
+            top: Val::Px(100.0),
+            left: Val::Px(50.0),
+            ..default()
+        },
+        TextColor::from(endesga::AQUA),
+        TextFont::from_font(r_asset_server.load("fonts/FiraMono-Medium.ttf")).with_font_size(30.0),
     ));
 }
 
@@ -133,12 +122,9 @@ fn setup_door(
     let door_hs = door_size / 2.0;
     let ec_door = commands
         .spawn((
-            PbrBundle {
-                mesh: meshes.add(Cuboid::new(door_size, door_size, door_size)),
-                material: materials.add(endesga::SKY),
-                transform: door_position,
-                ..default()
-            },
+            Mesh3d(meshes.add(Cuboid::new(door_size, door_size, door_size))),
+            MeshMaterial3d(materials.add(endesga::SKY)),
+            door_position,
             DoorBundle {
                 security_level: level,
                 ownership: OwnershipRegistry::new_permanent(owner),
@@ -160,33 +146,35 @@ fn interaction_system(
     mut commands: Commands,
 ) {
     if r_keyboard_input.just_pressed(KeyCode::KeyE) {
-        if let Some(interactor) = r_player_entity.0 {
-            if let Some(target) = r_target_entity.0 {
-                commands.trigger_targets(UseEvent { user: interactor }, target);
-            }
+        if let Some(target) = r_target_entity.0 {
+            commands.trigger_targets(
+                UseEvent {
+                    user: **r_player_entity,
+                },
+                target,
+            );
         }
     }
 }
 
 fn show_inventory_system(
-    mut inventory_text_query: Query<&mut Text, With<InventoryText>>,
+    q_text: Single<Entity, With<InventoryText>>,
+    mut writer: TextUiWriter,
     mut inventories: Query<&mut Inventory, Changed<Inventory>>,
     q_name: Query<&Name>,
     r_player_entity: Res<PlayerEntity>,
 ) {
-    for mut text in &mut inventory_text_query {
-        if let Ok(inventory) = inventories.get_mut(r_player_entity.0.unwrap()) {
-            let mut items: Vec<String> = Vec::new();
-            for inventory_item in inventory.items() {
-                items.push(q_name.get(*inventory_item).unwrap().to_string().clone());
-            }
-            text.sections[0].value = format!("Inventory {:?}", items);
+    if let Ok(inventory) = inventories.get_mut(**r_player_entity) {
+        let mut items: Vec<String> = Vec::new();
+        for inventory_item in inventory.items() {
+            items.push(q_name.get(*inventory_item).unwrap().to_string().clone());
         }
+        *writer.text(*q_text, 0) = format!("Inventory {:?}", items);
     }
 }
 
 fn door_color_change_state_system(
-    mut doors: Query<(&DoorState, &Handle<StandardMaterial>), With<Door>>,
+    mut doors: Query<(&DoorState, &MeshMaterial3d<StandardMaterial>), With<Door>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (door_state, material) in &mut doors {

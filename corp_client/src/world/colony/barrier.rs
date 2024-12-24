@@ -1,4 +1,4 @@
-use crate::{state::GameState, world::prelude::*};
+use crate::prelude::*;
 use avian3d::{collision::CollisionLayers, prelude::LayerMask};
 use bevy::prelude::*;
 use corp_shared::prelude::*;
@@ -62,7 +62,7 @@ fn change_barrier_field_visibility_and_collision(
                 *visible = Visibility::Hidden;
                 commands
                     .entity(e_door)
-                    .insert(CollisionLayers::new([Layer::Sensor], [LayerMask::NONE]));
+                    .insert(CollisionLayers::new([GameLayer::Sensor], [LayerMask::NONE]));
             } else if *door_state == DoorState::Closed {
                 *visible = Visibility::Visible;
                 commands

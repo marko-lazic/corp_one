@@ -1,49 +1,20 @@
-use crate::{
-    asset::{Colony, ColonyConfig, MeshAssets, SceneAssets},
-    state::GameState,
-    world::{colony::scene_hook, prelude::*},
-};
+use crate::{prelude::*, world::colony::scene_hook};
 use avian3d::prelude::*;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     scene::SceneInstanceReady,
 };
-use bevy_mod_picking::prelude::*;
 use bevy_scene_hook::{HookedSceneBundle, SceneHook};
 use corp_shared::prelude::*;
 
 #[derive(Event)]
 pub struct ColonyLoadEvent(pub Handle<ColonyConfig>);
 
-#[derive(Resource)]
-struct ColonyScene(Entity);
-
 pub fn colony_loader_plugin(app: &mut App) {
     app.add_event::<ColonyLoadEvent>()
         .add_systems(OnEnter(GameState::LoadColony), load_colony_event)
-        .add_systems(
-            FixedUpdate,
-            check_colony_loaded
-                .run_if(in_state(GameState::LoadColony))
-                .run_if(resource_exists::<ColonyScene>),
-        )
-        .add_systems(OnEnter(GameState::Playing), update_lights);
-}
-
-fn check_colony_loaded(
-    mut ev_scene_instance_ready: EventReader<SceneInstanceReady>,
-    mut ev_player_spawn: EventWriter<PlayerSpawnEvent>,
-    r_colony_scene: Res<ColonyScene>,
-    r_physics_systems: Res<PhysicsSystems>,
-    mut commands: Commands,
-) {
-    for event in ev_scene_instance_ready.read() {
-        if event.parent == r_colony_scene.0 {
-            commands.run_system(r_physics_systems.setup_colliders);
-            ev_player_spawn.send(PlayerSpawnEvent::SpawnRandom);
-        }
-    }
+        .add_systems(OnExit(GameState::LoadColony), update_lights);
 }
 
 fn load_colony_event(
@@ -60,8 +31,8 @@ fn load_colony_event(
     let Some(colony_load_event) = ev_colony_load.read().last() else {
         return;
     };
-
     let current_colony = r_colony_config.get(&colony_load_event.0).unwrap();
+    info!("Setup colony {:?}", current_colony);
 
     let colony_scene = match current_colony.name {
         Colony::Cloning => r_scene_assets.cloning.clone(),
@@ -71,14 +42,11 @@ fn load_colony_event(
     };
 
     // spawn scene
-    let colony_scene = commands
+    commands
         .spawn((
             Name::new("Colony"),
             HookedSceneBundle {
-                scene: SceneBundle {
-                    scene: colony_scene,
-                    ..default()
-                },
+                scene: SceneRoot(colony_scene),
                 hook: SceneHook::new(move |entity_ref, commands| {
                     if let Some(name) = entity_ref.get::<Name>().map(|t| t.as_str()) {
                         scene_hook::components(entity_ref.id(), name, commands)
@@ -87,9 +55,16 @@ fn load_colony_event(
             },
             StateScoped(GameState::Playing),
         ))
-        .id();
-
-    commands.insert_resource(ColonyScene(colony_scene));
+        .observe(
+            |_trigger: Trigger<SceneInstanceReady>,
+             mut commands: Commands,
+             mut ev_player_spawn: EventWriter<PlayerSpawnEvent>,
+             r_physics_systems: Res<PhysicsSystems>| {
+                info!("Colony loaded");
+                commands.run_system(r_physics_systems.setup_colliders);
+                ev_player_spawn.send(PlayerSpawnEvent::SpawnRandom);
+            },
+        );
 
     let e_hacking_tool = commands
         .spawn((
@@ -101,55 +76,51 @@ fn load_colony_event(
     commands
         .spawn((
             Name::new("Backpack"),
-            SceneBundle {
-                scene: r_mesh_assets.low_poly_backpack.clone(),
-                transform: Transform::from_xyz(6.0, 0.5, -3.0).with_scale(Vec3::splat(0.2)),
-                ..default()
-            },
+            SceneRoot(r_mesh_assets.low_poly_backpack.clone()),
+            Transform::from_xyz(6.0, 0.5, -3.0).with_scale(Vec3::splat(0.2)),
             BackpackBundle::with_items(vec![e_hacking_tool]),
-            PickableBundle::default(),
             InteractionObjectType::Backpack,
             Collider::cuboid(3.0, 12.0, 3.0),
             Sensor,
+            RigidBody::Static,
+            CollisionLayers::new([GameLayer::Sensor], [GameLayer::Player]),
             StateScoped(GameState::Playing),
         ))
         .observe(on_use_backpack_event)
-        .observe(on_use_backpack_action_event);
+        .observe(on_use_backpack_action_event)
+        .observe(|over: Trigger<Pointer<Over>>| {
+            info!("Over backpack: {:?}", over);
+        });
 
-    commands.spawn((
-        Name::new("Debug Cube"),
-        MaterialMeshBundle {
-            mesh: r_meshes.add(Cuboid::new(5.0, 5.0, 5.0)),
-            material: r_force_field_materials.add(ForceFieldMaterial {}),
-            transform: Transform::from_xyz(10., 0., 0.),
-            ..default()
-        },
-        NotShadowReceiver,
-        NotShadowCaster,
-        RigidBody::Static,
-        Collider::cuboid(5.0, 5.0, 5.0),
-        PickableBundle::default(),
-        On::<Pointer<Click>>::run(|event: Listener<Pointer<Click>>| {
-            info!("Clicked on entity {:?}", event.target);
-        }),
-        StateScoped(GameState::Playing),
-    ));
+    commands
+        .spawn((
+            Name::new("Debug Cube"),
+            Mesh3d(r_meshes.add(Cuboid::new(5.0, 5.0, 5.0))),
+            MeshMaterial3d(r_force_field_materials.add(ForceFieldMaterial {})),
+            Transform::from_xyz(10., 0., 0.),
+            NotShadowReceiver,
+            NotShadowCaster,
+            RigidBody::Static,
+            Collider::cuboid(5.0, 5.0, 5.0),
+            StateScoped(GameState::Playing),
+        ))
+        .observe(|click: Trigger<Pointer<Click>>| {
+            info!("Clicked on debug cube {:?}", click.target);
+        });
 
     commands.spawn((
         Name::new("Debug Ground"),
-        PbrBundle {
-            mesh: r_meshes.add(Plane3d::default().mesh().size(100.0, 100.0)),
-            transform: Transform::from_translation(Vec3::new(4., -0.01, 4.)),
-            material: r_materials.add(StandardMaterial {
-                base_color: Color::WHITE,
-                perceptual_roughness: 0.0,
-                reflectance: 0.0,
-                metallic: 0.0,
-                ..default()
-            }),
+        Mesh3d(r_meshes.add(Plane3d::default().mesh().size(100.0, 100.0))),
+        Transform::from_translation(Vec3::new(4., -0.01, 4.)),
+        MeshMaterial3d(r_materials.add(StandardMaterial {
+            base_color: Color::WHITE,
+            perceptual_roughness: 0.0,
+            reflectance: 0.0,
+            metallic: 0.0,
             ..default()
-        },
+        })),
         RigidBody::Static,
+        CollisionLayers::new([GameLayer::Fixed], [GameLayer::Player]),
         Collider::cuboid(100.0, 0.01, 100.0),
         StateScoped(GameState::Playing),
     ));
@@ -161,10 +132,9 @@ fn load_colony_event(
             Zone::from(*zone_asset),
             Sensor,
             Collider::cuboid(zone_asset.size, 2.0, zone_asset.size),
-            SpatialBundle::from_transform(Transform::from_translation(
-                zone_asset.position + Vec3::Y,
-            )),
-            CollisionLayers::new([Layer::Zone], [Layer::Player]),
+            Transform::from_translation(zone_asset.position + Vec3::Y),
+            Visibility::default(),
+            CollisionLayers::new([GameLayer::Zone], [GameLayer::Player]),
             StateScoped(GameState::Playing),
         ));
     }

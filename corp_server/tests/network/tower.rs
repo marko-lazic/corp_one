@@ -148,8 +148,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::tower::{MessagePack, Timeout};
     use bevy::{log::LogPlugin, prelude::*, tasks::IoTaskPool};
     use std::time::Duration;
+    use tower::{Service, ServiceBuilder};
 
     #[test]
     fn bevy_tasks_block_on() {
@@ -188,21 +190,21 @@ mod tests {
     }
     #[test]
     fn do_test() {
-        // async_io::block_on(async {
-        //     let mp_service = MessagePack::new();
-        //     let timeout_service = Timeout::new(mp_service, Duration::from_millis(100));
-        //     let mut service = ServiceBuilder::new().service(timeout_service);
-        //
-        //     match service.call("Hello World!").await {
-        //         Ok(response) => {
-        //             println!("Service response ok: {:?}", response);
-        //         }
-        //         Err(err) => {
-        //             println!("Service response err: {:?}", err);
-        //         }
-        //     }
-        //
-        //     assert_eq!(1 + 1, 2);
-        // });
+        async_io::block_on(async {
+            let mp_service = MessagePack::new();
+            let timeout_service = Timeout::new(mp_service, Duration::from_millis(100));
+            let mut service = ServiceBuilder::new().service(timeout_service);
+
+            match service.call("Hello World!").await {
+                Ok(response) => {
+                    println!("Service response ok: {:?}", response);
+                }
+                Err(err) => {
+                    println!("Service response err: {:?}", err);
+                }
+            }
+
+            assert_eq!(1 + 1, 2);
+        });
     }
 }

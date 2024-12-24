@@ -4,7 +4,7 @@ fn main() {
     App::new()
         .add_plugins((MinimalPlugins, LogPlugin::default()))
         .add_systems(Startup, startup)
-        .observe(wave_spawner)
+        .add_observer(wave_spawner)
         .insert_resource(Time::<Fixed>::from_seconds(0.5))
         .add_systems(FixedUpdate, update_loop)
         .run();

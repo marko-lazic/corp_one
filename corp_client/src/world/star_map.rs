@@ -1,6 +1,5 @@
+use crate::prelude::*;
 use bevy::prelude::*;
-
-use crate::{asset::TextureAssets, state::GameState};
 
 pub struct StarMapPlugin;
 
@@ -12,13 +11,10 @@ impl Plugin for StarMapPlugin {
 
 fn setup_star_map(mut commands: Commands, texture_assets: Res<TextureAssets>) {
     // Orthographic camera is needed for showing SpriteBundle image
-    commands.spawn((Camera2dBundle::default(), StateScoped(GameState::StarMap)));
+    commands.spawn((Camera2d, StateScoped(GameState::StarMap)));
     commands.spawn((
         Name::new("Star Map Background"),
-        SpriteBundle {
-            texture: texture_assets.nebula.clone(),
-            ..Default::default()
-        },
+        Sprite::from_image(texture_assets.nebula.clone()),
         StateScoped(GameState::StarMap),
     ));
 }

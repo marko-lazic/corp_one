@@ -1,10 +1,7 @@
-use std::time::Duration;
-
+use crate::prelude::*;
 use bevy::{animation::animate_targets, prelude::*};
-
 use corp_shared::prelude::Player;
-
-use crate::{asset::PlayerAssets, state::GameState, world::ccc::CharacterMovement};
+use std::time::Duration;
 
 struct MannequinAnimationNodeIndex {
     idle: AnimationNodeIndex,
@@ -14,7 +11,7 @@ struct MannequinAnimationNodeIndex {
 #[derive(Resource)]
 struct MannequinAnimations {
     node: MannequinAnimationNodeIndex,
-    graph: Handle<AnimationGraph>,
+    graph: AnimationGraphHandle,
 }
 
 pub struct AnimatorPlugin;
@@ -53,7 +50,7 @@ fn setup_animation_graph(
 
     commands.insert_resource(MannequinAnimations {
         node: MannequinAnimationNodeIndex { idle, run },
-        graph: handle,
+        graph: AnimationGraphHandle(handle),
     });
 }
 

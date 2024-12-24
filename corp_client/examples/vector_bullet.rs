@@ -3,7 +3,6 @@ use bevy_inspector_egui::{prelude::*, quick::ResourceInspectorPlugin};
 
 fn main() {
     App::new()
-        .insert_resource(Msaa::Sample4)
         .init_resource::<InspectorData>()
         .init_resource::<GameData>()
         .init_gizmo_group::<MyRoundGizmos>()
@@ -67,23 +66,22 @@ fn setup(
     mut game: ResMut<GameData>,
 ) {
     // camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 15.0)),
-        ..Default::default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_translation(Vec3::new(0.0, 0.0, 15.0)),
+    ));
 
     // sphere
     let sphere_id = commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Sphere::new(0.1).mesh().ico(7).unwrap()),
-            material: materials.add(StandardMaterial {
+        .spawn((
+            Mesh3d(meshes.add(Sphere::new(0.1).mesh().ico(7).unwrap())),
+            MeshMaterial3d(materials.add(StandardMaterial {
                 base_color: Color::LinearRgba(LinearRgba::GREEN),
                 ..Default::default()
-            }),
-            transform: Transform::from_xyz(1.5, 1.0, 1.5),
-            ..Default::default()
-        })
-        .insert(Movable)
+            })),
+            Transform::from_xyz(1.5, 1.0, 1.5),
+            Movable,
+        ))
         .id();
 
     game.sphere = Some(sphere_id);

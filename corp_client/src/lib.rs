@@ -1,5 +1,3 @@
-pub use client::*;
-
 mod asset;
 mod client;
 mod gui;
@@ -9,7 +7,7 @@ mod util;
 mod world;
 
 pub mod prelude {
-    pub use crate::{
+    pub use super::{
         asset::prelude::*, client::*, gui::prelude::*, sound::prelude::*, state::prelude::*,
         world::prelude::*,
     };

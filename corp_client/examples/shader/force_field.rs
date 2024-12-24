@@ -41,64 +41,45 @@ fn setup(
     mut depth_materials: ResMut<Assets<PrepassOutputMaterial>>,
 ) {
     // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Rectangle::from_size(Vec2::splat(5.0))),
-        material: materials.add(Color::from(MEDIUM_SEA_GREEN)),
-        transform: Transform::from_rotation(Quat::from_rotation_x(-FRAC_PI_2)),
-        ..default()
-    });
+    commands.spawn((
+        Mesh3d(meshes.add(Rectangle::from_size(Vec2::splat(5.0)))),
+        MeshMaterial3d(materials.add(Color::from(MEDIUM_SEA_GREEN))),
+        Transform::from_rotation(Quat::from_rotation_x(-FRAC_PI_2)),
+    ));
     //cube
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Cuboid::from_size(Vec3::splat(0.5))),
-        material: materials.add(Color::WHITE),
-        transform: Transform::from_xyz(0.0, 0.25, 0.0),
-        ..default()
-    });
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::from_size(Vec3::splat(0.5)))),
+        MeshMaterial3d(materials.add(Color::WHITE)),
+        Transform::from_xyz(0.0, 0.25, 0.0),
+    ));
     // sphere
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Sphere::new(1.25).mesh().uv(64, 64)),
-            material: force_field_materials.add(ForceFieldMaterial {}),
-            transform: Transform::from_xyz(0.0, 0.5, 0.0)
-                .with_rotation(Quat::from_axis_angle(Vec3::X, std::f32::consts::FRAC_PI_2)),
-            ..default()
-        },
+        Mesh3d(meshes.add(Sphere::new(1.25).mesh().uv(64, 64))),
+        MeshMaterial3d(force_field_materials.add(ForceFieldMaterial {})),
+        Transform::from_xyz(0.0, 0.5, 0.0)
+            .with_rotation(Quat::from_axis_angle(Vec3::X, std::f32::consts::FRAC_PI_2)),
         NotShadowReceiver,
         NotShadowCaster,
     ));
     // Quad to show the depth prepass
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Rectangle::from_size(Vec2::new(20.0, 20.0))),
-            material: depth_materials.add(PrepassOutputMaterial {
-                settings: ShowPrepassSettings::default(),
-            }),
-            transform: Transform::from_xyz(-0.75, 1.25, 3.0)
-                .looking_at(Vec3::new(2.0, -2.5, -5.0), Vec3::Y),
-            ..default()
-        },
+        Mesh3d(meshes.add(Rectangle::from_size(Vec2::new(20.0, 20.0)))),
+        MeshMaterial3d(depth_materials.add(PrepassOutputMaterial {
+            settings: ShowPrepassSettings::default(),
+        })),
+        Transform::from_xyz(-0.75, 1.25, 3.0).looking_at(Vec3::new(2.0, -2.5, -5.0), Vec3::Y),
         NotShadowCaster,
     ));
     // light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1500.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
-    });
+    commands.spawn((PointLight::default(), Transform::from_xyz(4.0, 8.0, 4.0)));
     // camera
     commands.spawn((
-        Camera3dBundle {
-            camera: Camera {
-                hdr: true,
-                ..default()
-            },
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Camera3d::default(),
+        Camera {
+            hdr: true,
             ..default()
         },
+        Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         DepthPrepass,
         // This will generate a texture containing world normals (with normal maps applied)
         NormalPrepass,
@@ -162,14 +143,13 @@ impl Material for PrepassOutputMaterial {
 fn toggle_prepass_view(
     mut prepass_view: Local<u32>,
     keycode: Res<ButtonInput<KeyCode>>,
-    material_handle: Query<&Handle<PrepassOutputMaterial>>,
+    material_handle: Single<&MeshMaterial3d<PrepassOutputMaterial>>,
     mut materials: ResMut<Assets<PrepassOutputMaterial>>,
 ) {
     if keycode.just_pressed(KeyCode::Space) {
         *prepass_view = (*prepass_view + 1) % 4;
 
-        let handle = material_handle.single();
-        let mat = materials.get_mut(handle).unwrap();
+        let mat = materials.get_mut(*material_handle).unwrap();
         mat.settings.show_depth = (*prepass_view == 1) as u32;
         mat.settings.show_normals = (*prepass_view == 2) as u32;
         mat.settings.show_motion_vectors = (*prepass_view == 3) as u32;

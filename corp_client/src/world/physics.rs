@@ -8,13 +8,14 @@ use bevy::{
 use bevy_tnua::prelude::*;
 use bevy_tnua_avian3d::TnuaAvian3dPlugin;
 
-#[derive(PhysicsLayer, Clone, Copy, Debug)]
-pub enum Layer {
-    Player = 0b0001,
-    Zone = 0b0010,
-    VortexGate = 0b0011,
-    Sensor = 0b0100,
-    Fixed = 0b0101,
+#[derive(PhysicsLayer, Default, Clone, Copy, Debug)]
+pub enum GameLayer {
+    #[default]
+    Default,
+    Player,
+    Zone,
+    Sensor,
+    Fixed,
 }
 
 #[derive(Resource)]
@@ -32,11 +33,11 @@ impl Plugin for WorldPhysicsPlugin {
             TnuaControllerPlugin::new(FixedUpdate),
             TnuaAvian3dPlugin::new(FixedUpdate),
         ))
-        .add_systems(Startup, setup);
+        .add_systems(Startup, register_system);
     }
 }
 
-fn setup(world: &mut World) {
+fn register_system(world: &mut World) {
     let setup_colliders = world.register_system(setup_colliders);
     world.insert_resource(PhysicsSystems { setup_colliders });
 }
@@ -46,7 +47,7 @@ fn setup_colliders(
     q_added_name: Query<(Entity, &Name)>,
     q_children: Query<&Children>,
     r_meshes: Res<Assets<Mesh>>,
-    r_mesh_handles: Query<&Handle<Mesh>>,
+    q_meshes: Query<&Mesh3d>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
 ) {
     for (entity, name) in &q_added_name {
@@ -55,18 +56,20 @@ fn setup_colliders(
             .any(|&s| name.to_lowercase().contains(s))
         {
             for (collider_entity, mesh) in
-                Mesh::search_in_children(entity, &q_children, &r_meshes, &r_mesh_handles)
+                Mesh::search_in_children(entity, &q_children, &r_meshes, &q_meshes)
             {
                 let collider = Collider::trimesh_from_mesh(&mesh)
                     .expect("Failed to initialize a collider with a Mesh.");
 
-                commands
-                    .entity(collider_entity)
-                    .insert((RigidBody::Static, collider));
+                commands.entity(collider_entity).insert((
+                    RigidBody::Static,
+                    collider,
+                    CollisionLayers::new([GameLayer::Fixed], [GameLayer::Player]),
+                ));
             }
         } else if name.to_lowercase().contains("barrierfield") {
             for (collider_entity, mesh) in
-                Mesh::search_in_children(entity, &q_children, &r_meshes, &r_mesh_handles)
+                Mesh::search_in_children(entity, &q_children, &r_meshes, &q_meshes)
             {
                 let rapier_collider = Collider::trimesh_from_mesh(&mesh)
                     .expect("Failed to initialize a collider with a Mesh.");
@@ -75,19 +78,15 @@ fn setup_colliders(
                     .entity(collider_entity)
                     .insert((RigidBody::Kinematic, rapier_collider));
 
+                let mesh_3d = q_meshes.get(collider_entity).unwrap().clone();
+
                 // Shaders should be refactored out of physics plugin
                 commands.entity(collider_entity).insert((
-                    MaterialMeshBundle {
-                        mesh: r_mesh_handles.get(collider_entity).unwrap().clone(),
-                        material: r_force_field_materials.add(ForceFieldMaterial {}),
-                        ..default()
-                    },
+                    mesh_3d,
+                    MeshMaterial3d(r_force_field_materials.add(ForceFieldMaterial {})),
                     NotShadowReceiver,
                     NotShadowCaster,
                 ));
-                commands
-                    .entity(collider_entity)
-                    .remove::<Handle<StandardMaterial>>();
             }
         }
     }

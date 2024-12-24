@@ -17,7 +17,7 @@ pub fn cast_ray_system(
     // We will color in read the colliders hovered by the mouse.
     for (camera, camera_transform) in &q_camera {
         // First, compute a ray from the mouse position.
-        let Some(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
+        let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
             return;
         };
 
@@ -27,7 +27,7 @@ pub fn cast_ray_system(
             ray.direction.into(),
             f32::MAX,
             true,
-            SpatialQueryFilter::default(),
+            &SpatialQueryFilter::default(),
         ) {
             r_target_entity.0 = Some(hit_data.entity);
         } else {
@@ -87,11 +87,10 @@ mod tests {
     fn setup_camera(app: &mut App) -> Entity {
         let entity = app
             .world_mut()
-            .spawn(Camera3dBundle {
-                transform: Transform::from_xyz(0.0, 0.0, 1.0)
-                    .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
-                ..Default::default()
-            })
+            .spawn((
+                Camera3d::default(),
+                Transform::from_xyz(0.0, 0.0, 1.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+            ))
             .id();
         entity
     }
@@ -106,7 +105,7 @@ mod tests {
         let entity = app
             .world_mut()
             .spawn((
-                TransformBundle::from(Transform::from_xyz(0.0, 0.0, 0.0)),
+                Transform::from(Transform::from_xyz(0.0, 0.0, 0.0)),
                 RigidBody::Static,
                 Collider::cuboid(length, length, length),
             ))

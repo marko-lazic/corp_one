@@ -1,4 +1,4 @@
-use crate::prelude::{AssetLoadingPlugin, GameStatePlugin, SoundPlugin, WorldPlugin};
+use crate::prelude::*;
 use bevy::prelude::*;
 
 pub struct CorpClientPlugin;
