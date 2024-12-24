@@ -1,4 +1,3 @@
-pub use asset_loading::*;
 pub use colony_configs::*;
 
 mod asset_loading;
