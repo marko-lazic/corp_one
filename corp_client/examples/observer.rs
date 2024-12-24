@@ -21,19 +21,19 @@ fn startup(mut commands: Commands) {
         .observe(on_use_event_market_terminal)
         .id();
 
-    commands.trigger_targets(UseEvent, door);
-    commands.trigger_targets(UseEvent, energy_node);
-    commands.trigger_targets(UseEvent, market_terminal);
-    commands.trigger_targets(UseEvent, vec![door, energy_node, market_terminal]);
+    commands.trigger_targets(TriggerEvent, door);
+    commands.trigger_targets(TriggerEvent, energy_node);
+    commands.trigger_targets(TriggerEvent, market_terminal);
+    commands.trigger_targets(TriggerEvent, vec![door, energy_node, market_terminal]);
     commands.trigger(NextWave);
     commands.trigger(NextWave);
     commands.trigger(NextWave);
 }
 
 #[derive(Debug, Event)]
-struct UseEvent;
+struct TriggerEvent;
 
-fn on_use_event_door(trigger: Trigger<UseEvent>) {
+fn on_use_event_door(trigger: Trigger<TriggerEvent>) {
     info!(
         "Using energy door {:?} {:?}",
         trigger.entity(),
@@ -41,7 +41,7 @@ fn on_use_event_door(trigger: Trigger<UseEvent>) {
     );
 }
 
-fn on_use_event_energy_node(trigger: Trigger<UseEvent>) {
+fn on_use_event_energy_node(trigger: Trigger<TriggerEvent>) {
     info!(
         "Using energy node {:?} {:?}",
         trigger.entity(),
@@ -49,7 +49,7 @@ fn on_use_event_energy_node(trigger: Trigger<UseEvent>) {
     );
 }
 
-fn on_use_event_market_terminal(trigger: Trigger<UseEvent>) {
+fn on_use_event_market_terminal(trigger: Trigger<TriggerEvent>) {
     info!(
         "Using market terminal {:?} {:?}",
         trigger.entity(),
