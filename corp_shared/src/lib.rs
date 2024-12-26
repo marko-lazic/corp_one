@@ -4,6 +4,7 @@ use bevy::math::Vec3;
 
 pub mod asset;
 pub mod items;
+pub mod network;
 pub mod stats;
 pub mod util;
 pub mod world;
@@ -16,6 +17,7 @@ pub const SERVER_PORT: u16 = 9001;
 pub const CLONING_SPAWN_POSITION: Vec3 = Vec3::from_array([0.; 3]);
 
 pub mod prelude {
+    pub use super::network::prelude::*;
     pub use crate::{
         asset::*,
         items::{inventory::*, item::*},

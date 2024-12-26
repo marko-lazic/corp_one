@@ -1,14 +1,7 @@
-use bevy::app::{App, Plugin};
+use crate::{prelude::*, world::colony::object_interaction::ObjectInteractionPlugin};
+use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_scene_hook::HookPlugin;
-
-use crate::{
-    asset::ColonyConfig,
-    world::colony::{
-        colony_loader::colony_loader_plugin, object_interaction::ObjectInteractionPlugin,
-        vortex::VortexPlugin,
-    },
-};
 
 pub struct ColonyPlugin;
 

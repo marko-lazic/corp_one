@@ -1,8 +1,8 @@
-use bevy::prelude::*;
-
 use crate::prelude::*;
+use bevy::prelude::*;
+use lightyear::prelude::{Deserialize, Serialize};
 
-#[derive(Component)]
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Backpack;
 
 #[derive(Bundle)]

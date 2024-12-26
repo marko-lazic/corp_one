@@ -18,5 +18,6 @@ default-members = [
 
 [workspace.dependencies]
 bevy = { version = "0.15.0", default-features = false }
-
+lightyear = { version = "0.18.0", default-features = false }
+serde = { version = "1", default-features = false }
 

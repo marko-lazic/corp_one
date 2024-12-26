@@ -1,15 +1,16 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-pub struct CorpClientPlugin;
+pub struct BackendPlugin;
 
-impl Plugin for CorpClientPlugin {
+impl Plugin for BackendPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             GameStatePlugin,
             AssetLoadingPlugin,
             SoundPlugin,
             WorldPlugin,
+            ClientNetPlugin,
         ));
     }
 }

@@ -7,8 +7,7 @@ pub struct DbPlugin;
 
 impl Plugin for DbPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(ServerState::Load), database_setup)
-            .add_systems(OnEnter(ServerState::Serve), light_year_and_session);
+        app.add_systems(OnEnter(ServerState::Load), database_setup);
     }
 }
 
@@ -49,8 +48,4 @@ async fn fetch_players(pool: Arc<SqlitePool>) -> Result<Vec<table::Player>, sqlx
         .fetch_all(&*pool)
         .await?;
     Ok(players)
-}
-
-fn light_year_and_session() {
-    // Testing with lightyear crate.
 }
