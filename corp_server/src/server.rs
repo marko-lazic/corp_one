@@ -26,19 +26,26 @@ impl Plugin for ServerNetPlugin {
 #[derive(Resource, Default)]
 pub struct ClientEntityMap(HashMap<ClientId, Entity>);
 
-fn backpack_spawner(mut commands: Commands, mut rng: ResMut<GlobalEntropy<WyRand>>) {
+fn backpack_spawner(
+    mut commands: Commands,
+    q_backpacks: Query<&Backpack>,
+    mut rng: ResMut<GlobalEntropy<WyRand>>,
+) {
+    const MAX_BACKPACKS: usize = 10;
+    if q_backpacks.iter().count() > MAX_BACKPACKS {
+        return;
+    }
+
     let x: f32 = rng.gen_range(-10.0..=10.0);
     let z: f32 = rng.gen_range(-10.0..=10.0);
 
     let e_item = commands.spawn((HackingTool, Replicate::default())).id();
-    let entity = commands
-        .spawn((
-            Backpack,
-            Inventory::new(vec![e_item]),
-            Transform::from_xyz(x, 0.1, z),
-            Replicate::default(),
-        ))
-        .id();
+    commands.spawn((
+        Backpack,
+        Inventory::new(vec![e_item]),
+        Transform::from_xyz(x, 0.1, z),
+        Replicate::default(),
+    ));
 }
 
 pub(crate) fn handle_disconnections(

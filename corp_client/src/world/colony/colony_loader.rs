@@ -66,25 +66,6 @@ fn load_colony_event(
             },
         );
 
-    let e_hacking_tool = commands
-        .spawn((HackingTool, StateScoped(GameState::Playing)))
-        .id();
-
-    commands
-        .spawn((
-            Backpack,
-            Inventory::new(vec![e_hacking_tool]),
-            SceneRoot(r_mesh_assets.low_poly_backpack.clone()),
-            Transform::from_xyz(6.0, 0.5, -3.0),
-            InteractionObjectType::Backpack,
-            StateScoped(GameState::Playing),
-        ))
-        .observe(on_use_backpack_event)
-        .observe(on_use_backpack_action_event)
-        .observe(|over: Trigger<Pointer<Over>>| {
-            info!("Over backpack: {:?}", over);
-        });
-
     commands
         .spawn((
             Name::new("Debug Cube"),
