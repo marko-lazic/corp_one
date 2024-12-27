@@ -13,6 +13,10 @@ use lightyear::prelude::{Deserialize, Serialize};
     Sensor,
     CollisionLayers(init_backpack_collision_layers),
 )]
+#[cfg_attr(feature = "client", require(
+    InteractionObjectType(|| InteractionObjectType::Backpack),
+    StateScoped<GameState>(|| StateScoped(GameState::Playing)))
+)]
 pub struct Backpack;
 
 pub fn init_backpack_collider() -> Collider {

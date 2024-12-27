@@ -5,6 +5,7 @@ use bevy::math::Vec3;
 pub mod asset;
 pub mod items;
 pub mod network;
+mod state;
 pub mod stats;
 pub mod util;
 pub mod world;
@@ -21,6 +22,7 @@ pub mod prelude {
     pub use crate::{
         asset::*,
         items::{inventory::*, item::*},
+        state::prelude::*,
         stats::health::*,
         util::test_utils::*,
         world::{

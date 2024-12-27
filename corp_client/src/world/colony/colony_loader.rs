@@ -23,7 +23,6 @@ fn load_colony_event(
     r_scene_assets: Res<SceneAssets>,
     mut r_meshes: ResMut<Assets<Mesh>>,
     mut r_materials: ResMut<Assets<StandardMaterial>>,
-    r_mesh_assets: Res<MeshAssets>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
     mut commands: Commands,
 ) {

@@ -5,7 +5,7 @@ authors = ["marko.lazic <markolazic@protonmail.com>"]
 edition = "2021"
 
 [dependencies]
-corp_shared = { path = "../corp_shared" }
+corp_shared = { path = "../corp_shared", features = ["client"] }
 bevy = { workspace = true, features = [
     "bevy_asset",
     "bevy_ui",

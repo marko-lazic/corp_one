@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 use bevy_tnua::{builtins::TnuaBuiltinWalk, prelude::TnuaController};
-use corp_shared::prelude::{Health, Player};
+use corp_shared::prelude::*;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum CharacterSet {

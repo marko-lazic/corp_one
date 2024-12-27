@@ -1,14 +1,5 @@
 use bevy::prelude::*;
-
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-pub enum GameState {
-    #[default]
-    Loading,
-    StarMap,
-    LoadColony,
-    Playing,
-}
-
+use corp_shared::prelude::GameState;
 pub struct GameStatePlugin;
 
 impl Plugin for GameStatePlugin {

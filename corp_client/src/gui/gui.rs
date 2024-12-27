@@ -1,5 +1,6 @@
-use crate::{gui::cursor_ui::CursorPlugin, prelude::*};
+use crate::prelude::*;
 use bevy::prelude::*;
+use corp_shared::prelude::*;
 
 pub struct GuiPlugin;
 

@@ -8,7 +8,7 @@ use bevy::{
     render::camera::{Exposure, PhysicalCameraParameters},
 };
 use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
-use corp_shared::prelude::Player;
+use corp_shared::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]

@@ -3,5 +3,5 @@ mod debug;
 mod gui;
 
 pub mod prelude {
-    pub use super::{debug::*, gui::*};
+    pub use super::{cursor_ui::*, debug::*, gui::*};
 }

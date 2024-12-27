@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::{app::AppExit, prelude::*, utils::HashSet};
-use corp_shared::prelude::{GameLayer, Health, InteractionObjectType, Inventory, Player, UseEvent};
+use corp_shared::prelude::*;
 use leafwing_input_manager::prelude::*;
 use std::{f32::consts::PI, hash::Hash};
 

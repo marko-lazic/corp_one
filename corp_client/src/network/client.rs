@@ -1,4 +1,3 @@
-use crate::prelude::GameState;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 pub use lightyear::prelude::client::*;

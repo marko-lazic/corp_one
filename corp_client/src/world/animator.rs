@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::{animation::animate_targets, prelude::*};
-use corp_shared::prelude::Player;
+use corp_shared::prelude::*;
 use std::time::Duration;
 
 struct MannequinAnimationNodeIndex {
