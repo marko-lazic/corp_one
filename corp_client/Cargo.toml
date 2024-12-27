@@ -6,21 +6,39 @@ edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-bevy = { workspace = true, features = ["bevy_asset", "bevy_ui", "bevy_text", "animation", "tonemapping_luts", "bevy_animation", "bevy_winit", "dynamic_linking", "png", "bevy_gltf"] }
+bevy = { workspace = true, features = [
+    "bevy_asset",
+    "bevy_ui",
+    "bevy_text",
+    "animation",
+    "tonemapping_luts",
+    "bevy_animation",
+    "bevy_winit",
+    "dynamic_linking",
+    "png",
+    "bevy_gltf",
+] }
+avian3d = { workspace = true, features = ["default", "enhanced-determinism"] }
 lightyear = { workspace = true, features = ["webtransport", "leafwing"] }
 serde = { workspace = true }
 leafwing-input-manager = { version = "0.16.0" }
 bevy-inspector-egui = "0.28.0"
-bevy_asset_loader = { version = "0.22.0", default-features = false, features = ["3d"] }
-bevy_kira_audio = { version = "0.21.0", default-features = false, features = ["wav", "ogg"] }
+bevy_asset_loader = { version = "0.22.0", default-features = false, features = [
+    "3d",
+] }
+bevy_kira_audio = { version = "0.21.0", default-features = false, features = [
+    "wav",
+    "ogg",
+] }
 bevy_common_assets = { version = "0.12.0", features = ["ron"] }
-avian3d = { version = "0.2.0" }
 bevy-tnua = "0.21.0"
 bevy-tnua-avian3d = "0.2.0"
-bevy_dolly = { version = "0.0.5", default-features = false, features = ["drivers"] }
+bevy_dolly = { version = "0.0.5", default-features = false, features = [
+    "drivers",
+] }
 bevy-scene-hook = { git = "https://github.com/AlephCubed/bevy-scene-hook.git", branch = "main" }
 bevy_framepace = "0.18.0"
-rand = "0.8.5"
+rand = { workspace = true }
 
 [dev-dependencies]
 bevy_panorbit_camera = "0.21.1"

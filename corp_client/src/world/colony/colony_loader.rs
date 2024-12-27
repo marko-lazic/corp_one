@@ -67,23 +67,16 @@ fn load_colony_event(
         );
 
     let e_hacking_tool = commands
-        .spawn((
-            HackingToolBundle::default(),
-            StateScoped(GameState::Playing),
-        ))
+        .spawn((HackingTool, StateScoped(GameState::Playing)))
         .id();
 
     commands
         .spawn((
-            Name::new("Backpack"),
+            Backpack,
+            Inventory::new(vec![e_hacking_tool]),
             SceneRoot(r_mesh_assets.low_poly_backpack.clone()),
-            Transform::from_xyz(6.0, 0.5, -3.0).with_scale(Vec3::splat(0.2)),
-            BackpackBundle::with_items(vec![e_hacking_tool]),
+            Transform::from_xyz(6.0, 0.5, -3.0),
             InteractionObjectType::Backpack,
-            Collider::cuboid(3.0, 12.0, 3.0),
-            Sensor,
-            RigidBody::Static,
-            CollisionLayers::new([GameLayer::Sensor], [GameLayer::Player]),
             StateScoped(GameState::Playing),
         ))
         .observe(on_use_backpack_event)

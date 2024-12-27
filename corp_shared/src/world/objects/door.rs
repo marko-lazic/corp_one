@@ -517,7 +517,7 @@ mod tests {
     }
 
     fn setup_hacking_tool(app: &mut App) -> Entity {
-        let item_entity = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let item_entity = app.world_mut().spawn(HackingTool).id();
         item_entity
     }
 

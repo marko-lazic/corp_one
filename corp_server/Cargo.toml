@@ -6,9 +6,29 @@ edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
-bevy = { workspace = true, features = ["bevy_state", "bevy_color", "async-io", "multi_threaded", "serialize"] }
-lightyear = { workspace = true, features = ["webtransport", "leafwing"] }
-serde = { workspace = true, fetuares = ["derive"] }
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_color",
+    "async-io",
+    "multi_threaded",
+    "serialize",
+] }
+avian3d = { workspace = true, features = [
+    "3d",
+    "f32",
+    "parry-f32",
+    "bevy_scene",
+    "parallel",
+    "enhanced-determinism",
+] }
+lightyear = { workspace = true, features = [
+    "webtransport",
+    "leafwing",
+    "avian3d",
+] }
+rand = { workspace = true }
+bevy_rand = { version = "0.8.0", features = ["wyrand"] }
+serde = { workspace = true }
 rmp-serde = "1.3.0"
 chrono = { version = "0.4", features = ["serde"] }
 sqlx = { version = "0.8", features = ["runtime-async-std", "sqlite", "chrono"] }

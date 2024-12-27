@@ -1,7 +1,9 @@
 use crate::ServerState;
 use bevy::{prelude::*, time::common_conditions::on_timer, utils::HashMap};
+use bevy_rand::{prelude::WyRand, resource::GlobalEntropy};
 use corp_shared::prelude::*;
 use lightyear::prelude::{server::*, *};
+use rand::Rng;
 use std::time::Duration;
 
 pub struct ServerNetPlugin;
@@ -24,15 +26,19 @@ impl Plugin for ServerNetPlugin {
 #[derive(Resource, Default)]
 pub struct ClientEntityMap(HashMap<ClientId, Entity>);
 
-fn backpack_spawner(mut commands: Commands, mut local: Local<i32>) {
-    *local += 1;
-    info!("Spawning Dev Backpack no. {}", *local);
-    commands.spawn((
-        Name::new(format!("Dev Backpack {}", *local)),
-        Transform::from_xyz(6.0, 0.5, -3.0).with_scale(Vec3::splat(0.2)),
-        BackpackBundle::with_items(vec![]),
-        Replicate::default(),
-    ));
+fn backpack_spawner(mut commands: Commands, mut rng: ResMut<GlobalEntropy<WyRand>>) {
+    let x: f32 = rng.gen_range(-10.0..=10.0);
+    let z: f32 = rng.gen_range(-10.0..=10.0);
+
+    let e_item = commands.spawn((HackingTool, Replicate::default())).id();
+    let entity = commands
+        .spawn((
+            Backpack,
+            Inventory::new(vec![e_item]),
+            Transform::from_xyz(x, 0.1, z),
+            Replicate::default(),
+        ))
+        .id();
 }
 
 pub(crate) fn handle_disconnections(
@@ -110,6 +116,7 @@ fn build_server_plugin() -> ServerPlugins {
             send_interval: corp_shared::network::SERVER_REPLICATION_INTERVAL,
             ..default()
         },
+
         ..default()
     };
     ServerPlugins::new(config)

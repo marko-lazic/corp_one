@@ -1,24 +1,28 @@
 use crate::prelude::*;
+use avian3d::prelude::*;
 use bevy::prelude::*;
 use lightyear::prelude::{Deserialize, Serialize};
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[require(
+    Name(|| Name::new("Backpack")),
+    Inventory,
+    Transform,
+    RigidBody(|| RigidBody::Dynamic),
+    Collider(init_backpack_collider),
+    Sensor,
+    CollisionLayers(init_backpack_collision_layers),
+)]
 pub struct Backpack;
 
-#[derive(Bundle)]
-pub struct BackpackBundle {
-    backpack: Backpack,
-    inventory: Inventory,
+pub fn init_backpack_collider() -> Collider {
+    Collider::cuboid(0.6, 2.4, 0.6)
 }
 
-impl BackpackBundle {
-    pub fn with_items(items: Vec<Entity>) -> Self {
-        BackpackBundle {
-            backpack: Backpack,
-            inventory: Inventory { items },
-        }
-    }
+pub fn init_backpack_collision_layers() -> CollisionLayers {
+    CollisionLayers::new([GameLayer::Sensor], [GameLayer::Player])
 }
+
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum BackpackAction {
     List,
@@ -91,7 +95,7 @@ mod tests {
     fn one_item_is_in_backpack() {
         // given
         let (mut app, _) = setup();
-        let e_item = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_item = app.world_mut().spawn(HackingTool).id();
         let e_backpack = setup_backpack(&mut app, vec![e_item]);
 
         // when
@@ -105,8 +109,8 @@ mod tests {
     fn player_list_items_in_backpack() {
         // given
         let (mut app, e_player) = setup();
-        let e_item_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let e_item_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_item_1 = app.world_mut().spawn(HackingTool).id();
+        let e_item_2 = app.world_mut().spawn(HackingTool).id();
         let e_backpack = setup_backpack(&mut app, vec![e_item_1, e_item_2]);
 
         // when
@@ -129,8 +133,8 @@ mod tests {
     fn player_take_all_items_from_backpack() {
         // given
         let (mut app, e_player) = setup();
-        let e_item_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let e_item_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_item_1 = app.world_mut().spawn(HackingTool).id();
+        let e_item_2 = app.world_mut().spawn(HackingTool).id();
         let e_backpack = setup_backpack(&mut app, vec![e_item_1, e_item_2]);
 
         // when
@@ -153,8 +157,8 @@ mod tests {
     fn player_take_one_item_from_backpack() {
         // given
         let (mut app, e_player) = setup();
-        let e_item_1 = app.world_mut().spawn(HackingToolBundle::default()).id();
-        let e_item_2 = app.world_mut().spawn(HackingToolBundle::default()).id();
+        let e_item_1 = app.world_mut().spawn(HackingTool).id();
+        let e_item_2 = app.world_mut().spawn(HackingTool).id();
         let e_backpack = setup_backpack(&mut app, vec![e_item_1, e_item_2]);
 
         // when
@@ -183,7 +187,7 @@ mod tests {
 
     fn setup_backpack(app: &mut App, items: Vec<Entity>) -> Entity {
         app.world_mut()
-            .spawn(BackpackBundle::with_items(items))
+            .spawn((Backpack, Inventory::new(items)))
             .observe(on_use_backpack_event)
             .observe(on_use_backpack_action_event)
             .id()

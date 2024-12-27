@@ -1,3 +1,4 @@
+use crate::prelude::GameState;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 pub use lightyear::prelude::client::*;
@@ -11,8 +12,12 @@ pub struct ClientNetPlugin;
 impl Plugin for ClientNetPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((build_client_plugin(), ProtocolPlugin))
-            .add_systems(Startup, connect_client)
-            .add_systems(Update, (receive_entity_spawn, receive_player_id_insert));
+            .add_systems(OnEnter(GameState::Playing), connect_client)
+            .add_systems(
+                Update,
+                (receive_entity_spawn, receive_player_id_insert)
+                    .run_if(in_state(GameState::Playing)),
+            );
     }
 }
 
@@ -57,7 +62,10 @@ fn build_client_plugin() -> ClientPlugins {
     let net_config = NetConfig::Netcode {
         auth,
         io,
-        config: NetcodeConfig::default(),
+        config: NetcodeConfig {
+            client_timeout_secs: 3,
+            ..default()
+        },
     };
     let config = ClientConfig {
         // part of the config needs to be shared between the client and server

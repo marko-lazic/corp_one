@@ -1,14 +1,16 @@
 ## Run the project
 
+### Run server
+
+```shell
+cargo run --bin corp_server
+```
+
 ### Run client
 
 ```shell
 cargo run --bin corp_client
 ```
-
-### Run server
-
-cargo run --bin server_server
 
 ### Run tests
 

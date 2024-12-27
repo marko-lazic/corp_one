@@ -79,7 +79,7 @@ fn setup(
         SecurityLevel::Medium,
     );
 
-    let hacking_tool_entity = commands.spawn(HackingToolBundle::default()).id();
+    let hacking_tool_entity = commands.spawn(HackingTool).id();
 
     // spawn player
     let player_entity = commands

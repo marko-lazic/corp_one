@@ -48,17 +48,17 @@ pub struct AudioAssets {
 
 #[derive(Resource, AssetCollection)]
 pub struct MeshAssets {
-    #[asset(path = "mesh/low_poly_backpack.glb#Scene0")]
+    #[asset(path = "mesh/backpack.glb#Scene0")]
     pub low_poly_backpack: Handle<Scene>,
 }
 
 #[derive(Resource, AssetCollection)]
 pub struct PlayerAssets {
-    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Scene0")]
+    #[asset(path = "mesh/mannequiny.gltf#Scene0")]
     pub mannequiny: Handle<Scene>,
-    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Animation9")]
+    #[asset(path = "mesh/mannequiny.gltf#Animation9")]
     pub run: Handle<AnimationClip>,
-    #[asset(path = "mesh/mannequiny/mannequiny.gltf#Animation7")]
+    #[asset(path = "mesh/mannequiny.gltf#Animation7")]
     pub idle: Handle<AnimationClip>,
 }
 

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Component, Default, Debug)]
+#[derive(Component, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub struct Inventory {
     pub items: Vec<Entity>,
 }

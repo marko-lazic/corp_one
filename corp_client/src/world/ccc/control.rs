@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::{app::AppExit, prelude::*, utils::HashSet};
-use corp_shared::prelude::{Health, InteractionObjectType, Inventory, Player, UseEvent};
+use corp_shared::prelude::{GameLayer, Health, InteractionObjectType, Inventory, Player, UseEvent};
 use leafwing_input_manager::prelude::*;
 use std::{f32::consts::PI, hash::Hash};
 
@@ -165,6 +165,7 @@ impl Plugin for ControlPlugin {
 }
 
 fn double_tap_to_exit(
+    mut commands: Commands,
     action_state: Res<ActionState<UIAction>>,
     r_time: Res<Time<Fixed>>,
     mut ev_exit_app: EventWriter<AppExit>,
@@ -174,6 +175,7 @@ fn double_tap_to_exit(
         l_double_tap.increment();
     }
     l_double_tap.tick(r_time.delta()).on_complete(|| {
+        commands.disconnect_client();
         ev_exit_app.send(AppExit::Success);
     });
 }
@@ -349,7 +351,7 @@ fn detect_interactable_objects(
     if direction.as_vec3() == Vec3::ZERO {
         return;
     }
-    let ray = Ray3d::new(origin, Dir3::from(direction));
+    let ray = Ray3d::new(origin, direction);
     rays.push(ray);
 
     // Clear any previously selected entities

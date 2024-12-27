@@ -1,4 +1,4 @@
-use crate::prelude::Backpack;
+use crate::prelude::{Backpack, HackingTool, Inventory};
 use bevy::prelude::*;
 use lightyear::{client::components::ComponentSyncMode, prelude::*};
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,18 @@ impl Plugin for ProtocolPlugin {
             .add_interpolation(ComponentSyncMode::Once);
 
         app.register_component::<Backpack>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once)
+            .add_interpolation(ComponentSyncMode::Once);
+
+        app.register_component::<Inventory>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once)
+            .add_interpolation(ComponentSyncMode::Once);
+
+        app.register_component::<HackingTool>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once)
+            .add_interpolation(ComponentSyncMode::Once);
+
+        app.register_component::<Transform>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once)
             .add_interpolation(ComponentSyncMode::Once);
     }

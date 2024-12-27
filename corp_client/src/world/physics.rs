@@ -7,16 +7,7 @@ use bevy::{
 };
 use bevy_tnua::prelude::*;
 use bevy_tnua_avian3d::TnuaAvian3dPlugin;
-
-#[derive(PhysicsLayer, Default, Clone, Copy, Debug)]
-pub enum GameLayer {
-    #[default]
-    Default,
-    Player,
-    Zone,
-    Sensor,
-    Fixed,
-}
+use corp_shared::prelude::*;
 
 #[derive(Resource)]
 pub struct PhysicsSystems {

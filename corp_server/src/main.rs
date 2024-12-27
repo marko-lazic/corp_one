@@ -1,5 +1,6 @@
 use crate::{database::DbPlugin, server::ServerNetPlugin};
 use bevy::{app::ScheduleRunnerPlugin, log::LogPlugin, prelude::*, state::app::StatesPlugin};
+use bevy_rand::prelude::{EntropyPlugin, WyRand};
 use std::time::Duration;
 
 mod database;
@@ -24,6 +25,7 @@ fn main() {
             MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frames_per_second)),
             DbPlugin,
             ServerNetPlugin,
+            EntropyPlugin::<WyRand>::default(),
         ))
         .init_state::<ServerState>()
         .run();

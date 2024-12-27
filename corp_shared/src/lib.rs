@@ -27,6 +27,7 @@ pub mod prelude {
             faction::*,
             interaction::*,
             objects::{backpack::*, door::*, territory::*},
+            physics::*,
             player::*,
             security::*,
         },

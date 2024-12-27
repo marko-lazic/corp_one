@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use avian3d::prelude::*;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 
@@ -34,13 +33,11 @@ fn player_loot_drop(
 
         commands
             .spawn((
-                Name::new("Loot Bag"),
+                Backpack,
+                Inventory::new(inventory.remove_all()),
+                *transform,
                 SceneRoot(r_mesh_assets.low_poly_backpack.clone()),
-                Transform::from_translation(transform.translation).with_scale(Vec3::splat(0.2)),
-                BackpackBundle::with_items(inventory.remove_all()),
                 InteractionObjectType::Backpack,
-                RigidBody::Dynamic,
-                Collider::cuboid(1.5, 1.5, 1.5),
                 StateScoped(GameState::Playing),
             ))
             .observe(on_use_backpack_event)
