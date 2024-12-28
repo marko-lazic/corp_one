@@ -1,8 +1,11 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, time::common_conditions::on_timer};
 use corp_shared::prelude::*;
 pub use lightyear::prelude::client::*;
 use lightyear::prelude::*;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    time::Duration,
+};
 
 const CLIENT_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 4000);
 
@@ -12,6 +15,7 @@ impl Plugin for ClientNetPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((build_client_plugin(), ProtocolPlugin))
             .add_systems(OnEnter(GameState::Playing), connect_client)
+            .add_systems(Update, on_connect)
             .add_systems(
                 Update,
                 (receive_entity_spawn, receive_player_id_insert)
@@ -20,18 +24,37 @@ impl Plugin for ClientNetPlugin {
     }
 }
 
-pub(crate) fn receive_entity_spawn(mut reader: EventReader<EntitySpawnEvent>) {
+fn on_connect(mut connect_event: EventReader<ConnectEvent>) {
+    for event in connect_event.read() {
+        let client_id = event.client_id();
+        info!("Received ConnectEvent: {:?}", client_id);
+    }
+}
+
+pub fn receive_entity_spawn(mut reader: EventReader<EntitySpawnEvent>) {
     for event in reader.read() {
         info!("Received entity spawn: {:?}", event.entity());
     }
 }
 
-pub(crate) fn receive_player_id_insert(mut reader: EventReader<ComponentInsertEvent<PlayerId>>) {
+pub fn receive_player_id_insert(
+    mut reader: EventReader<ComponentInsertEvent<PlayerId>>,
+    client_connection: Res<ClientConnection>,
+    q_player_id: Query<&PlayerId>,
+) {
     for event in reader.read() {
         info!(
             "Received component PlayerId insert for entity: {:?}",
             event.entity()
         );
+        if let Ok(client_id) = q_player_id.get(event.entity()) {
+            if client_id.0 == client_connection.id() {
+                info!(
+                    "Our Client PlayerId {} is inserted!",
+                    client_connection.id()
+                );
+            }
+        }
     }
 }
 
@@ -45,7 +68,7 @@ fn build_client_plugin() -> ClientPlugins {
     // This is where you provide the server address.
     let auth = Authentication::Manual {
         server_addr: corp_shared::network::SERVER_ADDR,
-        client_id: 0,
+        client_id: 42,
         private_key: Key::default(),
         protocol_id: 0,
     };
