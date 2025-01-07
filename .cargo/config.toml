@@ -1,16 +1,16 @@
-# [unstable]
-# codegen-backend = true # Enable cranelift
+[unstable] # Enable cranelift
+codegen-backend = true # Enable cranelift
 
 # Enable a small amount of optimization in dev mode
 [profile.dev]
 opt-level = 0
 codegen-units = 32
 incremental = true
-# codegen-backend = "cranelift"  # Enable cranelift
+codegen-backend = "cranelift"  # Enable cr0sanelift
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
-# codegen-backend = "llvm"   # Enable cranelift
+codegen-backend = "llvm"   # Enable cranelift
 opt-level = 3
 
 [profile.debugging]

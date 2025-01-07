@@ -18,7 +18,7 @@ default-members = [
 
 [workspace.dependencies]
 bevy = { version = "0.15.0", default-features = false }
-lightyear = { version = "0.18.0", default-features = false }
+lightyear = { git = "https://github.com/cBournhonesque/lightyear.git", rev = "5e26ba9", default-features = false }
 serde = { version = "1", default-features = false }
 avian3d = { version = "0.2.0", default-features = false }
 rand = "0.8.5"

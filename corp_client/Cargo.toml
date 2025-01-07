@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 corp_shared = { path = "../corp_shared", features = ["client"] }
-bevy = { workspace = true, features = [
+bevy = { workspace = true, default-features = false, features = [
     "bevy_asset",
     "bevy_ui",
     "bevy_text",
