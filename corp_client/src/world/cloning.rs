@@ -70,7 +70,7 @@ fn dead_player_system(
 }
 
 fn vort_in_dead_player_to_cloning(
-    mut r_player_store: ResMut<PlayerData>,
+    mut r_player_store: ResMut<PlayerSystems>,
     mut ev_vort_in: EventWriter<VortInEvent>,
 ) {
     if r_player_store.health.is_dead() {
@@ -99,7 +99,7 @@ mod tests {
 
         let setup_player = world.register_system(setup_player);
         let setup_camera = world.register_system(setup_camera);
-        let mut player_store = PlayerData {
+        let mut player_store = PlayerSystems {
             health: Health::default(),
             setup_player,
             setup_camera,
@@ -113,7 +113,7 @@ mod tests {
         schedule.run(&mut world);
 
         assert_eq!(
-            world.resource::<PlayerData>().health.get_health(),
+            world.resource::<PlayerSystems>().health.get_health(),
             &CLONE_HEALTH_80,
             "PlayerStore health is set to clone health"
         );

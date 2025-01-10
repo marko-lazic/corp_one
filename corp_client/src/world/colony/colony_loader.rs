@@ -57,11 +57,9 @@ fn load_colony_event(
         .observe(
             |_trigger: Trigger<SceneInstanceReady>,
              mut commands: Commands,
-             mut ev_player_spawn: EventWriter<PlayerSpawnEvent>,
              r_physics_systems: Res<PhysicsSystems>| {
                 info!("Colony loaded");
                 commands.run_system(r_physics_systems.setup_colliders);
-                ev_player_spawn.send(PlayerSpawnEvent::SpawnRandom);
             },
         );
 

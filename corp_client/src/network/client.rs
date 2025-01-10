@@ -1,11 +1,9 @@
-use bevy::{prelude::*, time::common_conditions::on_timer};
+use crate::prelude::PlayerSystems;
+use bevy::prelude::*;
 use corp_shared::prelude::*;
 pub use lightyear::prelude::client::*;
-use lightyear::prelude::*;
-use std::{
-    net::{IpAddr, Ipv4Addr, SocketAddr},
-    time::Duration,
-};
+use lightyear::{prelude::*, shared::replication::components::Controlled};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 const CLIENT_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 4000);
 
@@ -14,12 +12,11 @@ pub struct ClientNetPlugin;
 impl Plugin for ClientNetPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((build_client_plugin(), ProtocolPlugin))
-            .add_systems(OnEnter(GameState::Playing), connect_client)
-            .add_systems(Update, on_connect)
+            .add_systems(OnEnter(GameState::LoadColony), connect_client)
+            .add_systems(Update, (on_connect, handle_new_character))
             .add_systems(
                 Update,
-                (receive_entity_spawn, receive_player_id_insert)
-                    .run_if(in_state(GameState::Playing)),
+                (receive_entity_spawn).run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -37,24 +34,25 @@ pub fn receive_entity_spawn(mut reader: EventReader<EntitySpawnEvent>) {
     }
 }
 
-pub fn receive_player_id_insert(
-    mut reader: EventReader<ComponentInsertEvent<PlayerId>>,
-    client_connection: Res<ClientConnection>,
-    q_player_id: Query<&PlayerId>,
+fn handle_new_character(
+    connection: Res<ClientConnection>,
+    mut commands: Commands,
+    mut character_query: Query<
+        (Entity, Has<Controlled>),
+        (Added<Predicted>, With<CharacterMarker>),
+    >,
+    r_player_systems: Res<PlayerSystems>,
 ) {
-    for event in reader.read() {
-        info!(
-            "Received component PlayerId insert for entity: {:?}",
-            event.entity()
-        );
-        if let Ok(client_id) = q_player_id.get(event.entity()) {
-            if client_id.0 == client_connection.id() {
-                info!(
-                    "Our Client PlayerId {} is inserted!",
-                    client_connection.id()
-                );
-            }
+    for (entity, is_controlled) in &mut character_query {
+        if is_controlled {
+            info!("Adding Player setup to controlled and predicted entity {entity:?}");
+            commands.run_system_with_input(r_player_systems.setup_player, entity);
+        } else {
+            info!("Remote character replicated to us: {entity:?}");
         }
+        let client_id = connection.id();
+        info!(?entity, ?client_id, "Adding physics to character");
+        commands.entity(entity).insert(());
     }
 }
 

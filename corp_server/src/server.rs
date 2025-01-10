@@ -86,7 +86,7 @@ fn handle_connections(
             },
             ..default()
         };
-        let entity = commands.spawn((PlayerId(client_id), replicate));
+        let entity = commands.spawn((PlayerId(client_id), CharacterMarker, replicate));
         entity_map.0.insert(client_id, entity.id());
         info!("Create entity {:?} for client {:?}", entity.id(), client_id);
     }

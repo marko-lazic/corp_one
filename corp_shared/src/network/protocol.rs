@@ -12,6 +12,9 @@ impl Plugin for ProtocolPlugin {
             .add_prediction(ComponentSyncMode::Once)
             .add_interpolation(ComponentSyncMode::Once);
 
+        app.register_component::<CharacterMarker>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
+
         app.register_component::<Backpack>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once)
             .add_interpolation(ComponentSyncMode::Once);
@@ -32,3 +35,6 @@ impl Plugin for ProtocolPlugin {
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct PlayerId(pub ClientId);
+
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct CharacterMarker;

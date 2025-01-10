@@ -12,8 +12,7 @@ impl Plugin for FrontendReplicationPlugin {
         );
     }
 }
-
-pub fn receive_backpack_insert(
+fn receive_backpack_insert(
     r_mesh_assets: Res<MeshAssets>,
     mut reader: EventReader<ComponentInsertEvent<Backpack>>,
     mut commands: Commands,

@@ -78,13 +78,13 @@ fn update_camera(
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
     let Ok(mut rig) = rig_q.get_single_mut() else {
-        error!("No camera rig found");
+        warn!("Update Camera: No camera rig found");
         return;
     };
     let camera_yp = rig.driver_mut::<YawPitch>();
 
     let Ok(action_state) = q_action_state.get_single() else {
-        warn!("PlayerAction state is missing.");
+        warn!("Update Camera: PlayerAction state is missing.");
         return;
     };
 

@@ -53,7 +53,7 @@ fn debug_vort_in(mut ev_vort_in: EventWriter<VortInEvent>, mut run_once: Local<b
 }
 
 fn vort_out_event_reader(
-    mut r_player_store: ResMut<PlayerData>,
+    mut r_player_store: ResMut<PlayerSystems>,
     r_player_entity: Res<PlayerEntity>,
     mut r_next_state: ResMut<NextState<GameState>>,
     mut ev_vort_out: EventReader<VortOutEvent>,
