@@ -74,12 +74,9 @@ impl UIAction {
     }
 }
 
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
-pub enum PlayerAction {
-    Forward,
-    Backward,
-    Left,
-    Right,
+#[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
+pub enum CharacterAction {
+    Move,
     Aim,
     OrientationMode,
     Use,
@@ -92,16 +89,22 @@ pub enum PlayerAction {
     Kill,
 }
 
-impl PlayerAction {
-    pub fn player_input_map() -> InputMap<PlayerAction> {
-        use PlayerAction::*;
+impl Actionlike for CharacterAction {
+    fn input_control_kind(&self) -> InputControlKind {
+        match self {
+            Self::Move => InputControlKind::DualAxis,
+            _ => InputControlKind::Button,
+        }
+    }
+}
+
+impl CharacterAction {
+    pub fn player_input_map() -> InputMap<CharacterAction> {
+        use CharacterAction::*;
         let mut input = InputMap::default();
         input
             // Movement
-            .insert(Forward, KeyCode::KeyW)
-            .insert(Backward, KeyCode::KeyS)
-            .insert(Left, KeyCode::KeyA)
-            .insert(Right, KeyCode::KeyD)
+            .insert_dual_axis(Move, VirtualDPad::wasd())
             // Weapon
             .insert(Aim, MouseButton::Right)
             // Abilities
@@ -125,7 +128,7 @@ pub struct ControlPlugin;
 
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
+        app.add_plugins(InputManagerPlugin::<CharacterAction>::default())
             .init_resource::<PlayerEntity>()
             .init_resource::<CursorWorld>()
             .init_resource::<HoverEntities>()
@@ -220,31 +223,23 @@ fn update_cursor_world(
 }
 
 fn player_control_movement(
-    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
+    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
     q_camera: Query<&Transform, With<MainCamera>>,
     mut q_movement: Query<&mut ControlMovement, With<Player>>,
 ) {
-    let Ok(cam) = q_camera.get_single() else {
+    let Ok(cam_transform) = q_camera.get_single() else {
         warn!("Can not find Transform, With<MainCamera>");
         return;
     };
 
-    let cam_forward = Vec3::new(
-        cam.rotation.mul_vec3(Vec3::Z).x,
-        0.0,
-        cam.rotation.mul_vec3(Vec3::Z).z,
-    )
-    .normalize_or_zero();
-    let cam_right = Vec3::new(
-        cam.rotation.mul_vec3(Vec3::X).x,
-        0.0,
-        cam.rotation.mul_vec3(Vec3::X).z,
-    )
-    .normalize_or_zero();
-
-    let Ok(mut movement) = q_movement.get_single_mut() else {
-        warn!("Can not find ControlMovement, With<Player>");
-        return;
+    let cam_forward = {
+        let f = cam_transform.rotation.mul_vec3(Vec3::Z);
+        // Invert it to account for camera looking down -Z
+        -Vec3::new(f.x, 0.0, f.z).normalize_or_zero()
+    };
+    let cam_right = {
+        let r = cam_transform.rotation.mul_vec3(Vec3::X);
+        Vec3::new(r.x, 0.0, r.z).normalize_or_zero()
     };
 
     let Ok(action_state) = q_action_state.get_single() else {
@@ -252,33 +247,31 @@ fn player_control_movement(
         return;
     };
 
-    let mut direction = Vec3::ZERO;
-    if action_state.pressed(&PlayerAction::Forward) {
-        direction -= cam_forward;
-    }
-    if action_state.pressed(&PlayerAction::Backward) {
-        direction += cam_forward;
-    }
-    if action_state.pressed(&PlayerAction::Left) {
-        direction -= cam_right;
-    }
-    if action_state.pressed(&PlayerAction::Right) {
-        direction += cam_right;
-    }
+    let input_axis = action_state
+        .axis_pair(&CharacterAction::Move)
+        .clamp_length_max(1.0);
 
-    movement.direction = direction;
+    let input_forward = cam_forward * input_axis.y;
+    let input_strafe = cam_right * input_axis.x;
+
+    let Ok(mut movement) = q_movement.get_single_mut() else {
+        warn!("Can not find ControlMovement, With<Player>");
+        return;
+    };
+
+    movement.direction = (input_forward + input_strafe).normalize_or_zero();
 }
 
 fn player_control_orientation(
     r_cursor_world: Res<CursorWorld>,
-    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
+    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
     mut q_orientation: Query<&mut OrientationMode, With<Player>>,
 ) {
     let Ok(action_state) = q_action_state.get_single() else {
         warn!("PlayerAction state is missing.");
         return;
     };
-    if action_state.just_pressed(&PlayerAction::OrientationMode) {
+    if action_state.just_pressed(&CharacterAction::OrientationMode) {
         for mut orientation_mode in &mut q_orientation {
             *orientation_mode = match *orientation_mode {
                 OrientationMode::Direction => {
@@ -410,7 +403,7 @@ fn create_use_event(
     mut commands: Commands,
     r_use_entity: Res<HoverEntities>,
     r_player_entity: Res<PlayerEntity>,
-    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
+    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
     q_interaction_object: Query<&InteractionObjectType>,
     mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
 ) {
@@ -418,7 +411,7 @@ fn create_use_event(
         warn!("PlayerAction state is missing.");
         return;
     };
-    if action_state.just_pressed(&PlayerAction::Use) {
+    if action_state.just_pressed(&CharacterAction::Use) {
         let Some(player) = r_player_entity.get() else {
             return;
         };
@@ -471,14 +464,14 @@ fn create_use_event(
 }
 
 fn kill(
-    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
+    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
     mut q_player_health: Query<&mut Health, With<Player>>,
 ) {
     let Ok(action_state) = q_action_state.get_single() else {
         warn!("PlayerAction state is missing.");
         return;
     };
-    if action_state.just_pressed(&PlayerAction::Kill) {
+    if action_state.just_pressed(&CharacterAction::Kill) {
         if let Some(mut health) = q_player_health.iter_mut().next() {
             health.kill_mut();
         }
@@ -488,13 +481,13 @@ fn kill(
 fn log_inventory(
     q_inventory: Query<&Inventory, With<Player>>,
     q_name: Query<&Name>,
-    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
+    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
 ) {
     let Ok(action_state) = q_action_state.get_single() else {
         warn!("PlayerAction state is missing.");
         return;
     };
-    if action_state.just_pressed(&PlayerAction::Inventory) {
+    if action_state.just_pressed(&CharacterAction::Inventory) {
         if let Ok(inventory) = q_inventory.get_single() {
             let item_names: Vec<String> = inventory
                 .items

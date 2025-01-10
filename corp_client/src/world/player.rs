@@ -51,7 +51,7 @@ pub fn setup_player(
         .entity(e_player)
         .insert((
             Name::new("Player"),
-            InputManagerBundle::with_map(PlayerAction::player_input_map()),
+            InputManagerBundle::with_map(CharacterAction::player_input_map()),
             Transform::from_translation(rnd_node_position + Vec3::Y),
             Visibility::default(),
             Player,

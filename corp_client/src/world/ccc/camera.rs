@@ -70,7 +70,7 @@ pub fn setup_camera(mut commands: Commands, q_player_transform: Single<&Transfor
 }
 
 fn update_camera(
-    q_action_state: Query<&ActionState<PlayerAction>, With<Player>>,
+    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
     time: Res<Time<Fixed>>,
     mut rig_q: Query<&mut Rig>,
     q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
@@ -88,14 +88,14 @@ fn update_camera(
         return;
     };
 
-    if action_state.just_pressed(&PlayerAction::CameraRotateClockwise) {
+    if action_state.just_pressed(&CharacterAction::CameraRotateClockwise) {
         camera_yp.rotate_yaw_pitch(-45.0, 0.0);
     }
-    if action_state.just_pressed(&PlayerAction::CameraRotateCounterClockwise) {
+    if action_state.just_pressed(&CharacterAction::CameraRotateCounterClockwise) {
         camera_yp.rotate_yaw_pitch(45.0, 0.0);
     }
 
-    if action_state.pressed(&PlayerAction::CameraZoomIn) {
+    if action_state.pressed(&CharacterAction::CameraZoomIn) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
             xz.z = (xz.z - 4.0 * time.delta_secs()).abs();
@@ -103,7 +103,7 @@ fn update_camera(
         }
     }
 
-    if action_state.pressed(&PlayerAction::CameraZoomOut) {
+    if action_state.pressed(&CharacterAction::CameraZoomOut) {
         if let Some(arm) = rig.try_driver_mut::<Arm>() {
             let mut xz = arm.offset;
             xz.z = (xz.z + 4.0 * time.delta_secs()).abs();
@@ -112,7 +112,7 @@ fn update_camera(
     }
 
     let mut target_zoom_factor: f32 = 1.0;
-    if action_state.pressed(&PlayerAction::Aim) {
+    if action_state.pressed(&CharacterAction::Aim) {
         target_zoom_factor = 1.8;
     }
 
