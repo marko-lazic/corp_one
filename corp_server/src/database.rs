@@ -11,7 +11,7 @@ impl Plugin for DbPlugin {
     }
 }
 
-fn database_setup(/*mut commands: Commands*/) {
+fn database_setup() {
     let dirs = Dirs::new("corp_server");
     let database_path_buf = dirs.data_dir.join("database.sqlite");
     let _ignored = dirs.config_dir;

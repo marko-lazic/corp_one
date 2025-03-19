@@ -28,6 +28,7 @@ rustflags = ["-Z", "share-generics=y", "-C", "debuginfo=2"]
 
 [env]
 RUST_BACKTRACE = "1"
+RUSTFLAGS = "-Zthreads=8"
 
 [term]
 color = "always"
