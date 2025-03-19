@@ -89,7 +89,7 @@ fn build_client_plugin() -> ClientPlugins {
     };
     let config = ClientConfig {
         // part of the config needs to be shared between the client and server
-        shared: corp_shared::network::shared_config(),
+        shared: shared_config(),
         net: net_config,
         ..default()
     };

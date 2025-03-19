@@ -19,7 +19,7 @@ bevy = { workspace = true, default-features = false, features = [
     "bevy_gltf",
 ] }
 avian3d = { workspace = true, features = ["default", "enhanced-determinism"] }
-lightyear = { workspace = true, features = ["webtransport", "leafwing"] }
+lightyear = { workspace = true, features = ["leafwing"] }
 serde = { workspace = true }
 leafwing-input-manager = { version = "0.16.0" }
 bevy-inspector-egui = "0.28.0"

@@ -113,17 +113,8 @@ fn build_server_plugin() -> ServerPlugins {
         config: NetcodeConfig::default(),
     };
     let config = ServerConfig {
-        // part of the config needs to be shared between the client and server
-        shared: corp_shared::network::shared_config(),
-        // we can specify multiple net configs here, and the server will listen on all of them
-        // at the same time. Here we will only use one
+        shared: shared_config(),
         net: vec![net_config],
-        replication: ReplicationConfig {
-            // we will send updates to the clients every 100ms
-            send_interval: corp_shared::network::SERVER_REPLICATION_INTERVAL,
-            ..default()
-        },
-
         ..default()
     };
     ServerPlugins::new(config)
