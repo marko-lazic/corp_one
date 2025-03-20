@@ -1,6 +1,6 @@
 use crate::ServerState;
 use bevy::{prelude::*, time::common_conditions::on_timer, utils::HashMap};
-use bevy_rand::{prelude::WyRand, resource::GlobalEntropy};
+use bevy_rand::prelude::{GlobalEntropy, WyRand};
 use corp_shared::prelude::*;
 use lightyear::prelude::{server::*, *};
 use rand::Rng;
@@ -102,7 +102,7 @@ fn build_server_plugin() -> ServerPlugins {
     // The IoConfig will specify the transport to use.
     let io = IoConfig {
         // the address specified here is the server_address, because we open a UDP socket on the server
-        transport: ServerTransport::UdpSocket(corp_shared::network::SERVER_ADDR),
+        transport: ServerTransport::UdpSocket(SERVER_ADDR),
         ..default()
     };
     // The NetConfig specifies how we establish a connection with the server.
