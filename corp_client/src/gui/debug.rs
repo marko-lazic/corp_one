@@ -89,7 +89,7 @@ fn setup(
     ));
 
     let (debug_gizmo_config, _) = config_store.config_mut::<DebugGizmos>();
-    debug_gizmo_config.enabled = false;
+    debug_gizmo_config.enabled = true;
 }
 
 #[derive(Bundle)]
@@ -120,7 +120,6 @@ impl DebugTextBundle {
 fn update_interaction_text(
     mut e_debug_gui: EventReader<DebugGuiEvent>,
     q_text: Single<Entity, With<InteractionText>>,
-    q_interaction_object_type: Query<&InteractionObjectType>,
     q_name: Query<&Name>,
     mut writer: TextUiWriter,
 ) {
@@ -132,13 +131,7 @@ fn update_interaction_text(
                     .map(|n| n.as_str())
                     .unwrap_or("unknown");
 
-                let interaction_type = q_interaction_object_type
-                    .get(entity.clone())
-                    .map(|o| format!("{o:?}"))
-                    .unwrap_or("unknown".into());
-
-                let message =
-                    format!("Entity {entity:?}, Name {name}, Interaction Type {interaction_type}");
+                let message = format!("Entity {entity:?}, Name {name}");
 
                 *writer.text(q_text.clone().into(), 0) = message.to_owned();
             }

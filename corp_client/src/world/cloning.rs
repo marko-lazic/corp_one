@@ -37,7 +37,6 @@ fn player_loot_drop(
                 Inventory::new(inventory.remove_all()),
                 *transform,
                 SceneRoot(r_mesh_assets.low_poly_backpack.clone()),
-                InteractionObjectType::Backpack,
                 StateScoped(GameState::Playing),
             ))
             .observe(on_use_backpack_event)

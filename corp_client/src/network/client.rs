@@ -12,11 +12,11 @@ pub struct ClientNetPlugin;
 impl Plugin for ClientNetPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((build_client_plugin(), ProtocolPlugin))
-            .add_systems(OnEnter(GameState::LoadColony), connect_client)
+            .add_systems(OnEnter(IsColonyLoaded::Loaded), connect_client)
             .add_systems(Update, (on_connect, handle_new_character))
             .add_systems(
                 Update,
-                (receive_entity_spawn).run_if(in_state(GameState::Playing)),
+                receive_entity_spawn.run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -57,6 +57,7 @@ fn handle_new_character(
 }
 
 fn connect_client(mut commands: Commands) {
+    info!("Connecting to server");
     commands.connect_client();
 }
 

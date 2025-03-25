@@ -5,6 +5,7 @@ use bevy::{
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use corp_client::prelude::*;
+use corp_shared::prelude::*;
 
 const CORP_ONE_GAME_TITLE: &str = "Corp One";
 const WIDTH: f32 = 1200.0;
@@ -19,6 +20,7 @@ impl Plugin for FrontendPlugin {
                 primary_window: Some(new_window()),
                 ..default()
             }),
+            GameStatePlugin,
             ShaderPlugin,
             GuiPlugin,
             WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Backquote)),

@@ -1,11 +1,11 @@
-use crate::{prelude::*, world::colony::scene_hook};
+use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     scene::SceneInstanceReady,
 };
-use bevy_scene_hook::{HookedSceneBundle, SceneHook};
+use bevy_skein::SkeinPlugin;
 use corp_shared::prelude::*;
 
 #[derive(Event)]
@@ -13,6 +13,8 @@ pub struct ColonyLoadEvent(pub Handle<ColonyConfig>);
 
 pub fn colony_loader_plugin(app: &mut App) {
     app.add_event::<ColonyLoadEvent>()
+        .register_type::<EnergyNode>()
+        .add_plugins(SkeinPlugin::default())
         .add_systems(OnEnter(GameState::LoadColony), load_colony_event)
         .add_systems(OnExit(GameState::LoadColony), update_lights);
 }
@@ -42,26 +44,8 @@ fn load_colony_event(
 
     // spawn scene
     commands
-        .spawn((
-            Name::new("Colony"),
-            HookedSceneBundle {
-                scene: SceneRoot(colony_scene),
-                hook: SceneHook::new(move |entity_ref, commands| {
-                    if let Some(name) = entity_ref.get::<Name>().map(|t| t.as_str()) {
-                        scene_hook::components(entity_ref.id(), name, commands)
-                    }
-                }),
-            },
-            StateScoped(GameState::Playing),
-        ))
-        .observe(
-            |_trigger: Trigger<SceneInstanceReady>,
-             mut commands: Commands,
-             r_physics_systems: Res<PhysicsSystems>| {
-                info!("Colony loaded");
-                commands.run_system(r_physics_systems.setup_colliders);
-            },
-        );
+        .spawn((Name::new("Colony"), SceneRoot(colony_scene)))
+        .observe(on_colony_loaded);
 
     commands
         .spawn((
@@ -91,8 +75,8 @@ fn load_colony_event(
             ..default()
         })),
         RigidBody::Static,
-        CollisionLayers::new([GameLayer::Fixed], [GameLayer::Player]),
-        Collider::cuboid(100.0, 0.01, 100.0),
+        CollisionLayers::new([GameLayer::Structure], [GameLayer::Player]),
+        Collider::cuboid(40.0, 0.01, 40.0),
         StateScoped(GameState::Playing),
     ));
 
@@ -109,6 +93,14 @@ fn load_colony_event(
             StateScoped(GameState::Playing),
         ));
     }
+}
+
+fn on_colony_loaded(
+    _trigger: Trigger<SceneInstanceReady>,
+    mut next_state: ResMut<NextState<IsColonyLoaded>>,
+) {
+    info!("Colony Scene Instance Ready");
+    next_state.set(IsColonyLoaded::Loaded);
 }
 
 // Temporary fixes the problem with shadows not working

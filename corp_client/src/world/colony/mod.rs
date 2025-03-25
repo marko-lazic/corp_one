@@ -1,8 +1,6 @@
 mod barrier;
 mod colony;
 mod colony_loader;
-mod object_interaction;
-mod scene_hook;
 mod vortex;
 mod zone;
 

@@ -1,34 +1,10 @@
+use crate::{prelude::ForceFieldMaterial, util::mesh_extension::MeshExt};
 use avian3d::{collision::CollisionLayers, prelude::LayerMask};
-use bevy::prelude::*;
+use bevy::{
+    pbr::{NotShadowCaster, NotShadowReceiver},
+    prelude::*,
+};
 use corp_shared::prelude::*;
-
-#[derive(Component, Default, Debug)]
-pub struct BarrierControl {
-    pub barrier_field_name: String,
-}
-
-impl BarrierControl {
-    pub fn new(name: &str) -> Self {
-        Self {
-            barrier_field_name: name.to_string(),
-        }
-    }
-}
-
-#[derive(Component, Debug)]
-pub struct BarrierField {
-    pub entity: Entity,
-    pub name: String,
-}
-
-impl BarrierField {
-    pub fn new(entity: Entity, name: &str) -> Self {
-        Self {
-            entity,
-            name: name.to_string(),
-        }
-    }
-}
 
 pub struct BarrierPlugin;
 
@@ -36,7 +12,11 @@ impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (change_barrier_field_visibility_and_collision,).run_if(in_state(GameState::Playing)),
+            (
+                add_force_field_shader,
+                change_barrier_field_visibility_and_collision,
+            )
+                .run_if(in_state(GameState::Playing)),
         )
         .add_systems(
             FixedUpdate,
@@ -50,9 +30,28 @@ impl Plugin for BarrierPlugin {
     }
 }
 
+fn add_force_field_shader(
+    mut commands: Commands,
+    query: Query<Entity, Added<Door>>,
+    q_children: Query<&Children>,
+    r_meshes: Res<Assets<Mesh>>,
+    q_meshes: Query<&Mesh3d>,
+    mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
+) {
+    for entity in &query {
+        for (entity, _) in Mesh::search_in_children(entity, &q_children, &r_meshes, &q_meshes) {
+            commands.entity(entity).insert((
+                MeshMaterial3d(r_force_field_materials.add(ForceFieldMaterial {})),
+                NotShadowReceiver,
+                NotShadowCaster,
+            ));
+        }
+    }
+}
+
 fn change_barrier_field_visibility_and_collision(
     mut commands: Commands,
-    mut q_barrier_field_visibility: Query<&mut Visibility, With<BarrierField>>,
+    mut q_barrier_field_visibility: Query<&mut Visibility, With<DoorId>>,
     q_door: Query<(Entity, &DoorState), (Changed<DoorState>, With<Door>)>,
 ) {
     for (e_door, door_state) in &q_door {

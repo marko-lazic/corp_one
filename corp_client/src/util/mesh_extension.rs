@@ -12,11 +12,11 @@ pub trait MeshExt {
 impl MeshExt for Mesh {
     fn search_in_children<'a>(
         parent: Entity,
-        children_query: &'a Query<&Children>,
+        q_children: &'a Query<&Children>,
         r_meshes: &'a Assets<Mesh>,
         q_mesh_handles: &'a Query<&Mesh3d>,
     ) -> Vec<(Entity, &'a Mesh)> {
-        if let Ok(children) = children_query.get(parent) {
+        if let Ok(children) = q_children.get(parent) {
             let mut result: Vec<_> = children
                 .iter()
                 .filter_map(|entity| {
@@ -41,7 +41,7 @@ impl MeshExt for Mesh {
             let mut inner_result = children
                 .iter()
                 .flat_map(|entity| {
-                    Self::search_in_children(*entity, children_query, r_meshes, q_mesh_handles)
+                    Self::search_in_children(*entity, q_children, r_meshes, q_mesh_handles)
                 })
                 .collect();
             result.append(&mut inner_result);

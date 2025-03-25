@@ -16,13 +16,6 @@ impl VortInEvent {
         VortInEvent { colony }
     }
 }
-
-#[derive(Component, Default)]
-pub struct VortexNode;
-
-#[derive(Component, Default)]
-pub struct VortexGate;
-
 pub struct VortexPlugin;
 
 impl Plugin for VortexPlugin {

@@ -1,6 +1,10 @@
 pub mod faction;
-pub mod interaction;
-pub mod objects;
 pub mod physics;
 pub mod player;
 pub mod security;
+pub mod structure;
+pub mod r#use;
+
+pub mod prelude {
+    pub use super::{faction::*, physics::*, player::*, r#use::*, structure::*};
+}

@@ -25,13 +25,6 @@ pub mod prelude {
         state::prelude::*,
         stats::health::*,
         util::test_utils::*,
-        world::{
-            faction::*,
-            interaction::*,
-            objects::{backpack::*, door::*, territory::*},
-            physics::*,
-            player::*,
-            security::*,
-        },
+        world::prelude::*,
     };
 }

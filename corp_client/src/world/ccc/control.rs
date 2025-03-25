@@ -139,6 +139,7 @@ impl Plugin for ControlPlugin {
             .add_systems(
                 FixedUpdate,
                 (
+                    detect_usable_targets,
                     update_cursor_world,
                     player_control_movement,
                     player_control_orientation,
@@ -148,12 +149,6 @@ impl Plugin for ControlPlugin {
                     toggle_window_cursor_visible,
                 )
                     .chain()
-                    .in_set(ControlSet::PlayingInput)
-                    .run_if(in_state(GameState::Playing)),
-            )
-            .add_systems(
-                FixedUpdate,
-                detect_interactable_objects
                     .in_set(ControlSet::PlayingInput)
                     .run_if(in_state(GameState::Playing)),
             )
@@ -288,13 +283,13 @@ const NUM_RAYS: usize = 10; // Number of rays to evenly distribute within the FO
 const RAY_SPACING: f32 = HORIZONTAL_FOV / (NUM_RAYS - 1) as f32; // Angle between each ray
 const LOOKUP_RANGE: f32 = 2.0; // Range of rays
 
-fn detect_interactable_objects(
+fn detect_usable_targets(
     r_player_entity: Res<PlayerEntity>,
     mut r_hover_entities: ResMut<HoverEntities>,
     q_transform: Query<&Transform>,
     q_parent: Query<&Parent>,
     q_spatial: SpatialQuery,
-    q_object_type: Query<&InteractionObjectType>,
+    q_use: Query<&Use>,
     mut e_debug_gui: EventWriter<DebugGuiEvent>,
     r_cursor_world: Res<CursorWorld>,
     mut gizmos: Gizmos<DebugGizmos>,
@@ -349,16 +344,16 @@ fn detect_interactable_objects(
 
     // Clear any previously selected entities
     r_hover_entities.clear();
-    // Collect usable objects
+    // Collect usable structures
     for ray in rays {
         if let Some(ray_hit_data) = q_spatial.cast_ray(
             ray.origin,
             ray.direction.into(),
             LOOKUP_RANGE,
             true,
-            &SpatialQueryFilter::from_mask([GameLayer::Fixed, GameLayer::Sensor]),
+            &SpatialQueryFilter::from_mask([GameLayer::Structure, GameLayer::Sensor]),
         ) {
-            if let Ok(_) = q_object_type.get(ray_hit_data.entity) {
+            if let Ok(_) = q_use.get(ray_hit_data.entity) {
                 gizmos.ray(
                     ray.origin,
                     (ray.origin + ray.direction * ray_hit_data.distance) - ray.origin,
@@ -404,62 +399,25 @@ fn create_use_event(
     r_use_entity: Res<HoverEntities>,
     r_player_entity: Res<PlayerEntity>,
     q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
-    q_interaction_object: Query<&InteractionObjectType>,
+    q_use: Query<&Use>,
     mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
 ) {
     let Ok(action_state) = q_action_state.get_single() else {
         warn!("PlayerAction state is missing.");
         return;
     };
+
     if action_state.just_pressed(&CharacterAction::Use) {
         let Some(player) = r_player_entity.get() else {
             return;
         };
-        let Some(usable_entity) = r_use_entity.0.iter().last() else {
-            return;
-        };
-        let usable_entity = usable_entity.entity;
 
-        let Ok(interaction_object) = q_interaction_object.get(usable_entity) else {
-            return;
-        };
-
-        match interaction_object {
-            InteractionObjectType::DoorControl => {
-                commands.queue(move |w: &mut World| {
-                    let barrier_fields = {
-                        let fields = w.query::<&BarrierField>().iter(&w).collect::<Vec<_>>();
-                        fields
-                    };
-
-                    if let Some(barrier_control) = w.get::<BarrierControl>(usable_entity) {
-                        let target_entity = barrier_fields
-                            .iter()
-                            .find(|&&bf| bf.name == barrier_control.barrier_field_name)
-                            .map(|&bf| bf.entity);
-
-                        if let Some(target_entity) = target_entity {
-                            w.trigger_targets(UseEvent::new(player), target_entity);
-                        } else {
-                            warn!(
-                                "Didn't find any barrier field with name: {}",
-                                barrier_control.barrier_field_name
-                            );
-                        }
-                    } else {
-                        warn!("Barrier control not found for entity: {:?}", usable_entity);
-                    }
-                });
-            }
-            InteractionObjectType::TerritoryNode => {
-                commands.trigger_targets(UseEvent::new(player), usable_entity);
-            }
-            InteractionObjectType::Backpack => {
-                commands.trigger_targets(UseEvent::new(player), usable_entity);
+        for entity_target in r_use_entity.0.iter() {
+            if let Ok(_) = q_use.get(entity_target.entity) {
+                commands.trigger_targets(UseEvent::new(player), entity_target.entity);
+                ev_interaction_sound.send(InteractionSoundEvent);
             }
         }
-
-        ev_interaction_sound.send(InteractionSoundEvent);
     }
 }
 

@@ -73,7 +73,7 @@ pub fn setup_player(
                 LockedAxes::ROTATION_LOCKED,
                 CollisionLayers::new(
                     [GameLayer::Player],
-                    [GameLayer::Zone, GameLayer::Sensor, GameLayer::Fixed],
+                    [GameLayer::Zone, GameLayer::Sensor, GameLayer::Structure],
                 ),
             ),
         ))
@@ -85,11 +85,11 @@ pub fn setup_player(
                     Transform::from_xyz(0.0, -1.5, 0.0),
                 ))
                 .observe(
-                    |trigger: Trigger<SceneInstanceReady>,
+                    |_trigger: Trigger<SceneInstanceReady>,
                      mut commands: Commands,
                      r_player_systems: Res<PlayerSystems>,
                      mut next_state: ResMut<NextState<GameState>>| {
-                        info!("observed: {:?}", trigger);
+                        info!("Player Scene Instance Ready");
                         commands.run_system(r_player_systems.setup_camera);
                         next_state.set(GameState::Playing);
                     },
