@@ -7,11 +7,11 @@ use crate::prelude::*;
 #[reflect(Component)]
 #[require(
     Name(|| Name::new("Door")),
+    DynamicStructure,
     DoorState,
     SecurityLevel(|| SecurityLevel::Low),
     OwnershipRegistry(lookup_door_ownership),
-    DoorCooldown,
-    MeshCollider(|| MeshCollider::Kinematic)
+    DoorCooldown
 )]
 pub struct Door;
 
@@ -27,8 +27,8 @@ pub struct DoorId(pub i32);
 #[reflect(Component)]
 #[require(
     Name(|| Name::new("Door Terminal")),
-    Use,
-    MeshCollider
+    Structure,
+    Use
 )]
 #[cfg_attr(feature = "client", require(
     StateScoped<GameState>(|| StateScoped(GameState::Playing)))
@@ -183,27 +183,14 @@ pub fn on_use_door_terminal(
     trigger: Trigger<UseEvent>,
     mut commands: Commands,
     q_door_id: Query<&DoorId>,
-    q_door: Query<(Entity, &DoorId), With<DoorId>>,
+    q_door: Query<(Entity, &DoorId), With<Door>>,
 ) {
-    if let Ok(door_id) = q_door_id.get(trigger.entity()) {
-        info!("Door id {:?}", door_id);
+    if let Ok(terminal_door_id) = q_door_id.get(trigger.entity()) {
         for (door_entity, door_id) in &q_door {
-            if door_id == door_id {
-                commands.trigger_targets(UseEvent::new(trigger.user), door_entity)
-            } else {
-                warn!(
-                    "Door terminal: {:?} not found. Triggered by user: {:?}",
-                    trigger.entity(),
-                    trigger.user
-                );
+            if terminal_door_id == door_id {
+                commands.trigger_targets(UseEvent::new(trigger.user), door_entity);
             }
         }
-    } else {
-        warn!(
-            "Door terminal: {:?} not found. Triggered by user: {:?}",
-            trigger.entity(),
-            trigger.user
-        );
     }
 }
 

@@ -1,5 +1,5 @@
-use avian3d::prelude::{PhysicsLayer, RigidBody};
-use bevy::prelude::Component;
+use avian3d::{collision::CollisionLayers, prelude::*};
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(PhysicsLayer, Serialize, Deserialize, Default, Clone, Copy, Debug)]
@@ -12,18 +12,16 @@ pub enum GameLayer {
     Structure,
 }
 
-#[derive(Component, Default, Copy, Clone)]
-pub enum MeshCollider {
-    #[default]
-    Static,
-    Kinematic,
+#[derive(Component, Default, Debug, Reflect)]
+#[reflect(Component)]
+#[require(CollisionLayers(structure_collision_layers), RigidBody(|| RigidBody::Static))]
+pub struct Structure;
+
+pub fn structure_collision_layers() -> CollisionLayers {
+    CollisionLayers::new([GameLayer::Structure], [GameLayer::Player])
 }
 
-impl From<MeshCollider> for RigidBody {
-    fn from(value: MeshCollider) -> Self {
-        match value {
-            MeshCollider::Static => RigidBody::Static,
-            MeshCollider::Kinematic => RigidBody::Kinematic,
-        }
-    }
-}
+#[derive(Component, Default, Debug, Reflect)]
+#[reflect(Component)]
+#[require(RigidBody(|| RigidBody::Kinematic))]
+pub struct DynamicStructure;

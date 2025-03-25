@@ -5,7 +5,7 @@ use bevy::prelude::*;
 #[reflect(Component)]
 #[require(
     Name(|| Name::new("Tree")),
-    MeshCollider
+    Structure
 )]
 #[cfg_attr(feature = "client", require(
     StateScoped<GameState>(|| StateScoped(GameState::Playing)))
@@ -16,7 +16,7 @@ pub struct Tree;
 #[reflect(Component)]
 #[require(
     Name(|| Name::new("Wall")),
-    MeshCollider
+    Structure
 )]
 #[cfg_attr(feature = "client", require(
     StateScoped<GameState>(|| StateScoped(GameState::Playing)))
@@ -27,7 +27,7 @@ pub struct Wall;
 #[reflect(Component)]
 #[require(
     Name(|| Name::new("Ground")),
-    MeshCollider
+    Structure
 )]
 #[cfg_attr(feature = "client", require(
     StateScoped<GameState>(|| StateScoped(GameState::Playing)))
@@ -38,7 +38,7 @@ pub struct Ground;
 #[reflect(Component)]
 #[require(
     Name(|| Name::new("Floor")),
-    MeshCollider
+    Structure
 )]
 #[cfg_attr(feature = "client", require(
     StateScoped<GameState>(|| StateScoped(GameState::Playing)))

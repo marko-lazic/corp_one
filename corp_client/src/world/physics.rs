@@ -20,25 +20,19 @@ impl Plugin for WorldPhysicsPlugin {
 
 fn add_trimesh_collider(
     mut commands: Commands,
-    query: Query<(Entity, &MeshCollider), Added<MeshCollider>>,
+    query: Query<Entity, Added<Structure>>,
     children_query: Query<&Children>,
     mesh_3d: Query<&Mesh3d>,
     meshes: Res<Assets<Mesh>>,
 ) {
-    for (entity, mesh_collider) in &query {
+    for entity in &query {
         for child in children_query.iter_descendants(entity) {
             if let Ok(Mesh3d(handle)) = mesh_3d.get(child) {
                 let mesh = meshes.get(handle).unwrap();
                 if let Some(collider) = Collider::trimesh_from_mesh(mesh) {
-                    commands.entity(entity).insert((
-                        collider,
-                        CollisionMargin(0.05),
-                        RigidBody::from(*mesh_collider),
-                        CollisionLayers::new([GameLayer::Structure], [GameLayer::Player]),
-                    ));
-                    info!("Collider added to map entity  {}", child);
-                } else {
-                    warn!("Info this entity didnt have a mesh {}", child);
+                    commands
+                        .entity(entity)
+                        .insert((collider, CollisionMargin(0.05)));
                 }
             }
         }

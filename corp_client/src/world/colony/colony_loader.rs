@@ -65,7 +65,7 @@ fn load_colony_event(
 
     commands.spawn((
         Name::new("Debug Ground"),
-        Mesh3d(r_meshes.add(Plane3d::default().mesh().size(100.0, 100.0))),
+        Mesh3d(r_meshes.add(Plane3d::default().mesh().size(50.0, 50.0))),
         Transform::from_translation(Vec3::new(4., -0.01, 4.)),
         MeshMaterial3d(r_materials.add(StandardMaterial {
             base_color: Color::WHITE,
@@ -76,7 +76,7 @@ fn load_colony_event(
         })),
         RigidBody::Static,
         CollisionLayers::new([GameLayer::Structure], [GameLayer::Player]),
-        Collider::cuboid(40.0, 0.01, 40.0),
+        Collider::cuboid(50.0, 0.01, 50.0),
         StateScoped(GameState::Playing),
     ));
 

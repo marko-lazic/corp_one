@@ -7,10 +7,10 @@ use crate::prelude::{Faction, OwnershipRegistry, SecurityLevel, UseEvent};
 #[reflect(Component)]
 #[require(
     Name(|| Name::new("Energy Node")),
+    Structure,
     Use,
     SecurityLevel(|| SecurityLevel::Low),
-    OwnershipRegistry(lookup_ownership),
-    MeshCollider
+    OwnershipRegistry(lookup_ownership)
 )]
 #[cfg_attr(feature = "client", require(
     StateScoped<GameState>(|| StateScoped(GameState::Playing)))

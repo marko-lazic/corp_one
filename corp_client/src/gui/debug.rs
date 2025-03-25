@@ -89,7 +89,7 @@ fn setup(
     ));
 
     let (debug_gizmo_config, _) = config_store.config_mut::<DebugGizmos>();
-    debug_gizmo_config.enabled = true;
+    debug_gizmo_config.enabled = false;
 }
 
 #[derive(Bundle)]
