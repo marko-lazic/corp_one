@@ -287,7 +287,6 @@ fn detect_usable_targets(
     r_player_entity: Res<PlayerEntity>,
     mut r_hover_entities: ResMut<HoverEntities>,
     q_transform: Query<&Transform>,
-    q_parent: Query<&Parent>,
     q_spatial: SpatialQuery,
     q_use: Query<&Use>,
     mut e_debug_gui: EventWriter<DebugGuiEvent>,
@@ -360,16 +359,8 @@ fn detect_usable_targets(
                     bevy::color::palettes::tailwind::RED_700,
                 );
 
-                let parent_entity = match q_parent.get(ray_hit_data.entity) {
-                    Ok(parent) => parent.get(),
-                    Err(_) => {
-                        // Parent not found for entity {entity:?}, using entity itself.
-                        ray_hit_data.entity
-                    }
-                };
-
-                let Ok(transform) = q_transform.get(parent_entity) else {
-                    warn!("Failed to retrieve transform for entity {parent_entity:?}");
+                let Ok(transform) = q_transform.get(ray_hit_data.entity) else {
+                    warn!("Err get transform for entity {:?}", ray_hit_data.entity);
                     return;
                 };
                 r_hover_entities.insert(UsableTarget {
