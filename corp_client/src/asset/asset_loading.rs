@@ -1,4 +1,3 @@
-use crate::prelude::*;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_kira_audio::AudioSource;
@@ -11,22 +10,15 @@ use corp_shared::prelude::*;
 /// Data/Lighting->Lighting Mode Unitless
 #[derive(AssetCollection, Resource)]
 pub struct SceneAssets {
+    /// Iris Relaxed Alien Adventure
     #[asset(path = "scenes/iris/iris.glb#Scene0")]
     pub iris: Handle<Scene>,
+    /// Cloning Facility
     #[asset(path = "scenes/cloning/cloning.glb#Scene0")]
     pub cloning: Handle<Scene>,
+    /// Liberte stronghold of The Democratic
     #[asset(path = "scenes/liberte/liberte.glb#Scene0")]
     pub liberte: Handle<Scene>,
-}
-
-#[derive(AssetCollection, Resource)]
-pub struct ColonyConfigAssets {
-    #[asset(path = "data/colony/iris.colony")]
-    pub iris: Handle<ColonyConfig>,
-    #[asset(path = "data/colony/liberte.colony")]
-    pub liberte: Handle<ColonyConfig>,
-    #[asset(path = "data/colony/cloning.colony")]
-    pub cloning: Handle<ColonyConfig>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -81,7 +73,6 @@ impl Plugin for AssetLoadingPlugin {
                 .load_collection::<TextureAssets>()
                 .load_collection::<AudioAssets>()
                 .load_collection::<FontAssets>()
-                .load_collection::<ColonyConfigAssets>()
                 .load_collection::<SceneAssets>(),
         );
     }

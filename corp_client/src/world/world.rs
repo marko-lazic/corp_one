@@ -27,7 +27,6 @@ impl Plugin for WorldPlugin {
             CharacterPlugin,
             ControlPlugin,
             MainCameraPlugin,
-            ZonePlugin,
             PlayerPlugin,
             CloningPlugin,
         ))

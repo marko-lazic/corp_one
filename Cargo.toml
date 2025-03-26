@@ -22,4 +22,4 @@ lightyear = { git = "https://github.com/cBournhonesque/lightyear.git", rev = "20
 serde = { version = "1", default-features = false }
 avian3d = { version = "0.2", default-features = false }
 rand = "0.8"
-
+bevy_rand = { version = "0.8", features = ["wyrand"] }

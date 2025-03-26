@@ -7,14 +7,18 @@ pub enum GameLayer {
     #[default]
     Default,
     Player,
-    Zone,
+    Area,
     Sensor,
     Structure,
 }
 
 #[derive(Component, Default, Debug, Reflect)]
 #[reflect(Component)]
-#[require(CollisionLayers(structure_collision_layers), RigidBody(|| RigidBody::Static))]
+#[require(
+    CollisionLayers(structure_collision_layers),
+    RigidBody(|| RigidBody::Static),
+    CreateTriMesh
+)]
 pub struct Structure;
 
 pub fn structure_collision_layers() -> CollisionLayers {
@@ -25,3 +29,11 @@ pub fn structure_collision_layers() -> CollisionLayers {
 #[reflect(Component)]
 #[require(RigidBody(|| RigidBody::Kinematic))]
 pub struct DynamicStructure;
+
+#[derive(Component, Default, Debug, Reflect)]
+#[reflect(Component)]
+#[require(Sensor, RigidBody(|| RigidBody::Static), CreateTriMesh)]
+pub struct PassStructure;
+
+#[derive(Component, Default)]
+pub struct CreateTriMesh;

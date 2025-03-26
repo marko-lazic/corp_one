@@ -20,7 +20,7 @@ impl Plugin for WorldPhysicsPlugin {
 
 fn add_trimesh_collider(
     mut commands: Commands,
-    query: Query<Entity, Added<Structure>>,
+    query: Query<Entity, Added<CreateTriMesh>>,
     children_query: Query<&Children>,
     mesh_3d: Query<&Mesh3d>,
     meshes: Res<Assets<Mesh>>,

@@ -9,11 +9,10 @@ use bevy_skein::SkeinPlugin;
 use corp_shared::prelude::*;
 
 #[derive(Event)]
-pub struct ColonyLoadEvent(pub Handle<ColonyConfig>);
+pub struct ColonyLoadEvent(pub Colony);
 
 pub fn colony_loader_plugin(app: &mut App) {
     app.add_event::<ColonyLoadEvent>()
-        .register_type::<EnergyNode>()
         .add_plugins(SkeinPlugin::default())
         .add_systems(OnEnter(GameState::LoadColony), load_colony_event)
         .add_systems(OnExit(GameState::LoadColony), update_lights);
@@ -21,21 +20,18 @@ pub fn colony_loader_plugin(app: &mut App) {
 
 fn load_colony_event(
     mut ev_colony_load: EventReader<ColonyLoadEvent>,
-    r_colony_config: Res<Assets<ColonyConfig>>,
     r_scene_assets: Res<SceneAssets>,
     mut r_meshes: ResMut<Assets<Mesh>>,
     mut r_materials: ResMut<Assets<StandardMaterial>>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
     mut commands: Commands,
 ) {
-    info!("Setup colony");
     let Some(colony_load_event) = ev_colony_load.read().last() else {
         return;
     };
-    let current_colony = r_colony_config.get(&colony_load_event.0).unwrap();
-    info!("Setup colony {:?}", current_colony);
+    info!("Setup colony {:?}", colony_load_event.0);
 
-    let colony_scene = match current_colony.name {
+    let colony_scene = match colony_load_event.0 {
         Colony::Cloning => r_scene_assets.cloning.clone(),
         Colony::Iris => r_scene_assets.iris.clone(),
         Colony::Liberte => r_scene_assets.liberte.clone(),
@@ -79,20 +75,6 @@ fn load_colony_event(
         Collider::cuboid(50.0, 0.01, 50.0),
         StateScoped(GameState::Playing),
     ));
-
-    // spawn zones
-    for zone_asset in &current_colony.zones {
-        commands.spawn((
-            Name::new(format!("Zone {:?}", zone_asset.zone_type)),
-            Zone::from(*zone_asset),
-            Sensor,
-            Collider::cuboid(zone_asset.size, 2.0, zone_asset.size),
-            Transform::from_translation(zone_asset.position + Vec3::Y),
-            Visibility::default(),
-            CollisionLayers::new([GameLayer::Zone], [GameLayer::Player]),
-            StateScoped(GameState::Playing),
-        ));
-    }
 }
 
 fn on_colony_loaded(

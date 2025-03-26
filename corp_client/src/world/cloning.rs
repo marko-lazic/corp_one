@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use corp_shared::prelude::*;
+use corp_shared::{prelude::*, world::colony::Colony};
 
 pub struct CloningPlugin;
 
@@ -45,7 +45,6 @@ fn player_loot_drop(
 }
 
 fn dead_player_system(
-    r_colony_config_assets: Res<ColonyConfigAssets>,
     r_time: Res<Time<Fixed>>,
     mut r_player_entity: ResMut<PlayerEntity>,
     mut ev_colony_load: EventWriter<ColonyLoadEvent>,
@@ -61,7 +60,7 @@ fn dead_player_system(
             });
             health.cloning_cooldown.tick(r_time.delta());
             if health.cloning_cooldown.finished() {
-                ev_colony_load.send(ColonyLoadEvent(r_colony_config_assets.cloning.clone()));
+                ev_colony_load.send(ColonyLoadEvent(Colony::Cloning));
                 r_next_state.set(GameState::LoadColony);
             }
         }
@@ -106,7 +105,6 @@ mod tests {
         player_store.health.kill_mut();
         world.insert_resource(player_store);
         world.init_resource::<Events<VortInEvent>>();
-        world.insert_resource(create_colony_assets());
 
         // Run systems
         schedule.run(&mut world);
@@ -116,13 +114,5 @@ mod tests {
             &CLONE_HEALTH_80,
             "PlayerStore health is set to clone health"
         );
-    }
-
-    fn create_colony_assets() -> ColonyConfigAssets {
-        ColonyConfigAssets {
-            iris: Default::default(),
-            liberte: Default::default(),
-            cloning: Default::default(),
-        }
     }
 }

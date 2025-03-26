@@ -73,7 +73,7 @@ pub fn setup_player(
                 LockedAxes::ROTATION_LOCKED,
                 CollisionLayers::new(
                     [GameLayer::Player],
-                    [GameLayer::Zone, GameLayer::Sensor, GameLayer::Structure],
+                    [GameLayer::Area, GameLayer::Sensor, GameLayer::Structure],
                 ),
             ),
         ))

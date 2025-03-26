@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use bevy_common_assets::ron::RonAssetPlugin;
-use corp_shared::world::structure::StructurePlugin;
+use corp_shared::{prelude::action::ActionPlugin, world::structure::StructurePlugin};
 
 pub struct ColonyPlugin;
 
@@ -11,7 +10,8 @@ impl Plugin for ColonyPlugin {
             VortexPlugin,
             BarrierPlugin,
             StructurePlugin,
-            RonAssetPlugin::<ColonyConfig>::new(&["colony"]),
+            AreaPlugin,
+            ActionPlugin,
             colony_loader_plugin,
         ));
     }

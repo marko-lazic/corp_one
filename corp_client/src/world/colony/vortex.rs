@@ -1,12 +1,12 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::prelude::*;
-use corp_shared::prelude::*;
+use corp_shared::{prelude::*, world::colony::Colony};
 
 #[derive(Event)]
 pub struct VortOutEvent;
 
-#[derive(Event)]
+#[derive(Event, Clone)]
 pub struct VortInEvent {
     colony: Colony,
 }
@@ -64,20 +64,13 @@ fn vort_out_event_reader(
 }
 
 fn vort_in_event_reader(
-    r_colony_config_assets: Res<ColonyConfigAssets>,
     mut r_next_state: ResMut<NextState<GameState>>,
     mut ev_vort_in: EventReader<VortInEvent>,
     mut ev_colony_load: EventWriter<ColonyLoadEvent>,
 ) {
     for vort_in in ev_vort_in.read() {
-        info!("Vort in: {:?}", vort_in.colony);
-        let colony_config_handle = match vort_in.colony {
-            Colony::Cloning => r_colony_config_assets.cloning.clone(),
-            Colony::Iris => r_colony_config_assets.iris.clone(),
-            Colony::Liberte => r_colony_config_assets.liberte.clone(),
-            Colony::Playground => Handle::default(),
-        };
-        ev_colony_load.send(ColonyLoadEvent(colony_config_handle));
+        let colony = vort_in.colony.clone();
+        ev_colony_load.send(ColonyLoadEvent(colony));
         r_next_state.set(GameState::LoadColony);
     }
 }

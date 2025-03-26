@@ -125,11 +125,9 @@ fn setup_door(
             Mesh3d(meshes.add(Cuboid::new(door_size, door_size, door_size))),
             MeshMaterial3d(materials.add(endesga::SKY)),
             door_position,
-            DoorBundle {
-                security_level: level,
-                ownership: OwnershipRegistry::new_permanent(owner),
-                ..default()
-            },
+            Door,
+            level,
+            OwnershipRegistry::new_permanent(owner),
             RigidBody::Static,
             Collider::cuboid(door_hs, door_hs, door_hs),
         ))
