@@ -21,14 +21,18 @@ pub enum GameLayer {
 )]
 pub struct Structure;
 
+#[derive(Component, Default, Debug, Reflect)]
+#[reflect(Component)]
+#[require(
+    CollisionLayers(structure_collision_layers),
+    RigidBody(|| RigidBody::Kinematic),
+    CreateTriMesh
+)]
+pub struct DynamicStructure;
+
 pub fn structure_collision_layers() -> CollisionLayers {
     CollisionLayers::new([GameLayer::Structure], [GameLayer::Player])
 }
-
-#[derive(Component, Default, Debug, Reflect)]
-#[reflect(Component)]
-#[require(RigidBody(|| RigidBody::Kinematic))]
-pub struct DynamicStructure;
 
 #[derive(Component, Default, Debug, Reflect)]
 #[reflect(Component)]
