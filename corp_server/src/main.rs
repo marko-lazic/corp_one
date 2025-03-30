@@ -1,32 +1,28 @@
-use crate::{database::DbPlugin, server::ServerNetPlugin};
-use bevy::{app::ScheduleRunnerPlugin, log::LogPlugin, prelude::*, state::app::StatesPlugin};
-use bevy_rand::prelude::{EntropyPlugin, WyRand};
-use std::time::Duration;
+use crate::{game::prelude::*, log::init_logging};
+use corp_shared::prelude::Colony;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
-mod database;
 mod dirs;
-mod server;
+mod game;
+mod log;
 mod table;
 
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-pub enum ServerState {
-    #[default]
-    Load,
-    Serve,
-}
+#[tokio::main]
+async fn main() -> Result<(), anyhow::Error> {
+    init_logging()?;
+    let config = ServerConfig {
+        colony: Colony::Iris,
+        server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 5000),
+    };
+    let _iris_ref = kameo::actor::spawn_in_thread(GameInstanceActor { config });
+    let config = ServerConfig {
+        colony: Colony::Cloning,
+        server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 5001),
+    };
+    let _cloning_ref = kameo::actor::spawn_in_thread(GameInstanceActor { config });
 
-fn main() {
-    let frames_per_second = Duration::from_secs_f32(1.0 / 60.0);
-
-    App::new()
-        .add_plugins((
-            LogPlugin::default(),
-            StatesPlugin,
-            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frames_per_second)),
-            DbPlugin,
-            ServerNetPlugin,
-            EntropyPlugin::<WyRand>::default(),
-        ))
-        .init_state::<ServerState>()
-        .run();
+    println!("Actors running. Press CTRL+C to stop.");
+    tokio::signal::ctrl_c().await?;
+    println!("Shutting down.");
+    Ok(())
 }

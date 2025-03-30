@@ -1,6 +1,6 @@
 use lightyear::prelude::Deserialize;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Copy, Eq, PartialEq)]
 pub enum Colony {
     Cloning,
     Iris,
