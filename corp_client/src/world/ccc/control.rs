@@ -173,7 +173,6 @@ fn double_tap_to_exit(
         l_double_tap.increment();
     }
     l_double_tap.tick(r_time.delta()).on_complete(|| {
-        commands.disconnect_client();
         ev_exit_app.send(AppExit::Success);
     });
 }

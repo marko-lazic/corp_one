@@ -1,4 +1,4 @@
-use crate::{dirs::Dirs, game::prelude::*, table};
+use crate::{dirs::Dirs, game::*, table};
 use bevy::{prelude::*, tasks::IoTaskPool};
 use corp_shared::prelude::Colony;
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
@@ -8,14 +8,11 @@ pub struct DbPlugin;
 
 impl Plugin for DbPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(ServerState::Load),
-            database_setup.run_if(is_colony_iris),
-        );
+        app.add_systems(Startup, database_setup.run_if(is_colony_iris));
     }
 }
 
-fn is_colony_iris(config: Res<ServerConfig>) -> bool {
+fn is_colony_iris(config: Res<GameInstanceConfig>) -> bool {
     config.colony == Colony::Iris
 }
 

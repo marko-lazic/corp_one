@@ -18,8 +18,12 @@ default-members = [
 
 [workspace.dependencies]
 bevy = { version = "0.15", default-features = false }
-lightyear = { git = "https://github.com/cBournhonesque/lightyear.git", rev = "2037d46", default-features = false }
 serde = { version = "1", default-features = false }
 avian3d = { version = "0.2", default-features = false }
 rand = "0.8"
 bevy_rand = { version = "0.8", features = ["wyrand"] }
+
+aeronet = { path = "../temp/aeronet/crates/aeronet", default-features = false }
+aeronet_webtransport = { path = "../temp/aeronet/crates/aeronet_webtransport", default-features = false }
+aeronet_replicon = { path = "../temp/aeronet/crates/aeronet_replicon", default-features = false }
+bevy_replicon = { version = "0.31.1", default-features = false }

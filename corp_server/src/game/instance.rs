@@ -1,8 +1,8 @@
-use crate::game::{app::new_app, config::ServerConfig};
+use crate::game::*;
 use kameo::{actor::ActorRef, error::Infallible, Actor};
 
 pub struct GameInstanceActor {
-    pub config: ServerConfig,
+    pub config: GameInstanceConfig,
 }
 
 impl Actor for GameInstanceActor {

@@ -1,98 +1,128 @@
-use crate::prelude::PlayerSystems;
+use crate::prelude::*;
+use aeronet::{
+    io::{
+        connection::{DisconnectReason, Disconnected},
+        Session, SessionEndpoint,
+    },
+    transport::TransportConfig,
+};
+use aeronet_replicon::client::{AeronetRepliconClient, AeronetRepliconClientPlugin};
+use aeronet_webtransport::{
+    cert,
+    client::{WebTransportClient, WebTransportClientPlugin},
+    wtransport,
+};
 use bevy::prelude::*;
+use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
-pub use lightyear::prelude::client::*;
-use lightyear::{prelude::*, shared::replication::components::Controlled};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-
-const CLIENT_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 4000);
 
 pub struct ClientNetPlugin;
 
 impl Plugin for ClientNetPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((build_client_plugin(), ProtocolPlugin))
-            .add_systems(OnEnter(IsColonyLoaded::Loaded), connect_client)
-            .add_systems(Update, (on_connect, handle_new_character))
-            .add_systems(
-                Update,
-                receive_entity_spawn.run_if(in_state(GameState::Playing)),
-            );
-    }
-}
-
-fn on_connect(mut connect_event: EventReader<ConnectEvent>) {
-    for event in connect_event.read() {
-        let client_id = event.client_id();
-        info!("Received ConnectEvent: {:?}", client_id);
-    }
-}
-
-pub fn receive_entity_spawn(mut reader: EventReader<EntitySpawnEvent>) {
-    for event in reader.read() {
-        info!("Received entity spawn: {:?}", event.entity());
-    }
-}
-
-fn handle_new_character(
-    connection: Res<ClientConnection>,
-    mut commands: Commands,
-    mut character_query: Query<
-        (Entity, Has<Controlled>),
-        (Added<Predicted>, With<CharacterMarker>),
-    >,
-    r_player_systems: Res<PlayerSystems>,
-) {
-    for (entity, is_controlled) in &mut character_query {
-        if is_controlled {
-            info!("Adding Player setup to controlled and predicted entity {entity:?}");
-            commands.run_system_with_input(r_player_systems.setup_player, entity);
-        } else {
-            info!("Remote character replicated to us: {entity:?}");
-        }
-        let client_id = connection.id();
-        info!(?entity, ?client_id, "Adding physics to character");
-        commands.entity(entity).insert(());
+        app.add_plugins((
+            // transport
+            WebTransportClientPlugin,
+            // replication
+            RepliconPlugins,
+            AeronetRepliconClientPlugin,
+            ReplicateRulesPlugin,
+            // game
+            SpawnListenerPlugin,
+        ))
+        .add_systems(OnEnter(LoadingSubState::Loaded), connect_client)
+        .add_observer(on_connecting)
+        .add_observer(on_connected)
+        .add_observer(on_disconnected);
     }
 }
 
 fn connect_client(mut commands: Commands) {
-    info!("Connecting to server");
-    commands.connect_client();
+    let cert_hash = "".to_string();
+    let config = web_transport_config(cert_hash);
+
+    let target = "https://[::1]:25565".to_string();
+
+    let name = "Corp One Session ID 1";
+    commands
+        .spawn((Name::new(name), AeronetRepliconClient))
+        .queue(WebTransportClient::connect(config, target));
 }
 
-/// Here we create the lightyear [`ClientPlugins`]
-fn build_client_plugin() -> ClientPlugins {
-    // Authentication is where you specify how the client should connect to the server
-    // This is where you provide the server address.
-    let auth = Authentication::Manual {
-        server_addr: corp_shared::network::SERVER_ADDR,
-        client_id: 42,
-        private_key: Key::default(),
-        protocol_id: 0,
+fn web_transport_config(cert_hash: String) -> wtransport::ClientConfig {
+    use aeronet_webtransport::wtransport::tls::Sha256Digest;
+    use core::time::Duration;
+
+    let config = wtransport::ClientConfig::builder().with_bind_default();
+
+    let config = if cert_hash.is_empty() {
+        warn!("Connecting without certificate validation");
+        config.with_no_cert_validation()
+    } else {
+        match cert::hash_from_b64(&cert_hash) {
+            Ok(hash) => config.with_server_certificate_hashes([Sha256Digest::new(hash)]),
+            Err(err) => {
+                warn!("Failed to read certificate hash from string: {err:?}");
+                config.with_server_certificate_hashes([])
+            }
+        }
     };
-    // The IoConfig will specify the transport to use.
-    let io = IoConfig {
-        // the address specified here is the client_address, because we open a UDP socket on the client
-        transport: ClientTransport::UdpSocket(CLIENT_ADDR),
+
+    config
+        .keep_alive_interval(Some(Duration::from_secs(1)))
+        .max_idle_timeout(Some(Duration::from_secs(20)))
+        .expect("should be a valid idle timeout")
+        .build()
+}
+
+fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) {
+    let entity = trigger.entity();
+    let name = names
+        .get(entity)
+        .expect("our session entity should have a name");
+    info!("{name} connecting");
+}
+
+fn on_connected(
+    trigger: Trigger<OnAdd, Session>,
+    names: Query<&Name>,
+    _game_state: ResMut<NextState<GameState>>,
+    mut commands: Commands,
+    r_player_systems: Res<PlayerSystems>,
+) {
+    let entity = trigger.entity();
+    let name = names
+        .get(entity)
+        .expect("our session entity should have a name");
+    info!("{name} connected");
+
+    commands.entity(entity).insert((TransportConfig {
+        max_memory_usage: 64 * 1024,
+        send_bytes_per_sec: 4 * 1024,
         ..default()
+    },));
+
+    commands.run_system_with_input(r_player_systems.setup_player, trigger.entity());
+}
+
+fn on_disconnected(
+    trigger: Trigger<Disconnected>,
+    names: Query<&Name>,
+    _game_state: ResMut<NextState<GameState>>,
+) {
+    let session = trigger.entity();
+    let name = names
+        .get(session)
+        .expect("our session entity should have a name");
+    match &trigger.reason {
+        DisconnectReason::User(reason) => {
+            info!("{name} disconnected by user: {reason}")
+        }
+        DisconnectReason::Peer(reason) => {
+            info!("{name} disconnected by peer: {reason}")
+        }
+        DisconnectReason::Error(err) => {
+            info!("{name} disconnected due to error: {err:?}")
+        }
     };
-    // The NetConfig specifies how we establish a connection with the server.
-    // We can use either Steam (in which case we will use steam sockets and there is no need to specify
-    // our own io) or Netcode (in which case we need to specify our own io).
-    let net_config = NetConfig::Netcode {
-        auth,
-        io,
-        config: NetcodeConfig {
-            client_timeout_secs: 3,
-            ..default()
-        },
-    };
-    let config = ClientConfig {
-        // part of the config needs to be shared between the client and server
-        shared: shared_config(),
-        net: net_config,
-        ..default()
-    };
-    ClientPlugins::new(config)
 }

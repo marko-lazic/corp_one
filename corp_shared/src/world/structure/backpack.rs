@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::prelude::*;
-use lightyear::prelude::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[require(

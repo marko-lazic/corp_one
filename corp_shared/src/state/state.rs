@@ -11,9 +11,9 @@ pub enum GameState {
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, SubStates)]
 #[source(GameState = GameState::LoadColony)]
-pub enum IsColonyLoaded {
+pub enum LoadingSubState {
     #[default]
-    Running,
+    Loading,
     Loaded,
 }
 
@@ -22,7 +22,7 @@ pub struct GameStatePlugin;
 impl Plugin for GameStatePlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<GameState>()
-            .add_sub_state::<IsColonyLoaded>()
+            .add_sub_state::<LoadingSubState>()
             .enable_state_scoped_entities::<GameState>();
     }
 }

@@ -79,10 +79,10 @@ fn load_colony_event(
 
 fn on_colony_loaded(
     _trigger: Trigger<SceneInstanceReady>,
-    mut next_state: ResMut<NextState<IsColonyLoaded>>,
+    mut next_state: ResMut<NextState<LoadingSubState>>,
 ) {
     info!("Colony Scene Instance Ready");
-    next_state.set(IsColonyLoaded::Loaded);
+    next_state.set(LoadingSubState::Loaded);
 }
 
 // Temporary fixes the problem with shadows not working

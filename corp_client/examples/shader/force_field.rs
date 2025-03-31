@@ -6,7 +6,7 @@ use std::f32::consts::FRAC_PI_2;
 use bevy::{
     color::palettes::css::MEDIUM_SEA_GREEN,
     core_pipeline::{
-        bloom::BloomSettings,
+        bloom::Bloom,
         prepass::{DepthPrepass, MotionVectorPrepass, NormalPrepass},
     },
     pbr::{NotShadowCaster, NotShadowReceiver},
@@ -85,7 +85,7 @@ fn setup(
         NormalPrepass,
         // This will generate a texture containing screen space pixel motion vectors
         MotionVectorPrepass,
-        BloomSettings::default(),
+        Bloom::default(),
     ));
 }
 

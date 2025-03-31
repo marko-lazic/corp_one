@@ -59,7 +59,7 @@ mod tests {
 
     fn setup_territory_node(app: &mut App, faction: Faction, level: SecurityLevel) -> Entity {
         let ownership = OwnershipRegistry::new_permanent(faction);
-        let door_entity = app.world_mut().spawn(EnergyNode).id();
+        let door_entity = app.world_mut().spawn((EnergyNode, ownership, level)).id();
         door_entity
     }
 

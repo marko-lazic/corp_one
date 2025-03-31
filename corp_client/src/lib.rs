@@ -1,5 +1,5 @@
 mod asset;
-mod backend;
+mod client_backend;
 mod gui;
 mod network;
 mod sound;
@@ -8,7 +8,7 @@ mod world;
 
 pub mod prelude {
     pub use super::{
-        asset::prelude::*, backend::*, gui::prelude::*, network::prelude::*, sound::prelude::*,
-        world::prelude::*,
+        asset::prelude::*, client_backend::*, gui::prelude::*, network::prelude::*,
+        sound::prelude::*, world::prelude::*,
     };
 }

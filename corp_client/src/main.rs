@@ -1,11 +1,11 @@
-mod frontend;
+mod client_frontend;
 
-use crate::frontend::FrontendPlugin;
+use crate::client_frontend::ClientFrontendPlugin;
 use bevy::prelude::*;
 use corp_client::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins((FrontendPlugin, BackendPlugin))
+        .add_plugins((ClientFrontendPlugin, ClientBackendPlugin))
         .run();
 }
