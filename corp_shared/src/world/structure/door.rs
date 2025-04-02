@@ -10,8 +10,7 @@ use crate::prelude::*;
     DynamicStructure,
     DoorState,
     SecurityLevel(|| SecurityLevel::Low),
-    OwnershipRegistry(lookup_door_ownership),
-    DoorCooldown
+    OwnershipRegistry(lookup_door_ownership)
 )]
 pub struct Door;
 
@@ -35,46 +34,43 @@ pub struct DoorId(pub i32);
 )]
 pub struct DoorTerminal;
 
-#[derive(Component, Default, Eq, PartialEq, Debug, Copy, Clone)]
+#[derive(Component, Default, Eq, PartialEq, Debug, Clone)]
 pub enum DoorState {
-    Open,
+    Open {
+        autoclose: Timer,
+        toggle_block: Timer,
+    },
     #[default]
     Closed,
 }
 
 impl DoorState {
-    pub fn toggle(&mut self, door_cooldown: &mut DoorCooldown) {
-        if door_cooldown.toggle_block.finished() {
-            door_cooldown.toggle_block.reset();
-            door_cooldown.autoclose.reset();
-            *self = match *self {
-                DoorState::Open => DoorState::Closed,
-                DoorState::Closed => DoorState::Open,
-            };
+    const AUTOCLOSE_SECS: f32 = 10.0;
+    const TOGGLE_BLOCK_SECS: f32 = 1.0;
+    const HACK_DURATION_SECS: f32 = 60.0 * 5.0;
+    pub fn open() -> Self {
+        DoorState::Open {
+            autoclose: Timer::from_seconds(Self::AUTOCLOSE_SECS, TimerMode::Once),
+            toggle_block: Timer::from_seconds(Self::TOGGLE_BLOCK_SECS, TimerMode::Once),
         }
     }
-}
 
-#[derive(Component)]
-pub struct DoorCooldown {
-    pub autoclose: Timer,
-    pub toggle_block: Timer,
-}
-
-impl DoorCooldown {
-    const OPEN_TIME: f32 = 10.0;
-    const TOGGLE_TIME: f32 = 1.0;
-    const HACK_DURATION: f32 = 60.0 * 5.0; // 5 min
-}
-
-impl Default for DoorCooldown {
-    fn default() -> Self {
-        let mut toggle_cooldown = Timer::from_seconds(DoorCooldown::TOGGLE_TIME, TimerMode::Once);
-        toggle_cooldown.tick(Duration::from_secs_f32(DoorCooldown::TOGGLE_TIME));
-
-        DoorCooldown {
-            autoclose: Timer::from_seconds(DoorCooldown::OPEN_TIME, TimerMode::Once),
-            toggle_block: toggle_cooldown,
+    pub fn is_open(&self) -> bool {
+        matches!(self, DoorState::Open { .. })
+    }
+    pub fn toggle(&mut self) {
+        match self {
+            DoorState::Open {
+                toggle_block,
+                autoclose: _autoclose,
+            } => {
+                if toggle_block.finished() {
+                    *self = DoorState::Closed;
+                }
+            }
+            DoorState::Closed => {
+                *self = Self::open();
+            }
         }
     }
 }
@@ -86,22 +82,21 @@ pub struct UseDoorHackEvent {
     pub hacker: Entity,
 }
 
-pub fn door_cooldown_system(
-    mut q_door: Query<(&mut DoorCooldown, &mut DoorState), With<Door>>,
-    r_time: Res<Time>,
-) {
-    for (mut door_cooldown, mut door_state) in &mut q_door {
-        // If the door is currently open and the cooldown timer has expired, set the state to Closed
-        if *door_state == DoorState::Open
-            && door_cooldown.autoclose.tick(r_time.delta()).just_finished()
-        {
-            *door_state = DoorState::Closed;
-            door_cooldown.autoclose.reset();
-        }
+pub fn door_cooldown_system(mut q_door: Query<&mut DoorState, With<Door>>, r_time: Res<Time>) {
+    for mut door_state in &mut q_door {
+        match *door_state {
+            DoorState::Open {
+                ref mut autoclose,
+                ref mut toggle_block,
+            } => {
+                autoclose.tick(r_time.delta());
+                toggle_block.tick(r_time.delta());
 
-        // If the door toggle cooldown timer has expired, allow the player to interact with the door again
-        if !door_cooldown.toggle_block.finished() {
-            door_cooldown.toggle_block.tick(r_time.delta());
+                if autoclose.finished() {
+                    *door_state = DoorState::Closed;
+                }
+            }
+            _ => {}
         }
     }
 }
@@ -110,29 +105,21 @@ pub fn on_use_door_event(
     trigger: Trigger<UseEvent>,
     mut commands: Commands,
     q_member: Query<&MemberOf>,
-    mut q_door: Query<
-        (
-            &mut DoorCooldown,
-            &mut DoorState,
-            &OwnershipRegistry,
-            &SecurityLevel,
-        ),
-        With<Door>,
-    >,
+    mut q_door: Query<(&mut DoorState, &OwnershipRegistry, &SecurityLevel), With<Door>>,
 ) {
     if let Ok(member_of) = q_member.get(trigger.event().user) {
-        if let Ok((mut door_cooldown, mut door_state, control_registry, security_level)) =
+        if let Ok((mut door_state, control_registry, security_level)) =
             q_door.get_mut(trigger.entity())
         {
             if let Some(control_type) = control_registry.get_control_type(&member_of.faction) {
                 match control_type {
                     Ownership::Permanent(_) => {
                         if security_level.has_required_rank(&member_of.rank) {
-                            door_state.toggle(&mut door_cooldown);
+                            door_state.toggle();
                         }
                     }
                     Ownership::Hacked(_, _) => {
-                        door_state.toggle(&mut door_cooldown);
+                        door_state.toggle();
                     }
                 }
             } else {
@@ -150,13 +137,11 @@ pub fn on_use_door_event(
 pub fn on_use_door_hack_event(
     trigger: Trigger<UseDoorHackEvent>,
     mut commands: Commands,
-    mut q_door: Query<(&mut DoorCooldown, &mut DoorState, &mut OwnershipRegistry)>,
+    mut q_door: Query<(&mut DoorState, &mut OwnershipRegistry)>,
     mut q_player: Query<(&mut Inventory, &MemberOf), With<Player>>,
     q_hacking_tool: Query<&HackingTool>,
 ) {
-    if let Ok((mut door_cooldown, mut door_state, mut ownership_registry)) =
-        q_door.get_mut(trigger.entity())
-    {
+    if let Ok((mut door_state, mut ownership_registry)) = q_door.get_mut(trigger.entity()) {
         if let Ok((mut inventory, member_of)) = q_player.get_mut(trigger.event().hacker) {
             if let Some(e_hacking_tool) = inventory
                 .items
@@ -169,11 +154,11 @@ pub fn on_use_door_hack_event(
                 ownership_registry.add(Ownership::Hacked(
                     member_of.faction,
                     Timer::new(
-                        Duration::from_secs_f32(DoorCooldown::HACK_DURATION),
+                        Duration::from_secs_f32(DoorState::HACK_DURATION_SECS),
                         TimerMode::Once,
                     ),
                 ));
-                door_state.toggle(&mut door_cooldown);
+                door_state.toggle();
             }
         }
     }
@@ -196,11 +181,9 @@ pub fn on_use_door_terminal(
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
-
-    use bevy::prelude::*;
-
     use crate::prelude::*;
+    use bevy::prelude::*;
+    use std::time::Duration;
 
     #[test]
     fn door_default_closed() {
@@ -223,16 +206,16 @@ mod tests {
         let mut app = setup();
         setup_player(&mut app, vec![], Faction::EC, Rank::R0);
         let door_entity = setup_door(&mut app, Faction::EC, SecurityLevel::Low);
-        *app.get_mut::<DoorState>(door_entity) = DoorState::Open;
+        *app.get_mut::<DoorState>(door_entity) = DoorState::open();
 
         // when
         app.update_after(Duration::from_secs_f32(10.0));
 
         // then
-        assert_eq!(*app.get::<DoorState>(door_entity), DoorState::Closed);
-        let result = app.get::<DoorCooldown>(door_entity);
-        assert!(!result.autoclose.finished());
-        assert_eq!(result.autoclose.remaining_secs(), 10.0);
+        assert!(matches!(
+            *app.get::<DoorState>(door_entity),
+            DoorState::Closed
+        ));
     }
 
     #[test]
@@ -248,7 +231,7 @@ mod tests {
 
         // then
         let result = app.get::<DoorState>(door_entity);
-        assert_eq!(*result, DoorState::Open);
+        assert!(matches!(*result, DoorState::Open { .. }));
     }
 
     #[test]
@@ -266,7 +249,7 @@ mod tests {
 
         // then
         let result_1 = app.get::<DoorState>(door_entity_1);
-        assert_eq!(*result_1, DoorState::Open);
+        assert!(matches!(*result_1, DoorState::Open { .. }));
         let result_2 = app.get::<DoorState>(door_entity_2);
         assert_eq!(*result_2, DoorState::Closed);
     }
@@ -277,7 +260,8 @@ mod tests {
         let mut app = setup();
         let player_entity = setup_player(&mut app, vec![], Faction::EC, Rank::R4);
         let door_entity = setup_door(&mut app, Faction::EC, SecurityLevel::Low);
-        *app.get_mut::<DoorState>(door_entity) = DoorState::Open;
+        *app.get_mut::<DoorState>(door_entity) = DoorState::open();
+        app.update_after(Duration::from_secs_f32(1.0));
 
         // when
         app.world_mut()
@@ -285,8 +269,10 @@ mod tests {
         app.update();
 
         // then
-        let result = app.get::<DoorState>(door_entity);
-        assert_eq!(*result, DoorState::Closed);
+        assert!(matches!(
+            *app.get::<DoorState>(door_entity),
+            DoorState::Closed
+        ));
     }
 
     #[test]
@@ -324,8 +310,16 @@ mod tests {
         app.update_after(Duration::from_secs_f32(0.1));
 
         // then
-        assert_eq!(*app.get::<DoorState>(door_entity), DoorState::Open);
-        assert!(!app.get::<DoorCooldown>(door_entity).toggle_block.finished());
+        if let DoorState::Open {
+            autoclose,
+            toggle_block,
+        } = app.get::<DoorState>(door_entity)
+        {
+            assert_eq!(autoclose.finished(), false);
+            assert_eq!(toggle_block.finished(), false);
+        } else {
+            panic!("Expected DoorState::Open");
+        }
     }
 
     #[test]
@@ -343,13 +337,16 @@ mod tests {
         }
 
         // then
-        assert_eq!(*app.get::<DoorState>(door_entity), DoorState::Open);
-        assert_eq!(
-            app.get::<DoorCooldown>(door_entity)
-                .autoclose
-                .remaining_secs(),
-            10.0
-        );
+        if let DoorState::Open {
+            autoclose,
+            toggle_block,
+        } = app.get::<DoorState>(door_entity)
+        {
+            assert_eq!(autoclose.remaining_secs(), 10.0);
+            assert_eq!(toggle_block.remaining_secs(), 1.0);
+        } else {
+            panic!("Expected DoorState::Open");
+        }
     }
 
     #[test]
@@ -367,7 +364,10 @@ mod tests {
         app.update();
 
         // then
-        assert_eq!(*app.get::<DoorState>(door_entity), DoorState::Open);
+        assert!(matches!(
+            *app.get::<DoorState>(door_entity),
+            DoorState::Open { .. }
+        ));
         assert_eq!(app.get::<Inventory>(player_entity).items.len(), 0);
         assert!(!app.has_component::<HackingTool>(hacking_tool_entity));
     }
@@ -424,7 +424,7 @@ mod tests {
 
         // then
         let result = app.get::<DoorState>(e_door_cmg_low);
-        assert_eq!(*result, DoorState::Open);
+        assert!(matches!(*result, DoorState::Open { .. }));
     }
 
     #[test]
@@ -439,9 +439,11 @@ mod tests {
         app.world_mut()
             .trigger_targets(UseEvent::new(e_player_ec), e_door_vi_medium);
         app.update();
-        assert_eq!(
-            *app.get::<DoorState>(e_door_vi_medium),
-            DoorState::Open,
+        assert!(
+            matches!(
+                *app.get::<DoorState>(e_door_vi_medium),
+                DoorState::Open { .. }
+            ),
             "Door is hacked and open."
         );
 
@@ -458,9 +460,11 @@ mod tests {
             .trigger_targets(UseEvent::new(e_player_ec), e_door_vi_medium);
 
         // then
-        assert_eq!(
-            *app.get::<DoorState>(e_door_vi_medium),
-            DoorState::Open,
+        assert!(
+            matches!(
+                *app.get::<DoorState>(e_door_vi_medium),
+                DoorState::Open { .. }
+            ),
             "Re-open hacked doors after they autoclosed."
         );
     }
@@ -474,7 +478,7 @@ mod tests {
         let e_door_ec = setup_door(&mut app, Faction::EC, SecurityLevel::Low);
         app.world_mut()
             .trigger_targets(UseEvent::new(e_player_vi), e_door_ec);
-        app.update_after(Duration::from_secs_f32(DoorCooldown::HACK_DURATION));
+        app.update_after(Duration::from_secs_f32(DoorState::HACK_DURATION_SECS));
 
         // when
         app.world_mut()
@@ -518,7 +522,10 @@ mod tests {
             .trigger_targets(UseEvent::new(e_other_player_ec), e_door_cmg);
 
         // then
-        assert_eq!(*app.get::<DoorState>(e_door_cmg), DoorState::Open);
+        assert!(matches!(
+            *app.get::<DoorState>(e_door_cmg),
+            DoorState::Open { .. }
+        ));
     }
 
     fn setup() -> App {

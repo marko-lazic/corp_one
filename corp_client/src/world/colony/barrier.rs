@@ -56,7 +56,7 @@ fn change_barrier_field_visibility_and_collision(
 ) {
     for (e_door, door_state) in &q_door {
         if let Ok(mut visible) = q_barrier_field_visibility.get_mut(e_door) {
-            if *door_state == DoorState::Open {
+            if door_state.is_open() {
                 *visible = Visibility::Hidden;
                 commands
                     .entity(e_door)

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Eq, PartialEq, Copy, Clone)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Faction {
     EC,
     CMG,

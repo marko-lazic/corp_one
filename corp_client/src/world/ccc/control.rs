@@ -163,7 +163,6 @@ impl Plugin for ControlPlugin {
 }
 
 fn double_tap_to_exit(
-    mut commands: Commands,
     action_state: Res<ActionState<UIAction>>,
     r_time: Res<Time<Fixed>>,
     mut ev_exit_app: EventWriter<AppExit>,

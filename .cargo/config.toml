@@ -6,12 +6,11 @@ codegen-backend = true # Enable cranelift
 opt-level = 0
 debug = true
 incremental = true
-
 codegen-backend = "cranelift"  # Enable cranelift
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
-codegen-backend = "llvm"   # Enable cranelift
+codegen-backend = "cranelift" # Enable cranelift
 opt-level = 3
 
 [profile.debugging]
