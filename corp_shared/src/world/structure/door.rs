@@ -127,7 +127,7 @@ pub fn on_use_door_event(
             if let Some(control_type) = control_registry.get_control_type(&member_of.faction) {
                 match control_type {
                     Ownership::Permanent(_) => {
-                        if Some(&member_of.rank) >= REQUIRED_RANK_BY_SECURITY.get(security_level) {
+                        if security_level.has_required_rank(&member_of.rank) {
                             door_state.toggle(&mut door_cooldown);
                         }
                     }

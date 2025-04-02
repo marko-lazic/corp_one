@@ -1,8 +1,5 @@
-use bevy::prelude::Component;
-use lazy_static::lazy_static;
-use std::collections::HashMap;
-
 use crate::prelude::Rank;
+use bevy::prelude::Component;
 
 #[derive(Component, Eq, PartialEq, Hash)]
 pub enum SecurityLevel {
@@ -11,12 +8,15 @@ pub enum SecurityLevel {
     High,
 }
 
-lazy_static! {
-    pub static ref REQUIRED_RANK_BY_SECURITY: HashMap<SecurityLevel, Rank> = {
-        let mut map = HashMap::new();
-        map.insert(SecurityLevel::Low, Rank::R4);
-        map.insert(SecurityLevel::Medium, Rank::R5);
-        map.insert(SecurityLevel::High, Rank::R6);
-        map
-    };
+impl SecurityLevel {
+    pub fn has_required_rank(&self, rank: &Rank) -> bool {
+        rank >= &self.required_rank()
+    }
+    pub fn required_rank(&self) -> Rank {
+        match self {
+            SecurityLevel::Low => Rank::R4,
+            SecurityLevel::Medium => Rank::R5,
+            SecurityLevel::High => Rank::R6,
+        }
+    }
 }
