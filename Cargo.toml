@@ -1,9 +1,7 @@
 [workspace]
 resolver = "2"
 
-exclude = [
-    "benches",
-]
+exclude = ["benches"]
 members = [
     "corp_client",
     "corp_server",
@@ -11,12 +9,7 @@ members = [
     "corp_proxy",
     "tools/ci",
 ]
-default-members = [
-    "corp_client",
-    "corp_server",
-    "corp_shared",
-    "corp_proxy",
-]
+default-members = ["corp_client", "corp_server", "corp_shared", "corp_proxy"]
 
 [workspace.dependencies]
 bevy = { version = "0.15", default-features = false }
@@ -24,7 +17,8 @@ serde = { version = "1", default-features = false }
 avian3d = { version = "0.2", default-features = false }
 rand = "0.8"
 bevy_rand = { version = "0.8", features = ["wyrand"] }
-tokio = { version = "1.44", features = ["full"] }
+tokio = { version = "1.44", default-features = false }
+anyhow = "1.0.98"
 
 aeronet = { path = "../temp/aeronet/crates/aeronet", default-features = false }
 aeronet_webtransport = { path = "../temp/aeronet/crates/aeronet_webtransport", default-features = false }

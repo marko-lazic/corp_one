@@ -37,8 +37,7 @@ impl Plugin for ServerNetPlugin {
 }
 
 fn open_server(mut commands: Commands, instance_config: Res<GameInstanceConfig>) {
-    let identity = wtransport::Identity::self_signed(["localhost", "127.0.0.1", "::1"])
-        .expect("all given SANs should be valid DNS names");
+    let identity = instance_config.identity.clone_identity();
     let cert = &identity.certificate_chain().as_slice()[0];
     let spki_fingerprint = cert::spki_fingerprint_b64(cert).expect("should be a valid certificate");
     let cert_hash = cert::hash_to_b64(cert.hash());

@@ -1,5 +1,5 @@
 pub mod constants {
-    pub const TICK_RATE: u16 = 128;
+    pub const TICK_RATE: u16 = 30;
 }
 
 pub mod replicate_rules;

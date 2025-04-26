@@ -11,6 +11,7 @@ serde = { workspace = true }
 rand = { workspace = true }
 bevy_rand = { workspace = true }
 bevy_replicon = { workspace = true }
+anyhow = { workspace = true }
 
 [features]
 client = []

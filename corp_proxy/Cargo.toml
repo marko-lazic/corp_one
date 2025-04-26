@@ -4,4 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-quiche = { version = "0.23.6" }
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+sha2 = "0.10.8"
+hex = "0.4.3"
+log = "0.4"
+env_logger = "0.11"
+anyhow = { workspace = true }
+wtransport = { version = "0.6.1", features = ["dangerous-configuration"] }
+tracing = "0.1.41"
+futures = "0.3.31"

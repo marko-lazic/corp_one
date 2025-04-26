@@ -11,9 +11,11 @@ use aeronet_webtransport::{
     cert,
     client::{WebTransportClient, WebTransportClientPlugin},
     wtransport,
+    wtransport::tls::Sha256Digest,
 };
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
+use core::time::Duration;
 use corp_shared::prelude::*;
 
 pub struct ClientNetPlugin;
@@ -41,7 +43,7 @@ fn connect_client(mut commands: Commands) {
     let cert_hash = "".to_string();
     let config = web_transport_config(cert_hash);
 
-    let target = "https://[::1]:25565".to_string();
+    let target = "https://[::1]:25560".to_string();
 
     let name = "Corp One Session ID 1";
     commands
@@ -50,9 +52,6 @@ fn connect_client(mut commands: Commands) {
 }
 
 fn web_transport_config(cert_hash: String) -> wtransport::ClientConfig {
-    use aeronet_webtransport::wtransport::tls::Sha256Digest;
-    use core::time::Duration;
-
     let config = wtransport::ClientConfig::builder().with_bind_default();
 
     let config = if cert_hash.is_empty() {
