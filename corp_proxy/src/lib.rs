@@ -2,7 +2,6 @@ pub mod init;
 
 use log::error;
 
-use sha2::{Digest, Sha256};
 use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 use tracing::{info, info_span, Instrument};

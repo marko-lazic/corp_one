@@ -177,7 +177,9 @@ fn door_color_change_state_system(
 ) {
     for (door_state, material) in &mut doors {
         match door_state {
-            DoorState::Open => materials.get_mut(material).unwrap().base_color = endesga::FOG,
+            DoorState::Open { .. } => {
+                materials.get_mut(material).unwrap().base_color = endesga::FOG
+            }
             DoorState::Closed => materials.get_mut(material).unwrap().base_color = endesga::SKY,
         }
     }

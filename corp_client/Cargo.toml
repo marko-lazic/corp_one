@@ -19,8 +19,6 @@ bevy = { workspace = true, default-features = false, features = [
     "bevy_gltf",
 ] }
 avian3d = { workspace = true, features = ["default", "enhanced-determinism", "serialize"] }
-
-serde = { workspace = true }
 leafwing-input-manager = { version = "0.16" }
 bevy-inspector-egui = "0.30"
 bevy_asset_loader = { version = "0.22.0", default-features = false, features = [
@@ -39,7 +37,6 @@ bevy_skein = { version = "0.1.2" }
 bevy_framepace = "0.18"
 rand = { workspace = true }
 bevy_rand = { workspace = true }
-
 aeronet = { workspace = true }
 aeronet_webtransport = { workspace = true, features = ["client", "dangerous-configuration"] }
 aeronet_replicon = { workspace = true, features = ["client"] }
