@@ -20,7 +20,7 @@ impl Plugin for AnimatorPlugin {
     fn build(&self, app: &mut App) {
         // Warning: Re-insertion happens every time game enters playing state
         // Loading needs to be split into loading for resources and data setup
-        app.add_systems(OnExit(GameState::Loading), setup_animation_graph)
+        app.add_systems(OnExit(GameState::Init), setup_animation_graph)
             .add_systems(
                 FixedUpdate,
                 setup_scene_once_loaded

@@ -47,7 +47,6 @@ fn player_loot_drop(
 fn dead_player_system(
     r_time: Res<Time<Fixed>>,
     mut r_player_entity: ResMut<PlayerEntity>,
-    mut ev_colony_load: EventWriter<ColonyLoadEvent>,
     mut q_health: Query<(Entity, &mut Health), With<Player>>,
     mut r_next_state: ResMut<NextState<GameState>>,
     mut commands: Commands,
@@ -60,8 +59,7 @@ fn dead_player_system(
             });
             health.cloning_cooldown.tick(r_time.delta());
             if health.cloning_cooldown.finished() {
-                ev_colony_load.send(ColonyLoadEvent(Colony::Cloning));
-                r_next_state.set(GameState::LoadColony);
+                r_next_state.set(GameState::Load(Colony::Cloning));
             }
         }
     }

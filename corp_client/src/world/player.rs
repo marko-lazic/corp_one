@@ -18,7 +18,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, register_player_one_shoot_systems);
+        app.add_systems(Startup, register_player_one_shoot_systems)
+            .add_systems(OnEnter(LoadingSubState::SpawnPlayer), spawn_player);
     }
 }
 
@@ -31,11 +32,22 @@ fn register_player_one_shoot_systems(mut commands: Commands) {
     commands.insert_resource(player_data)
 }
 
+fn spawn_player(
+    mut commands: Commands,
+    r_player_systems: Res<PlayerSystems>,
+    r_player_entity: Res<PlayerEntity>,
+) {
+    if let Some(player_entity) = r_player_entity.0 {
+        commands.run_system_with_input(r_player_systems.setup_player, player_entity);
+    } else {
+        error!("Failed to spawn player. Player entity not set.");
+    }
+}
+
 pub fn setup_player(
     In(e_player): In<Entity>,
     r_player_data: Res<PlayerSystems>,
     r_player_assets: Res<PlayerAssets>,
-    mut r_player_entity: ResMut<PlayerEntity>,
     mut q_vortex_node_pos: Query<&mut Transform, With<VortexNode>>,
     mut commands: Commands,
 ) {
@@ -96,6 +108,5 @@ pub fn setup_player(
                 );
         });
 
-    *r_player_entity = e_player.into();
-    info!("Player entity: {:?}", r_player_entity);
+    info!("Spawned player entity: {:?}", e_player);
 }

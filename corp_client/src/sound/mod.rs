@@ -29,7 +29,7 @@ impl Plugin for SoundPlugin {
             .add_audio_channel::<RunSound>()
             .add_audio_channel::<InteractionSound>()
             .add_systems(
-                OnExit(GameState::Loading),
+                OnExit(GameState::Init),
                 (setup_walk_sound, setup_background_music),
             )
             .add_systems(

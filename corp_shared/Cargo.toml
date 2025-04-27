@@ -12,6 +12,8 @@ rand = { workspace = true }
 bevy_rand = { workspace = true }
 bevy_replicon = { workspace = true }
 anyhow = { workspace = true }
+strum = "0.27.1"
+strum_macros = "0.27.1"
 
 [features]
 client = []

@@ -11,7 +11,8 @@ impl Plugin for SessionPlugin {
     fn build(&self, app: &mut App) {
         app.add_observer(on_connected)
             .add_observer(on_disconnected)
-            .add_observer(on_connected_client);
+            .add_observer(on_connected_client)
+            .add_observer(on_disconnected_client);
     }
 }
 
@@ -21,11 +22,15 @@ fn on_connected_client(
 ) {
     if let Ok(client) = q_conn_clients.get(trigger.entity()) {
         info!(
-            "Connected entity: {:?} id: {:?}",
+            "Connected Entity: {:?} id: {:?}",
             trigger.entity(),
             client.id()
         );
     }
+}
+
+fn on_disconnected_client(trigger: Trigger<OnRemove, ConnectedClient>) {
+    info!("Disconnected Entity: {:?}", trigger.entity());
 }
 
 fn on_connected(trigger: Trigger<OnAdd, Session>, clients: Query<&Parent>, mut commands: Commands) {
@@ -34,7 +39,7 @@ fn on_connected(trigger: Trigger<OnAdd, Session>, clients: Query<&Parent>, mut c
         return;
     };
 
-    info!("{client} connected to {server}");
+    info!("{client} Connected to {server}");
     commands.entity(client).insert(Replicated);
 }
 

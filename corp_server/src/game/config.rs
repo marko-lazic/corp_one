@@ -4,13 +4,13 @@ use corp_shared::prelude::Colony;
 use std::net::SocketAddr;
 
 #[derive(Resource, Debug)]
-pub struct GameInstanceConfig {
+pub struct ColonyAppConfig {
     pub colony: Colony,
     pub server_addr: SocketAddr,
     pub identity: Identity,
 }
 
-impl Clone for GameInstanceConfig {
+impl Clone for ColonyAppConfig {
     fn clone(&self) -> Self {
         Self {
             colony: self.colony.clone(),

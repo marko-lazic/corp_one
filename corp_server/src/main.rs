@@ -13,19 +13,26 @@ async fn main() -> Result<(), anyhow::Error> {
     init_logging()?;
     let identity = Identity::load_pemfiles("./certs/server.pem", "./certs/server.key").await?;
 
-    let config = GameInstanceConfig {
+    let config = ColonyAppConfig {
         colony: Colony::Iris,
         server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 25565),
         identity: identity.clone_identity(),
     };
-    let _iris_ref = kameo::actor::spawn_in_thread(GameInstanceActor { config });
+    let _iris_ref = kameo::actor::spawn_in_thread(ColonyAppActor { config });
 
-    let config = GameInstanceConfig {
+    let config = ColonyAppConfig {
         colony: Colony::Cloning,
         server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 25566),
-        identity,
+        identity: identity.clone_identity(),
     };
-    let _cloning_ref = kameo::actor::spawn_in_thread(GameInstanceActor { config });
+    let _cloning_ref = kameo::actor::spawn_in_thread(ColonyAppActor { config });
+
+    let config = ColonyAppConfig {
+        colony: Colony::StarMap,
+        server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 25567),
+        identity: identity.clone_identity(),
+    };
+    let _star_map_ref = kameo::actor::spawn_in_thread(StarMapAppActor { config });
 
     let _proxy_ref = kameo::actor::spawn_in_thread(ProxyActor);
 

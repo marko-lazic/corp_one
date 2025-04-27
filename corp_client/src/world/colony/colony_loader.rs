@@ -8,30 +8,28 @@ use bevy::{
 use bevy_skein::SkeinPlugin;
 use corp_shared::prelude::*;
 
-#[derive(Event)]
-pub struct ColonyLoadEvent(pub Colony);
-
 pub fn colony_loader_plugin(app: &mut App) {
-    app.add_event::<ColonyLoadEvent>()
-        .add_plugins(SkeinPlugin::default())
-        .add_systems(OnEnter(GameState::LoadColony), load_colony_event)
-        .add_systems(OnExit(GameState::LoadColony), update_lights);
+    app.add_plugins(SkeinPlugin::default())
+        .add_systems(OnEnter(LoadingSubState::ColonyLoading), load_colony)
+        .add_systems(OnExit(LoadingSubState::ColonyLoading), update_lights);
 }
 
-fn load_colony_event(
-    mut ev_colony_load: EventReader<ColonyLoadEvent>,
+fn load_colony(
+    r_state: Res<State<GameState>>,
     r_scene_assets: Res<SceneAssets>,
     mut r_meshes: ResMut<Assets<Mesh>>,
     mut r_materials: ResMut<Assets<StandardMaterial>>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
     mut commands: Commands,
 ) {
-    let Some(colony_load_event) = ev_colony_load.read().last() else {
-        return;
+    let colony = match r_state.get() {
+        GameState::Load(colony) => colony,
+        _ => return,
     };
-    info!("Setup colony {:?}", colony_load_event.0);
 
-    let colony_scene = match colony_load_event.0 {
+    info!("Setup Colony {:?}", colony);
+
+    let colony_scene = match colony {
         Colony::Cloning => r_scene_assets.cloning.clone(),
         Colony::Iris => r_scene_assets.iris.clone(),
         Colony::Liberte => r_scene_assets.liberte.clone(),
@@ -40,7 +38,11 @@ fn load_colony_event(
 
     // spawn scene
     commands
-        .spawn((Name::new("Colony"), SceneRoot(colony_scene)))
+        .spawn((
+            Name::new("Colony"),
+            SceneRoot(colony_scene),
+            StateScoped(GameState::Playing),
+        ))
         .observe(on_colony_loaded);
 
     commands
@@ -79,15 +81,14 @@ fn load_colony_event(
 
 fn on_colony_loaded(
     _trigger: Trigger<SceneInstanceReady>,
-    mut next_state: ResMut<NextState<LoadingSubState>>,
+    mut r_next_loading_sub_state: ResMut<NextState<LoadingSubState>>,
 ) {
     info!("Colony Scene Instance Ready");
-    next_state.set(LoadingSubState::Loaded);
+    r_next_loading_sub_state.set(LoadingSubState::Connect);
 }
 
-// Temporary fixes the problem with shadows not working
+// Temporarily fixes the problem with shadows not working
 fn update_lights(mut query: Query<&mut PointLight>) {
-    info!("Update lights");
     for mut point_light in query.iter_mut() {
         point_light.shadows_enabled = true;
         point_light.intensity = 100_000.0;

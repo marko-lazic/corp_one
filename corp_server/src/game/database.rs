@@ -12,7 +12,7 @@ impl Plugin for DbPlugin {
     }
 }
 
-fn is_colony_iris(config: Res<GameInstanceConfig>) -> bool {
+fn is_colony_iris(config: Res<ColonyAppConfig>) -> bool {
     config.colony == Colony::Iris
 }
 

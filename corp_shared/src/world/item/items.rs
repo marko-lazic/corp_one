@@ -5,4 +5,7 @@ use serde::{Deserialize, Serialize};
 #[require(
     Name(||  Name::new("Hacking Tool"))
 )]
+#[cfg_attr(feature = "client", require(
+    StateScoped<crate::prelude::GameState>(|| StateScoped(crate::prelude::GameState::Playing)))
+)]
 pub struct HackingTool;

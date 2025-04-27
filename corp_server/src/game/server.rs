@@ -27,8 +27,6 @@ impl Plugin for ServerNetPlugin {
             AeronetRepliconServerPlugin,
             SessionPlugin,
             ReplicateRulesPlugin,
-            // game
-            SpawnPlugin,
         ))
         .add_systems(Startup, open_server)
         .add_observer(on_opened)
@@ -36,7 +34,7 @@ impl Plugin for ServerNetPlugin {
     }
 }
 
-fn open_server(mut commands: Commands, instance_config: Res<GameInstanceConfig>) {
+fn open_server(mut commands: Commands, instance_config: Res<ColonyAppConfig>) {
     let identity = instance_config.identity.clone_identity();
     let cert = &identity.certificate_chain().as_slice()[0];
     let spki_fingerprint = cert::spki_fingerprint_b64(cert).expect("should be a valid certificate");
@@ -76,9 +74,9 @@ fn on_session_request(mut request: Trigger<SessionRequest>, clients: Query<&Pare
         return;
     };
 
-    info!("{client} connecting to {server} with headers:");
+    debug!("{client} connecting to {server} with headers:");
     for (header_key, header_value) in &request.headers {
-        info!("  {header_key}: {header_value}");
+        debug!("  {header_key}: {header_value}");
     }
 
     request.respond(SessionResponse::Accepted);

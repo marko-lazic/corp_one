@@ -38,7 +38,8 @@ impl Plugin for VortexPlugin {
 }
 
 fn debug_vort_in(mut ev_vort_in: EventWriter<VortInEvent>, mut run_once: Local<bool>) {
-    if !(*run_once) {
+    *run_once = true;
+    if !*run_once {
         info!("Debug vort in");
         ev_vort_in.send(VortInEvent::vort(Colony::Iris));
         *run_once = true;
@@ -66,12 +67,9 @@ fn vort_out_event_reader(
 fn vort_in_event_reader(
     mut r_next_state: ResMut<NextState<GameState>>,
     mut ev_vort_in: EventReader<VortInEvent>,
-    mut ev_colony_load: EventWriter<ColonyLoadEvent>,
 ) {
     for vort_in in ev_vort_in.read() {
-        let colony = vort_in.colony.clone();
-        ev_colony_load.send(ColonyLoadEvent(colony));
-        r_next_state.set(GameState::LoadColony);
+        r_next_state.set(GameState::Load(vort_in.colony));
     }
 }
 

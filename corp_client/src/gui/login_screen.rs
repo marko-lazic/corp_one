@@ -1,25 +1,24 @@
-use crate::{gui::login_screen::LoginScreenPlugin, prelude::*};
+use crate::prelude::ASSET_PATH;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 
-pub struct GuiPlugin;
+pub struct LoginScreenPlugin;
 
-impl Plugin for GuiPlugin {
+impl Plugin for LoginScreenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((DebugGuiPlugin, CursorPlugin, LoginScreenPlugin))
-            .add_systems(OnEnter(GameState::Init), loading_splash);
+        app.add_systems(OnEnter(GameState::Login), setup_login_screen);
     }
 }
 
-fn loading_splash(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_login_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((Camera2d, StateScoped(GameState::Init)));
     commands
         .spawn((
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
-                justify_content: JustifyContent::End,
-                align_items: AlignItems::End,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
                 flex_direction: FlexDirection::Column,
                 row_gap: Val::Px(10.0),
                 ..default()
@@ -28,7 +27,7 @@ fn loading_splash(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .with_children(|parent| {
             parent.spawn((
-                Text::new("Loading"),
+                Text::new("Login"),
                 TextFont::from_font(asset_server.load(ASSET_PATH.default_font))
                     .with_font_size(40.0),
                 TextColor::from(Color::srgb(0.9, 0.9, 0.9)),
