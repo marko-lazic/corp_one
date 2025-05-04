@@ -44,7 +44,7 @@ fn connect_client(
 ) {
     if let Some(colony) = r_state.get_loading_colony() {
         let config = client_settings.client_config();
-        let target = client_settings.target(colony.to_string().to_lowercase());
+        let target = client_settings.target(*colony);
         info!("Connecting with {target:?}");
         commands
             .spawn((

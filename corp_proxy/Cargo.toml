@@ -11,3 +11,4 @@ anyhow = { workspace = true }
 wtransport = { version = "0.6.1", features = ["dangerous-configuration"] }
 tracing = "0.1.41"
 futures = "0.3.31"
+corp_shared = { path = "../corp_shared" }

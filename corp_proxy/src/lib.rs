@@ -2,7 +2,7 @@ pub mod init;
 
 use log::error;
 
-use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
+use std::{collections::HashMap, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 use tracing::{info, info_span, Instrument};
 use wtransport::{
@@ -16,7 +16,7 @@ pub struct ProxyConfig {
     /// The port of the proxy server to listen on
     pub port: u16,
     /// Routes map (world identifier -> backend server address)
-    pub routes: HashMap<String, String>,
+    pub routes: HashMap<Colony, String>,
     /// TLS certificate path for WebTransport
     pub cert_path: Option<PathBuf>,
     /// TLS key path for WebTransport
@@ -34,7 +34,7 @@ impl Default for ProxyConfig {
     }
 }
 
-type Routes = Arc<RwLock<HashMap<String, String>>>;
+type Routes = Arc<RwLock<HashMap<Colony, String>>>;
 
 /// A game proxy that routes WebTransport traffic
 pub struct GameProxy {
@@ -79,6 +79,7 @@ async fn handle_connection(incoming_session: IncomingSession, routes: Routes) {
     error!("{:?}", result);
 }
 
+use corp_shared::prelude::Colony;
 use wtransport::endpoint::ConnectOptions;
 
 struct Dispatch {
@@ -95,7 +96,7 @@ impl Dispatch {
 
         let route = self.get_route(&req)?;
         let backend_addr = self
-            .get_backend(&route)
+            .get_backend(route)
             .await
             .ok_or(anyhow::anyhow!("No backend found for route {}", route))?;
 
@@ -260,17 +261,17 @@ impl Dispatch {
         Ok(())
     }
 
-    async fn get_backend(&self, world_id: &str) -> Option<String> {
+    async fn get_backend(&self, world_id: Colony) -> Option<String> {
         let routes = self.routes.read().await;
-        routes.get(world_id).cloned()
+        routes.get(&world_id).cloned()
     }
 
     // Extract the world identifier from various request parts
-    fn get_route(&self, req: &SessionRequest) -> anyhow::Result<String> {
+    fn get_route(&self, req: &SessionRequest) -> anyhow::Result<Colony> {
         let route = req
             .headers()
             .get("x-route")
             .ok_or(anyhow::anyhow!("No route header"))?;
-        Ok(route.clone())
+        Ok(Colony::from_str(route.as_str())?)
     }
 }
