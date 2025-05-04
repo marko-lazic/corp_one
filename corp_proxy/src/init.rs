@@ -12,11 +12,12 @@ pub async fn init() -> anyhow::Result<()> {
     let iris_addr = "https://localhost:25565";
     let cloning_addr = "https://localhost:25566";
     let starmap_addr = "https://localhost:25567";
+    let liberte_addr = "https://localhost:25568";
 
-    routes.insert("default".into(), iris_addr.into());
     routes.insert("iris".into(), iris_addr.into());
     routes.insert("cloning".into(), cloning_addr.into());
     routes.insert("starmap".into(), starmap_addr.into());
+    routes.insert("liberte".into(), liberte_addr.into());
 
     let config = ProxyConfig {
         port: 25560,

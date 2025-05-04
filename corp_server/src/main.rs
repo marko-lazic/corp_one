@@ -34,6 +34,14 @@ async fn main() -> Result<(), anyhow::Error> {
     };
     let _star_map_ref = kameo::actor::spawn_in_thread(StarMapAppActor { config });
 
+    let config = ColonyAppConfig {
+        colony: Colony::Liberte,
+        server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 25568),
+        identity: identity.clone_identity(),
+    };
+
+    let _liberte_ref = kameo::actor::spawn_in_thread(ColonyAppActor { config });
+
     let _proxy_ref = kameo::actor::spawn_in_thread(ProxyActor);
 
     println!("Actors running. Press CTRL+C to stop.");

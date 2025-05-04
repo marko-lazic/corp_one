@@ -93,10 +93,11 @@ impl Dispatch {
     pub async fn run(&self, session: IncomingSession) -> anyhow::Result<()> {
         let req = session.await?;
 
+        let route = self.get_route(&req)?;
         let backend_addr = self
-            .get_backend(&self.get_route(&req))
+            .get_backend(&route)
             .await
-            .ok_or(anyhow::anyhow!("No backend found"))?;
+            .ok_or(anyhow::anyhow!("No backend found for route {}", route))?;
 
         // Connect to backend
         let config = ClientConfig::builder()
@@ -261,17 +262,15 @@ impl Dispatch {
 
     async fn get_backend(&self, world_id: &str) -> Option<String> {
         let routes = self.routes.read().await;
-        routes
-            .get(world_id)
-            .cloned()
-            .or_else(|| routes.get("default").cloned())
+        routes.get(world_id).cloned()
     }
 
     // Extract the world identifier from various request parts
-    fn get_route(&self, req: &SessionRequest) -> String {
-        req.headers()
+    fn get_route(&self, req: &SessionRequest) -> anyhow::Result<String> {
+        let route = req
+            .headers()
             .get("x-route")
-            .unwrap_or(&"default".to_string())
-            .to_string()
+            .ok_or(anyhow::anyhow!("No route header"))?;
+        Ok(route.clone())
     }
 }
