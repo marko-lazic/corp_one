@@ -1,10 +1,5 @@
 use bevy::prelude::*;
 
-#[derive(Component, Default)]
-pub struct ControlMovement {
-    pub direction: Vec3,
-}
-
 #[derive(Component, Default, PartialEq)]
 pub enum OrientationMode {
     #[default]
@@ -44,6 +39,5 @@ impl Default for CharacterMovement {
 #[derive(Bundle, Default)]
 pub struct MovementBundle {
     pub character_movement: CharacterMovement,
-    pub control_movement: ControlMovement,
     pub control_orientation: OrientationMode,
 }

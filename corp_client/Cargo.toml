@@ -19,7 +19,7 @@ bevy = { workspace = true, default-features = false, features = [
     "bevy_gltf",
 ] }
 avian3d = { workspace = true, features = ["default", "enhanced-determinism", "serialize"] }
-leafwing-input-manager = { version = "0.16" }
+bevy_enhanced_input = "0.10.0"
 bevy-inspector-egui = "0.30"
 bevy_asset_loader = { version = "0.22.0", default-features = false, features = [
     "3d",

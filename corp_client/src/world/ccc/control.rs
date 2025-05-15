@@ -1,15 +1,14 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::{app::AppExit, prelude::*, utils::HashSet};
-use corp_shared::{prelude::*, world::colony::Colony};
-use leafwing_input_manager::prelude::*;
+use bevy_dolly::{
+    dolly_type::Rig,
+    prelude::{Arm, *},
+};
+use bevy_enhanced_input::prelude::*;
+use bevy_tnua::{builtins::TnuaBuiltinWalk, controller::TnuaController};
+use corp_shared::prelude::*;
 use std::{f32::consts::PI, hash::Hash};
-
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum ControlSet {
-    PlayingInput,
-    StarMapInput,
-}
 
 #[derive(Resource, Default, Debug, Deref, DerefMut)]
 pub struct PlayerEntity(pub Option<Entity>);
@@ -53,226 +52,78 @@ pub struct HoverEntities(pub HashSet<UsableTarget>);
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct CursorWorld(Vec3);
 
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
-pub enum UIAction {
-    Escape,
-    ColonyIris,
-    ColonyLiberte,
-    ColonyPlayground,
-}
-
-impl UIAction {
-    fn ui_input_map() -> InputMap<UIAction> {
-        use UIAction::*;
-        let mut input = InputMap::default();
-        input
-            .insert(Escape, KeyCode::Escape)
-            .insert(ColonyIris, KeyCode::KeyI)
-            .insert(ColonyPlayground, KeyCode::KeyP)
-            .insert(ColonyLiberte, KeyCode::KeyL);
-        input
-    }
-}
-
-#[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
-pub enum CharacterAction {
-    Move,
-    Aim,
-    OrientationMode,
-    Use,
-    Inventory,
-    Shoot,
-    CameraZoomIn,
-    CameraZoomOut,
-    CameraRotateClockwise,
-    CameraRotateCounterClockwise,
-    Kill,
-}
-
-impl Actionlike for CharacterAction {
-    fn input_control_kind(&self) -> InputControlKind {
-        match self {
-            Self::Move => InputControlKind::DualAxis,
-            _ => InputControlKind::Button,
-        }
-    }
-}
-
-impl CharacterAction {
-    pub fn player_input_map() -> InputMap<CharacterAction> {
-        use CharacterAction::*;
-        let mut input = InputMap::default();
-        input
-            // Movement
-            .insert_dual_axis(Move, VirtualDPad::wasd())
-            // Weapon
-            .insert(Aim, MouseButton::Right)
-            // Abilities
-            .insert(Use, KeyCode::KeyE)
-            .insert(Kill, KeyCode::KeyK)
-            .insert(Shoot, MouseButton::Left)
-            // User Interface
-            .insert(Inventory, KeyCode::KeyI)
-            // Options
-            .insert(OrientationMode, KeyCode::Space)
-            .insert(CameraZoomIn, KeyCode::Equal)
-            .insert(CameraZoomOut, KeyCode::Minus)
-            .insert(CameraRotateClockwise, KeyCode::KeyZ)
-            .insert(CameraRotateCounterClockwise, KeyCode::KeyC);
-
-        input
-    }
-}
-
 pub struct ControlPlugin;
 
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InputManagerPlugin::<CharacterAction>::default())
+        app.add_plugins(EnhancedInputPlugin)
             .init_resource::<PlayerEntity>()
             .init_resource::<CursorWorld>()
             .init_resource::<HoverEntities>()
-            .add_plugins(InputManagerPlugin::<UIAction>::default())
-            .init_resource::<ActionState<UIAction>>()
-            .insert_resource(UIAction::ui_input_map())
-            .add_systems(FixedUpdate, double_tap_to_exit)
+            .add_input_context::<OnFoot>()
+            .add_input_context::<OnStarMap>()
+            .add_input_context::<OnUi>()
+            .add_systems(OnEnter(GameState::StarMap), setup_star_map_input_controls)
+            .add_systems(OnEnter(GameState::Playing), setup_playing_input_controls)
+            .add_systems(OnExit(GameState::Playing), reset_cursor_visible)
             .add_systems(
                 FixedUpdate,
                 (
+                    can_move,
                     detect_usable_targets,
                     update_cursor_world,
-                    player_control_movement,
-                    player_control_orientation,
-                    create_use_event,
-                    kill,
-                    log_inventory,
-                    toggle_window_cursor_visible,
+                    rotate_character,
                 )
-                    .chain()
-                    .in_set(ControlSet::PlayingInput)
                     .run_if(in_state(GameState::Playing)),
             )
-            .add_systems(OnExit(GameState::Playing), enable_cursor_visible)
-            .add_systems(
-                FixedUpdate,
-                starmap_keyboard
-                    .in_set(ControlSet::StarMapInput)
-                    .run_if(in_state(GameState::StarMap)),
-            );
+            .add_observer(foot_binding)
+            .add_observer(star_map_binding)
+            .add_observer(ui_binding)
+            .add_observer(apply_movement)
+            .add_observer(apply_stop_movement)
+            .add_observer(apply_orientation_mode)
+            .add_observer(apply_use)
+            .add_observer(apply_kill)
+            .add_observer(apply_inventory)
+            .add_observer(apply_exit)
+            .add_observer(apply_window_cursor_visible)
+            .add_observer(apply_starmap_iris)
+            .add_observer(apply_starmap_liberte)
+            .add_observer(apply_rotate_camera_clockwise)
+            .add_observer(apply_rotate_camera_counter_clockwise)
+            .add_observer(apply_camera_zoom_in)
+            .add_observer(apply_camera_zoom_out)
+            .add_observer(apply_aim)
+            .add_observer(apply_aim_completed);
     }
 }
 
-fn double_tap_to_exit(
-    action_state: Res<ActionState<UIAction>>,
-    r_time: Res<Time<Fixed>>,
-    mut ev_exit_app: EventWriter<AppExit>,
-    mut l_double_tap: Local<DoubleTap>,
-) {
-    if action_state.just_pressed(&UIAction::Escape) {
-        l_double_tap.increment();
-    }
-    l_double_tap.tick(r_time.delta()).on_complete(|| {
-        ev_exit_app.send(AppExit::Success);
-    });
+fn setup_star_map_input_controls(mut commands: Commands) {
+    commands.spawn((
+        Name::new("Star Map Input Controls"),
+        Actions::<OnStarMap>::default(),
+        Actions::<OnUi>::default(),
+        StateScoped(GameState::StarMap),
+    ));
 }
 
-fn update_cursor_world(
-    q_windows: Query<&Window>,
-    mut r_cursor_world: ResMut<CursorWorld>,
-    q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
-    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
-) {
-    let Ok((camera, camera_transform)) = q_camera.get_single() else {
-        return;
-    };
-    let belt_level = Vec3::new(0.0, 1.0, 0.0);
-    let Ok(follow_pos) = q_follow_cam.get_single() else {
-        return;
-    };
-
-    let ray = q_windows
-        .single()
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
-        .unwrap_or_else(|| Ray3d {
-            origin: follow_pos.translation,
-            direction: follow_pos.down(),
-        });
-
-    // Calculate if and where the ray is hitting the belt (of the character height) level.
-    let Some(distance) = ray.intersect_plane(belt_level, InfinitePlane3d::new(Vec3::Y)) else {
-        return;
-    };
-    let mouse_ground_pos = ray.get_point(distance);
-    r_cursor_world.0 = mouse_ground_pos;
-
-    for mut orientation_mode in &mut q_orientation {
-        if let OrientationMode::Location(_) = *orientation_mode {
-            *orientation_mode =
-                OrientationMode::Location(Vec2::new(mouse_ground_pos.x, mouse_ground_pos.z));
-        }
-    }
+fn setup_playing_input_controls(mut commands: Commands) {
+    commands.spawn((
+        Name::new("Playing Input Controls"),
+        Actions::<OnFoot>::default(),
+        Actions::<OnUi>::default(),
+        StateScoped(GameState::Playing),
+    ));
 }
 
-fn player_control_movement(
-    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
-    q_camera: Query<&Transform, With<MainCamera>>,
-    mut q_movement: Query<&mut ControlMovement, With<Player>>,
-) {
-    let Ok(cam_transform) = q_camera.get_single() else {
-        warn!("Can not find Transform, With<MainCamera>");
-        return;
-    };
-
-    let cam_forward = {
-        let f = cam_transform.rotation.mul_vec3(Vec3::Z);
-        // Invert it to account for camera looking down -Z
-        -Vec3::new(f.x, 0.0, f.z).normalize_or_zero()
-    };
-    let cam_right = {
-        let r = cam_transform.rotation.mul_vec3(Vec3::X);
-        Vec3::new(r.x, 0.0, r.z).normalize_or_zero()
-    };
-
-    let Ok(action_state) = q_action_state.get_single() else {
-        warn!("Can not find ActionState<PlayerAction>, With<Player>");
-        return;
-    };
-
-    let input_axis = action_state
-        .axis_pair(&CharacterAction::Move)
-        .clamp_length_max(1.0);
-
-    let input_forward = cam_forward * input_axis.y;
-    let input_strafe = cam_right * input_axis.x;
-
-    let Ok(mut movement) = q_movement.get_single_mut() else {
-        warn!("Can not find ControlMovement, With<Player>");
-        return;
-    };
-
-    movement.direction = (input_forward + input_strafe).normalize_or_zero();
+fn reset_cursor_visible(mut q_windows: Query<&mut Window>) {
+    let mut window = q_windows.single_mut();
+    window.cursor_options.visible = true;
 }
 
-fn player_control_orientation(
-    r_cursor_world: Res<CursorWorld>,
-    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
-    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
-) {
-    let Ok(action_state) = q_action_state.get_single() else {
-        warn!("PlayerAction state is missing.");
-        return;
-    };
-    if action_state.just_pressed(&CharacterAction::OrientationMode) {
-        for mut orientation_mode in &mut q_orientation {
-            *orientation_mode = match *orientation_mode {
-                OrientationMode::Direction => {
-                    OrientationMode::Location(Vec2::new(r_cursor_world.x, r_cursor_world.z))
-                }
-                OrientationMode::Location(_) => OrientationMode::Direction,
-            }
-        }
+fn can_move(mut query: Query<(&mut CharacterMovement, &Health), Changed<Health>>) {
+    for (mut character_movement, health) in &mut query {
+        character_movement.can_move = health.is_alive();
     }
 }
 
@@ -383,129 +234,401 @@ fn detect_usable_targets(
     }
 }
 
-fn create_use_event(
-    mut commands: Commands,
-    r_use_entity: Res<HoverEntities>,
-    r_player_entity: Res<PlayerEntity>,
-    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
-    q_use: Query<&Use>,
-    mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
+fn update_cursor_world(
+    mut r_cursor_world: ResMut<CursorWorld>,
+    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
+    q_windows: Query<&Window>,
+    q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
+    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
-    let Ok(action_state) = q_action_state.get_single() else {
-        warn!("PlayerAction state is missing.");
+    let Ok((camera, camera_transform)) = q_camera.get_single() else {
+        return;
+    };
+    let belt_level = Vec3::new(0.0, 1.0, 0.0);
+    let Ok(follow_pos) = q_follow_cam.get_single() else {
         return;
     };
 
-    if action_state.just_pressed(&CharacterAction::Use) {
-        let Some(player) = r_player_entity.get() else {
-            return;
-        };
+    let ray = q_windows
+        .single()
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
+        .unwrap_or_else(|| Ray3d {
+            origin: follow_pos.translation,
+            direction: follow_pos.down(),
+        });
 
-        for entity_target in r_use_entity.0.iter() {
-            if let Ok(_) = q_use.get(entity_target.entity) {
-                commands.trigger_targets(UseEvent::new(player), entity_target.entity);
-                ev_interaction_sound.send(InteractionSoundEvent);
+    // Calculate if and where the ray is hitting the belt (of the character height) level.
+    let Some(distance) = ray.intersect_plane(belt_level, InfinitePlane3d::new(Vec3::Y)) else {
+        return;
+    };
+    let mouse_ground_pos = ray.get_point(distance);
+    r_cursor_world.0 = mouse_ground_pos;
+
+    if let Ok(mut orientation_mode) = q_orientation.get_single_mut() {
+        if let OrientationMode::Location(_) = *orientation_mode {
+            *orientation_mode =
+                OrientationMode::Location(Vec2::new(mouse_ground_pos.x, mouse_ground_pos.z));
+        }
+    };
+}
+
+fn rotate_character(
+    mut query: Query<
+        (&mut Transform, &CharacterMovement, &OrientationMode),
+        Or<(Changed<OrientationMode>, Changed<CharacterMovement>)>,
+    >,
+) {
+    for (mut transform, character_movement, orientation) in &mut query {
+        match orientation {
+            OrientationMode::Direction => {
+                if character_movement.direction == Vec3::ZERO {
+                    continue;
+                }
+                let direction_2d = Vec2::new(
+                    character_movement.direction.x,
+                    character_movement.direction.z,
+                );
+                let rotation_angle = std::f32::consts::PI + direction_2d.angle_to(Vec2::Y);
+
+                let current_rotation = transform.rotation;
+                let target_rotation = Quat::from_rotation_y(rotation_angle);
+                let interpolated_rotation = current_rotation.lerp(target_rotation, 0.1);
+
+                transform.rotation = interpolated_rotation;
+            }
+            OrientationMode::Location(location_2d) => {
+                let target_position =
+                    Vec3::new(location_2d.x, transform.translation.y, location_2d.y);
+                let look_direction = transform.translation - target_position; // Reverse direction vector
+
+                if look_direction.length_squared() > 0.0 {
+                    let rotation_angle = look_direction.x.atan2(look_direction.z);
+
+                    let current_rotation = transform.rotation;
+                    let target_rotation = Quat::from_rotation_y(rotation_angle);
+                    let interpolated_rotation = current_rotation.lerp(target_rotation, 0.1);
+
+                    transform.rotation = interpolated_rotation;
+                }
             }
         }
     }
 }
 
-fn kill(
-    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
+fn foot_binding(trigger: Trigger<Binding<OnFoot>>, mut players: Query<&mut Actions<OnFoot>>) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    actions
+        .bind::<Move>()
+        .to(Cardinal::wasd_keys())
+        .with_modifiers(DeadZone::default());
+    actions.bind::<AimAction>().to(MouseButton::Right);
+    actions.bind::<UseAction>().to(KeyCode::KeyE);
+    actions.bind::<KillAction>().to(KeyCode::KeyK);
+    actions.bind::<ShootAction>().to(MouseButton::Left);
+    actions.bind::<InventoryAction>().to(KeyCode::KeyI);
+    actions.bind::<OrientationModeAction>().to(KeyCode::Space);
+    actions.bind::<ZoomInAction>().to(KeyCode::Equal);
+    actions.bind::<ZoomOutAction>().to(KeyCode::Minus);
+    actions.bind::<RotateClockwiseAction>().to(KeyCode::KeyZ);
+    actions
+        .bind::<RotateCounterClockwiseAction>()
+        .to(KeyCode::KeyC);
+}
+
+fn star_map_binding(
+    trigger: Trigger<Binding<OnStarMap>>,
+    mut players: Query<&mut Actions<OnStarMap>>,
+) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    actions.bind::<ColonyIrisAction>().to(KeyCode::KeyI);
+    actions.bind::<ColonyLiberteAction>().to(KeyCode::KeyL);
+}
+
+fn ui_binding(trigger: Trigger<Binding<OnUi>>, mut players: Query<&mut Actions<OnUi>>) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    actions
+        .bind::<EscapeAction>()
+        .to(KeyCode::Escape)
+        .with_conditions(Hold::new(0.5));
+}
+
+fn apply_movement(
+    trigger: Trigger<Fired<Move>>,
+    q_camera: Query<&Transform, With<MainCamera>>,
+    mut q_movement: Query<&mut CharacterMovement, With<Player>>,
+    mut q_tnua: Query<&mut TnuaController>,
+) {
+    let Ok(cam_transform) = q_camera.get_single() else {
+        warn!("Can not find Transform, With<MainCamera>");
+        return;
+    };
+
+    let cam_forward = {
+        let f = cam_transform.rotation.mul_vec3(Vec3::Z);
+        // Invert it to account for camera looking down -Z
+        -Vec3::new(f.x, 0.0, f.z).normalize_or_zero()
+    };
+    let cam_right = {
+        let r = cam_transform.rotation.mul_vec3(Vec3::X);
+        Vec3::new(r.x, 0.0, r.z).normalize_or_zero()
+    };
+
+    let input_axis = trigger.value;
+    let input_forward = cam_forward * input_axis.y;
+    let input_strafe = cam_right * input_axis.x;
+
+    if let Ok(mut movement) = q_movement.get_single_mut() {
+        movement.direction = (input_forward + input_strafe).normalize_or_zero();
+        if movement.can_move {
+            if let Ok(mut controller) = q_tnua.get_single_mut() {
+                movement.velocity = movement.direction * movement.speed;
+                controller.basis(TnuaBuiltinWalk {
+                    // The `desired_velocity` determines how the character will move.
+                    desired_velocity: movement.velocity,
+                    // The `float_height` must be greater (even if by little) from the distance between the
+                    // character's center and the lowest point of its collider.
+                    float_height: 1.5,
+                    ..Default::default()
+                });
+            } else {
+                warn!("Failed to get tnua controller");
+            }
+        }
+    } else {
+        warn!("Can not find CharacterMovement for single Player");
+    }
+}
+
+fn apply_stop_movement(
+    _trigger: Trigger<Completed<Move>>,
+    mut q_tnua: Query<&mut TnuaController>,
+    mut q_movement: Query<&mut CharacterMovement, With<Player>>,
+) {
+    if let Ok(mut movement) = q_movement.get_single_mut() {
+        movement.velocity = Vec3::ZERO;
+    }
+    if let Ok(mut controller) = q_tnua.get_single_mut() {
+        controller.basis(TnuaBuiltinWalk {
+            desired_velocity: Vec3::ZERO,
+            float_height: 1.5,
+            ..Default::default()
+        });
+    }
+}
+
+fn apply_orientation_mode(
+    _trigger: Trigger<Started<OrientationModeAction>>,
+    r_cursor_world: Res<CursorWorld>,
+    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
+) {
+    if let Ok(mut orientation_mode) = q_orientation.get_single_mut() {
+        *orientation_mode = match *orientation_mode {
+            OrientationMode::Direction => {
+                OrientationMode::Location(Vec2::new(r_cursor_world.0.x, r_cursor_world.0.z))
+            }
+            OrientationMode::Location(_) => OrientationMode::Direction,
+        }
+    } else {
+        warn!("Can not find OrientationMode, With<Player>");
+    }
+}
+
+fn apply_use(
+    _trigger: Trigger<Started<UseAction>>,
+    mut commands: Commands,
+    r_use_entity: Res<HoverEntities>,
+    r_player_entity: Res<PlayerEntity>,
+    q_use: Query<&Use>,
+    mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
+) {
+    let Some(player) = r_player_entity.get() else {
+        return;
+    };
+
+    for entity_target in r_use_entity.0.iter() {
+        if let Ok(_) = q_use.get(entity_target.entity) {
+            commands.trigger_targets(UseEvent::new(player), entity_target.entity);
+            ev_interaction_sound.send(InteractionSoundEvent);
+        }
+    }
+}
+
+fn apply_kill(
+    _trigger: Trigger<Started<KillAction>>,
     mut q_player_health: Query<&mut Health, With<Player>>,
 ) {
-    let Ok(action_state) = q_action_state.get_single() else {
-        warn!("PlayerAction state is missing.");
-        return;
-    };
-    if action_state.just_pressed(&CharacterAction::Kill) {
-        if let Some(mut health) = q_player_health.iter_mut().next() {
-            health.kill_mut();
-        }
+    if let Some(mut health) = q_player_health.iter_mut().next() {
+        health.kill_mut();
     }
 }
 
-fn log_inventory(
+fn apply_inventory(
+    _trigger: Trigger<Started<InventoryAction>>,
     q_inventory: Query<&Inventory, With<Player>>,
     q_name: Query<&Name>,
-    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
 ) {
-    let Ok(action_state) = q_action_state.get_single() else {
-        warn!("PlayerAction state is missing.");
-        return;
-    };
-    if action_state.just_pressed(&CharacterAction::Inventory) {
-        if let Ok(inventory) = q_inventory.get_single() {
-            let item_names: Vec<String> = inventory
-                .items
-                .iter()
-                .filter_map(|&item| q_name.get(item).ok().map(|name| name.to_string()))
-                .collect();
+    if let Ok(inventory) = q_inventory.get_single() {
+        let item_names: Vec<String> = inventory
+            .items
+            .iter()
+            .filter_map(|&item| q_name.get(item).ok().map(|name| name.to_string()))
+            .collect();
 
-            let output = format!("Inventory: [{}]", item_names.join(", "));
-            info!("{}", output);
-        }
+        let output = format!("Inventory: [{}]", item_names.join(", "));
+        info!("{}", output);
     }
 }
 
-fn toggle_window_cursor_visible(
-    action_state: Res<ActionState<UIAction>>,
+fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut ev_exit_app: EventWriter<AppExit>) {
+    if trigger.elapsed_secs > 0.4 {
+        ev_exit_app.send(AppExit::Success);
+    }
+}
+
+fn apply_window_cursor_visible(
+    _trigger: Trigger<Started<EscapeAction>>,
     mut q_windows: Query<&mut Window>,
 ) {
-    if action_state.just_pressed(&UIAction::Escape) {
-        let mut window = q_windows.single_mut();
-        window.cursor_options.visible = !window.cursor_options.visible;
-    }
-}
-
-fn enable_cursor_visible(mut q_windows: Query<&mut Window>) {
     let mut window = q_windows.single_mut();
-    window.cursor_options.visible = true;
+    window.cursor_options.visible = !window.cursor_options.visible;
 }
 
-fn starmap_keyboard(
-    action_state: Res<ActionState<UIAction>>,
+fn apply_starmap_iris(
+    _trigger: Trigger<Started<ColonyIrisAction>>,
     mut ev_vort_in: EventWriter<VortInEvent>,
 ) {
-    if action_state.just_pressed(&UIAction::ColonyIris) {
-        ev_vort_in.send(VortInEvent::vort(Colony::Iris));
-    } else if action_state.just_pressed(&UIAction::ColonyLiberte) {
-        ev_vort_in.send(VortInEvent::vort(Colony::Liberte));
-    } else if action_state.just_pressed(&UIAction::ColonyPlayground) {
-        ev_vort_in.send(VortInEvent::vort(Colony::Playground));
-    }
+    info!("apply_starmap_iris");
+    ev_vort_in.send(VortInEvent::vort(Colony::Iris));
 }
 
-#[cfg(test)]
-mod tests {
-    use bevy::input::InputPlugin;
-
-    use corp_shared::prelude::*;
-
-    use super::*;
-
-    #[test]
-    fn send_input() {
-        // given
-        let mut app = setup();
-
-        // when
-        KeyCode::Escape.press(app.world_mut());
-
-        app.update();
-
-        // then
-        assert!(app
-            .world()
-            .resource::<ActionState<UIAction>>()
-            .pressed(&UIAction::Escape));
-    }
-
-    fn setup() -> App {
-        let mut app = App::new();
-        app.init_time()
-            .add_plugins(MinimalPlugins)
-            .add_plugins((InputPlugin, ControlPlugin));
-        app
-    }
+fn apply_starmap_liberte(
+    _trigger: Trigger<Started<ColonyLiberteAction>>,
+    mut ev_vort_in: EventWriter<VortInEvent>,
+) {
+    ev_vort_in.send(VortInEvent::vort(Colony::Liberte));
 }
+
+fn apply_rotate_camera_clockwise(
+    _trigger: Trigger<Started<RotateClockwiseAction>>,
+    mut q_rig: Query<&mut Rig>,
+) {
+    if let Ok(mut rig) = q_rig.get_single_mut() {
+        let camera_yp = rig.driver_mut::<YawPitch>();
+        camera_yp.rotate_yaw_pitch(-45.0, 0.0);
+    };
+}
+
+fn apply_rotate_camera_counter_clockwise(
+    _trigger: Trigger<Started<RotateCounterClockwiseAction>>,
+    mut q_rig: Query<&mut Rig>,
+) {
+    if let Ok(mut rig) = q_rig.get_single_mut() {
+        let camera_yp = rig.driver_mut::<YawPitch>();
+        camera_yp.rotate_yaw_pitch(45.0, 0.0);
+    };
+}
+
+fn apply_camera_zoom_in(
+    _trigger: Trigger<Fired<ZoomInAction>>,
+    mut q_rig: Query<&mut Rig>,
+    time: Res<Time<Fixed>>,
+) {
+    if let Ok(mut rig) = q_rig.get_single_mut() {
+        if let Some(arm) = rig.try_driver_mut::<Arm>() {
+            let mut xz = arm.offset;
+            xz.z = (xz.z - 4.0 * time.delta_secs()).abs();
+            arm.offset = xz.clamp_length_min(6.0);
+        }
+    };
+}
+
+fn apply_camera_zoom_out(
+    _trigger: Trigger<Fired<ZoomOutAction>>,
+    mut q_rig: Query<&mut Rig>,
+    time: Res<Time<Fixed>>,
+) {
+    if let Ok(mut rig) = q_rig.get_single_mut() {
+        if let Some(arm) = rig.try_driver_mut::<Arm>() {
+            let mut xz = arm.offset;
+            xz.z = (xz.z + 4.0 * time.delta_secs()).abs();
+            arm.offset = xz.clamp_length_max(18.0);
+        }
+    };
+}
+
+fn apply_aim(_trigger: Trigger<Started<AimAction>>, mut r_camera_modifier: ResMut<CameraModifier>) {
+    r_camera_modifier.aim_zoom_factor = 1.8;
+}
+
+fn apply_aim_completed(
+    _trigger: Trigger<Completed<AimAction>>,
+    mut r_camera_modifier: ResMut<CameraModifier>,
+) {
+    r_camera_modifier.aim_zoom_factor = 1.0;
+}
+
+#[derive(InputContext)]
+struct OnFoot;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = Vec2)]
+struct Move;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct AimAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct OrientationModeAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct UseAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct InventoryAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct ShootAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct KillAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct ZoomInAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct ZoomOutAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct RotateClockwiseAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct RotateCounterClockwiseAction;
+
+#[derive(InputContext)]
+struct OnStarMap;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct ColonyIrisAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct ColonyLiberteAction;
+
+#[derive(InputContext)]
+struct OnUi;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct EscapeAction;

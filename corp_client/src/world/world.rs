@@ -24,18 +24,10 @@ impl Plugin for WorldPlugin {
             ColonyPlugin,
             AnimatorPlugin,
             StarMapPlugin,
-            CharacterPlugin,
             ControlPlugin,
             MainCameraPlugin,
             PlayerPlugin,
             CloningPlugin,
-        ))
-        .configure_sets(
-            FixedUpdate,
-            (
-                ControlSet::PlayingInput.before(CharacterSet::Movement),
-                CameraSet::Update.after(CharacterSet::Movement),
-            ),
-        );
+        ));
     }
 }

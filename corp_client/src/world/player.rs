@@ -4,7 +4,6 @@ use bevy::{ecs::system::SystemId, prelude::*, scene::SceneInstanceReady};
 use bevy_tnua::prelude::TnuaController;
 use bevy_tnua_avian3d::TnuaAvian3dSensorShape;
 use corp_shared::prelude::*;
-use leafwing_input_manager::InputManagerBundle;
 use rand::seq::SliceRandom;
 
 #[derive(Resource)]
@@ -63,10 +62,9 @@ pub fn setup_player(
         .entity(e_player)
         .insert((
             Name::new("Player"),
-            InputManagerBundle::with_map(CharacterAction::player_input_map()),
+            Player,
             Transform::from_translation(rnd_node_position + Vec3::Y),
             Visibility::default(),
-            Player,
             MovementBundle::default(),
             MainCameraFollow,
             Inventory::default(),

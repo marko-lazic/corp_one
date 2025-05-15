@@ -1,4 +1,3 @@
-use crate::prelude::*;
 use bevy::{
     core_pipeline::{
         bloom::Bloom,
@@ -7,13 +6,20 @@ use bevy::{
     prelude::*,
     render::camera::{Exposure, PhysicalCameraParameters},
 };
-use bevy_dolly::prelude::{Arm, Dolly, Position, Rig, Smooth, YawPitch};
+use bevy_dolly::prelude::*;
 use corp_shared::prelude::*;
-use leafwing_input_manager::action_state::ActionState;
 
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum CameraSet {
-    Update,
+#[derive(Resource)]
+pub struct CameraModifier {
+    pub aim_zoom_factor: f32,
+}
+
+impl Default for CameraModifier {
+    fn default() -> Self {
+        Self {
+            aim_zoom_factor: 1.0,
+        }
+    }
 }
 
 #[derive(Component)]
@@ -26,11 +32,10 @@ pub struct MainCameraPlugin;
 
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.init_resource::<CameraModifier>().add_systems(
             FixedUpdate,
             (update_camera, Dolly::<MainCamera>::update_active)
                 .chain()
-                .in_set(CameraSet::Update)
                 .run_if(in_state(GameState::Playing)),
         );
     }
@@ -70,60 +75,22 @@ pub fn setup_camera(mut commands: Commands, q_player_transform: Single<&Transfor
 }
 
 fn update_camera(
-    q_action_state: Query<&ActionState<CharacterAction>, With<Player>>,
-    time: Res<Time<Fixed>>,
-    mut rig_q: Query<&mut Rig>,
+    r_camera_modifier: Res<CameraModifier>,
+    mut q_rig: Query<&mut Rig>,
     q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
-    windows: Query<&Window>,
+    q_windows: Query<&Window>,
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
-    let Ok(mut rig) = rig_q.get_single_mut() else {
-        warn!("Update Camera: No camera rig found");
+    let Ok((camera, camera_transform)) = q_camera.get_single() else {
         return;
     };
-    let camera_yp = rig.driver_mut::<YawPitch>();
-
-    let Ok(action_state) = q_action_state.get_single() else {
-        warn!("Update Camera: PlayerAction state is missing.");
-        return;
-    };
-
-    if action_state.just_pressed(&CharacterAction::CameraRotateClockwise) {
-        camera_yp.rotate_yaw_pitch(-45.0, 0.0);
-    }
-    if action_state.just_pressed(&CharacterAction::CameraRotateCounterClockwise) {
-        camera_yp.rotate_yaw_pitch(45.0, 0.0);
-    }
-
-    if action_state.pressed(&CharacterAction::CameraZoomIn) {
-        if let Some(arm) = rig.try_driver_mut::<Arm>() {
-            let mut xz = arm.offset;
-            xz.z = (xz.z - 4.0 * time.delta_secs()).abs();
-            arm.offset = xz.clamp_length_min(6.0);
-        }
-    }
-
-    if action_state.pressed(&CharacterAction::CameraZoomOut) {
-        if let Some(arm) = rig.try_driver_mut::<Arm>() {
-            let mut xz = arm.offset;
-            xz.z = (xz.z + 4.0 * time.delta_secs()).abs();
-            arm.offset = xz.clamp_length_max(18.0);
-        }
-    }
-
-    let mut target_zoom_factor: f32 = 1.0;
-    if action_state.pressed(&CharacterAction::Aim) {
-        target_zoom_factor = 1.8;
-    }
-
-    let (camera, camera_transform) = q_camera.single();
     let ground_origin = Vec3::ZERO;
 
     let Ok(follow_pos) = q_follow_cam.get_single() else {
         return;
     };
 
-    let Ok(window) = windows.get_single() else {
+    let Ok(window) = q_windows.get_single() else {
         return;
     };
 
@@ -146,21 +113,26 @@ fn update_camera(
     let sensitivity = 0.2; // Adjust this value to control camera movement speed
 
     // Calculate the new camera position by offsetting from the player position
-    let new_camera_pos = follow_pos.translation + direction * sensitivity * target_zoom_factor;
+    let new_camera_pos =
+        follow_pos.translation + direction * sensitivity * r_camera_modifier.aim_zoom_factor;
 
-    // Update camera position
-    if let Some(camera_pos) = rig.try_driver_mut::<Position>() {
-        // Calculate the distance between the player and the new camera position
-        let max_distance = (new_camera_pos - follow_pos.translation).length();
+    if let Ok(mut rig) = q_rig.get_single_mut() {
+        // Update camera position
+        if let Some(camera_pos) = rig.try_driver_mut::<Position>() {
+            // Calculate the distance between the player and the new camera position
+            let max_distance = (new_camera_pos - follow_pos.translation).length();
 
-        // Limit the distance to ensure the player is always visible
-        let distance = distance.min(max_distance);
+            // Limit the distance to ensure the player is always visible
+            let distance = distance.min(max_distance);
 
-        // Calculate the new camera position
-        let camera_pos_diff = (new_camera_pos - follow_pos.translation).normalize() * distance;
+            // Calculate the new camera position
+            let camera_pos_diff = (new_camera_pos - follow_pos.translation).normalize() * distance;
 
-        let player_and_camera_pos_diff = follow_pos.translation + camera_pos_diff;
-        camera_pos.position.x = player_and_camera_pos_diff.x;
-        camera_pos.position.z = player_and_camera_pos_diff.z;
+            let player_and_camera_pos_diff = follow_pos.translation + camera_pos_diff;
+            camera_pos.position.x = player_and_camera_pos_diff.x;
+            camera_pos.position.z = player_and_camera_pos_diff.z;
+        }
+    } else {
+        warn!("Update Camera: No camera rig found");
     }
 }
