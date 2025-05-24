@@ -18,7 +18,7 @@ impl Plugin for SpawnPlugin {
 fn backpack_spawner(
     mut commands: Commands,
     q_backpacks: Query<&Backpack>,
-    mut rng: ResMut<GlobalEntropy<WyRand>>,
+    mut rng: GlobalEntropy<WyRand>,
 ) {
     const MAX_BACKPACKS: usize = 10;
     if q_backpacks.iter().count() > MAX_BACKPACKS {

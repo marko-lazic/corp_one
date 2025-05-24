@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
-use bevy::{app::AppExit, prelude::*, utils::HashSet};
+use bevy::{app::AppExit, platform::collections::HashSet, prelude::*};
 use bevy_dolly::{
     dolly_type::Rig,
     prelude::{Arm, *},
@@ -116,9 +116,10 @@ fn setup_playing_input_controls(mut commands: Commands) {
     ));
 }
 
-fn reset_cursor_visible(mut q_windows: Query<&mut Window>) {
-    let mut window = q_windows.single_mut();
+fn reset_cursor_visible(mut q_windows: Query<&mut Window>) -> Result {
+    let mut window = q_windows.single_mut()?;
     window.cursor_options.visible = true;
+    Ok(())
 }
 
 fn can_move(mut query: Query<(&mut CharacterMovement, &Health), Changed<Health>>) {
@@ -240,17 +241,13 @@ fn update_cursor_world(
     q_windows: Query<&Window>,
     q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-) {
-    let Ok((camera, camera_transform)) = q_camera.get_single() else {
-        return;
-    };
+) -> Result {
+    let (camera, camera_transform) = q_camera.single()?;
     let belt_level = Vec3::new(0.0, 1.0, 0.0);
-    let Ok(follow_pos) = q_follow_cam.get_single() else {
-        return;
-    };
+    let follow_pos = q_follow_cam.single()?;
 
     let ray = q_windows
-        .single()
+        .single()?
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
         .unwrap_or_else(|| Ray3d {
@@ -260,17 +257,18 @@ fn update_cursor_world(
 
     // Calculate if and where the ray is hitting the belt (of the character height) level.
     let Some(distance) = ray.intersect_plane(belt_level, InfinitePlane3d::new(Vec3::Y)) else {
-        return;
+        return Ok(());
     };
     let mouse_ground_pos = ray.get_point(distance);
     r_cursor_world.0 = mouse_ground_pos;
 
-    if let Ok(mut orientation_mode) = q_orientation.get_single_mut() {
+    if let Ok(mut orientation_mode) = q_orientation.single_mut() {
         if let OrientationMode::Location(_) = *orientation_mode {
             *orientation_mode =
                 OrientationMode::Location(Vec2::new(mouse_ground_pos.x, mouse_ground_pos.z));
         }
     };
+    Ok(())
 }
 
 fn rotate_character(
@@ -317,7 +315,7 @@ fn rotate_character(
 }
 
 fn foot_binding(trigger: Trigger<Binding<OnFoot>>, mut players: Query<&mut Actions<OnFoot>>) {
-    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Move>()
         .to(Cardinal::wasd_keys())
@@ -340,13 +338,13 @@ fn star_map_binding(
     trigger: Trigger<Binding<OnStarMap>>,
     mut players: Query<&mut Actions<OnStarMap>>,
 ) {
-    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    let mut actions = players.get_mut(trigger.target()).unwrap();
     actions.bind::<ColonyIrisAction>().to(KeyCode::KeyI);
     actions.bind::<ColonyLiberteAction>().to(KeyCode::KeyL);
 }
 
 fn ui_binding(trigger: Trigger<Binding<OnUi>>, mut players: Query<&mut Actions<OnUi>>) {
-    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<EscapeAction>()
         .to(KeyCode::Escape)
@@ -489,9 +487,10 @@ fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut ev_exit_app: EventWri
 fn apply_window_cursor_visible(
     _trigger: Trigger<Started<EscapeAction>>,
     mut q_windows: Query<&mut Window>,
-) {
-    let mut window = q_windows.single_mut();
+) -> Result {
+    let mut window = q_windows.single_mut()?;
     window.cursor_options.visible = !window.cursor_options.visible;
+    Ok(())
 }
 
 fn apply_starmap_iris(

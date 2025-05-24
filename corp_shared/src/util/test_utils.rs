@@ -1,12 +1,12 @@
 use std::time::Duration;
 
-use bevy::{app::App, prelude::*};
+use bevy::{app::App, ecs::component::Mutable, prelude::*};
 
 pub trait TestUtils {
     fn init_time(&mut self) -> &mut Self;
     fn update_after(&mut self, duration: Duration) -> &mut Self;
     fn get<C: Component>(&self, entity: Entity) -> &C;
-    fn get_mut<C: Component>(&mut self, entity: Entity) -> Mut<C>;
+    fn get_mut<C: Component<Mutability = Mutable>>(&mut self, entity: Entity) -> Mut<C>;
     fn has_component<C: Component>(&self, entity: Entity) -> bool;
 
     fn get_resource<R: Resource>(&self) -> &R;
@@ -39,7 +39,7 @@ impl TestUtils for App {
         })
     }
 
-    fn get_mut<C: Component>(&mut self, entity: Entity) -> Mut<C> {
+    fn get_mut<C: Component<Mutability = Mutable>>(&mut self, entity: Entity) -> Mut<C> {
         self.world_mut().get_mut::<C>(entity).unwrap_or_else(|| {
             panic!(
                 "Component {} not found on entity {}",

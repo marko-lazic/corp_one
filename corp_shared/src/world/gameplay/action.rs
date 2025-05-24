@@ -26,7 +26,7 @@ impl Plugin for ActionPlugin {
 fn heal(
     trigger: Trigger<HealActionEvent>,
     mut q_health: Query<&mut Health>,
-    mut rng: ResMut<GlobalEntropy<WyRand>>,
+    mut rng: GlobalEntropy<WyRand>,
 ) {
     if let Ok(mut health) = q_health.get_mut(trigger.receiver) {
         let amount = rng.gen_range((*trigger.range).clone()) as f32;
@@ -37,7 +37,7 @@ fn heal(
 fn take_damage(
     trigger: Trigger<DamageActionEvent>,
     mut q_health: Query<&mut Health>,
-    mut rng: ResMut<GlobalEntropy<WyRand>>,
+    mut rng: GlobalEntropy<WyRand>,
 ) {
     if let Ok(mut health) = q_health.get_mut(trigger.receiver) {
         let amount = rng.gen_range((*trigger.range).clone()) as f32;

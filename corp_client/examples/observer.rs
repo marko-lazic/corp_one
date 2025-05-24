@@ -36,7 +36,7 @@ struct TriggerEvent;
 fn on_use_event_door(trigger: Trigger<TriggerEvent>) {
     info!(
         "Using energy door {:?} {:?}",
-        trigger.entity(),
+        trigger.target(),
         trigger.event()
     );
 }
@@ -44,7 +44,7 @@ fn on_use_event_door(trigger: Trigger<TriggerEvent>) {
 fn on_use_event_energy_node(trigger: Trigger<TriggerEvent>) {
     info!(
         "Using energy node {:?} {:?}",
-        trigger.entity(),
+        trigger.target(),
         trigger.event()
     );
 }
@@ -52,7 +52,7 @@ fn on_use_event_energy_node(trigger: Trigger<TriggerEvent>) {
 fn on_use_event_market_terminal(trigger: Trigger<TriggerEvent>) {
     info!(
         "Using market terminal {:?} {:?}",
-        trigger.entity(),
+        trigger.target(),
         trigger.event()
     );
 }

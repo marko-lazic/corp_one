@@ -7,18 +7,18 @@ pub fn cast_ray_system(
     mut r_target_entity: ResMut<TargetEntity>,
     q_windows: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
-) {
-    let window = q_windows.single();
+) -> Result {
+    let window = q_windows.single()?;
 
     let Some(cursor_position) = window.cursor_position() else {
-        return;
+        return Ok(());
     };
 
     // We will color in read the colliders hovered by the mouse.
     for (camera, camera_transform) in &q_camera {
         // First, compute a ray from the mouse position.
         let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
-            return;
+            return Ok(());
         };
 
         // Then cast the ray.
@@ -34,6 +34,7 @@ pub fn cast_ray_system(
             r_target_entity.0 = None;
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -62,6 +63,7 @@ mod tests {
         let mut query = app.world().query::<&mut Window>();
         query
             .single_mut(&mut app.world())
+            .unwrap()
             .set_cursor_position(Some(Vec2::new(0.0, 0.0)));
 
         app.update();

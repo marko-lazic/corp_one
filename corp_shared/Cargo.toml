@@ -2,7 +2,7 @@
 name = "corp_shared"
 version = "0.1.0"
 authors = ["Marko Lazić <marko.lazic@comyno.com>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 bevy = { workspace = true, features = ["dynamic_linking", "bevy_color", "bevy_state"] }
@@ -12,8 +12,8 @@ rand = { workspace = true }
 bevy_rand = { workspace = true }
 bevy_replicon = { workspace = true }
 anyhow = { workspace = true }
-strum = "0.27.1"
-strum_macros = "0.27.1"
+strum = "0.27"
+strum_macros = "0.27"
 
 [features]
 client = []

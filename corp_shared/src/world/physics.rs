@@ -1,4 +1,4 @@
-use avian3d::{collision::CollisionLayers, prelude::*};
+use avian3d::prelude::*;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,8 @@ pub enum GameLayer {
 #[derive(Component, Default, Debug, Reflect)]
 #[reflect(Component)]
 #[require(
-    CollisionLayers(structure_collision_layers),
-    RigidBody(|| RigidBody::Static),
+    CollisionLayers = structure_collision_layers(),
+    RigidBody::Static,
     CreateTriMesh
 )]
 pub struct Structure;
@@ -24,8 +24,8 @@ pub struct Structure;
 #[derive(Component, Default, Debug, Reflect)]
 #[reflect(Component)]
 #[require(
-    CollisionLayers(structure_collision_layers),
-    RigidBody(|| RigidBody::Kinematic),
+    CollisionLayers = structure_collision_layers(),
+    RigidBody::Kinematic,
     CreateTriMesh
 )]
 pub struct DynamicStructure;
@@ -36,7 +36,7 @@ pub fn structure_collision_layers() -> CollisionLayers {
 
 #[derive(Component, Default, Debug, Reflect)]
 #[reflect(Component)]
-#[require(Sensor, RigidBody(|| RigidBody::Static), CreateTriMesh)]
+#[require(Sensor, RigidBody::Static, CreateTriMesh)]
 pub struct PassStructure;
 
 #[derive(Component, Default)]

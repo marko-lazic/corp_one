@@ -12,15 +12,15 @@ members = [
 default-members = ["corp_client", "corp_server", "corp_shared", "corp_proxy"]
 
 [workspace.dependencies]
-bevy = { version = "0.15", default-features = false }
+bevy = { version = "0.16", default-features = false }
 serde = { version = "1", default-features = false }
-avian3d = { version = "0.2", default-features = false }
+avian3d = { version = "0.3", default-features = false }
 rand = "0.8"
-bevy_rand = { version = "0.8", features = ["wyrand"] }
-tokio = { version = "1.44", default-features = false }
+bevy_rand = { version = "0.11", features = ["wyrand"] }
+tokio = { version = "1.45", default-features = false }
 anyhow = "1.0.98"
 
-aeronet = { path = "../temp/aeronet/crates/aeronet", default-features = false }
-aeronet_webtransport = { path = "../temp/aeronet/crates/aeronet_webtransport", default-features = false }
-aeronet_replicon = { path = "../temp/aeronet/crates/aeronet_replicon", default-features = false }
-bevy_replicon = { version = "0.31.1", default-features = false }
+aeronet = { version = "0.14", default-features = false }
+aeronet_webtransport = { version = "0.14", default-features = false }
+aeronet_replicon = { version = "0.14", default-features = false }
+bevy_replicon = { version = "0.33", default-features = false }

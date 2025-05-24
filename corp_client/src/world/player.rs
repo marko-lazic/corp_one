@@ -37,7 +37,7 @@ fn spawn_player(
     r_player_entity: Res<PlayerEntity>,
 ) {
     if let Some(player_entity) = r_player_entity.0 {
-        commands.run_system_with_input(r_player_systems.setup_player, player_entity);
+        commands.run_system_with(r_player_systems.setup_player, player_entity);
     } else {
         error!("Failed to spawn player. Player entity not set.");
     }

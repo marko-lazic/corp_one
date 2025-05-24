@@ -5,17 +5,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[require(
-    Name(|| Name::new("Backpack")),
+    Name::new("Backpack"),
     Use,
     Inventory,
     Transform,
-    RigidBody(|| RigidBody::Dynamic),
-    Collider(init_backpack_collider),
+    RigidBody::Dynamic,
+    Collider = init_backpack_collider(),
     Sensor,
-    CollisionLayers(init_backpack_collision_layers),
+    CollisionLayers = init_backpack_collision_layers(),
 )]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState>(|| StateScoped(GameState::Playing)))
+    StateScoped<GameState> = StateScoped(GameState::Playing))
 )]
 pub struct Backpack;
 
@@ -46,7 +46,7 @@ pub fn on_use_backpack_event(trigger: Trigger<UseEvent>, mut commands: Commands)
             user: trigger.event().user,
             action: BackpackAction::TakeAll,
         },
-        trigger.entity(),
+        trigger.target(),
     );
 }
 
@@ -55,7 +55,7 @@ pub fn on_use_backpack_action_event(
     mut q_inventory: Query<&mut Inventory>,
 ) {
     let e_user = trigger.event().user;
-    let e_backpack = trigger.entity();
+    let e_backpack = trigger.target();
 
     let Ok([mut user_inventory, mut backpack]) = q_inventory.get_many_mut([e_user, e_backpack])
     else {

@@ -2,7 +2,7 @@
 name = "corp_client"
 version = "0.1.0"
 authors = ["marko.lazic <markolazic@protonmail.com>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 corp_shared = { path = "../corp_shared", features = ["client"] }
@@ -19,22 +19,20 @@ bevy = { workspace = true, default-features = false, features = [
     "bevy_gltf",
 ] }
 avian3d = { workspace = true, features = ["default", "enhanced-determinism", "serialize"] }
-bevy_enhanced_input = "0.10.0"
-bevy-inspector-egui = "0.30"
-bevy_asset_loader = { version = "0.22.0", default-features = false, features = [
-    "3d",
-] }
-bevy_kira_audio = { version = "0.22", default-features = false, features = [
+bevy_enhanced_input = "0.11"
+bevy-inspector-egui = "0.31"
+bevy_asset_loader = { version = "0.23.0", default-features = false, features = ["3d"] }
+bevy_kira_audio = { version = "0.23", default-features = false, features = [
     "wav",
     "ogg",
 ] }
-bevy-tnua = "0.21.0"
-bevy-tnua-avian3d = "0.2.0"
-bevy_dolly = { version = "0.0.5", default-features = false, features = [
+bevy-tnua = "0.24.0"
+bevy-tnua-avian3d = "0.5.0"
+bevy_dolly = { git = "https://github.com/BlackPhlox/bevy_dolly.git", branch = "bevy_0.16", default-features = false, features = [
     "drivers",
 ] }
-bevy_skein = { version = "0.1.2" }
-bevy_framepace = "0.18"
+bevy_skein = { version = "0.2" }
+bevy_framepace = "0.19"
 rand = { workspace = true }
 bevy_rand = { workspace = true }
 aeronet = { workspace = true }
@@ -43,7 +41,7 @@ aeronet_replicon = { workspace = true, features = ["client"] }
 bevy_replicon = { workspace = true, features = ["default"] }
 
 [dev-dependencies]
-bevy_panorbit_camera = "0.23"
+bevy_panorbit_camera = "0.26"
 
 
 [[example]]

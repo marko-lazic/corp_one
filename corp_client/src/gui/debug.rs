@@ -33,7 +33,7 @@ pub struct DebugGuiPlugin;
 impl Plugin for DebugGuiPlugin {
     fn build(&self, app: &mut App) {
         app.init_gizmo_group::<DebugGizmos>()
-            .add_plugins(FrameTimeDiagnosticsPlugin)
+            .add_plugins(FrameTimeDiagnosticsPlugin::default())
             .add_event::<DebugGuiEvent>()
             .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(

@@ -58,9 +58,9 @@ fn rotate_camera(
     mut camera: Query<&mut Transform, With<MainCamera>>,
     time: Res<Time>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
-) {
+) -> Result {
     if !mouse_button_input.pressed(MouseButton::Left) {
-        let cam_transform = camera.single_mut().into_inner();
+        let cam_transform = camera.single_mut()?.into_inner();
 
         cam_transform.rotate_around(
             Vec3::ZERO,
@@ -68,6 +68,7 @@ fn rotate_camera(
         );
         cam_transform.look_at(Vec3::ZERO, Vec3::Y);
     }
+    Ok(())
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]

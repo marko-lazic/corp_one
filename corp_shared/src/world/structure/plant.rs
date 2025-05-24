@@ -6,14 +6,14 @@ use crate::prelude::{Faction, OwnershipRegistry, SecurityLevel, UseEvent};
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 #[require(
-    Name(|| Name::new("Energy Node")),
+    Name::new("Energy Node"),
     Structure,
     Use,
-    SecurityLevel(|| SecurityLevel::Low),
-    OwnershipRegistry(lookup_ownership)
+    SecurityLevel::Low,
+    OwnershipRegistry = lookup_ownership()
 )]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState>(|| StateScoped(GameState::Playing)))
+    StateScoped<GameState> = StateScoped(GameState::Playing))
 )]
 pub struct EnergyNode;
 
@@ -22,7 +22,7 @@ fn lookup_ownership() -> OwnershipRegistry {
 }
 
 pub fn on_use_territory_node_event(trigger: Trigger<UseEvent>) {
-    info!("Interaction with territory node: {:?}", trigger.entity());
+    info!("Interaction with territory node: {:?}", trigger.target());
 }
 
 #[cfg(test)]

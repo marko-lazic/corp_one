@@ -1,8 +1,8 @@
 use crate::prelude::*;
 use aeronet::{
     io::{
-        connection::{Disconnect, DisconnectReason, Disconnected},
-        Session, SessionEndpoint,
+        connection::{Disconnect, Disconnected}, Session,
+        SessionEndpoint,
     },
     transport::TransportConfig,
 };
@@ -58,12 +58,11 @@ fn connect_client(
     };
 }
 
-fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) {
-    let entity = trigger.entity();
-    let name = names
-        .get(entity)
-        .expect("our session entity should have a name");
+fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) -> Result {
+    let target = trigger.target();
+    let name = names.get(target)?;
     info!("{name} Connecting");
+    Ok(())
 }
 
 fn on_connected(
@@ -74,20 +73,18 @@ fn on_connected(
     mut r_player_entity: ResMut<PlayerEntity>,
     mut r_next_loading_sub_state: ResMut<NextState<LoadingSubState>>,
     mut commands: Commands,
-) {
-    let entity = trigger.entity();
-    let name = names
-        .get(entity)
-        .expect("our session entity should have a name");
+) -> Result {
+    let target = trigger.target();
+    let name = names.get(target)?;
     info!("{name} Connected");
 
-    commands.entity(entity).insert((TransportConfig {
+    commands.entity(target).insert((TransportConfig {
         max_memory_usage: 64 * 1024,
         send_bytes_per_sec: 4 * 1024,
         ..default()
     },));
 
-    *r_player_entity = PlayerEntity::from(trigger.entity());
+    *r_player_entity = PlayerEntity::from(trigger.target());
 
     if r_state
         .get_loading_colony()
@@ -98,33 +95,28 @@ fn on_connected(
     } else {
         r_next_loading_sub_state.set(LoadingSubState::SpawnPlayer);
     }
+    Ok(())
 }
 
 fn disconnect_client(
     mut commands: Commands,
     mut r_player_entity: ResMut<PlayerEntity>,
-    q_sessions: Query<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
-) {
-    match q_sessions.get_single() {
-        Ok((session, name, session_opt)) => {
-            if session_opt.is_some() {
-                info!("{name} is Connected");
-                commands.trigger_targets(
-                    Disconnect::new("Disconnected by User - Changing State"),
-                    session,
-                );
-                r_player_entity.0 = None;
-            } else {
-                info!("{name} is not Connected");
-            }
-        }
-        Err(QuerySingleError::NoEntities(_)) => {
-            info!("No sessions active");
-        }
-        Err(QuerySingleError::MultipleEntities(_)) => {
-            info!("Multiple sessions active");
-        }
-    };
+    q_session: Single<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
+) -> Result {
+    let (session, name, session_opt) = *q_session;
+
+    if session_opt.is_some() {
+        info!("{name} is Connected");
+        commands.trigger_targets(
+            Disconnect::new("Disconnected by User - Changing State"),
+            session,
+        );
+        r_player_entity.0 = None;
+    } else {
+        info!("{name} is not Connected");
+    }
+
+    Ok(())
 }
 
 fn graceful_disconnect_on_exit(
@@ -147,21 +139,20 @@ fn on_disconnected(
     trigger: Trigger<Disconnected>,
     names: Query<&Name>,
     mut game_state: ResMut<NextState<GameState>>,
-) {
-    let session = trigger.entity();
-    let name = names
-        .get(session)
-        .expect("our session entity should have a name");
-    match &trigger.reason {
-        DisconnectReason::User(reason) => {
+) -> Result {
+    let target = trigger.target();
+    let name = names.get(target)?;
+    match trigger.event() {
+        Disconnected::ByUser(reason) => {
             info!("{name} disconnected by user: {reason}")
         }
-        DisconnectReason::Peer(reason) => {
+        Disconnected::ByPeer(reason) => {
             info!("{name} disconnected by peer: {reason}")
         }
-        DisconnectReason::Error(err) => {
+        Disconnected::ByError(err) => {
             info!("{name} disconnected due to error: {err:?}");
             game_state.set(GameState::Login);
         }
     };
+    Ok(())
 }

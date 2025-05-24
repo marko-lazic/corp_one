@@ -2,7 +2,7 @@
 name = "corp_server"
 version = "0.1.0"
 authors = ["Marko Lazić <marko.lazic@comyno.com>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
@@ -26,16 +26,16 @@ avian3d = { workspace = true, features = [
 rand = { workspace = true }
 bevy_rand = { workspace = true }
 serde = { workspace = true }
-rmp-serde = "1.3.0"
+rmp-serde = "1.3"
 chrono = { version = "0.4", features = ["serde"] }
 sqlx = { version = "0.8", features = ["runtime-async-std", "sqlite", "chrono"] }
 directories = "6.0"
-async-io = "2.4.0"
-pin-project = "1.1.7"
-tower = "0.5.2"
-async-channel = "2.3.1"
+async-io = "2.4"
+pin-project = "1.1"
+tower = "0.5"
+async-channel = "2.3"
 anyhow = { workspace = true }
-tracing = "0.1.41"
+tracing = "0.1"
 kameo = { version = "0.16" }
 tokio = { workspace = true, features = ["full"] }
 

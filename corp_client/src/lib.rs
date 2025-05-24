@@ -3,7 +3,6 @@ mod client_backend;
 mod gui;
 mod network;
 mod sound;
-mod util;
 mod world;
 
 pub mod prelude {

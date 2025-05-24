@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
     window::{PresentMode, WindowMode},
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use corp_client::prelude::*;
 use corp_shared::prelude::*;
 
@@ -23,6 +23,9 @@ impl Plugin for ClientFrontendPlugin {
             GameStatePlugin,
             ShaderPlugin,
             GuiPlugin,
+            EguiPlugin {
+                enable_multipass_for_primary_context: true,
+            },
             WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Backquote)),
             bevy_framepace::FramepacePlugin,
         ));

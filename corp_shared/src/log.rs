@@ -1,5 +1,5 @@
 use anyhow::Result;
-use bevy::{log::tracing_subscriber, utils::tracing};
+use bevy::log::{tracing, tracing_subscriber};
 
 pub fn init_logging() -> Result<()> {
     let subscriber = tracing_subscriber::fmt()

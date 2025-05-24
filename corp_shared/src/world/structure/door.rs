@@ -6,11 +6,11 @@ use crate::prelude::*;
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 #[require(
-    Name(|| Name::new("Door")),
+    Name::new("Door"),
     DynamicStructure,
     DoorState,
-    SecurityLevel(|| SecurityLevel::Low),
-    OwnershipRegistry(lookup_door_ownership)
+    SecurityLevel::Low,
+    OwnershipRegistry = lookup_door_ownership()
 )]
 pub struct Door;
 
@@ -24,13 +24,9 @@ pub struct DoorId(pub i32);
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
-#[require(
-    Name(|| Name::new("Door Terminal")),
-    Structure,
-    Use
-)]
+#[require(Name::new("Door Terminal"), Structure, Use)]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState>(|| StateScoped(GameState::Playing)))
+    StateScoped<GameState> = StateScoped(GameState::Playing))
 )]
 pub struct DoorTerminal;
 
@@ -109,7 +105,7 @@ pub fn on_use_door_event(
 ) {
     if let Ok(member_of) = q_member.get(trigger.event().user) {
         if let Ok((mut door_state, control_registry, security_level)) =
-            q_door.get_mut(trigger.entity())
+            q_door.get_mut(trigger.target())
         {
             if let Some(control_type) = control_registry.get_control_type(&member_of.faction) {
                 match control_type {
@@ -127,7 +123,7 @@ pub fn on_use_door_event(
                     UseDoorHackEvent {
                         hacker: trigger.event().user,
                     },
-                    trigger.entity(),
+                    trigger.target(),
                 );
             }
         }
@@ -141,7 +137,7 @@ pub fn on_use_door_hack_event(
     mut q_player: Query<(&mut Inventory, &MemberOf), With<Player>>,
     q_hacking_tool: Query<&HackingTool>,
 ) {
-    if let Ok((mut door_state, mut ownership_registry)) = q_door.get_mut(trigger.entity()) {
+    if let Ok((mut door_state, mut ownership_registry)) = q_door.get_mut(trigger.target()) {
         if let Ok((mut inventory, member_of)) = q_player.get_mut(trigger.event().hacker) {
             if let Some(e_hacking_tool) = inventory
                 .items
@@ -170,7 +166,7 @@ pub fn on_use_door_terminal(
     q_door_id: Query<&DoorId>,
     q_door: Query<(Entity, &DoorId), With<Door>>,
 ) {
-    if let Ok(terminal_door_id) = q_door_id.get(trigger.entity()) {
+    if let Ok(terminal_door_id) = q_door_id.get(trigger.target()) {
         for (door_entity, door_id) in &q_door {
             if terminal_door_id == door_id {
                 commands.trigger_targets(UseEvent::new(trigger.user), door_entity);

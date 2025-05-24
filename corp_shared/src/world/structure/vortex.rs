@@ -4,24 +4,22 @@ use bevy::prelude::*;
 
 #[derive(Component, Default, Reflect, Debug)]
 #[reflect(Component)]
-#[require(
-    Name(|| Name::new("Vortex Node")),
-)]
+#[require(Name::new("Vortex Node"))]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState>(|| StateScoped(GameState::Playing)))
+    StateScoped<GameState> = StateScoped(GameState::Playing))
 )]
 pub struct VortexNode;
 
 #[derive(Component, Default, Reflect, Debug)]
 #[reflect(Component)]
 #[require(
-    Name(|| Name::new("Vortex Gate")),
+    Name::new("Vortex Gate"),
     Sensor,
-    Collider(vortex_gate_collider),
-    CollisionLayers(vortex_gate_collision_layers)
+    Collider = vortex_gate_collider(),
+    CollisionLayers = vortex_gate_collision_layers()
 )]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState>(|| StateScoped(GameState::Playing)))
+    StateScoped<GameState> = StateScoped(GameState::Playing))
 )]
 pub struct VortexGate;
 

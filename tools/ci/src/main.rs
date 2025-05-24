@@ -111,7 +111,9 @@ fn main() {
 
     if what_to_run.contains(Check::DOC_CHECK) {
         // Check that building docs work and does not emit warnings
-        std::env::set_var("RUSTDOCFLAGS", "-D warnings");
+        unsafe {
+            std::env::set_var("RUSTDOCFLAGS", "-D warnings");
+        }
         cmd!(
             sh,
             "cargo doc --workspace --all-features --no-deps --document-private-items"

@@ -1,5 +1,5 @@
-use crate::{prelude::ForceFieldMaterial, util::mesh_extension::MeshExt};
-use avian3d::{collision::CollisionLayers, prelude::LayerMask};
+use crate::prelude::ForceFieldMaterial;
+use avian3d::prelude::*;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
@@ -12,11 +12,7 @@ impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (
-                add_force_field_shader,
-                change_barrier_field_visibility_and_collision,
-            )
-                .run_if(in_state(GameState::Playing)),
+            (change_barrier_field_visibility_and_collision,).run_if(in_state(GameState::Playing)),
         )
         .add_systems(
             FixedUpdate,
@@ -26,27 +22,21 @@ impl Plugin for BarrierPlugin {
             )
                 .chain()
                 .run_if(in_state(GameState::Playing)),
-        );
+        )
+        .add_observer(on_add_door);
     }
 }
 
-fn add_force_field_shader(
+fn on_add_door(
+    trigger: Trigger<OnAdd, Door>,
     mut commands: Commands,
-    query: Query<Entity, Added<Door>>,
-    q_children: Query<&Children>,
-    r_meshes: Res<Assets<Mesh>>,
-    q_meshes: Query<&Mesh3d>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
 ) {
-    for entity in &query {
-        for (entity, _) in Mesh::search_in_children(entity, &q_children, &r_meshes, &q_meshes) {
-            commands.entity(entity).insert((
-                MeshMaterial3d(r_force_field_materials.add(ForceFieldMaterial {})),
-                NotShadowReceiver,
-                NotShadowCaster,
-            ));
-        }
-    }
+    commands.entity(trigger.target()).insert((
+        MeshMaterial3d(r_force_field_materials.add(ForceFieldMaterial {})),
+        NotShadowReceiver,
+        NotShadowCaster,
+    ));
 }
 
 fn change_barrier_field_visibility_and_collision(
