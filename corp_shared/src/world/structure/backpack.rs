@@ -86,7 +86,7 @@ pub fn despawn_empty_backpack_system(
 ) {
     for (entity, inventory) in &mut q_entity_backpack {
         if inventory.items().count() == 0 {
-            commands.entity(entity).despawn();
+            commands.entity(entity).try_despawn();
         }
     }
 }

@@ -66,14 +66,14 @@ pub struct AssetLoadingPlugin;
 impl Plugin for AssetLoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(GameState::Init)
+            bevy_asset_loader::prelude::LoadingState::new(GameState::Init)
                 .load_collection::<PlayerAssets>()
                 .load_collection::<MeshAssets>()
                 .load_collection::<TextureAssets>()
                 .load_collection::<AudioAssets>()
                 .load_collection::<FontAssets>()
                 .load_collection::<SceneAssets>()
-                .continue_to_state(GameState::Load(Colony::StarMap)),
+                .continue_to_state(GameState::Login),
         );
     }
 }

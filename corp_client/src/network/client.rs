@@ -8,11 +8,22 @@ use aeronet::{
 };
 use aeronet_replicon::client::{AeronetRepliconClient, AeronetRepliconClientPlugin};
 use aeronet_webtransport::client::{WebTransportClient, WebTransportClientPlugin};
-use bevy::{ecs::query::QuerySingleError, prelude::*};
+use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 
+#[derive(Event)]
+pub struct RequestConnect(pub Colony);
+#[derive(Component)]
+pub struct Client;
+
+#[derive(Component)]
+pub struct ConnectedPlayer;
+
 pub struct ClientNetPlugin;
+
+#[derive(Event)]
+struct ConnectClient(pub Colony);
 
 impl Plugin for ClientNetPlugin {
     fn build(&self, app: &mut App) {
@@ -27,35 +38,49 @@ impl Plugin for ClientNetPlugin {
             SpawnListenerPlugin,
         ))
         .init_resource::<ClientSettings>()
-        .add_systems(OnEnter(LoadingSubState::Connect), connect_client)
         .add_systems(OnExit(GameState::Playing), disconnect_client)
         .add_systems(OnExit(GameState::StarMap), disconnect_client)
         .add_systems(FixedUpdate, graceful_disconnect_on_exit)
+        .add_observer(request_connect)
+        .add_observer(connect_client)
         .add_observer(on_connecting)
         .add_observer(on_connected)
         .add_observer(on_disconnected);
     }
 }
 
+fn request_connect(
+    trigger: Trigger<RequestConnect>,
+    mut commands: Commands,
+    mut r_next_game_state: ResMut<NextState<GameState>>,
+    q_client_entity: Query<Entity, With<Client>>,
+) -> Result {
+    if let Ok(e_client) = q_client_entity.single() {
+        commands.entity(e_client).try_despawn();
+    }
+    commands.trigger(ConnectClient(trigger.0));
+    r_next_game_state.set(GameState::Loading);
+    Ok(())
+}
+
 fn connect_client(
+    trigger: Trigger<ConnectClient>,
     mut commands: Commands,
     client_settings: Res<ClientSettings>,
-    r_state: Res<State<GameState>>,
-) {
-    if let Some(colony) = r_state.get_loading_colony() {
-        let config = client_settings.client_config();
-        let target = client_settings.target(*colony);
-        info!("Connecting with {target:?}");
-        commands
-            .spawn((
-                Name::new(format!("Client Session {}", colony)),
-                *colony,
-                AeronetRepliconClient,
-            ))
-            .queue(WebTransportClient::connect(config, target));
-    } else {
-        error!("Client failed to connect in {:?} state", r_state.get());
-    };
+) -> Result {
+    let colony = trigger.0;
+    let config = client_settings.client_config();
+    let target = client_settings.target(colony);
+    info!("Connecting with {target:?}");
+    commands
+        .spawn((
+            Client,
+            Name::new(format!("Client Session {}", colony)),
+            colony,
+            AeronetRepliconClient,
+        ))
+        .queue(WebTransportClient::connect(config, target));
+    Ok(())
 }
 
 fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) -> Result {
@@ -67,43 +92,31 @@ fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) 
 
 fn on_connected(
     trigger: Trigger<OnAdd, Session>,
-    r_state: Res<State<GameState>>,
-    mut r_next_state: ResMut<NextState<GameState>>,
-    names: Query<&Name>,
-    mut r_player_entity: ResMut<PlayerEntity>,
-    mut r_next_loading_sub_state: ResMut<NextState<LoadingSubState>>,
+    mut r_next_loading_state: ResMut<NextState<LoadingState>>,
     mut commands: Commands,
 ) -> Result {
-    let target = trigger.target();
-    let name = names.get(target)?;
-    info!("{name} Connected");
+    let e_session = trigger.target();
+    info!("Session {e_session} Connected!");
 
-    commands.entity(target).insert((TransportConfig {
-        max_memory_usage: 64 * 1024,
-        send_bytes_per_sec: 4 * 1024,
-        ..default()
-    },));
-
-    *r_player_entity = PlayerEntity::from(trigger.target());
-
-    if r_state
-        .get_loading_colony()
-        .map(|c| c.is_star_map())
-        .unwrap_or_default()
-    {
-        r_next_state.set(GameState::StarMap);
-    } else {
-        r_next_loading_sub_state.set(LoadingSubState::SpawnPlayer);
-    }
+    commands.entity(e_session).insert((
+        ConnectedPlayer,
+        TransportConfig {
+            max_memory_usage: 64 * 1024,
+            send_bytes_per_sec: 4 * 1024,
+            ..default()
+        },
+    ));
+    r_next_loading_state.set(LoadingState::LoadColony);
     Ok(())
 }
 
 fn disconnect_client(
     mut commands: Commands,
-    mut r_player_entity: ResMut<PlayerEntity>,
-    q_session: Single<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
+    session_endpoint: Single<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
+    connected_player_entity: Single<Entity, With<ConnectedPlayer>>,
+    client_entity: Single<Entity, With<Client>>,
 ) -> Result {
-    let (session, name, session_opt) = *q_session;
+    let (session, name, session_opt) = *session_endpoint;
 
     if session_opt.is_some() {
         info!("{name} is Connected");
@@ -111,7 +124,8 @@ fn disconnect_client(
             Disconnect::new("Disconnected by User - Changing State"),
             session,
         );
-        r_player_entity.0 = None;
+        commands.entity(*connected_player_entity).try_despawn();
+        commands.entity(*client_entity).try_despawn();
     } else {
         info!("{name} is not Connected");
     }

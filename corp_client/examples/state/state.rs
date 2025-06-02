@@ -156,7 +156,7 @@ fn interaction_system(
 }
 
 fn show_inventory_system(
-    q_text: Single<Entity, With<InventoryText>>,
+    inventory_text_entity: Single<Entity, With<InventoryText>>,
     mut writer: TextUiWriter,
     mut inventories: Query<&mut Inventory, Changed<Inventory>>,
     q_name: Query<&Name>,
@@ -167,7 +167,7 @@ fn show_inventory_system(
         for inventory_item in inventory.items() {
             items.push(q_name.get(*inventory_item).unwrap().to_string().clone());
         }
-        *writer.text(*q_text, 0) = format!("Inventory {:?}", items);
+        *writer.text(*inventory_text_entity, 0) = format!("Inventory {:?}", items);
     }
 }
 

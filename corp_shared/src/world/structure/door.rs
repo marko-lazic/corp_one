@@ -146,7 +146,7 @@ pub fn on_use_door_hack_event(
                 .copied()
             {
                 inventory.remove(e_hacking_tool);
-                commands.entity(e_hacking_tool).despawn();
+                commands.entity(e_hacking_tool).try_despawn();
                 ownership_registry.add(Ownership::Hacked(
                     member_of.faction,
                     Timer::new(

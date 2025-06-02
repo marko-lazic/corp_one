@@ -17,6 +17,8 @@ bevy = { workspace = true, default-features = false, features = [
     "dynamic_linking",
     "png",
     "bevy_gltf",
+    "track_location",
+    "configurable_error_handler"
 ] }
 avian3d = { workspace = true, features = ["default", "enhanced-determinism", "serialize"] }
 bevy_enhanced_input = "0.11"

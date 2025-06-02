@@ -119,7 +119,7 @@ impl DebugTextBundle {
 
 fn update_interaction_text(
     mut e_debug_gui: EventReader<DebugGuiEvent>,
-    q_text: Single<Entity, With<InteractionText>>,
+    interaction_text_entity: Single<Entity, With<InteractionText>>,
     q_name: Query<&Name>,
     mut writer: TextUiWriter,
 ) {
@@ -133,7 +133,7 @@ fn update_interaction_text(
 
                 let message = format!("Entity {entity:?}, Name {name}");
 
-                *writer.text(q_text.clone().into(), 0) = message.to_owned();
+                *writer.text(interaction_text_entity.clone().into(), 0) = message.to_owned();
             }
         }
     }
@@ -141,13 +141,13 @@ fn update_interaction_text(
 
 fn update_player_position_text(
     q_transform: Query<&Transform, With<Player>>,
-    q_text: Single<Entity, With<PlayerPositionText>>,
+    player_position_text_entity: Single<Entity, With<PlayerPositionText>>,
     mut writer: TextUiWriter,
 ) {
     let Ok(player_pos) = q_transform.get_single().map(|t| t.translation) else {
         return;
     };
-    *writer.text(*q_text, 0) = format!(
+    *writer.text(*player_position_text_entity, 0) = format!(
         "Player {:.0} {:.0} {:.0}",
         player_pos.x, player_pos.y, player_pos.z
     );
@@ -155,18 +155,19 @@ fn update_player_position_text(
 
 fn update_mouse_screen_position_text(
     r_cursor: Res<CursorUi>,
-    q_text: Single<Entity, With<MouseScreenPositionText>>,
+    mouse_screen_position_text_entity: Single<Entity, With<MouseScreenPositionText>>,
     mut writer: TextUiWriter,
 ) {
-    *writer.text(*q_text, 0) = format!("MS Screen {:.0} {:.0}", r_cursor.x, r_cursor.y);
+    *writer.text(*mouse_screen_position_text_entity, 0) =
+        format!("MS Screen {:.0} {:.0}", r_cursor.x, r_cursor.y);
 }
 
 fn update_mouse_world_position_text(
     r_cursor: Res<CursorWorld>,
-    q_text: Single<Entity, With<MouseWorldPositionText>>,
+    mouse_world_position_text_entity: Single<Entity, With<MouseWorldPositionText>>,
     mut writer: TextUiWriter,
 ) {
-    *writer.text(*q_text, 0) = format!(
+    *writer.text(*mouse_world_position_text_entity, 0) = format!(
         "MS World {:.0} {:.0} {:.0}",
         r_cursor.x, r_cursor.y, r_cursor.z
     );
@@ -174,24 +175,25 @@ fn update_mouse_world_position_text(
 
 fn update_camera_position_text(
     q_camera_pos: Query<&Transform, With<Camera>>,
-    q_text: Single<Entity, With<CameraDebugText>>,
+    camera_debug_text_entity: Single<Entity, With<CameraDebugText>>,
     mut writer: TextUiWriter,
 ) {
     let Ok(cam_pos) = q_camera_pos.get_single().map(|t| t.translation) else {
         return;
     };
 
-    *writer.text(*q_text, 0) = format!("Camera {:.0} {:.0} {:.0}", cam_pos.x, cam_pos.y, cam_pos.z);
+    *writer.text(*camera_debug_text_entity, 0) =
+        format!("Camera {:.0} {:.0} {:.0}", cam_pos.x, cam_pos.y, cam_pos.z);
 }
 
 fn update_player_health_text(
     q_health: Query<&Health, With<Player>>,
-    q_text: Single<Entity, With<PlayerHealthText>>,
+    player_health_text_entity: Single<Entity, With<PlayerHealthText>>,
     mut writer: TextUiWriter,
 ) {
     let Ok(health) = q_health.get_single() else {
         return;
     };
 
-    *writer.text(*q_text, 0) = format!("Health {:.0}", health.get_health());
+    *writer.text(*player_health_text_entity, 0) = format!("Health {:.0}", health.get_health());
 }

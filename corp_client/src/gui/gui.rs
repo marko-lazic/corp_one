@@ -1,4 +1,4 @@
-use crate::{gui::login_screen::LoginScreenPlugin, prelude::*};
+use crate::prelude::*;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 
@@ -6,7 +6,7 @@ pub struct GuiPlugin;
 
 impl Plugin for GuiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((DebugGuiPlugin, CursorPlugin, LoginScreenPlugin))
+        app.add_plugins((DebugGuiPlugin, CursorPlugin, LoginPlugin))
             .add_systems(OnEnter(GameState::Init), loading_splash);
     }
 }

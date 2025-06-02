@@ -10,22 +10,25 @@ use corp_shared::prelude::*;
 
 pub fn colony_loader_plugin(app: &mut App) {
     app.add_plugins(SkeinPlugin::default())
-        .add_systems(OnEnter(LoadingSubState::ColonyLoading), load_colony)
-        .add_systems(OnExit(LoadingSubState::ColonyLoading), update_lights);
+        .add_systems(OnEnter(LoadingState::LoadColony), load_colony)
+        .add_systems(OnExit(LoadingState::LoadColony), update_lights);
 }
 
 fn load_colony(
-    r_state: Res<State<GameState>>,
-    r_scene_assets: Res<SceneAssets>,
+    mut commands: Commands,
     mut r_meshes: ResMut<Assets<Mesh>>,
     mut r_materials: ResMut<Assets<StandardMaterial>>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
-    mut commands: Commands,
-) {
-    let colony = match r_state.get() {
-        GameState::Load(colony) => colony,
-        _ => return,
-    };
+    mut r_next_game_state: ResMut<NextState<GameState>>,
+    r_scene_assets: Res<SceneAssets>,
+    client_colony: Single<&Colony, With<Client>>,
+) -> Result {
+    let colony = *client_colony;
+
+    if *colony == Colony::StarMap {
+        r_next_game_state.set(GameState::StarMap);
+        return Ok(());
+    }
 
     info!("Setup Colony {:?}", colony);
 
@@ -77,14 +80,15 @@ fn load_colony(
         Collider::cuboid(50.0, 0.01, 50.0),
         StateScoped(GameState::Playing),
     ));
+    Ok(())
 }
 
 fn on_colony_loaded(
     _trigger: Trigger<SceneInstanceReady>,
-    mut r_next_loading_sub_state: ResMut<NextState<LoadingSubState>>,
+    mut r_next_loading_state: ResMut<NextState<LoadingState>>,
 ) {
     info!("Colony Scene Instance Ready");
-    r_next_loading_sub_state.set(LoadingSubState::Connect);
+    r_next_loading_state.set(LoadingState::SpawnPlayer);
 }
 
 // Temporarily fixes the problem with shadows not working

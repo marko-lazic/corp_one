@@ -48,28 +48,20 @@ fn debug_vort_in(mut ev_vort_in: EventWriter<VortInEvent>, mut run_once: Local<b
 
 fn vort_out_event_reader(
     mut r_player_store: ResMut<PlayerSystems>,
-    r_player_entity: Res<PlayerEntity>,
     mut r_next_state: ResMut<NextState<GameState>>,
     mut ev_vort_out: EventReader<VortOutEvent>,
-    q_health: Query<&Health, With<Player>>,
-) {
+    player_health: Single<&Health, With<Player>>,
+) -> Result {
     if ev_vort_out.read().last().is_some() {
-        let Some(e_player) = r_player_entity.get() else {
-            return;
-        };
-
-        let health = q_health.get(e_player).unwrap();
-        r_player_store.health = health.clone();
+        r_player_store.health = player_health.clone();
         r_next_state.set(GameState::StarMap);
     }
+    Ok(())
 }
 
-fn vort_in_event_reader(
-    mut r_next_state: ResMut<NextState<GameState>>,
-    mut ev_vort_in: EventReader<VortInEvent>,
-) {
+fn vort_in_event_reader(mut commands: Commands, mut ev_vort_in: EventReader<VortInEvent>) {
     for vort_in in ev_vort_in.read() {
-        r_next_state.set(GameState::Load(vort_in.colony));
+        commands.trigger(RequestConnect(vort_in.colony));
     }
 }
 

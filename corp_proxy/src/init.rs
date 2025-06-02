@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 pub async fn init() -> anyhow::Result<()> {
     env_logger::builder()
-        .filter_level(log::LevelFilter::Trace)
+        .filter_level(log::LevelFilter::Info)
         .init();
 
     let mut routes: HashMap<Colony, String> = HashMap::new();

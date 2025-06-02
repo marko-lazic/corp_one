@@ -18,7 +18,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, register_player_one_shoot_systems)
-            .add_systems(OnEnter(LoadingSubState::SpawnPlayer), spawn_player);
+            .add_systems(OnEnter(LoadingState::SpawnPlayer), spawn_player);
     }
 }
 
@@ -34,13 +34,10 @@ fn register_player_one_shoot_systems(mut commands: Commands) {
 fn spawn_player(
     mut commands: Commands,
     r_player_systems: Res<PlayerSystems>,
-    r_player_entity: Res<PlayerEntity>,
-) {
-    if let Some(player_entity) = r_player_entity.0 {
-        commands.run_system_with(r_player_systems.setup_player, player_entity);
-    } else {
-        error!("Failed to spawn player. Player entity not set.");
-    }
+    player_entity: Single<Entity, With<ConnectedPlayer>>,
+) -> Result {
+    commands.run_system_with(r_player_systems.setup_player, *player_entity);
+    Ok(())
 }
 
 pub fn setup_player(

@@ -20,7 +20,7 @@ impl Default for ClientSettings {
             host: "https://[::1]:25560".to_string(),
             cert_hash: "".to_string(),
             keep_alive_interval: Duration::from_secs(1),
-            max_idle_timeout: Duration::from_secs(20),
+            max_idle_timeout: Duration::from_secs(5),
         }
     }
 }

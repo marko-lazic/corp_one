@@ -10,21 +10,6 @@ use bevy_tnua::{builtins::TnuaBuiltinWalk, controller::TnuaController};
 use corp_shared::prelude::*;
 use std::{f32::consts::PI, hash::Hash};
 
-#[derive(Resource, Default, Debug, Deref, DerefMut)]
-pub struct PlayerEntity(pub Option<Entity>);
-
-impl PlayerEntity {
-    pub fn get(&self) -> Option<Entity> {
-        self.0
-    }
-}
-
-impl From<Entity> for PlayerEntity {
-    fn from(entity: Entity) -> Self {
-        Self(Some(entity))
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct UsableTarget {
     pub entity: Entity,
@@ -57,7 +42,6 @@ pub struct ControlPlugin;
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EnhancedInputPlugin)
-            .init_resource::<PlayerEntity>()
             .init_resource::<CursorWorld>()
             .init_resource::<HoverEntities>()
             .add_input_context::<OnFoot>()
@@ -134,7 +118,7 @@ const RAY_SPACING: f32 = HORIZONTAL_FOV / (NUM_RAYS - 1) as f32; // Angle betwee
 const LOOKUP_RANGE: f32 = 2.0; // Range of rays
 
 fn detect_usable_targets(
-    r_player_entity: Res<PlayerEntity>,
+    player_entity: Single<Entity, With<Player>>,
     mut r_hover_entities: ResMut<HoverEntities>,
     q_transform: Query<&Transform>,
     q_spatial: SpatialQuery,
@@ -142,14 +126,8 @@ fn detect_usable_targets(
     mut e_debug_gui: EventWriter<DebugGuiEvent>,
     r_cursor_world: Res<CursorWorld>,
     mut gizmos: Gizmos<DebugGizmos>,
-) {
-    let Some(e_player) = r_player_entity.get() else {
-        return;
-    };
-
-    let Ok(t_player) = q_transform.get(e_player) else {
-        return;
-    };
+) -> Result {
+    let t_player = q_transform.get(*player_entity)?;
 
     let mut rays = Vec::new();
     // Cast FOV rays
@@ -183,10 +161,10 @@ fn detect_usable_targets(
     // Cast cursor ray
     let cursor = r_cursor_world.0;
     let Ok(direction) = Dir3::new(Vec3::new(cursor.x, origin.y, cursor.z) - origin) else {
-        return;
+        return Ok(());
     };
     if direction.as_vec3() == Vec3::ZERO {
-        return;
+        return Ok(());
     }
     let ray = Ray3d::new(origin, direction);
     rays.push(ray);
@@ -211,7 +189,7 @@ fn detect_usable_targets(
 
                 let Ok(transform) = q_transform.get(ray_hit_data.entity) else {
                     warn!("Err get transform for entity {:?}", ray_hit_data.entity);
-                    return;
+                    return Ok(());
                 };
                 r_hover_entities.insert(UsableTarget {
                     entity: ray_hit_data.entity,
@@ -233,6 +211,7 @@ fn detect_usable_targets(
             );
         }
     }
+    Ok(())
 }
 
 fn update_cursor_world(
@@ -436,29 +415,25 @@ fn apply_use(
     _trigger: Trigger<Started<UseAction>>,
     mut commands: Commands,
     r_use_entity: Res<HoverEntities>,
-    r_player_entity: Res<PlayerEntity>,
+    player_entity: Single<Entity, With<Player>>,
     q_use: Query<&Use>,
     mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
-) {
-    let Some(player) = r_player_entity.get() else {
-        return;
-    };
-
+) -> Result {
     for entity_target in r_use_entity.0.iter() {
         if let Ok(_) = q_use.get(entity_target.entity) {
-            commands.trigger_targets(UseEvent::new(player), entity_target.entity);
+            commands.trigger_targets(UseEvent::new(*player_entity), entity_target.entity);
             ev_interaction_sound.send(InteractionSoundEvent);
         }
     }
+    Ok(())
 }
 
 fn apply_kill(
     _trigger: Trigger<Started<KillAction>>,
-    mut q_player_health: Query<&mut Health, With<Player>>,
-) {
-    if let Some(mut health) = q_player_health.iter_mut().next() {
-        health.kill_mut();
-    }
+    mut player_health: Single<&mut Health, With<Player>>,
+) -> Result {
+    player_health.kill_mut();
+    Ok(())
 }
 
 fn apply_inventory(
