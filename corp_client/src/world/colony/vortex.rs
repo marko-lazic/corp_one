@@ -3,78 +3,25 @@ use avian3d::prelude::*;
 use bevy::prelude::*;
 use corp_shared::{prelude::*, world::colony::Colony};
 
-#[derive(Event)]
-pub struct VortOutEvent;
-
-#[derive(Event, Clone)]
-pub struct VortInEvent {
-    colony: Colony,
-}
-
-impl VortInEvent {
-    pub fn vort(colony: Colony) -> Self {
-        VortInEvent { colony }
-    }
-}
 pub struct VortexPlugin;
 
 impl Plugin for VortexPlugin {
     fn build(&self, app: &mut App) {
-        app.add_state_scoped_event::<VortInEvent>(GameState::StarMap)
-            .add_state_scoped_event::<VortOutEvent>(GameState::Playing)
-            .add_systems(
-                FixedUpdate,
-                (debug_vort_in, vort_in_event_reader)
-                    .chain()
-                    .run_if(in_state(GameState::StarMap)),
-            )
-            .add_systems(
-                FixedUpdate,
-                (vort_out_event_reader, animate_nodes, vortex_gate_collider)
-                    .chain()
-                    .run_if(in_state(GameState::Playing)),
-            );
+        app.add_systems(
+            FixedUpdate,
+            (animate_nodes, leave_colony)
+                .chain()
+                .run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
-fn debug_vort_in(mut ev_vort_in: EventWriter<VortInEvent>, mut run_once: Local<bool>) {
-    *run_once = true;
-    if !*run_once {
-        info!("Debug vort in");
-        ev_vort_in.send(VortInEvent::vort(Colony::Iris));
-        *run_once = true;
-    }
-}
-
-fn vort_out_event_reader(
-    mut r_player_store: ResMut<PlayerSystems>,
-    mut r_next_state: ResMut<NextState<GameState>>,
-    mut ev_vort_out: EventReader<VortOutEvent>,
-    player_health: Single<&Health, With<Player>>,
-) -> Result {
-    if ev_vort_out.read().last().is_some() {
-        r_player_store.health = player_health.clone();
-        r_next_state.set(GameState::StarMap);
-    }
-    Ok(())
-}
-
-fn vort_in_event_reader(mut commands: Commands, mut ev_vort_in: EventReader<VortInEvent>) {
-    for vort_in in ev_vort_in.read() {
-        commands.trigger(RequestConnect(vort_in.colony));
-    }
-}
-
-fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<Time<Fixed>>) {
-    for mut transform in nodes.iter_mut() {
-        transform.rotate(Quat::from_rotation_y(time.delta_secs() * 0.2));
-    }
-}
-
-fn vortex_gate_collider(
+fn leave_colony(
     q_vortex_gate: Query<(&Transform, &Collider), With<VortexGate>>,
     q_spatial: SpatialQuery,
-    mut ev_vort_out: EventWriter<VortOutEvent>,
+    mut r_player_store: ResMut<PlayerSystems>,
+    player_health: Single<&Health, With<Player>>,
+    mut commands: Commands,
 ) {
     for (transform, collider) in &q_vortex_gate {
         let shape_rot = transform.rotation;
@@ -85,10 +32,17 @@ fn vortex_gate_collider(
             shape_rot,
             &SpatialQueryFilter::from_mask(GameLayer::Player),
             |entity| {
-                info!("Vort {entity} to star map.");
-                ev_vort_out.send(VortOutEvent);
+                info!("Vort {entity} to Star Map.");
+                r_player_store.health = player_health.clone();
+                commands.trigger(RequestConnect(Colony::StarMap));
                 false
             },
         )
+    }
+}
+
+fn animate_nodes(mut nodes: Query<&mut Transform, With<VortexNode>>, time: Res<Time<Fixed>>) {
+    for mut transform in nodes.iter_mut() {
+        transform.rotate(Quat::from_rotation_y(time.delta_secs() * 0.2));
     }
 }

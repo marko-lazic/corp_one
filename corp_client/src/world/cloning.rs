@@ -6,12 +6,15 @@ pub struct CloningPlugin;
 
 impl Plugin for CloningPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::StarMap), vort_in_dead_player_to_cloning)
-            .add_systems(
-                FixedUpdate,
-                dead_player_system.run_if(in_state(GameState::Playing)),
-            )
-            .add_observer(player_loot_drop);
+        app.add_systems(
+            OnEnter(GameState::StarMap),
+            star_map_vort_dead_player_to_cloning,
+        )
+        .add_systems(
+            FixedUpdate,
+            dead_player_system.run_if(in_state(GameState::Playing)),
+        )
+        .add_observer(player_loot_drop);
     }
 }
 
@@ -62,14 +65,14 @@ fn dead_player_system(
     }
 }
 
-fn vort_in_dead_player_to_cloning(
+fn star_map_vort_dead_player_to_cloning(
     mut r_player_store: ResMut<PlayerSystems>,
-    mut ev_vort_in: EventWriter<VortInEvent>,
+    mut commands: Commands,
 ) {
     if r_player_store.health.is_dead() {
         r_player_store.health.set_hit_points(CLONE_HEALTH_80);
         r_player_store.health.cloning_cooldown.reset();
-        ev_vort_in.send(VortInEvent::vort(Colony::Cloning));
+        commands.trigger(RequestConnect(Colony::Cloning));
     }
 }
 
@@ -83,7 +86,7 @@ mod tests {
     fn test_vort_in_dead_player() {
         // Setup stage
         let mut schedule = Schedule::default();
-        schedule.add_systems(vort_in_dead_player_to_cloning);
+        schedule.add_systems(star_map_vort_dead_player_to_cloning);
 
         // Setup world
         let mut world = World::default();
@@ -99,7 +102,6 @@ mod tests {
         };
         player_store.health.kill_mut();
         world.insert_resource(player_store);
-        world.init_resource::<Events<VortInEvent>>();
 
         // Run systems
         schedule.run(&mut world);

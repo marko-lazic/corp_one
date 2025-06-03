@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
-use bevy::{app::AppExit, platform::collections::HashSet, prelude::*};
+use bevy::{platform::collections::HashSet, prelude::*};
 use bevy_dolly::{
     dolly_type::Rig,
     prelude::{Arm, *},
@@ -422,9 +422,9 @@ fn apply_inventory(
     info!("{}", output);
 }
 
-fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut ev_exit_app: EventWriter<AppExit>) {
+fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut commands: Commands) {
     if trigger.elapsed_secs > 0.4 {
-        ev_exit_app.write(AppExit::Success);
+        commands.trigger(RequestExit);
     }
 }
 
@@ -435,19 +435,13 @@ fn apply_window_cursor_visible(
     window.cursor_options.visible = !window.cursor_options.visible;
 }
 
-fn apply_starmap_iris(
-    _trigger: Trigger<Started<ColonyIrisAction>>,
-    mut ev_vort_in: EventWriter<VortInEvent>,
-) {
+fn apply_starmap_iris(_trigger: Trigger<Started<ColonyIrisAction>>, mut commands: Commands) {
     info!("apply_starmap_iris");
-    ev_vort_in.send(VortInEvent::vort(Colony::Iris));
+    commands.trigger(RequestConnect(Colony::Iris));
 }
 
-fn apply_starmap_liberte(
-    _trigger: Trigger<Started<ColonyLiberteAction>>,
-    mut ev_vort_in: EventWriter<VortInEvent>,
-) {
-    ev_vort_in.send(VortInEvent::vort(Colony::Liberte));
+fn apply_starmap_liberte(_trigger: Trigger<Started<ColonyLiberteAction>>, mut commands: Commands) {
+    commands.trigger(RequestConnect(Colony::Liberte));
 }
 
 fn apply_rotate_camera_clockwise(

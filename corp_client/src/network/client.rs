@@ -12,16 +12,17 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 
-#[derive(Event)]
+#[derive(Event, Deref)]
 pub struct RequestConnect(pub Colony);
+#[derive(Event)]
+pub struct RequestExit;
 #[derive(Component)]
 pub struct Client;
-
 #[derive(Component)]
 pub struct ConnectedPlayer;
-
 pub struct ClientNetPlugin;
-
+#[derive(Event)]
+struct RequestDisconnect;
 #[derive(Event)]
 struct ConnectClient(pub Colony);
 
@@ -38,29 +39,24 @@ impl Plugin for ClientNetPlugin {
             SpawnListenerPlugin,
         ))
         .init_resource::<ClientSettings>()
-        .add_systems(OnExit(GameState::Playing), disconnect_client)
-        .add_systems(OnExit(GameState::StarMap), disconnect_client)
-        .add_systems(FixedUpdate, graceful_disconnect_on_exit)
         .add_observer(request_connect)
         .add_observer(connect_client)
         .add_observer(on_connecting)
         .add_observer(on_connected)
+        .add_observer(request_disconnect)
+        .add_observer(disconnect_and_exit)
         .add_observer(on_disconnected);
     }
 }
 
 fn request_connect(
-    trigger: Trigger<RequestConnect>,
+    colony: Trigger<RequestConnect>,
     mut commands: Commands,
-    mut r_next_game_state: ResMut<NextState<GameState>>,
-    q_client_entity: Query<Entity, With<Client>>,
-) -> Result {
-    if let Ok(e_client) = q_client_entity.single() {
-        commands.entity(e_client).try_despawn();
-    }
-    commands.trigger(ConnectClient(trigger.0));
-    r_next_game_state.set(GameState::Loading);
-    Ok(())
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    next_game_state.set(GameState::Loading);
+    commands.trigger(RequestDisconnect);
+    commands.trigger(ConnectClient(**colony));
 }
 
 fn connect_client(
@@ -110,40 +106,38 @@ fn on_connected(
     Ok(())
 }
 
-fn disconnect_client(
+fn request_disconnect(
+    _trigger: Trigger<RequestDisconnect>,
     mut commands: Commands,
     session_endpoint: Single<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
-    connected_player_entity: Single<Entity, With<ConnectedPlayer>>,
-    client_entity: Single<Entity, With<Client>>,
+    client_entity: Query<Entity, With<Client>>,
 ) -> Result {
     let (session, name, session_opt) = *session_endpoint;
 
     if session_opt.is_some() {
         info!("{name} is Connected");
-        commands.trigger_targets(
-            Disconnect::new("Disconnected by User - Changing State"),
-            session,
-        );
-        commands.entity(*connected_player_entity).try_despawn();
-        commands.entity(*client_entity).try_despawn();
+        commands.trigger_targets(Disconnect::new(code::REQUEST_DISCONNECT), session);
     } else {
         info!("{name} is not Connected");
+    }
+    if let Ok(existing) = client_entity.single() {
+        commands.entity(existing).try_despawn();
     }
 
     Ok(())
 }
 
-fn graceful_disconnect_on_exit(
-    mut exit_ev: EventReader<AppExit>,
+fn disconnect_and_exit(
+    _trigger: Trigger<RequestExit>,
     s_session_entity: Single<(Entity, Option<&Session>), With<SessionEndpoint>>,
     mut commands: Commands,
+    mut exit_ev: EventWriter<AppExit>,
 ) {
-    if exit_ev.read().next().is_some() {
-        let (entity, session_opt) = *s_session_entity;
-        if session_opt.is_some() {
-            info!("Disconnected by User - App is shutting down");
-            commands.trigger_targets(Disconnect::new("App exiting"), entity);
-        }
+    let (entity, session_opt) = *s_session_entity;
+    if session_opt.is_some() {
+        commands.trigger_targets(Disconnect::new(code::APP_EXIT), entity);
+    } else {
+        exit_ev.write(AppExit::Success);
     }
 }
 
@@ -151,12 +145,17 @@ fn on_disconnected(
     trigger: Trigger<Disconnected>,
     names: Query<&Name>,
     mut game_state: ResMut<NextState<GameState>>,
+    mut exit_ev: EventWriter<AppExit>,
 ) -> Result {
     let target = trigger.target();
     let name = names.get(target)?;
     match trigger.event() {
         Disconnected::ByUser(reason) => {
-            info!("{name} disconnected by user: {reason}")
+            info!("{name} disconnected by user: {reason}");
+            if reason == code::APP_EXIT {
+                exit_ev.write(AppExit::Success);
+            } else if reason == code::REQUEST_DISCONNECT {
+            }
         }
         Disconnected::ByPeer(reason) => {
             info!("{name} disconnected by peer: {reason}")
@@ -167,4 +166,9 @@ fn on_disconnected(
         }
     };
     Ok(())
+}
+
+mod code {
+    pub const APP_EXIT: &str = "APP_EXIT";
+    pub const REQUEST_DISCONNECT: &str = "REQUEST_DISCONNECT";
 }

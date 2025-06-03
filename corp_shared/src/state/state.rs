@@ -5,8 +5,8 @@ pub enum GameState {
     #[default]
     Init,
     Login,
-    StarMap,
     Loading,
+    StarMap,
     Playing,
 }
 
