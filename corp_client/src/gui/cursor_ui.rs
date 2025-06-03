@@ -33,11 +33,8 @@ fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
     ));
 }
 
-fn update_cursor_ui_position(primary_query: Query<&Window>, mut cursor: ResMut<CursorUi>) {
-    let Ok(primary) = primary_query.get_single() else {
-        return;
-    };
-    if let Some(position) = primary.cursor_position() {
+fn update_cursor_ui_position(q_primary_window: Single<&Window>, mut cursor: ResMut<CursorUi>) {
+    if let Some(position) = q_primary_window.cursor_position() {
         cursor.x = position.x;
         cursor.y = position.y;
     }
@@ -45,29 +42,19 @@ fn update_cursor_ui_position(primary_query: Query<&Window>, mut cursor: ResMut<C
 
 fn update_use_text(
     r_hover_entities: Res<HoverEntities>,
-    camera: Query<(&Camera, &GlobalTransform)>,
-    mut q_use_text: Query<(&mut Node, &mut Visibility), With<UseLabelComponent>>,
+    camera: Single<(&Camera, &GlobalTransform)>,
+    q_use_text: Single<(&mut Node, &mut Visibility), With<UseLabelComponent>>,
 ) {
-    let Ok((camera, gt_camera)) = camera.get_single() else {
-        return;
-    };
+    let (camera, gt_camera) = *camera;
+    let (mut node, mut visibility) = q_use_text.into_inner();
 
     if let Some(usable_entity) = r_hover_entities.iter().last() {
-        for (mut node, mut visibility) in &mut q_use_text {
+        if let Ok(hit_point_screen) = camera.world_to_viewport(gt_camera, usable_entity.hit_point) {
             *visibility = Visibility::Visible;
-            if let Ok(hit_point_screen) =
-                camera.world_to_viewport(gt_camera, usable_entity.hit_point)
-            {
-                node.left = Val::Px(hit_point_screen.x);
-                node.top = Val::Px(hit_point_screen.y);
-            }
+            node.left = Val::Px(hit_point_screen.x);
+            node.top = Val::Px(hit_point_screen.y);
         }
-    }
-
-    if r_hover_entities.is_empty() {
-        let result = q_use_text.get_single_mut();
-        if let Ok((_, mut visibility)) = result {
-            *visibility = Visibility::Hidden;
-        }
+    } else if r_hover_entities.is_empty() {
+        *visibility = Visibility::Hidden;
     }
 }

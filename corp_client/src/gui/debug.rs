@@ -140,17 +140,16 @@ fn update_interaction_text(
 }
 
 fn update_player_position_text(
-    q_transform: Query<&Transform, With<Player>>,
+    q_player_tr: Single<&Transform, With<Player>>,
     player_position_text_entity: Single<Entity, With<PlayerPositionText>>,
     mut writer: TextUiWriter,
-) {
-    let Ok(player_pos) = q_transform.get_single().map(|t| t.translation) else {
-        return;
-    };
+) -> Result {
+    let player_pos = q_player_tr.translation;
     *writer.text(*player_position_text_entity, 0) = format!(
         "Player {:.0} {:.0} {:.0}",
         player_pos.x, player_pos.y, player_pos.z
     );
+    Ok(())
 }
 
 fn update_mouse_screen_position_text(
@@ -174,26 +173,20 @@ fn update_mouse_world_position_text(
 }
 
 fn update_camera_position_text(
-    q_camera_pos: Query<&Transform, With<Camera>>,
+    q_camera_pos: Single<&Transform, With<Camera>>,
     camera_debug_text_entity: Single<Entity, With<CameraDebugText>>,
     mut writer: TextUiWriter,
 ) {
-    let Ok(cam_pos) = q_camera_pos.get_single().map(|t| t.translation) else {
-        return;
-    };
-
+    let cam_pos = q_camera_pos.translation;
     *writer.text(*camera_debug_text_entity, 0) =
         format!("Camera {:.0} {:.0} {:.0}", cam_pos.x, cam_pos.y, cam_pos.z);
 }
 
 fn update_player_health_text(
-    q_health: Query<&Health, With<Player>>,
+    q_player_health: Single<&Health, With<Player>>,
     player_health_text_entity: Single<Entity, With<PlayerHealthText>>,
     mut writer: TextUiWriter,
 ) {
-    let Ok(health) = q_health.get_single() else {
-        return;
-    };
-
-    *writer.text(*player_health_text_entity, 0) = format!("Health {:.0}", health.get_health());
+    let health = q_player_health.get_health();
+    *writer.text(*player_health_text_entity, 0) = format!("Health {:.0}", health);
 }

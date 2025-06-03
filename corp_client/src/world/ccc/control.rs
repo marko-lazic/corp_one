@@ -100,10 +100,8 @@ fn setup_playing_input_controls(mut commands: Commands) {
     ));
 }
 
-fn reset_cursor_visible(mut q_windows: Query<&mut Window>) -> Result {
-    let mut window = q_windows.single_mut()?;
+fn reset_cursor_visible(mut window: Single<&mut Window>) {
     window.cursor_options.visible = true;
-    Ok(())
 }
 
 fn can_move(mut query: Query<(&mut CharacterMovement, &Health), Changed<Health>>) {
@@ -216,17 +214,15 @@ fn detect_usable_targets(
 
 fn update_cursor_world(
     mut r_cursor_world: ResMut<CursorWorld>,
-    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
-    q_windows: Query<&Window>,
-    q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
-    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-) -> Result {
-    let (camera, camera_transform) = q_camera.single()?;
+    mut orientation_mode: Single<&mut OrientationMode, With<Player>>,
+    window: Single<&Window>,
+    follow_pos: Single<&Transform, With<MainCameraFollow>>,
+    s_camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
+) {
+    let (camera, camera_transform) = *s_camera;
     let belt_level = Vec3::new(0.0, 1.0, 0.0);
-    let follow_pos = q_follow_cam.single()?;
 
-    let ray = q_windows
-        .single()?
+    let ray = window
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
         .unwrap_or_else(|| Ray3d {
@@ -236,18 +232,15 @@ fn update_cursor_world(
 
     // Calculate if and where the ray is hitting the belt (of the character height) level.
     let Some(distance) = ray.intersect_plane(belt_level, InfinitePlane3d::new(Vec3::Y)) else {
-        return Ok(());
+        return;
     };
     let mouse_ground_pos = ray.get_point(distance);
     r_cursor_world.0 = mouse_ground_pos;
 
-    if let Ok(mut orientation_mode) = q_orientation.single_mut() {
-        if let OrientationMode::Location(_) = *orientation_mode {
-            *orientation_mode =
-                OrientationMode::Location(Vec2::new(mouse_ground_pos.x, mouse_ground_pos.z));
-        }
-    };
-    Ok(())
+    if let OrientationMode::Location(_) = **orientation_mode {
+        **orientation_mode =
+            OrientationMode::Location(Vec2::new(mouse_ground_pos.x, mouse_ground_pos.z));
+    }
 }
 
 fn rotate_character(
@@ -332,15 +325,10 @@ fn ui_binding(trigger: Trigger<Binding<OnUi>>, mut players: Query<&mut Actions<O
 
 fn apply_movement(
     trigger: Trigger<Fired<Move>>,
-    q_camera: Query<&Transform, With<MainCamera>>,
-    mut q_movement: Query<&mut CharacterMovement, With<Player>>,
-    mut q_tnua: Query<&mut TnuaController>,
+    cam_transform: Single<&Transform, With<MainCamera>>,
+    mut movement: Single<&mut CharacterMovement, With<Player>>,
+    mut tnua: Single<&mut TnuaController>,
 ) {
-    let Ok(cam_transform) = q_camera.get_single() else {
-        warn!("Can not find Transform, With<MainCamera>");
-        return;
-    };
-
     let cam_forward = {
         let f = cam_transform.rotation.mul_vec3(Vec3::Z);
         // Invert it to account for camera looking down -Z
@@ -355,59 +343,43 @@ fn apply_movement(
     let input_forward = cam_forward * input_axis.y;
     let input_strafe = cam_right * input_axis.x;
 
-    if let Ok(mut movement) = q_movement.get_single_mut() {
-        movement.direction = (input_forward + input_strafe).normalize_or_zero();
-        if movement.can_move {
-            if let Ok(mut controller) = q_tnua.get_single_mut() {
-                movement.velocity = movement.direction * movement.speed;
-                controller.basis(TnuaBuiltinWalk {
-                    // The `desired_velocity` determines how the character will move.
-                    desired_velocity: movement.velocity,
-                    // The `float_height` must be greater (even if by little) from the distance between the
-                    // character's center and the lowest point of its collider.
-                    float_height: 1.5,
-                    ..Default::default()
-                });
-            } else {
-                warn!("Failed to get tnua controller");
-            }
-        }
-    } else {
-        warn!("Can not find CharacterMovement for single Player");
-    }
-}
-
-fn apply_stop_movement(
-    _trigger: Trigger<Completed<Move>>,
-    mut q_tnua: Query<&mut TnuaController>,
-    mut q_movement: Query<&mut CharacterMovement, With<Player>>,
-) {
-    if let Ok(mut movement) = q_movement.get_single_mut() {
-        movement.velocity = Vec3::ZERO;
-    }
-    if let Ok(mut controller) = q_tnua.get_single_mut() {
-        controller.basis(TnuaBuiltinWalk {
-            desired_velocity: Vec3::ZERO,
+    movement.direction = (input_forward + input_strafe).normalize_or_zero();
+    if movement.can_move {
+        movement.velocity = movement.direction * movement.speed;
+        tnua.basis(TnuaBuiltinWalk {
+            // The `desired_velocity` determines how the character will move.
+            desired_velocity: movement.velocity,
+            // The `float_height` must be greater (even if by little) from the distance between the
+            // character's center and the lowest point of its collider.
             float_height: 1.5,
             ..Default::default()
         });
     }
 }
 
+fn apply_stop_movement(
+    _trigger: Trigger<Completed<Move>>,
+    mut tnua: Single<&mut TnuaController>,
+    mut player_movement: Single<&mut CharacterMovement, With<Player>>,
+) {
+    player_movement.velocity = Vec3::ZERO;
+    tnua.basis(TnuaBuiltinWalk {
+        desired_velocity: Vec3::ZERO,
+        float_height: 1.5,
+        ..Default::default()
+    });
+}
+
 fn apply_orientation_mode(
     _trigger: Trigger<Started<OrientationModeAction>>,
     r_cursor_world: Res<CursorWorld>,
-    mut q_orientation: Query<&mut OrientationMode, With<Player>>,
+    mut player_orientation_mode: Single<&mut OrientationMode, With<Player>>,
 ) {
-    if let Ok(mut orientation_mode) = q_orientation.get_single_mut() {
-        *orientation_mode = match *orientation_mode {
-            OrientationMode::Direction => {
-                OrientationMode::Location(Vec2::new(r_cursor_world.0.x, r_cursor_world.0.z))
-            }
-            OrientationMode::Location(_) => OrientationMode::Direction,
+    **player_orientation_mode = match **player_orientation_mode {
+        OrientationMode::Direction => {
+            OrientationMode::Location(Vec2::new(r_cursor_world.0.x, r_cursor_world.0.z))
         }
-    } else {
-        warn!("Can not find OrientationMode, With<Player>");
+        OrientationMode::Location(_) => OrientationMode::Direction,
     }
 }
 
@@ -419,8 +391,8 @@ fn apply_use(
     q_use: Query<&Use>,
     mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
 ) -> Result {
-    for entity_target in r_use_entity.0.iter() {
-        if let Ok(_) = q_use.get(entity_target.entity) {
+    for entity_target in r_use_entity.iter() {
+        if q_use.contains(entity_target.entity) {
             commands.trigger_targets(UseEvent::new(*player_entity), entity_target.entity);
             ev_interaction_sound.send(InteractionSoundEvent);
         }
@@ -438,19 +410,17 @@ fn apply_kill(
 
 fn apply_inventory(
     _trigger: Trigger<Started<InventoryAction>>,
-    q_inventory: Query<&Inventory, With<Player>>,
+    inventory: Single<&Inventory, With<Player>>,
     q_name: Query<&Name>,
 ) {
-    if let Ok(inventory) = q_inventory.get_single() {
-        let item_names: Vec<String> = inventory
-            .items
-            .iter()
-            .filter_map(|&item| q_name.get(item).ok().map(|name| name.to_string()))
-            .collect();
+    let item_names: Vec<String> = inventory
+        .items
+        .iter()
+        .filter_map(|&item| q_name.get(item).ok().map(|name| name.to_string()))
+        .collect();
 
-        let output = format!("Inventory: [{}]", item_names.join(", "));
-        info!("{}", output);
-    }
+    let output = format!("Inventory: [{}]", item_names.join(", "));
+    info!("{}", output);
 }
 
 fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut ev_exit_app: EventWriter<AppExit>) {
@@ -461,11 +431,9 @@ fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut ev_exit_app: EventWri
 
 fn apply_window_cursor_visible(
     _trigger: Trigger<Started<EscapeAction>>,
-    mut q_windows: Query<&mut Window>,
-) -> Result {
-    let mut window = q_windows.single_mut()?;
+    mut window: Single<&mut Window>,
+) {
     window.cursor_options.visible = !window.cursor_options.visible;
-    Ok(())
 }
 
 fn apply_starmap_iris(
@@ -485,50 +453,42 @@ fn apply_starmap_liberte(
 
 fn apply_rotate_camera_clockwise(
     _trigger: Trigger<Started<RotateClockwiseAction>>,
-    mut q_rig: Query<&mut Rig>,
+    mut rig: Single<&mut Rig>,
 ) {
-    if let Ok(mut rig) = q_rig.get_single_mut() {
-        let camera_yp = rig.driver_mut::<YawPitch>();
-        camera_yp.rotate_yaw_pitch(-45.0, 0.0);
-    };
+    let camera_yp = rig.driver_mut::<YawPitch>();
+    camera_yp.rotate_yaw_pitch(-45.0, 0.0);
 }
 
 fn apply_rotate_camera_counter_clockwise(
     _trigger: Trigger<Started<RotateCounterClockwiseAction>>,
-    mut q_rig: Query<&mut Rig>,
+    mut rig: Single<&mut Rig>,
 ) {
-    if let Ok(mut rig) = q_rig.get_single_mut() {
-        let camera_yp = rig.driver_mut::<YawPitch>();
-        camera_yp.rotate_yaw_pitch(45.0, 0.0);
-    };
+    let camera_yp = rig.driver_mut::<YawPitch>();
+    camera_yp.rotate_yaw_pitch(45.0, 0.0);
 }
 
 fn apply_camera_zoom_in(
     _trigger: Trigger<Fired<ZoomInAction>>,
-    mut q_rig: Query<&mut Rig>,
+    mut rig: Single<&mut Rig>,
     time: Res<Time<Fixed>>,
 ) {
-    if let Ok(mut rig) = q_rig.get_single_mut() {
-        if let Some(arm) = rig.try_driver_mut::<Arm>() {
-            let mut xz = arm.offset;
-            xz.z = (xz.z - 4.0 * time.delta_secs()).abs();
-            arm.offset = xz.clamp_length_min(6.0);
-        }
-    };
+    if let Some(arm) = rig.try_driver_mut::<Arm>() {
+        let mut xz = arm.offset;
+        xz.z = (xz.z - 4.0 * time.delta_secs()).abs();
+        arm.offset = xz.clamp_length_min(6.0);
+    }
 }
 
 fn apply_camera_zoom_out(
     _trigger: Trigger<Fired<ZoomOutAction>>,
-    mut q_rig: Query<&mut Rig>,
+    mut rig: Single<&mut Rig>,
     time: Res<Time<Fixed>>,
 ) {
-    if let Ok(mut rig) = q_rig.get_single_mut() {
-        if let Some(arm) = rig.try_driver_mut::<Arm>() {
-            let mut xz = arm.offset;
-            xz.z = (xz.z + 4.0 * time.delta_secs()).abs();
-            arm.offset = xz.clamp_length_max(18.0);
-        }
-    };
+    if let Some(arm) = rig.try_driver_mut::<Arm>() {
+        let mut xz = arm.offset;
+        xz.z = (xz.z + 4.0 * time.delta_secs()).abs();
+        arm.offset = xz.clamp_length_max(18.0);
+    }
 }
 
 fn apply_aim(_trigger: Trigger<Started<AimAction>>, mut r_camera_modifier: ResMut<CameraModifier>) {

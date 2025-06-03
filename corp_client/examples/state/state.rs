@@ -158,17 +158,14 @@ fn interaction_system(
 fn show_inventory_system(
     inventory_text_entity: Single<Entity, With<InventoryText>>,
     mut writer: TextUiWriter,
-    mut inventories: Query<&mut Inventory, Changed<Inventory>>,
+    mut inventory: Single<&mut Inventory, (Changed<Inventory>, With<Player>)>,
     q_name: Query<&Name>,
-    r_player_entity: Res<PlayerEntity>,
 ) {
-    if let Ok(inventory) = inventories.get_mut(**r_player_entity) {
-        let mut items: Vec<String> = Vec::new();
-        for inventory_item in inventory.items() {
-            items.push(q_name.get(*inventory_item).unwrap().to_string().clone());
-        }
-        *writer.text(*inventory_text_entity, 0) = format!("Inventory {:?}", items);
+    let mut items: Vec<String> = Vec::new();
+    for inventory_item in inventory.items() {
+        items.push(q_name.get(*inventory_item).unwrap().to_string().clone());
     }
+    *writer.text(*inventory_text_entity, 0) = format!("Inventory {:?}", items);
 }
 
 fn door_color_change_state_system(

@@ -135,16 +135,14 @@ fn disconnect_client(
 
 fn graceful_disconnect_on_exit(
     mut exit_ev: EventReader<AppExit>,
-    q_sessions: Query<(Entity, Option<&Session>), With<SessionEndpoint>>,
+    s_session_entity: Single<(Entity, Option<&Session>), With<SessionEndpoint>>,
     mut commands: Commands,
 ) {
-    // if the AppExit event was sent…
     if exit_ev.read().next().is_some() {
-        for (entity, session_opt) in q_sessions.iter() {
-            if session_opt.is_some() {
-                info!("Disconnected by User - App is shutting down");
-                commands.trigger_targets(Disconnect::new("App exiting"), entity);
-            }
+        let (entity, session_opt) = *s_session_entity;
+        if session_opt.is_some() {
+            info!("Disconnected by User - App is shutting down");
+            commands.trigger_targets(Disconnect::new("App exiting"), entity);
         }
     }
 }

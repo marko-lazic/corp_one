@@ -20,13 +20,13 @@ impl Plugin for WorldPhysicsPlugin {
 
 fn add_trimesh_collider(
     mut commands: Commands,
-    query: Query<Entity, Added<CreateTriMesh>>,
-    children_query: Query<&Children>,
+    tri_mesh_entities: Query<Entity, Added<CreateTriMesh>>,
+    children: Query<&Children>,
     mesh_3d: Query<&Mesh3d>,
     meshes: Res<Assets<Mesh>>,
 ) {
-    for entity in &query {
-        for child in children_query.iter_descendants(entity) {
+    for entity in &tri_mesh_entities {
+        for child in children.iter_descendants(entity) {
             if let Ok(Mesh3d(handle)) = mesh_3d.get(child) {
                 let mesh = meshes.get(handle).unwrap();
                 if let Some(collider) = Collider::trimesh_from_mesh(mesh) {

@@ -5,36 +5,28 @@ use bevy::{prelude::*, window::PrimaryWindow};
 pub fn cast_ray_system(
     q_spatial: SpatialQuery,
     mut r_target_entity: ResMut<TargetEntity>,
-    q_windows: Query<&Window, With<PrimaryWindow>>,
-    q_camera: Query<(&Camera, &GlobalTransform)>,
-) -> Result {
-    let window = q_windows.single()?;
-
-    let Some(cursor_position) = window.cursor_position() else {
-        return Ok(());
-    };
-
-    // We will color in read the colliders hovered by the mouse.
-    for (camera, camera_transform) in &q_camera {
+    window: Single<&Window, With<PrimaryWindow>>,
+    s_camera: Single<(&Camera, &GlobalTransform)>,
+) {
+    if let Some(cursor_position) = window.cursor_position() {
+        // We will color in read the colliders hovered by the mouse.
+        let (camera, camera_transform) = *s_camera;
         // First, compute a ray from the mouse position.
-        let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
-            return Ok(());
+        if let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_position) {
+            // Then cast the ray.
+            if let Some(hit_data) = q_spatial.cast_ray(
+                ray.origin,
+                ray.direction.into(),
+                f32::MAX,
+                true,
+                &SpatialQueryFilter::default(),
+            ) {
+                r_target_entity.0 = Some(hit_data.entity);
+            } else {
+                r_target_entity.0 = None;
+            }
         };
-
-        // Then cast the ray.
-        if let Some(hit_data) = q_spatial.cast_ray(
-            ray.origin,
-            ray.direction.into(),
-            f32::MAX,
-            true,
-            &SpatialQueryFilter::default(),
-        ) {
-            r_target_entity.0 = Some(hit_data.entity);
-        } else {
-            r_target_entity.0 = None;
-        }
     }
-    Ok(())
 }
 
 #[cfg(test)]

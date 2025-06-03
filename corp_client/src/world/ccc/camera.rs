@@ -76,23 +76,13 @@ pub fn setup_camera(mut commands: Commands, q_player_transform: Single<&Transfor
 
 fn update_camera(
     r_camera_modifier: Res<CameraModifier>,
-    mut q_rig: Query<&mut Rig>,
-    q_follow_cam: Query<&Transform, With<MainCameraFollow>>,
-    q_windows: Query<&Window>,
-    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    s_camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
+    mut rig: Single<&mut Rig>,
+    follow_pos: Single<&Transform, With<MainCameraFollow>>,
+    window: Single<&Window>,
 ) {
-    let Ok((camera, camera_transform)) = q_camera.get_single() else {
-        return;
-    };
+    let (camera, camera_transform) = *s_camera;
     let ground_origin = Vec3::ZERO;
-
-    let Ok(follow_pos) = q_follow_cam.get_single() else {
-        return;
-    };
-
-    let Ok(window) = q_windows.get_single() else {
-        return;
-    };
 
     let ray = window
         .cursor_position()
@@ -116,23 +106,19 @@ fn update_camera(
     let new_camera_pos =
         follow_pos.translation + direction * sensitivity * r_camera_modifier.aim_zoom_factor;
 
-    if let Ok(mut rig) = q_rig.get_single_mut() {
-        // Update camera position
-        if let Some(camera_pos) = rig.try_driver_mut::<Position>() {
-            // Calculate the distance between the player and the new camera position
-            let max_distance = (new_camera_pos - follow_pos.translation).length();
+    // Update camera position
+    if let Some(camera_pos) = rig.try_driver_mut::<Position>() {
+        // Calculate the distance between the player and the new camera position
+        let max_distance = (new_camera_pos - follow_pos.translation).length();
 
-            // Limit the distance to ensure the player is always visible
-            let distance = distance.min(max_distance);
+        // Limit the distance to ensure the player is always visible
+        let distance = distance.min(max_distance);
 
-            // Calculate the new camera position
-            let camera_pos_diff = (new_camera_pos - follow_pos.translation).normalize() * distance;
+        // Calculate the new camera position
+        let camera_pos_diff = (new_camera_pos - follow_pos.translation).normalize() * distance;
 
-            let player_and_camera_pos_diff = follow_pos.translation + camera_pos_diff;
-            camera_pos.position.x = player_and_camera_pos_diff.x;
-            camera_pos.position.z = player_and_camera_pos_diff.z;
-        }
-    } else {
-        warn!("Update Camera: No camera rig found");
+        let player_and_camera_pos_diff = follow_pos.translation + camera_pos_diff;
+        camera_pos.position.x = player_and_camera_pos_diff.x;
+        camera_pos.position.z = player_and_camera_pos_diff.z;
     }
 }

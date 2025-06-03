@@ -63,14 +63,12 @@ fn pause_loops(run: Res<AudioChannel<RunSound>>) {
 
 fn walk_sound(
     run: Res<AudioChannel<RunSound>>,
-    mut player_query: Query<&CharacterMovement, With<Player>>,
+    player_movement: Single<&CharacterMovement, With<Player>>,
 ) {
-    if let Ok(player) = player_query.get_single_mut() {
-        if player.is_moving() {
-            run.resume().fade_in(AudioTween::default());
-        } else {
-            run.pause().fade_out(AudioTween::default());
-        }
+    if player_movement.is_moving() {
+        run.resume().fade_in(AudioTween::default());
+    } else {
+        run.pause().fade_out(AudioTween::default());
     }
 }
 

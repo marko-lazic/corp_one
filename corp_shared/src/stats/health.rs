@@ -30,8 +30,8 @@ impl Health {
         self.hit_points = (self.hit_points + heal).min(MAX_HEALTH);
     }
 
-    pub fn get_health(&self) -> &f32 {
-        &self.hit_points
+    pub fn get_health(&self) -> f32 {
+        self.hit_points
     }
 
     pub fn is_dead(&self) -> bool {

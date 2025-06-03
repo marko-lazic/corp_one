@@ -57,40 +57,36 @@ fn setup_animation_graph(
 fn setup_scene_once_loaded(
     mut commands: Commands,
     animations: Res<MannequinAnimations>,
-    mut players: Query<(Entity, &mut AnimationPlayer), Added<AnimationPlayer>>,
+    animation_player_entity: Single<(Entity, &mut AnimationPlayer), Added<AnimationPlayer>>,
 ) {
-    for (entity, mut player) in &mut players {
-        let mut transitions = AnimationTransitions::new();
-        transitions
-            .play(&mut player, animations.node.idle, Duration::ZERO)
-            .repeat();
-        commands
-            .entity(entity)
-            .insert(animations.graph.clone())
-            .insert(transitions);
-    }
+    let (entity, mut player) = animation_player_entity.into_inner();
+    let mut transitions = AnimationTransitions::new();
+    transitions
+        .play(&mut player, animations.node.idle, Duration::ZERO)
+        .repeat();
+    commands
+        .entity(entity)
+        .insert(animations.graph.clone())
+        .insert(transitions);
 }
 
 fn animation_control(
-    q_player_movement: Query<&CharacterMovement, With<Player>>,
-    mut q_animation_players: Query<(&mut AnimationPlayer, &mut AnimationTransitions)>,
+    movement: Single<&CharacterMovement, With<Player>>,
+    q_animation_players: Single<(&mut AnimationPlayer, &mut AnimationTransitions)>,
     animations: Res<MannequinAnimations>,
 ) {
-    for (mut player, mut transitions) in &mut q_animation_players {
-        for movement in &q_player_movement {
-            if movement.is_moving() {
-                if !player.is_playing_animation(animations.node.run) {
-                    transitions
-                        .play(&mut player, animations.node.run, Duration::ZERO)
-                        .repeat();
-                }
-            } else {
-                if !player.is_playing_animation(animations.node.idle) {
-                    transitions
-                        .play(&mut player, animations.node.idle, Duration::ZERO)
-                        .repeat();
-                }
-            }
+    let (mut player, mut transitions) = q_animation_players.into_inner();
+    if movement.is_moving() {
+        if !player.is_playing_animation(animations.node.run) {
+            transitions
+                .play(&mut player, animations.node.run, Duration::ZERO)
+                .repeat();
+        }
+    } else {
+        if !player.is_playing_animation(animations.node.idle) {
+            transitions
+                .play(&mut player, animations.node.idle, Duration::ZERO)
+                .repeat();
         }
     }
 }
