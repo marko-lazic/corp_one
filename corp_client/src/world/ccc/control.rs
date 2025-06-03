@@ -10,7 +10,7 @@ use bevy_tnua::{builtins::TnuaBuiltinWalk, controller::TnuaController};
 use corp_shared::prelude::*;
 use std::{f32::consts::PI, hash::Hash};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Event)]
 pub struct UsableTarget {
     pub entity: Entity,
     /// Position of targeted usable entity.
@@ -121,7 +121,7 @@ fn detect_usable_targets(
     q_transform: Query<&Transform>,
     q_spatial: SpatialQuery,
     q_use: Query<&Use>,
-    mut e_debug_gui: EventWriter<DebugGuiEvent>,
+    mut commands: Commands,
     r_cursor_world: Res<CursorWorld>,
     mut gizmos: Gizmos<DebugGizmos>,
 ) -> Result {
@@ -189,11 +189,12 @@ fn detect_usable_targets(
                     warn!("Err get transform for entity {:?}", ray_hit_data.entity);
                     return Ok(());
                 };
-                r_hover_entities.insert(UsableTarget {
+                let usable_target = UsableTarget {
                     entity: ray_hit_data.entity,
                     hit_point: transform.translation,
-                });
-                e_debug_gui.send(DebugGuiEvent::Interaction(ray_hit_data.entity));
+                };
+                r_hover_entities.insert(usable_target);
+                commands.trigger(usable_target)
             } else {
                 gizmos.ray(
                     ray.origin,
@@ -389,12 +390,10 @@ fn apply_use(
     r_use_entity: Res<HoverEntities>,
     player_entity: Single<Entity, With<Player>>,
     q_use: Query<&Use>,
-    mut ev_interaction_sound: EventWriter<InteractionSoundEvent>,
 ) -> Result {
     for entity_target in r_use_entity.iter() {
         if q_use.contains(entity_target.entity) {
             commands.trigger_targets(UseEvent::new(*player_entity), entity_target.entity);
-            ev_interaction_sound.send(InteractionSoundEvent);
         }
     }
     Ok(())
@@ -425,7 +424,7 @@ fn apply_inventory(
 
 fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut ev_exit_app: EventWriter<AppExit>) {
     if trigger.elapsed_secs > 0.4 {
-        ev_exit_app.send(AppExit::Success);
+        ev_exit_app.write(AppExit::Success);
     }
 }
 

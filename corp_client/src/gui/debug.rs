@@ -2,11 +2,6 @@ use crate::{gui::cursor_ui::CursorUi, prelude::*};
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use corp_shared::prelude::*;
 
-#[derive(Event)]
-pub enum DebugGuiEvent {
-    Interaction(Entity),
-}
-
 #[derive(Default, Reflect, GizmoConfigGroup)]
 pub struct DebugGizmos {}
 
@@ -34,12 +29,10 @@ impl Plugin for DebugGuiPlugin {
     fn build(&self, app: &mut App) {
         app.init_gizmo_group::<DebugGizmos>()
             .add_plugins(FrameTimeDiagnosticsPlugin::default())
-            .add_event::<DebugGuiEvent>()
             .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(
                 FixedUpdate,
                 (
-                    update_interaction_text,
                     update_player_position_text,
                     update_mouse_screen_position_text,
                     update_mouse_world_position_text,
@@ -48,7 +41,8 @@ impl Plugin for DebugGuiPlugin {
                 )
                     .chain()
                     .run_if(in_state(GameState::Playing)),
-            );
+            )
+            .add_observer(update_interaction_text);
     }
 }
 
@@ -118,25 +112,18 @@ impl DebugTextBundle {
 }
 
 fn update_interaction_text(
-    mut e_debug_gui: EventReader<DebugGuiEvent>,
+    trigger: Trigger<UsableTarget>,
     interaction_text_entity: Single<Entity, With<InteractionText>>,
     q_name: Query<&Name>,
     mut writer: TextUiWriter,
 ) {
-    for event in e_debug_gui.read() {
-        match event {
-            DebugGuiEvent::Interaction(entity) => {
-                let name = q_name
-                    .get(entity.clone())
-                    .map(|n| n.as_str())
-                    .unwrap_or("unknown");
-
-                let message = format!("Entity {entity:?}, Name {name}");
-
-                *writer.text(interaction_text_entity.clone().into(), 0) = message.to_owned();
-            }
-        }
-    }
+    let usable_entity = trigger.entity;
+    let name = q_name
+        .get(usable_entity)
+        .map(|n| n.as_str())
+        .unwrap_or("unknown");
+    let message = format!("Entity {usable_entity:?}, Name {name}");
+    *writer.text(*interaction_text_entity, 0) = message.to_owned();
 }
 
 fn update_player_position_text(

@@ -8,39 +8,33 @@ pub mod prelude {
 }
 
 #[derive(Resource)]
-struct BackgroundMusic;
+struct BackgroundMusicChannel;
 
 #[derive(Resource)]
-struct RunSound;
+struct RunChannel;
 
 #[derive(Resource)]
-struct InteractionSound;
-
-#[derive(Event)]
-pub struct InteractionSoundEvent;
+struct InteractionChannel;
 
 pub struct SoundPlugin;
 
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(AudioPlugin)
-            .add_event::<InteractionSoundEvent>()
-            .add_audio_channel::<BackgroundMusic>()
-            .add_audio_channel::<RunSound>()
-            .add_audio_channel::<InteractionSound>()
+            .add_audio_channel::<BackgroundMusicChannel>()
+            .add_audio_channel::<RunChannel>()
+            .add_audio_channel::<InteractionChannel>()
             .add_systems(
                 OnExit(GameState::Init),
                 (setup_walk_sound, setup_background_music),
             )
-            .add_systems(
-                FixedUpdate,
-                (walk_sound, play_interaction_event).run_if(in_state(GameState::Playing)),
-            )
-            .add_systems(OnExit(GameState::Playing), pause_loops);
+            .add_systems(FixedUpdate, walk_sound.run_if(in_state(GameState::Playing)))
+            .add_systems(OnExit(GameState::Playing), pause_loops)
+            .add_observer(play_use_sound);
     }
 }
 
-fn setup_walk_sound(walk: Res<AudioChannel<RunSound>>, audio_assets: Res<AudioAssets>) {
+fn setup_walk_sound(walk: Res<AudioChannel<RunChannel>>, audio_assets: Res<AudioAssets>) {
     walk.play(audio_assets.running.clone())
         .looped()
         .with_volume(0.3)
@@ -48,7 +42,7 @@ fn setup_walk_sound(walk: Res<AudioChannel<RunSound>>, audio_assets: Res<AudioAs
 }
 
 fn setup_background_music(
-    background: Res<AudioChannel<BackgroundMusic>>,
+    background: Res<AudioChannel<BackgroundMusicChannel>>,
     audio_assets: Res<AudioAssets>,
 ) {
     background
@@ -57,12 +51,12 @@ fn setup_background_music(
         .with_volume(0.3);
 }
 
-fn pause_loops(run: Res<AudioChannel<RunSound>>) {
+fn pause_loops(run: Res<AudioChannel<RunChannel>>) {
     run.pause();
 }
 
 fn walk_sound(
-    run: Res<AudioChannel<RunSound>>,
+    run: Res<AudioChannel<RunChannel>>,
     player_movement: Single<&CharacterMovement, With<Player>>,
 ) {
     if player_movement.is_moving() {
@@ -72,15 +66,13 @@ fn walk_sound(
     }
 }
 
-fn play_interaction_event(
-    interaction: Res<AudioChannel<InteractionSound>>,
+fn play_use_sound(
+    _trigger: Trigger<UseEvent>,
+    interaction: Res<AudioChannel<InteractionChannel>>,
     audio_assets: Res<AudioAssets>,
-    mut ev_interaction_sound: EventReader<InteractionSoundEvent>,
 ) {
-    for _ev in &mut ev_interaction_sound.read() {
-        interaction
-            .play(audio_assets.interaction_on.clone())
-            .fade_in(AudioTween::default())
-            .with_volume(0.3);
-    }
+    interaction
+        .play(audio_assets.interaction_on.clone())
+        .fade_in(AudioTween::default())
+        .with_volume(0.3);
 }
