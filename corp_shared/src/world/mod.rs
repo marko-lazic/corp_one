@@ -1,4 +1,5 @@
 pub mod colony;
+pub mod creature;
 pub mod faction;
 pub mod gameplay;
 pub mod item;
@@ -8,8 +9,13 @@ pub mod security;
 pub mod structure;
 pub mod r#use;
 
-pub mod prelude {
-    pub use super::{
-        colony::*, faction::*, gameplay::*, item::*, physics::*, player::*, r#use::*, structure::*,
-    };
-}
+pub use colony::*;
+pub use creature::*;
+pub use faction::*;
+pub use gameplay::*;
+pub use item::*;
+pub use physics::*;
+pub use player::*;
+pub use r#use::*;
+pub use security::*;
+pub use structure::*;

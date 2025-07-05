@@ -18,8 +18,6 @@ pub struct RequestConnect(pub Colony);
 pub struct RequestExit;
 #[derive(Component)]
 pub struct Client;
-#[derive(Component)]
-pub struct ConnectedPlayer;
 pub struct ClientNetPlugin;
 #[derive(Event)]
 struct RequestDisconnect;
@@ -88,21 +86,23 @@ fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) 
 
 fn on_connected(
     trigger: Trigger<OnAdd, Session>,
-    mut r_next_loading_state: ResMut<NextState<LoadingState>>,
     mut commands: Commands,
+    client_colony: Single<&Colony, With<Client>>,
 ) -> Result {
     let e_session = trigger.target();
     info!("Session {e_session} Connected!");
 
-    commands.entity(e_session).insert((
-        ConnectedPlayer,
-        TransportConfig {
-            max_memory_usage: 64 * 1024,
-            send_bytes_per_sec: 4 * 1024,
-            ..default()
-        },
-    ));
-    r_next_loading_state.set(LoadingState::LoadColony);
+    commands.entity(e_session).insert((TransportConfig {
+        max_memory_usage: 64 * 1024,
+        send_bytes_per_sec: 4 * 1024,
+        ..default()
+    },));
+
+    if **client_colony == Colony::StarMap {
+        commands.trigger(LoadStarMapCommand);
+    } else {
+        commands.trigger(LoadColonyCommand);
+    }
     Ok(())
 }
 

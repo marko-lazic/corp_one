@@ -67,7 +67,7 @@ fn walk_sound(
 }
 
 fn play_use_sound(
-    _trigger: Trigger<UseEvent>,
+    _trigger: Trigger<UseCommand>,
     interaction: Res<AudioChannel<InteractionChannel>>,
     audio_assets: Res<AudioAssets>,
 ) {

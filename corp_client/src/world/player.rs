@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use aeronet::io::Session;
 use avian3d::prelude::*;
 use bevy::{ecs::system::SystemId, prelude::*, scene::SceneInstanceReady};
 use bevy_tnua::prelude::TnuaController;
@@ -18,29 +19,31 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, register_player_one_shoot_systems)
-            .add_systems(OnEnter(LoadingState::SpawnPlayer), spawn_player);
+            .add_observer(on_spawn_player_controller);
     }
 }
 
 fn register_player_one_shoot_systems(mut commands: Commands) {
     let player_data = PlayerSystems {
         health: Default::default(),
-        setup_player: commands.register_system(setup_player),
+        setup_player: commands.register_system(spawn_controlled_player),
         setup_camera: commands.register_system(setup_camera),
     };
     commands.insert_resource(player_data)
 }
 
-fn spawn_player(
+fn on_spawn_player_controller(
+    _trigger: Trigger<SpawnPlayerController>,
     mut commands: Commands,
     r_player_systems: Res<PlayerSystems>,
-    player_entity: Single<Entity, With<ConnectedPlayer>>,
+    session_entity: Single<Entity, With<Session>>,
 ) -> Result {
-    commands.run_system_with(r_player_systems.setup_player, *player_entity);
+    let player_e = *session_entity;
+    commands.run_system_with(r_player_systems.setup_player, player_e);
     Ok(())
 }
 
-pub fn setup_player(
+pub fn spawn_controlled_player(
     In(e_player): In<Entity>,
     r_player_data: Res<PlayerSystems>,
     r_player_assets: Res<PlayerAssets>,
@@ -64,8 +67,8 @@ pub fn setup_player(
             Visibility::default(),
             MovementBundle::default(),
             MainCameraFollow,
-            Inventory::default(),
-            MemberOf {
+            Inventory,
+            PlayerFactionInfo {
                 faction: Faction::EC,
                 rank: Rank::R6,
             },

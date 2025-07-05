@@ -8,11 +8,11 @@ pub struct DbPlugin;
 
 impl Plugin for DbPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, database_setup.run_if(is_colony_iris));
+        app.add_systems(Startup, database_setup.run_if(is_iris));
     }
 }
 
-fn is_colony_iris(config: Res<ColonyAppConfig>) -> bool {
+fn is_iris(config: Res<ColonyAppConfig>) -> bool {
     config.colony == Colony::Iris
 }
 

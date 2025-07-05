@@ -3,11 +3,11 @@ use bevy::prelude::*;
 pub struct Use;
 
 #[derive(Debug, Event)]
-pub struct UseEvent {
+pub struct UseCommand {
     pub user: Entity,
 }
 
-impl UseEvent {
+impl UseCommand {
     pub fn new(user: Entity) -> Self {
         Self { user }
     }

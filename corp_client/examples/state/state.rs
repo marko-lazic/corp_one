@@ -31,7 +31,6 @@ fn main() {
                 process_temporary_faction_ownership_timers_system,
                 cast_ray_system,
                 interaction_system,
-                despawn_empty_backpack_system,
                 show_inventory_system,
                 door_color_change_state_system,
             )
@@ -85,14 +84,18 @@ fn setup(
     let player_entity = commands
         .spawn((
             Player,
-            Inventory::new(vec![hacking_tool_entity]),
-            MemberOf {
+            Inventory,
+            PlayerFactionInfo {
                 faction: Faction::EC,
                 rank: Rank::R7,
             },
             Transform::from_xyz(0.0, 0.0, 0.0),
         ))
         .id();
+
+    commands
+        .entity(player_entity)
+        .insert(StoredIn(hacking_tool_entity));
 
     commands.insert_resource(PlayerEntity(player_entity));
 
@@ -131,8 +134,7 @@ fn setup_door(
             RigidBody::Static,
             Collider::cuboid(door_hs, door_hs, door_hs),
         ))
-        .observe(on_use_door_event)
-        .observe(on_use_door_hack_event)
+        .observe(on_use_command)
         .id();
     ec_door
 }
@@ -146,7 +148,7 @@ fn interaction_system(
     if r_keyboard_input.just_pressed(KeyCode::KeyE) {
         if let Some(target) = r_target_entity.0 {
             commands.trigger_targets(
-                UseEvent {
+                UseCommand {
                     user: **r_player_entity,
                 },
                 target,
@@ -158,14 +160,18 @@ fn interaction_system(
 fn show_inventory_system(
     inventory_text_entity: Single<Entity, With<InventoryText>>,
     mut writer: TextUiWriter,
-    mut inventory: Single<&mut Inventory, (Changed<Inventory>, With<Player>)>,
+    container_query: Query<&Contains, With<Player>>,
     q_name: Query<&Name>,
 ) {
-    let mut items: Vec<String> = Vec::new();
-    for inventory_item in inventory.items() {
-        items.push(q_name.get(*inventory_item).unwrap().to_string().clone());
+    let mut string_list: Vec<String> = Vec::new();
+    for contains in &container_query {
+        for e_item in contains.iter() {
+            if let Ok(name) = q_name.get(e_item) {
+                string_list.push(name.to_string());
+            }
+        }
     }
-    *writer.text(*inventory_text_entity, 0) = format!("Inventory {:?}", items);
+    *writer.text(*inventory_text_entity, 0) = format!("Inventory {:?}", string_list);
 }
 
 fn door_color_change_state_system(

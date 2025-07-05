@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bevy::prelude::*;
 
 pub const MAX_HEALTH: f32 = 100.0;
@@ -9,13 +7,11 @@ pub const MIN_HEALTH: f32 = 0.0;
 #[derive(Clone, Debug, Component)]
 pub struct Health {
     hit_points: f32,
-    pub cloning_cooldown: Timer,
 }
 
 impl Default for Health {
     fn default() -> Self {
         Health {
-            cloning_cooldown: Timer::new(Duration::from_secs(5), TimerMode::Once),
             hit_points: MAX_HEALTH,
         }
     }
@@ -59,14 +55,14 @@ mod tests {
     fn take_damage_hit_points_min_value() {
         let mut health = Health::default();
         health.take_damage(9000.);
-        assert_eq!(health.get_health(), &MIN_HEALTH);
+        assert_eq!(health.get_health(), MIN_HEALTH);
     }
 
     #[test]
     fn heal_hit_points_max_value() {
         let mut health = Health::default();
         health.heal(200.);
-        assert_eq!(health.get_health(), &MAX_HEALTH);
+        assert_eq!(health.get_health(), MAX_HEALTH);
     }
 
     #[test]
@@ -74,6 +70,6 @@ mod tests {
         let mut health = Health::default();
         health.take_damage(50.);
         health.heal(30.);
-        assert_eq!(health.get_health(), &80.);
+        assert_eq!(health.get_health(), 80.);
     }
 }

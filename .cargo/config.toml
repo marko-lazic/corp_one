@@ -3,8 +3,8 @@ codegen-backend = true # Enable cranelift
 
 # Enable a small amount of optimization in dev mode
 [profile.dev]
-opt-level = 0
 debug = true
+opt-level = 0
 incremental = true
 codegen-backend = "cranelift"  # Enable cranelift
 

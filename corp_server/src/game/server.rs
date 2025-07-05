@@ -15,6 +15,9 @@ use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 use std::time::Duration;
 
+#[derive(Event, Deref)]
+pub struct ClientConnectedEvent(pub Entity);
+
 pub struct ServerNetPlugin;
 
 impl Plugin for ServerNetPlugin {
@@ -99,7 +102,7 @@ fn on_connected(
     let client = trigger.target();
     let &ChildOf(server) = clients.get(client)?;
     info!("{client} connected to {server}");
-    commands.entity(client).insert(Replicated);
+    commands.trigger(ClientConnectedEvent(client));
     Ok(())
 }
 

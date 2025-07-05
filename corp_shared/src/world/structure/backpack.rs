@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::prelude::*;
+use bevy_replicon::prelude::ClientTriggerExt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -27,68 +28,27 @@ pub fn init_backpack_collision_layers() -> CollisionLayers {
     CollisionLayers::new([GameLayer::Sensor], [GameLayer::Player])
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub enum BackpackAction {
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+pub enum LootAction {
     List,
     TakeAll,
     TakeItem(Entity),
 }
 
-#[derive(Debug, Event)]
-pub struct UseBackpackEvent {
+#[derive(Deserialize, Event, Serialize, Clone, Debug)]
+pub struct LootCommand {
     pub user: Entity,
-    pub action: BackpackAction,
+    pub action: LootAction,
 }
 
-pub fn on_use_backpack_event(trigger: Trigger<UseEvent>, mut commands: Commands) {
-    commands.trigger_targets(
-        UseBackpackEvent {
+pub fn on_use_backpack_event(trigger: Trigger<UseCommand>, mut commands: Commands) {
+    commands.client_trigger_targets(
+        LootCommand {
             user: trigger.event().user,
-            action: BackpackAction::TakeAll,
+            action: LootAction::TakeAll,
         },
         trigger.target(),
     );
-}
-
-pub fn on_use_backpack_action_event(
-    trigger: Trigger<UseBackpackEvent>,
-    mut q_inventory: Query<&mut Inventory>,
-) {
-    let e_user = trigger.event().user;
-    let e_backpack = trigger.target();
-
-    let Ok([mut user_inventory, mut backpack]) = q_inventory.get_many_mut([e_user, e_backpack])
-    else {
-        warn!("Could not find user_inventory and backpack entities");
-        return;
-    };
-
-    match trigger.event().action {
-        BackpackAction::List => {
-            for backpack_item in backpack.items() {
-                info!("{:?}", backpack_item);
-            }
-        }
-        BackpackAction::TakeAll => {
-            user_inventory.add_all(backpack.remove_all());
-        }
-        BackpackAction::TakeItem(item_entity) => {
-            if let Some(backpack_item) = backpack.remove(item_entity) {
-                user_inventory.add(backpack_item);
-            }
-        }
-    }
-}
-
-pub fn despawn_empty_backpack_system(
-    mut commands: Commands,
-    mut q_entity_backpack: Query<(Entity, &Inventory), (Changed<Inventory>, With<Backpack>)>,
-) {
-    for (entity, inventory) in &mut q_entity_backpack {
-        if inventory.items().count() == 0 {
-            commands.entity(entity).try_despawn();
-        }
-    }
 }
 
 #[cfg(test)]
@@ -106,7 +66,7 @@ mod tests {
         app.update();
 
         // then
-        assert_eq!(app.get::<Inventory>(e_backpack).items().count(), 1);
+        assert_eq!(app.get::<Contains>(e_backpack).into_iter().count(), 1);
     }
 
     #[test]
@@ -119,9 +79,9 @@ mod tests {
 
         // when
         app.world_mut().trigger_targets(
-            UseBackpackEvent {
+            LootCommand {
                 user: e_player,
-                action: BackpackAction::List,
+                action: LootAction::List,
             },
             e_backpack,
         );
@@ -129,10 +89,11 @@ mod tests {
         app.update();
 
         // then
-        assert_eq!(app.get::<Inventory>(e_player).items().count(), 0);
-        assert_eq!(app.get::<Inventory>(e_backpack).items().count(), 2);
+        assert_eq!(app.get::<Contains>(e_player).into_iter().count(), 0);
+        assert_eq!(app.get::<Contains>(e_backpack).into_iter().count(), 2);
     }
 
+    // This should now be an integration test
     #[test]
     fn player_take_all_items_from_backpack() {
         // given
@@ -144,16 +105,16 @@ mod tests {
         // when
         app.update();
         app.world_mut().trigger_targets(
-            UseBackpackEvent {
+            LootCommand {
                 user: e_player,
-                action: BackpackAction::TakeAll,
+                action: LootAction::TakeAll,
             },
             e_backpack,
         );
         app.update();
 
         // then
-        assert_eq!(app.get::<Inventory>(e_player).items().count(), 2);
+        assert_eq!(app.get::<Contains>(e_player).into_iter().count(), 2);
         assert!(!app.has_component::<Backpack>(e_backpack));
     }
 
@@ -168,39 +129,44 @@ mod tests {
         // when
         app.update();
         app.world_mut().trigger_targets(
-            UseBackpackEvent {
+            LootCommand {
                 user: e_player,
-                action: BackpackAction::TakeItem(e_item_2),
+                action: LootAction::TakeItem(e_item_2),
             },
             e_backpack,
         );
         app.update();
 
         // then
-        assert_eq!(app.get::<Inventory>(e_backpack).items().count(), 1);
-        assert_eq!(app.get::<Inventory>(e_player).items().count(), 1);
+        assert_eq!(app.get::<Contains>(e_backpack).into_iter().count(), 1);
+        assert_eq!(app.get::<Contains>(e_player).into_iter().count(), 1);
         assert_eq!(
-            app.get::<Inventory>(e_backpack).items().next(),
+            app.get::<Contains>(e_backpack).into_iter().next(),
             Some(&e_item_1),
         );
         assert_eq!(
-            app.get::<Inventory>(e_player).items().next(),
+            app.get::<Contains>(e_player).into_iter().next(),
             Some(&e_item_2)
         );
     }
 
     fn setup_backpack(app: &mut App, items: Vec<Entity>) -> Entity {
-        app.world_mut()
-            .spawn((Backpack, Inventory::new(items)))
+        let backpack = app
+            .world_mut()
+            .spawn(Backpack)
             .observe(on_use_backpack_event)
-            .observe(on_use_backpack_action_event)
-            .id()
+            .id();
+
+        for item in items {
+            app.world_mut().entity_mut(backpack).insert(StoredIn(item));
+        }
+
+        backpack
     }
 
     fn setup() -> (App, Entity) {
         let mut app = App::new();
-        app.init_time()
-            .add_systems(Update, despawn_empty_backpack_system.chain());
+        app.init_time();
         let player_entity = app.world_mut().spawn((Player, Inventory::default())).id();
         (app, player_entity)
     }

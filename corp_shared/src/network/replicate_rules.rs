@@ -1,14 +1,22 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use bevy_replicon::prelude::AppRuleExt;
+use bevy_replicon::prelude::*;
 
 pub struct ReplicateRulesPlugin;
 
 impl Plugin for ReplicateRulesPlugin {
     fn build(&self, app: &mut App) {
-        app.replicate::<Backpack>()
+        app.replicate::<Player>()
             .replicate::<Transform>()
-            .replicate::<Inventory>()
+            .replicate::<Backpack>()
             .replicate::<HackingTool>();
+
+        // Register client->server triggers
+        app.add_client_trigger::<DoorHackCommand>(Channel::Unordered);
+        app.add_client_trigger::<LootCommand>(Channel::Unordered);
+        app.add_client_trigger::<KillMeCommand>(Channel::Unordered);
+
+        // Register server->client triggers
+        app.add_server_trigger::<DoorHackedEvent>(Channel::Unordered);
     }
 }

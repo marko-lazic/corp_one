@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use bevy::prelude::*;
 
-use crate::prelude::{Faction, OwnershipRegistry, SecurityLevel, UseEvent};
+use crate::prelude::{Faction, OwnershipRegistry, SecurityLevel, UseCommand};
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
@@ -21,7 +21,7 @@ fn lookup_ownership() -> OwnershipRegistry {
     OwnershipRegistry::new_permanent(Faction::EC)
 }
 
-pub fn on_use_territory_node_event(trigger: Trigger<UseEvent>) {
+pub fn on_use_territory_node_event(trigger: Trigger<UseCommand>) {
     info!("Interaction with territory node: {:?}", trigger.target());
 }
 
@@ -30,7 +30,8 @@ mod tests {
     use bevy::prelude::*;
 
     use crate::prelude::{
-        Faction, Inventory, MemberOf, OwnershipRegistry, Player, Rank, TestUtils, UseEvent,
+        Faction, Inventory, OwnershipRegistry, Player, PlayerFactionInfo, Rank, TestUtils,
+        UseCommand,
     };
 
     use super::*;
@@ -44,7 +45,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player), e_energy_node);
+            .trigger_targets(UseCommand::new(e_player), e_energy_node);
         app.update();
 
         // then
@@ -66,7 +67,7 @@ mod tests {
     fn setup_player(app: &mut App, items: Vec<Entity>, faction: Faction, rank: Rank) -> Entity {
         let player_entity = app
             .world_mut()
-            .spawn((Player, Inventory::new(items), MemberOf { faction, rank }))
+            .spawn((Player, Inventory, PlayerFactionInfo { faction, rank }))
             .id();
         player_entity
     }

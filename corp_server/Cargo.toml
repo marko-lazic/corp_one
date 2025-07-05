@@ -13,6 +13,7 @@ bevy = { workspace = true, features = [
     "async-io",
     "multi_threaded",
     "serialize",
+    "configurable_error_handler",
 ] }
 avian3d = { workspace = true, features = [
     "3d",

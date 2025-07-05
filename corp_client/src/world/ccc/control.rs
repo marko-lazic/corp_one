@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use aeronet::io::Session;
 use avian3d::prelude::*;
 use bevy::{platform::collections::HashSet, prelude::*};
 use bevy_dolly::{
@@ -6,6 +7,7 @@ use bevy_dolly::{
     prelude::{Arm, *},
 };
 use bevy_enhanced_input::prelude::*;
+use bevy_replicon::prelude::ClientTriggerExt;
 use bevy_tnua::{builtins::TnuaBuiltinWalk, controller::TnuaController};
 use corp_shared::prelude::*;
 use std::{f32::consts::PI, hash::Hash};
@@ -393,7 +395,7 @@ fn apply_use(
 ) -> Result {
     for entity_target in r_use_entity.iter() {
         if q_use.contains(entity_target.entity) {
-            commands.trigger_targets(UseEvent::new(*player_entity), entity_target.entity);
+            commands.trigger_targets(UseCommand::new(*player_entity), entity_target.entity);
         }
     }
     Ok(())
@@ -401,25 +403,27 @@ fn apply_use(
 
 fn apply_kill(
     _trigger: Trigger<Started<KillAction>>,
-    mut player_health: Single<&mut Health, With<Player>>,
+    mut commands: Commands,
+    session_entity: Single<Entity, With<Session>>,
 ) -> Result {
-    player_health.kill_mut();
+    let player_e = *session_entity;
+    commands.client_trigger_targets(KillMeCommand, player_e);
     Ok(())
 }
 
 fn apply_inventory(
     _trigger: Trigger<Started<InventoryAction>>,
-    inventory: Single<&Inventory, With<Player>>,
-    q_name: Query<&Name>,
+    container_query: Query<(&Name, &Contains), With<Player>>,
+    q_item_name: Query<&Name, With<Item>>,
 ) {
-    let item_names: Vec<String> = inventory
-        .items
-        .iter()
-        .filter_map(|&item| q_name.get(item).ok().map(|name| name.to_string()))
-        .collect();
-
-    let output = format!("Inventory: [{}]", item_names.join(", "));
-    info!("{}", output);
+    for (container_name, contains) in &container_query {
+        println!("{:?} contains:", container_name);
+        for item_entity in contains.iter() {
+            if let Ok(name) = q_item_name.get(item_entity) {
+                println!("  - {}", name);
+            }
+        }
+    }
 }
 
 fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut commands: Commands) {

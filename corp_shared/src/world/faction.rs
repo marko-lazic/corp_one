@@ -21,7 +21,7 @@ pub enum Rank {
 }
 
 #[derive(Component, Eq, PartialEq)]
-pub struct MemberOf {
+pub struct PlayerFactionInfo {
     pub faction: Faction,
     pub rank: Rank,
 }

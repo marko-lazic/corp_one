@@ -4,6 +4,5 @@ pub mod constants {
 
 pub mod replicate_rules;
 
-pub mod prelude {
-    pub use super::{constants::*, replicate_rules::*};
-}
+pub use constants::*;
+pub use replicate_rules::*;

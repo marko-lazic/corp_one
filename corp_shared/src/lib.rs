@@ -6,7 +6,6 @@ pub mod asset;
 mod log;
 pub mod network;
 mod state;
-pub mod stats;
 pub mod util;
 pub mod world;
 
@@ -18,9 +17,5 @@ pub const SERVER_PORT: u16 = 9001;
 pub const CLONING_SPAWN_POSITION: Vec3 = Vec3::from_array([0.; 3]);
 
 pub mod prelude {
-    pub use super::network::prelude::*;
-    pub use crate::{
-        asset::*, log::*, state::prelude::*, stats::health::*, util::test_utils::*,
-        world::prelude::*,
-    };
+    pub use crate::{asset::*, log::*, network::*, state::*, util::*, world::*};
 }

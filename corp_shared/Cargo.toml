@@ -5,7 +5,7 @@ authors = ["Marko Lazić <marko.lazic@comyno.com>"]
 edition = "2024"
 
 [dependencies]
-bevy = { workspace = true, features = ["dynamic_linking", "bevy_color", "bevy_state"] }
+bevy = { workspace = true, features = ["dynamic_linking", "bevy_color", "bevy_state", "serialize"] }
 avian3d = { workspace = true, features = ["3d", "f32", "parry-f32", "default-collider"] }
 serde = { workspace = true }
 rand = { workspace = true }

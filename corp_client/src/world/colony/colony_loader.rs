@@ -7,26 +7,45 @@ use bevy::{
 };
 use bevy_skein::SkeinPlugin;
 use corp_shared::prelude::*;
+use log::error;
+
+#[derive(Event)]
+pub struct LoadColonyCommand;
+
+#[derive(Event)]
+pub struct LoadStarMapCommand;
+
+#[derive(Event)]
+struct UpdateLightsCommand;
 
 pub fn colony_loader_plugin(app: &mut App) {
     app.add_plugins(SkeinPlugin::default())
-        .add_systems(OnEnter(LoadingState::LoadColony), load_colony)
-        .add_systems(OnExit(LoadingState::LoadColony), update_lights);
+        .add_observer(on_load_star_map_command)
+        .add_observer(on_load_colony_command)
+        .add_observer(on_update_lights_command);
 }
 
-fn load_colony(
+fn on_load_star_map_command(
+    _trigger: Trigger<LoadStarMapCommand>,
+    mut r_next_game_state: ResMut<NextState<GameState>>,
+) {
+    info!("Star Map trigger");
+    r_next_game_state.set(GameState::StarMap);
+}
+
+fn on_load_colony_command(
+    _trigger: Trigger<LoadColonyCommand>,
     mut commands: Commands,
     mut r_meshes: ResMut<Assets<Mesh>>,
     mut r_materials: ResMut<Assets<StandardMaterial>>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
-    mut r_next_game_state: ResMut<NextState<GameState>>,
     r_scene_assets: Res<SceneAssets>,
     client_colony: Single<&Colony, With<Client>>,
 ) -> Result {
     let colony = *client_colony;
 
     if *colony == Colony::StarMap {
-        r_next_game_state.set(GameState::StarMap);
+        error!("Inconsistent state, StarMap is not a colony");
         return Ok(());
     }
 
@@ -83,16 +102,17 @@ fn load_colony(
     Ok(())
 }
 
-fn on_colony_loaded(
-    _trigger: Trigger<SceneInstanceReady>,
-    mut r_next_loading_state: ResMut<NextState<LoadingState>>,
-) {
+fn on_colony_loaded(_trigger: Trigger<SceneInstanceReady>, mut commands: Commands) {
     info!("Colony Scene Instance Ready");
-    r_next_loading_state.set(LoadingState::SpawnPlayer);
+    commands.trigger(SpawnPlayerController);
+    commands.trigger(UpdateLightsCommand);
 }
 
 // Temporarily fixes the problem with shadows not working
-fn update_lights(mut query: Query<&mut PointLight>) {
+fn on_update_lights_command(
+    _trigger: Trigger<UpdateLightsCommand>,
+    mut query: Query<&mut PointLight>,
+) {
     for mut point_light in query.iter_mut() {
         point_light.shadows_enabled = true;
         point_light.intensity = 100_000.0;

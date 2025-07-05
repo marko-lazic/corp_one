@@ -1,7 +1,8 @@
-use bevy::prelude::*;
-use std::{cmp::PartialEq, time::Duration};
-
 use crate::prelude::*;
+use bevy::prelude::*;
+use bevy_replicon::prelude::ClientTriggerExt;
+use serde::{Deserialize, Serialize};
+use std::cmp::PartialEq;
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
@@ -43,7 +44,7 @@ pub enum DoorState {
 impl DoorState {
     const AUTOCLOSE_SECS: f32 = 10.0;
     const TOGGLE_BLOCK_SECS: f32 = 1.0;
-    const HACK_DURATION_SECS: f32 = 60.0 * 5.0;
+    pub const HACK_DURATION_SECS: f32 = 60.0 * 5.0;
     pub fn open() -> Self {
         DoorState::Open {
             autoclose: Timer::from_seconds(Self::AUTOCLOSE_SECS, TimerMode::Once),
@@ -73,9 +74,13 @@ impl DoorState {
 
 pub struct UseDoorEvent;
 
-#[derive(Event)]
-pub struct UseDoorHackEvent {
-    pub hacker: Entity,
+#[derive(Deserialize, Event, Serialize, Clone, Debug)]
+pub struct DoorHackCommand;
+
+#[derive(Deserialize, Event, Serialize, Clone, Debug)]
+pub enum DoorHackedEvent {
+    Successful,
+    Failure,
 }
 
 pub fn door_cooldown_system(mut q_door: Query<&mut DoorState, With<Door>>, r_time: Res<Time>) {
@@ -97,10 +102,10 @@ pub fn door_cooldown_system(mut q_door: Query<&mut DoorState, With<Door>>, r_tim
     }
 }
 
-pub fn on_use_door_event(
-    trigger: Trigger<UseEvent>,
+pub fn on_use_command(
+    trigger: Trigger<UseCommand>,
     mut commands: Commands,
-    q_member: Query<&MemberOf>,
+    q_member: Query<&PlayerFactionInfo>,
     mut q_door: Query<(&mut DoorState, &OwnershipRegistry, &SecurityLevel), With<Door>>,
 ) {
     if let Ok(member_of) = q_member.get(trigger.event().user) {
@@ -119,49 +124,14 @@ pub fn on_use_door_event(
                     }
                 }
             } else {
-                commands.trigger_targets(
-                    UseDoorHackEvent {
-                        hacker: trigger.event().user,
-                    },
-                    trigger.target(),
-                );
-            }
-        }
-    }
-}
-
-pub fn on_use_door_hack_event(
-    trigger: Trigger<UseDoorHackEvent>,
-    mut commands: Commands,
-    mut q_door: Query<(&mut DoorState, &mut OwnershipRegistry)>,
-    mut q_player: Query<(&mut Inventory, &MemberOf), With<Player>>,
-    q_hacking_tool: Query<&HackingTool>,
-) {
-    if let Ok((mut door_state, mut ownership_registry)) = q_door.get_mut(trigger.target()) {
-        if let Ok((mut inventory, member_of)) = q_player.get_mut(trigger.event().hacker) {
-            if let Some(e_hacking_tool) = inventory
-                .items
-                .iter()
-                .find(|&&item_entity| q_hacking_tool.get(item_entity).is_ok())
-                .copied()
-            {
-                inventory.remove(e_hacking_tool);
-                commands.entity(e_hacking_tool).try_despawn();
-                ownership_registry.add(Ownership::Hacked(
-                    member_of.faction,
-                    Timer::new(
-                        Duration::from_secs_f32(DoorState::HACK_DURATION_SECS),
-                        TimerMode::Once,
-                    ),
-                ));
-                door_state.toggle();
+                commands.client_trigger_targets(DoorHackCommand, trigger.target());
             }
         }
     }
 }
 
 pub fn on_use_door_terminal(
-    trigger: Trigger<UseEvent>,
+    trigger: Trigger<UseCommand>,
     mut commands: Commands,
     q_door_id: Query<&DoorId>,
     q_door: Query<(Entity, &DoorId), With<Door>>,
@@ -169,7 +139,7 @@ pub fn on_use_door_terminal(
     if let Ok(terminal_door_id) = q_door_id.get(trigger.target()) {
         for (door_entity, door_id) in &q_door {
             if terminal_door_id == door_id {
-                commands.trigger_targets(UseEvent::new(trigger.user), door_entity);
+                commands.trigger_targets(UseCommand::new(trigger.user), door_entity);
             }
         }
     }
@@ -223,7 +193,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseCommand::new(player_entity), door_entity);
 
         // then
         let result = app.get::<DoorState>(door_entity);
@@ -240,7 +210,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity_1);
+            .trigger_targets(UseCommand::new(player_entity), door_entity_1);
         app.update();
 
         // then
@@ -261,7 +231,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseCommand::new(player_entity), door_entity);
         app.update();
 
         // then
@@ -280,10 +250,10 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseCommand::new(player_entity), door_entity);
         app.update_after(Duration::from_secs_f32(3.0));
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseCommand::new(player_entity), door_entity);
 
         // then
         let result = app.get::<DoorState>(door_entity);
@@ -299,10 +269,10 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseCommand::new(player_entity), door_entity);
         app.update_after(Duration::from_secs_f32(0.5));
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseCommand::new(player_entity), door_entity);
         app.update_after(Duration::from_secs_f32(0.1));
 
         // then
@@ -329,7 +299,7 @@ mod tests {
         for _ in 0..3 {
             app.update_after(Duration::from_secs_f32(2.0));
             app.world_mut()
-                .trigger_targets(UseEvent::new(player_entity), door_entity);
+                .trigger_targets(UseCommand::new(player_entity), door_entity);
         }
 
         // then
@@ -356,7 +326,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseCommand::new(player_entity), door_entity);
         app.update();
 
         // then
@@ -364,7 +334,7 @@ mod tests {
             *app.get::<DoorState>(door_entity),
             DoorState::Open { .. }
         ));
-        assert_eq!(app.get::<Inventory>(player_entity).items.len(), 0);
+        assert_eq!(app.get::<Contains>(player_entity).len(), 0);
         assert!(!app.has_component::<HackingTool>(hacking_tool_entity));
     }
 
@@ -380,12 +350,12 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(cmg_player_entity), door_entity);
+            .trigger_targets(UseCommand::new(cmg_player_entity), door_entity);
         app.update();
 
         // then
-        assert_eq!(app.get::<Inventory>(cmg_player_entity).items.len(), 0);
-        assert_eq!(app.get::<Inventory>(vi_player_entity).items.len(), 1);
+        assert_eq!(app.get::<Contains>(cmg_player_entity).len(), 0);
+        assert_eq!(app.get::<Contains>(vi_player_entity).len(), 1);
     }
 
     #[test]
@@ -397,7 +367,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(player_entity), door_entity);
+            .trigger_targets(UseCommand::new(player_entity), door_entity);
         app.update();
 
         // then
@@ -415,7 +385,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_ec), e_door_cmg_low);
+            .trigger_targets(UseCommand::new(e_player_ec), e_door_cmg_low);
         app.update();
 
         // then
@@ -433,7 +403,7 @@ mod tests {
 
         // when - EC player hacks VI door.
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_ec), e_door_vi_medium);
+            .trigger_targets(UseCommand::new(e_player_ec), e_door_vi_medium);
         app.update();
         assert!(
             matches!(
@@ -453,7 +423,7 @@ mod tests {
         );
 
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_ec), e_door_vi_medium);
+            .trigger_targets(UseCommand::new(e_player_ec), e_door_vi_medium);
 
         // then
         assert!(
@@ -473,12 +443,12 @@ mod tests {
         let e_player_vi = setup_player(&mut app, vec![hacking_tool_entity], Faction::VI, Rank::R0);
         let e_door_ec = setup_door(&mut app, Faction::EC, SecurityLevel::Low);
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_vi), e_door_ec);
+            .trigger_targets(UseCommand::new(e_player_vi), e_door_ec);
         app.update_after(Duration::from_secs_f32(DoorState::HACK_DURATION_SECS));
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_vi), e_door_ec);
+            .trigger_targets(UseCommand::new(e_player_vi), e_door_ec);
 
         // then
         let result = app.get::<DoorState>(e_door_ec);
@@ -494,7 +464,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_ec), e_door_ec);
+            .trigger_targets(UseCommand::new(e_player_ec), e_door_ec);
 
         // then
         let result = app.get::<DoorState>(e_door_ec);
@@ -509,13 +479,13 @@ mod tests {
         let e_player_ec = setup_player(&mut app, vec![hacking_tool_entity], Faction::EC, Rank::R2);
         let e_door_cmg = setup_door(&mut app, Faction::CMG, SecurityLevel::Low);
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_player_ec), e_door_cmg);
+            .trigger_targets(UseCommand::new(e_player_ec), e_door_cmg);
         app.update_after(Duration::from_secs_f32(10.0));
         let e_other_player_ec = setup_player(&mut app, vec![], Faction::EC, Rank::R0);
 
         // when
         app.world_mut()
-            .trigger_targets(UseEvent::new(e_other_player_ec), e_door_cmg);
+            .trigger_targets(UseCommand::new(e_other_player_ec), e_door_cmg);
 
         // then
         assert!(matches!(
@@ -527,8 +497,8 @@ mod tests {
     fn setup() -> App {
         let mut app = App::new();
         app.init_time();
-        app.add_event::<UseBackpackEvent>();
-        app.add_event::<UseDoorHackEvent>();
+        app.add_event::<LootCommand>();
+        app.add_event::<DoorHackCommand>();
         app.add_systems(
             Update,
             (
@@ -543,7 +513,7 @@ mod tests {
     fn setup_player(app: &mut App, items: Vec<Entity>, faction: Faction, rank: Rank) -> Entity {
         let player_entity = app
             .world_mut()
-            .spawn((Player, Inventory::new(items), MemberOf { faction, rank }))
+            .spawn((Player, Inventory, PlayerFactionInfo { faction, rank }))
             .id();
         player_entity
     }
@@ -559,8 +529,7 @@ mod tests {
         let door_entity = app
             .world_mut()
             .spawn((Door, security, ownership_registry))
-            .observe(on_use_door_event)
-            .observe(on_use_door_hack_event)
+            .observe(on_use_command)
             .id();
         door_entity
     }

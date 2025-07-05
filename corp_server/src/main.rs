@@ -1,5 +1,6 @@
 use crate::{game::*, proxy::ProxyActor};
 use aeronet_webtransport::wtransport::Identity;
+use bevy::ecs::error::{warn, GLOBAL_ERROR_HANDLER};
 use corp_shared::prelude::*;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
@@ -11,6 +12,9 @@ mod table;
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     init_logging()?;
+    GLOBAL_ERROR_HANDLER
+        .set(warn)
+        .expect("The error handler can only be set once, globally.");
     let identity = Identity::load_pemfiles("./certs/server.pem", "./certs/server.key").await?;
 
     let config = ColonyAppConfig {

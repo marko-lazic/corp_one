@@ -18,7 +18,6 @@ fn on_spawn_backpack(
     let mut entity_commands = commands.get_entity(trigger.target())?;
     entity_commands
         .insert((SceneRoot(r_mesh_assets.low_poly_backpack.clone()),))
-        .observe(on_use_backpack_event)
-        .observe(on_use_backpack_action_event);
+        .observe(on_use_backpack_event);
     Ok(())
 }

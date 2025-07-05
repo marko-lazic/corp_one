@@ -29,7 +29,6 @@ impl Plugin for StructurePlugin {
             .add_systems(
                 FixedUpdate,
                 (
-                    despawn_empty_backpack_system,
                     attach_energy_node_observer,
                     attach_door_observer,
                     attach_door_terminal_observer,
@@ -46,10 +45,7 @@ fn attach_energy_node_observer(mut commands: Commands, query: Query<Entity, Adde
 
 fn attach_door_observer(mut commands: Commands, query: Query<Entity, Added<Door>>) {
     for e in &query {
-        commands
-            .entity(e)
-            .observe(on_use_door_event)
-            .observe(on_use_door_hack_event);
+        commands.entity(e).observe(on_use_command);
     }
 }
 
