@@ -10,13 +10,13 @@ impl Plugin for HealthPlugin {
 }
 
 fn update_player_health(
-    player_health_query: Query<(Entity, &Health), With<Player>>,
+    changed_player_health: Query<(Entity, &Health), (With<Player>, Changed<Health>)>,
     mut commands: Commands,
 ) {
-    for (player_entity, health) in &player_health_query {
+    for (player_e, health) in &changed_player_health {
         if health.is_dead() {
-            info!("Player {} is dead", player_entity);
-            commands.entity(player_entity).insert(Dead);
+            info!("Player {} is dead", player_e);
+            commands.entity(player_e).insert(Dead);
         }
     }
 }

@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use aeronet::io::Session;
 use avian3d::prelude::*;
 use bevy::{platform::collections::HashSet, prelude::*};
 use bevy_dolly::{
@@ -401,13 +400,8 @@ fn apply_use(
     Ok(())
 }
 
-fn apply_kill(
-    _trigger: Trigger<Started<KillAction>>,
-    mut commands: Commands,
-    session_entity: Single<Entity, With<Session>>,
-) -> Result {
-    let player_e = *session_entity;
-    commands.client_trigger_targets(KillMeCommand, player_e);
+fn apply_kill(_trigger: Trigger<Started<KillAction>>, mut commands: Commands) -> Result {
+    commands.client_trigger(KillMeCommand);
     Ok(())
 }
 

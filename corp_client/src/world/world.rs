@@ -27,7 +27,7 @@ impl Plugin for WorldPlugin {
             ControlPlugin,
             MainCameraPlugin,
             PlayerPlugin,
-            CloningPlugin,
+            CloningLocalPlugin,
         ));
     }
 }

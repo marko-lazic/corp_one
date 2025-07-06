@@ -2,14 +2,18 @@ use crate::prelude::*;
 use bevy::prelude::*;
 use corp_shared::{prelude::*, world::colony::Colony};
 
-pub struct CloningPlugin;
+pub struct CloningLocalPlugin;
 
-impl Plugin for CloningPlugin {
+impl Plugin for CloningLocalPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(on_you_died);
+        app.add_observer(on_send_dead_player_to_cloning);
     }
 }
 
-fn on_you_died(_trigger: Trigger<YouDied>, mut commands: Commands) {
+fn on_send_dead_player_to_cloning(
+    _trigger: Trigger<SendDeadPlayerToCloningCommand>,
+    mut commands: Commands,
+) {
+    info!("Received SendDeadPlayerToCloningCommand");
     commands.trigger(RequestConnect(Colony::Cloning));
 }

@@ -9,7 +9,8 @@ impl Plugin for ReplicateRulesPlugin {
         app.replicate::<Player>()
             .replicate::<Transform>()
             .replicate::<Backpack>()
-            .replicate::<HackingTool>();
+            .replicate::<HackingTool>()
+            .replicate::<Health>();
 
         // Register client->server triggers
         app.add_client_trigger::<ClientPlayerSpawnCommand>(Channel::Unordered);
@@ -21,5 +22,6 @@ impl Plugin for ReplicateRulesPlugin {
         // Register server->client triggers
         app.add_server_trigger::<DoorHackedEvent>(Channel::Unordered);
         app.add_server_trigger::<MakeLocal>(Channel::Unordered);
+        app.add_server_trigger::<SendDeadPlayerToCloningCommand>(Channel::Unordered);
     }
 }

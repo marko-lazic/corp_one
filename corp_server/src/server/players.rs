@@ -22,6 +22,9 @@ fn init_clients(trigger: Trigger<FromClient<ClientPlayerSpawnCommand>>, mut comm
     // Create player
     commands.entity(trigger.client_entity).insert((
         Player,
+        Replicated,
+        Transform::default(),
+        Health::default(),
         AuthorizedClient,
         ClientEntityMap::default(),
     ));

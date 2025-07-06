@@ -1,10 +1,11 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub const MAX_HEALTH: f32 = 100.0;
 pub const CLONE_HEALTH_80: f32 = 80.0;
 pub const MIN_HEALTH: f32 = 0.0;
 
-#[derive(Clone, Debug, Component)]
+#[derive(Component, Serialize, Deserialize, Clone, Debug)]
 pub struct Health {
     hit_points: f32,
 }

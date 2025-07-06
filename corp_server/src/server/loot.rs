@@ -91,15 +91,17 @@ fn on_add_dead_drop_loot(
 ) -> Result {
     let dead_player_entity = trigger.target();
     let dead_player_transform = q_player.get(dead_player_entity)?;
-    let drop_loot_bag = commands
-        .spawn((Backpack, *dead_player_transform))
-        .observe(on_loot_command)
-        .id();
-    let dead_player_loot = contains_query.get(dead_player_entity)?;
-    for item_entity in dead_player_loot.into_iter() {
-        commands
-            .entity(*item_entity)
-            .insert(StoredIn(drop_loot_bag));
+
+    if let Ok(dead_player_loot) = contains_query.get(dead_player_entity) {
+        let drop_loot_bag = commands
+            .spawn((Backpack, Replicated, *dead_player_transform))
+            .observe(on_loot_command)
+            .id();
+        for item_entity in dead_player_loot.into_iter() {
+            commands
+                .entity(*item_entity)
+                .insert(StoredIn(drop_loot_bag));
+        }
     }
 
     Ok(())

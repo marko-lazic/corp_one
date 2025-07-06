@@ -50,6 +50,7 @@ fn request_connect(
     mut commands: Commands,
     mut next_game_state: ResMut<NextState<GameState>>,
 ) {
+    info!("RequestConnect {:?}", colony.0);
     next_game_state.set(GameState::Loading);
     commands.trigger(RequestDisconnect);
     commands.trigger(ConnectClientTo(**colony));
@@ -63,7 +64,7 @@ fn connect_client(
     let colony = trigger.event().0;
     let config = client_settings.client_config();
     let connect_options = client_settings.target(colony);
-    info!("Connecting with {connect_options:?}");
+    info!("ConnectClientTo {connect_options:?}");
     commands
         .spawn((
             Name::new(format!("Client Session {}", colony)),
@@ -108,13 +109,14 @@ fn request_disconnect(
     mut commands: Commands,
     session_endpoint: Single<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
 ) -> Result {
+    info!("Requesting Disconnect");
     let (session, name, session_opt) = *session_endpoint;
 
     if session_opt.is_some() {
-        info!("{name} is Connected");
+        info!("\"{name}\" is Connected");
         commands.trigger_targets(Disconnect::new(code::REQUEST_DISCONNECT), session);
     } else {
-        info!("{name} is not Connected");
+        info!("\"{name}\" is not Connected");
     }
 
     Ok(())

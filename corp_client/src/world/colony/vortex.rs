@@ -19,8 +19,6 @@ impl Plugin for VortexPlugin {
 fn leave_colony(
     q_vortex_gate: Query<(&Transform, &Collider), With<VortexGate>>,
     q_spatial: SpatialQuery,
-    mut r_player_store: ResMut<PlayerSystems>,
-    player_health: Single<&Health, With<Player>>,
     mut commands: Commands,
 ) {
     for (transform, collider) in &q_vortex_gate {
@@ -33,7 +31,6 @@ fn leave_colony(
             &SpatialQueryFilter::from_mask(GameLayer::Player),
             |entity| {
                 info!("Vort {entity} to Star Map.");
-                r_player_store.health = player_health.clone();
                 commands.trigger(RequestConnect(Colony::StarMap));
                 false
             },

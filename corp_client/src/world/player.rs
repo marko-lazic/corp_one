@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use aeronet::io::Session;
 use avian3d::prelude::*;
 use bevy::{ecs::system::SystemId, prelude::*, scene::SceneInstanceReady};
 use bevy_tnua::prelude::TnuaController;
@@ -9,7 +8,6 @@ use rand::seq::SliceRandom;
 
 #[derive(Resource)]
 pub struct PlayerSystems {
-    pub health: Health,
     pub spawn_player_body: SystemId<In<Entity>>,
     pub setup_camera: SystemId,
 }
@@ -29,7 +27,6 @@ impl Plugin for PlayerPlugin {
 
 fn register_player_one_shoot_systems(mut commands: Commands) {
     let player_data = PlayerSystems {
-        health: Default::default(),
         spawn_player_body: commands.register_system(spawn_player_body),
         setup_camera: commands.register_system(setup_camera),
     };
@@ -50,7 +47,6 @@ fn on_make_local(
 
 pub fn spawn_player_body(
     In(e_player): In<Entity>,
-    r_player_data: Res<PlayerSystems>,
     r_player_assets: Res<PlayerAssets>,
     mut q_vortex_node_pos: Query<&mut Transform, With<VortexNode>>,
     mut commands: Commands,
@@ -76,7 +72,6 @@ pub fn spawn_player_body(
                 faction: Faction::EC,
                 rank: Rank::R6,
             },
-            r_player_data.health.clone(),
             StateScoped(GameState::Playing),
             // Physics
             (
