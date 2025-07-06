@@ -1,4 +1,4 @@
-use crate::{dirs::Dirs, game::*, table};
+use crate::{dirs::Dirs, server::*, table};
 use bevy::{prelude::*, tasks::IoTaskPool};
 use corp_shared::prelude::Colony;
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};

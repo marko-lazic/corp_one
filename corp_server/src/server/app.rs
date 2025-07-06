@@ -1,10 +1,5 @@
-use crate::game::{cloning::CloningPlugin, death::DeathPlugin, health::HealthPlugin, *};
-use bevy::{
-    app::ScheduleRunnerPlugin
-    ,
-    prelude::*,
-    state::app::StatesPlugin,
-};
+use crate::server::{cloning::CloningPlugin, death::DeathPlugin, health::HealthPlugin, *};
+use bevy::{app::ScheduleRunnerPlugin, prelude::*, state::app::StatesPlugin};
 use bevy_rand::prelude::*;
 use corp_shared::prelude::*;
 use std::time::Duration;
@@ -23,6 +18,7 @@ pub fn colony_app(instance_config: ColonyAppConfig) {
             HealthPlugin,
             DeathPlugin,
             CloningPlugin,
+            PlayersPlugin,
             EntropyPlugin::<WyRand>::default(),
         ))
         .run();

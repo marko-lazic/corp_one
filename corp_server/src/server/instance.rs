@@ -1,4 +1,4 @@
-use crate::game::*;
+use crate::server::*;
 use kameo::{actor::ActorRef, error::Infallible, Actor};
 use tracing::info;
 

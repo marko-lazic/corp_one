@@ -1,4 +1,4 @@
-use crate::game::ColonyAppConfig;
+use crate::server::ColonyAppConfig;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 

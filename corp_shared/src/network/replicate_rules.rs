@@ -12,11 +12,14 @@ impl Plugin for ReplicateRulesPlugin {
             .replicate::<HackingTool>();
 
         // Register client->server triggers
+        app.add_client_trigger::<ClientPlayerSpawnCommand>(Channel::Unordered);
+
         app.add_client_trigger::<DoorHackCommand>(Channel::Unordered);
         app.add_client_trigger::<LootCommand>(Channel::Unordered);
         app.add_client_trigger::<KillMeCommand>(Channel::Unordered);
 
         // Register server->client triggers
         app.add_server_trigger::<DoorHackedEvent>(Channel::Unordered);
+        app.add_server_trigger::<MakeLocal>(Channel::Unordered);
     }
 }

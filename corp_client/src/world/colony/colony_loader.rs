@@ -1,10 +1,12 @@
 use crate::prelude::*;
+use aeronet_replicon::client::AeronetRepliconClient;
 use avian3d::prelude::*;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     scene::SceneInstanceReady,
 };
+use bevy_replicon::prelude::ClientTriggerExt;
 use bevy_skein::SkeinPlugin;
 use corp_shared::prelude::*;
 use log::error;
@@ -25,12 +27,9 @@ pub fn colony_loader_plugin(app: &mut App) {
         .add_observer(on_update_lights_command);
 }
 
-fn on_load_star_map_command(
-    _trigger: Trigger<LoadStarMapCommand>,
-    mut r_next_game_state: ResMut<NextState<GameState>>,
-) {
+fn on_load_star_map_command(_trigger: Trigger<LoadStarMapCommand>, mut commands: Commands) {
     info!("Star Map trigger");
-    r_next_game_state.set(GameState::StarMap);
+    commands.set_state(GameState::StarMap);
 }
 
 fn on_load_colony_command(
@@ -40,7 +39,7 @@ fn on_load_colony_command(
     mut r_materials: ResMut<Assets<StandardMaterial>>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
     r_scene_assets: Res<SceneAssets>,
-    client_colony: Single<&Colony, With<Client>>,
+    client_colony: Single<&Colony, With<AeronetRepliconClient>>,
 ) -> Result {
     let colony = *client_colony;
 
@@ -104,7 +103,7 @@ fn on_load_colony_command(
 
 fn on_colony_loaded(_trigger: Trigger<SceneInstanceReady>, mut commands: Commands) {
     info!("Colony Scene Instance Ready");
-    commands.trigger(SpawnPlayerController);
+    commands.client_trigger(ClientPlayerSpawnCommand);
     commands.trigger(UpdateLightsCommand);
 }
 

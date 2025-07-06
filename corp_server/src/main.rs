@@ -1,12 +1,12 @@
-use crate::{game::*, proxy::ProxyActor};
+use crate::{proxy::ProxyActor, server::*};
 use aeronet_webtransport::wtransport::Identity;
 use bevy::ecs::error::{warn, GLOBAL_ERROR_HANDLER};
 use corp_shared::prelude::*;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 mod dirs;
-mod game;
 mod proxy;
+mod server;
 mod table;
 
 #[tokio::main]

@@ -16,13 +16,11 @@ use corp_shared::prelude::*;
 pub struct RequestConnect(pub Colony);
 #[derive(Event)]
 pub struct RequestExit;
-#[derive(Component)]
-pub struct Client;
 pub struct ClientNetPlugin;
 #[derive(Event)]
 struct RequestDisconnect;
 #[derive(Event)]
-struct ConnectClient(pub Colony);
+struct ConnectClientTo(pub Colony);
 
 impl Plugin for ClientNetPlugin {
     fn build(&self, app: &mut App) {
@@ -54,40 +52,39 @@ fn request_connect(
 ) {
     next_game_state.set(GameState::Loading);
     commands.trigger(RequestDisconnect);
-    commands.trigger(ConnectClient(**colony));
+    commands.trigger(ConnectClientTo(**colony));
 }
 
 fn connect_client(
-    trigger: Trigger<ConnectClient>,
+    trigger: Trigger<ConnectClientTo>,
     mut commands: Commands,
     client_settings: Res<ClientSettings>,
 ) -> Result {
-    let colony = trigger.0;
+    let colony = trigger.event().0;
     let config = client_settings.client_config();
-    let target = client_settings.target(colony);
-    info!("Connecting with {target:?}");
+    let connect_options = client_settings.target(colony);
+    info!("Connecting with {connect_options:?}");
     commands
         .spawn((
-            Client,
             Name::new(format!("Client Session {}", colony)),
             colony,
             AeronetRepliconClient,
         ))
-        .queue(WebTransportClient::connect(config, target));
+        .queue(WebTransportClient::connect(config, connect_options));
     Ok(())
 }
 
 fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) -> Result {
     let target = trigger.target();
     let name = names.get(target)?;
-    info!("{name} Connecting");
+    info!("SessionEndpoint \"{name}\" Connecting");
     Ok(())
 }
 
 fn on_connected(
     trigger: Trigger<OnAdd, Session>,
     mut commands: Commands,
-    client_colony: Single<&Colony, With<Client>>,
+    client_colony: Single<&Colony, With<AeronetRepliconClient>>,
 ) -> Result {
     let e_session = trigger.target();
     info!("Session {e_session} Connected!");
@@ -110,7 +107,6 @@ fn request_disconnect(
     _trigger: Trigger<RequestDisconnect>,
     mut commands: Commands,
     session_endpoint: Single<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
-    client_entity: Query<Entity, With<Client>>,
 ) -> Result {
     let (session, name, session_opt) = *session_endpoint;
 
@@ -119,9 +115,6 @@ fn request_disconnect(
         commands.trigger_targets(Disconnect::new(code::REQUEST_DISCONNECT), session);
     } else {
         info!("{name} is not Connected");
-    }
-    if let Ok(existing) = client_entity.single() {
-        commands.entity(existing).try_despawn();
     }
 
     Ok(())
@@ -144,7 +137,7 @@ fn disconnect_and_exit(
 fn on_disconnected(
     trigger: Trigger<Disconnected>,
     names: Query<&Name>,
-    mut game_state: ResMut<NextState<GameState>>,
+    mut commands: Commands,
     mut exit_ev: EventWriter<AppExit>,
 ) -> Result {
     let target = trigger.target();
@@ -162,7 +155,7 @@ fn on_disconnected(
         }
         Disconnected::ByError(err) => {
             info!("{name} disconnected due to error: {err:?}");
-            game_state.set(GameState::Login);
+            commands.set_state(GameState::Login);
         }
     };
     Ok(())

@@ -1,4 +1,4 @@
-use crate::game::*;
+use crate::server::*;
 use aeronet::io::{
     connection::{Disconnected, LocalAddr},
     server::{Closed, Server},
@@ -14,10 +14,6 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 use std::time::Duration;
-
-#[derive(Event, Deref)]
-pub struct ClientConnectedEvent(pub Entity);
-
 pub struct ServerNetPlugin;
 
 impl Plugin for ServerNetPlugin {
@@ -94,15 +90,20 @@ fn on_session_request(mut request: Trigger<SessionRequest>, clients: Query<&Chil
     Ok(())
 }
 
-fn on_connected(
-    trigger: Trigger<OnAdd, Session>,
-    clients: Query<&ChildOf>,
-    mut commands: Commands,
-) -> Result {
+fn on_connected(trigger: Trigger<OnAdd, Session>, clients: Query<&ChildOf>) -> Result {
     let client = trigger.target();
     let &ChildOf(server) = clients.get(client)?;
-    info!("{client} connected to {server}");
-    commands.trigger(ClientConnectedEvent(client));
+    info!("Session {client} connected to server {server}");
+    // Add client metadata
+    // commands.entity(client_entity).insert((
+    //     ClientMetadata {
+    //         connected_at: std::time::Instant::now(), // Already exists in Session
+    //         ip_address: "127.0.0.1".to_string(), // From Session data
+    //     },
+    //     // Maybe some server-side rate limiting
+    //     RateLimiter::new(100), // 100 requests per second
+    // ));
+
     Ok(())
 }
 

@@ -10,40 +10,45 @@ use rand::seq::SliceRandom;
 #[derive(Resource)]
 pub struct PlayerSystems {
     pub health: Health,
-    pub setup_player: SystemId<In<Entity>>,
+    pub spawn_player_body: SystemId<In<Entity>>,
     pub setup_camera: SystemId,
 }
+
+/// Marks [`Player`] as locally controlled.
+#[derive(Component)]
+pub struct LocalPlayer;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, register_player_one_shoot_systems)
-            .add_observer(on_spawn_player_controller);
+            .add_observer(on_make_local);
     }
 }
 
 fn register_player_one_shoot_systems(mut commands: Commands) {
     let player_data = PlayerSystems {
         health: Default::default(),
-        setup_player: commands.register_system(spawn_controlled_player),
+        spawn_player_body: commands.register_system(spawn_player_body),
         setup_camera: commands.register_system(setup_camera),
     };
     commands.insert_resource(player_data)
 }
 
-fn on_spawn_player_controller(
-    _trigger: Trigger<SpawnPlayerController>,
+fn on_make_local(
+    trigger: Trigger<MakeLocal>,
     mut commands: Commands,
     r_player_systems: Res<PlayerSystems>,
-    session_entity: Single<Entity, With<Session>>,
 ) -> Result {
-    let player_e = *session_entity;
-    commands.run_system_with(r_player_systems.setup_player, player_e);
+    info!("MakeLocal received {:?}", trigger.target());
+    let player_e = trigger.target();
+    commands.entity(trigger.target()).insert(LocalPlayer);
+    commands.run_system_with(r_player_systems.spawn_player_body, player_e);
     Ok(())
 }
 
-pub fn spawn_controlled_player(
+pub fn spawn_player_body(
     In(e_player): In<Entity>,
     r_player_data: Res<PlayerSystems>,
     r_player_assets: Res<PlayerAssets>,
@@ -62,7 +67,6 @@ pub fn spawn_controlled_player(
         .entity(e_player)
         .insert((
             Name::new("Player"),
-            Player,
             Transform::from_translation(rnd_node_position + Vec3::Y),
             Visibility::default(),
             MovementBundle::default(),
@@ -97,11 +101,10 @@ pub fn spawn_controlled_player(
                 .observe(
                     |_trigger: Trigger<SceneInstanceReady>,
                      mut commands: Commands,
-                     r_player_systems: Res<PlayerSystems>,
-                     mut next_state: ResMut<NextState<GameState>>| {
+                     r_player_systems: Res<PlayerSystems>| {
                         info!("Player Scene Instance Ready");
                         commands.run_system(r_player_systems.setup_camera);
-                        next_state.set(GameState::Playing);
+                        commands.set_state(GameState::Playing);
                     },
                 );
         });
