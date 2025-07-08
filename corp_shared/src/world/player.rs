@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct Player;
 
 #[derive(Event, Serialize, Deserialize)]
-pub struct ClientPlayerSpawnCommand;
+pub struct PlayerSpawnClientCommand;
 
-/// A trigger that instructs the client to mark a specific entity as [`LocalPlayer`].
+/// A trigger from server that instructs the client to mark a specific entity as [`LocalPlayer`].
 #[derive(Event, Serialize, Deserialize)]
-pub struct MakeLocal;
+pub struct SetupPlayerServerCommand;

@@ -1,16 +1,10 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
-use bevy::{ecs::system::SystemId, prelude::*, scene::SceneInstanceReady};
+use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_tnua::prelude::TnuaController;
 use bevy_tnua_avian3d::TnuaAvian3dSensorShape;
 use corp_shared::prelude::*;
 use rand::seq::SliceRandom;
-
-#[derive(Resource)]
-pub struct PlayerSystems {
-    pub spawn_player_body: SystemId<In<Entity>>,
-    pub setup_camera: SystemId,
-}
 
 /// Marks [`Player`] as locally controlled.
 #[derive(Component)]
@@ -20,37 +14,25 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, register_player_one_shoot_systems)
-            .add_observer(on_make_local);
+        app.add_observer(on_setup_local_player);
     }
 }
 
-fn register_player_one_shoot_systems(mut commands: Commands) {
-    let player_data = PlayerSystems {
-        spawn_player_body: commands.register_system(spawn_player_body),
-        setup_camera: commands.register_system(setup_camera),
-    };
-    commands.insert_resource(player_data)
-}
-
-fn on_make_local(
-    trigger: Trigger<MakeLocal>,
-    mut commands: Commands,
-    r_player_systems: Res<PlayerSystems>,
-) -> Result {
-    info!("MakeLocal received {:?}", trigger.target());
-    let player_e = trigger.target();
-    commands.entity(trigger.target()).insert(LocalPlayer);
-    commands.run_system_with(r_player_systems.spawn_player_body, player_e);
-    Ok(())
-}
-
-pub fn spawn_player_body(
-    In(e_player): In<Entity>,
+fn on_setup_local_player(
+    trigger: Trigger<SetupPlayerServerCommand>,
     r_player_assets: Res<PlayerAssets>,
     mut q_vortex_node_pos: Query<&mut Transform, With<VortexNode>>,
     mut commands: Commands,
+    q_local_player: Query<&LocalPlayer>,
 ) {
+    info!("MakeLocal received {:?}", trigger.target());
+    let player_e = trigger.target();
+
+    // Validate no LocalPlayer exists
+    if q_local_player.iter().count() > 0 {
+        error!("Tried to spawn a second local player");
+    }
+
     let rnd_node_position = q_vortex_node_pos
         .iter_mut()
         .map(|t| t.translation)
@@ -60,9 +42,10 @@ pub fn spawn_player_body(
         .unwrap_or_else(|| Vec3::new(1.0, 10.0, 1.0));
 
     commands
-        .entity(e_player)
+        .entity(player_e)
         .insert((
             Name::new("Player"),
+            LocalPlayer,
             Transform::from_translation(rnd_node_position + Vec3::Y),
             Visibility::default(),
             MovementBundle::default(),
@@ -76,6 +59,7 @@ pub fn spawn_player_body(
             // Physics
             (
                 RigidBody::Dynamic,
+                CollisionEventsEnabled,
                 Collider::capsule(0.3, 0.75),
                 TnuaController::default(),
                 TnuaAvian3dSensorShape(Collider::cylinder(0.29, 0.0)),
@@ -94,15 +78,13 @@ pub fn spawn_player_body(
                     Transform::from_xyz(0.0, -1.5, 0.0),
                 ))
                 .observe(
-                    |_trigger: Trigger<SceneInstanceReady>,
-                     mut commands: Commands,
-                     r_player_systems: Res<PlayerSystems>| {
+                    |_trigger: Trigger<SceneInstanceReady>, mut commands: Commands| {
                         info!("Player Scene Instance Ready");
-                        commands.run_system(r_player_systems.setup_camera);
+                        commands.trigger(SetupLocalPlayerCamera);
                         commands.set_state(GameState::Playing);
                     },
                 );
         });
 
-    info!("Spawned player entity: {:?}", e_player);
+    info!("Spawned player entity: {:?}", player_e);
 }

@@ -12,7 +12,7 @@ impl Plugin for PlayersPlugin {
     }
 }
 
-fn init_clients(trigger: Trigger<FromClient<ClientPlayerSpawnCommand>>, mut commands: Commands) {
+fn init_clients(trigger: Trigger<FromClient<PlayerSpawnClientCommand>>, mut commands: Commands) {
     info!(
         "Received client player spawn command {:?}",
         trigger.client_entity
@@ -33,7 +33,7 @@ fn init_clients(trigger: Trigger<FromClient<ClientPlayerSpawnCommand>>, mut comm
     commands.server_trigger_targets(
         ToClients {
             mode: SendMode::Direct(trigger.client_entity),
-            event: MakeLocal,
+            event: SetupPlayerServerCommand,
         },
         trigger.client_entity,
     );
@@ -41,8 +41,10 @@ fn init_clients(trigger: Trigger<FromClient<ClientPlayerSpawnCommand>>, mut comm
 
 fn connect_clients(trigger: Trigger<OnAdd, ConnectedClient>) {
     info!("OnAdd ClientConnected {:?}", trigger.target());
+    // We don't do here anything at the moment because the client asks to get spawned
 }
 
-fn despawn_clients(trigger: Trigger<OnRemove, ConnectedClient>) {
+fn despawn_clients(trigger: Trigger<OnRemove, ConnectedClient>, mut commands: Commands) {
     info!("OnRemove ClientConnected {:?}", trigger.target());
+    commands.entity(trigger.target()).try_despawn();
 }

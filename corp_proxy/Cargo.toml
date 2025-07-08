@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-tokio = { workspace = true, features = ["rt-multi-thread"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time"] }
 log = "0.4"
 env_logger = "0.11"
 anyhow = { workspace = true }
 wtransport = { version = "0.6", features = ["dangerous-configuration"] }
 tracing = "0.1"
-futures = "0.3"
+tokio-util = "0.7"
 corp_shared = { path = "../corp_shared" }

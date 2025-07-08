@@ -103,7 +103,7 @@ fn on_load_colony_command(
 
 fn on_colony_loaded(_trigger: Trigger<SceneInstanceReady>, mut commands: Commands) {
     info!("Colony Scene Instance Ready");
-    commands.client_trigger(ClientPlayerSpawnCommand);
+    commands.client_trigger(PlayerSpawnClientCommand);
     commands.trigger(UpdateLightsCommand);
 }
 

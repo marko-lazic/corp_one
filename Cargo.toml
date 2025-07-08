@@ -23,4 +23,5 @@ anyhow = "1.0.98"
 aeronet = { path = "../temp/aeronet/crates/aeronet", default-features = false }
 aeronet_webtransport = { path = "../temp/aeronet/crates/aeronet_webtransport", default-features = false }
 aeronet_replicon = { path = "../temp/aeronet/crates/aeronet_replicon", default-features = false }
-bevy_replicon = { version = "0.34", default-features = false }
+bevy_replicon = { version = "0.34.3", default-features = false }
+bevy_defer = { version = "0.14.0", default-features = false }

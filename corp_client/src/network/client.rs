@@ -9,6 +9,7 @@ use aeronet::{
 use aeronet_replicon::client::{AeronetRepliconClient, AeronetRepliconClientPlugin};
 use aeronet_webtransport::client::{WebTransportClient, WebTransportClientPlugin};
 use bevy::prelude::*;
+use bevy_defer::{AppReactorExtension, AsyncCommandsExtension, AsyncWorld};
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 
@@ -21,6 +22,8 @@ pub struct ClientNetPlugin;
 struct RequestDisconnect;
 #[derive(Event)]
 struct ConnectClientTo(pub Colony);
+#[derive(Event, Clone, Eq, PartialEq)]
+struct ConnectionDisconnectedEvent;
 
 impl Plugin for ClientNetPlugin {
     fn build(&self, app: &mut App) {
@@ -34,6 +37,8 @@ impl Plugin for ClientNetPlugin {
             // game
             SpawnListenerPlugin,
         ))
+        .add_event::<ConnectionDisconnectedEvent>()
+        .react_to_event::<ConnectionDisconnectedEvent>()
         .init_resource::<ClientSettings>()
         .add_observer(request_connect)
         .add_observer(connect_client)
@@ -45,15 +50,27 @@ impl Plugin for ClientNetPlugin {
     }
 }
 
-fn request_connect(
-    colony: Trigger<RequestConnect>,
-    mut commands: Commands,
-    mut next_game_state: ResMut<NextState<GameState>>,
-) {
-    info!("RequestConnect {:?}", colony.0);
-    next_game_state.set(GameState::Loading);
-    commands.trigger(RequestDisconnect);
-    commands.trigger(ConnectClientTo(**colony));
+fn request_connect(trigger: Trigger<RequestConnect>, mut commands: Commands) {
+    let colony = **trigger;
+    info!("RequestConnect {:?}", colony);
+    commands.spawn_task(move || async move {
+        // First trigger disconnect
+        AsyncWorld.apply_command(|w: &mut World| {
+            w.trigger(RequestDisconnect);
+        });
+
+        // Then wait for disconnection and handle reconnection
+        loop {
+            let _event = AsyncWorld.next_event::<ConnectionDisconnectedEvent>().await;
+            info!("Disconnected, reconnecting");
+            AsyncWorld.set_state(GameState::Loading)?;
+            AsyncWorld.apply_command(move |w: &mut World| {
+                w.trigger(ConnectClientTo(colony));
+            });
+            break;
+        }
+        Ok(())
+    });
 }
 
 fn connect_client(
@@ -78,7 +95,7 @@ fn connect_client(
 fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) -> Result {
     let target = trigger.target();
     let name = names.get(target)?;
-    info!("SessionEndpoint \"{name}\" Connecting");
+    info!("SessionEndpoint \"{name}\" connecting...");
     Ok(())
 }
 
@@ -107,19 +124,21 @@ fn on_connected(
 fn request_disconnect(
     _trigger: Trigger<RequestDisconnect>,
     mut commands: Commands,
-    session_endpoint: Single<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
-) -> Result {
-    info!("Requesting Disconnect");
-    let (session, name, session_opt) = *session_endpoint;
-
-    if session_opt.is_some() {
-        info!("\"{name}\" is Connected");
-        commands.trigger_targets(Disconnect::new(code::REQUEST_DISCONNECT), session);
+    session_endpoint: Query<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
+) {
+    if let Ok((session, name, session_opt)) = session_endpoint.single() {
+        // Handle disconnect logic
+        if session_opt.is_some() {
+            info!("Session \"{name}\" is Connected, sending disconnect request");
+            commands.trigger_targets(Disconnect::new(code::REQUEST_DISCONNECT), session);
+        } else {
+            info!("Session \"{name}\" is not Connected!");
+            commands.send_event(ConnectionDisconnectedEvent);
+        }
     } else {
-        info!("\"{name}\" is not Connected");
+        info!("No session endpoint found, sending disconnected event");
+        commands.send_event(ConnectionDisconnectedEvent);
     }
-
-    Ok(())
 }
 
 fn disconnect_and_exit(
@@ -150,6 +169,7 @@ fn on_disconnected(
             if reason == code::APP_EXIT {
                 exit_ev.write(AppExit::Success);
             } else if reason == code::REQUEST_DISCONNECT {
+                commands.send_event(ConnectionDisconnectedEvent);
             }
         }
         Disconnected::ByPeer(reason) => {

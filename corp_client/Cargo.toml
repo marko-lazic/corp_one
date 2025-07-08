@@ -41,6 +41,7 @@ aeronet = { workspace = true }
 aeronet_webtransport = { workspace = true, features = ["client", "dangerous-configuration"] }
 aeronet_replicon = { workspace = true, features = ["client"] }
 bevy_replicon = { workspace = true, features = ["default"] }
+bevy_defer = { workspace = true, features = ["default"] }
 log = "0.4.27"
 
 [dev-dependencies]

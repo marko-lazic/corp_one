@@ -71,7 +71,7 @@ fn setup_scene_once_loaded(
 }
 
 fn animation_control(
-    movement: Single<&CharacterMovement, With<Player>>,
+    movement: Single<&CharacterMovement, With<LocalPlayer>>,
     q_animation_players: Single<(&mut AnimationPlayer, &mut AnimationTransitions)>,
     animations: Res<MannequinAnimations>,
 ) {

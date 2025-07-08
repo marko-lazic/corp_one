@@ -117,7 +117,7 @@ const RAY_SPACING: f32 = HORIZONTAL_FOV / (NUM_RAYS - 1) as f32; // Angle betwee
 const LOOKUP_RANGE: f32 = 2.0; // Range of rays
 
 fn detect_usable_targets(
-    player_entity: Single<Entity, With<Player>>,
+    player_entity: Single<Entity, With<LocalPlayer>>,
     mut r_hover_entities: ResMut<HoverEntities>,
     q_transform: Query<&Transform>,
     q_spatial: SpatialQuery,
@@ -216,7 +216,7 @@ fn detect_usable_targets(
 
 fn update_cursor_world(
     mut r_cursor_world: ResMut<CursorWorld>,
-    mut orientation_mode: Single<&mut OrientationMode, With<Player>>,
+    mut orientation_mode: Single<&mut OrientationMode, With<LocalPlayer>>,
     window: Single<&Window>,
     follow_pos: Single<&Transform, With<MainCameraFollow>>,
     s_camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -328,7 +328,7 @@ fn ui_binding(trigger: Trigger<Binding<OnUi>>, mut players: Query<&mut Actions<O
 fn apply_movement(
     trigger: Trigger<Fired<Move>>,
     cam_transform: Single<&Transform, With<MainCamera>>,
-    mut movement: Single<&mut CharacterMovement, With<Player>>,
+    mut movement: Single<&mut CharacterMovement, With<LocalPlayer>>,
     mut tnua: Single<&mut TnuaController>,
 ) {
     let cam_forward = {
@@ -362,7 +362,7 @@ fn apply_movement(
 fn apply_stop_movement(
     _trigger: Trigger<Completed<Move>>,
     mut tnua: Single<&mut TnuaController>,
-    mut player_movement: Single<&mut CharacterMovement, With<Player>>,
+    mut player_movement: Single<&mut CharacterMovement, With<LocalPlayer>>,
 ) {
     player_movement.velocity = Vec3::ZERO;
     tnua.basis(TnuaBuiltinWalk {
@@ -375,7 +375,7 @@ fn apply_stop_movement(
 fn apply_orientation_mode(
     _trigger: Trigger<Started<OrientationModeAction>>,
     r_cursor_world: Res<CursorWorld>,
-    mut player_orientation_mode: Single<&mut OrientationMode, With<Player>>,
+    mut player_orientation_mode: Single<&mut OrientationMode, With<LocalPlayer>>,
 ) {
     **player_orientation_mode = match **player_orientation_mode {
         OrientationMode::Direction => {
@@ -389,7 +389,7 @@ fn apply_use(
     _trigger: Trigger<Started<UseAction>>,
     mut commands: Commands,
     r_use_entity: Res<HoverEntities>,
-    player_entity: Single<Entity, With<Player>>,
+    player_entity: Single<Entity, With<LocalPlayer>>,
     q_use: Query<&Use>,
 ) -> Result {
     for entity_target in r_use_entity.iter() {
@@ -407,7 +407,7 @@ fn apply_kill(_trigger: Trigger<Started<KillAction>>, mut commands: Commands) ->
 
 fn apply_inventory(
     _trigger: Trigger<Started<InventoryAction>>,
-    container_query: Query<(&Name, &Contains), With<Player>>,
+    container_query: Query<(&Name, &Contains), With<LocalPlayer>>,
     q_item_name: Query<&Name, With<Item>>,
 ) {
     for (container_name, contains) in &container_query {

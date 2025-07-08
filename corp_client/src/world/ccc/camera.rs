@@ -1,3 +1,4 @@
+use crate::prelude::LocalPlayer;
 use bevy::{
     core_pipeline::{
         bloom::Bloom,
@@ -28,27 +29,38 @@ pub struct MainCamera;
 #[derive(Component)]
 pub struct MainCameraFollow;
 
+#[derive(Event)]
+pub struct SetupLocalPlayerCamera;
+
 pub struct MainCameraPlugin;
 
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<CameraModifier>().add_systems(
-            FixedUpdate,
-            (update_camera, Dolly::<MainCamera>::update_active)
-                .chain()
-                .run_if(in_state(GameState::Playing)),
-        );
+        app.init_resource::<CameraModifier>()
+            .add_systems(
+                FixedUpdate,
+                (update_camera, Dolly::<MainCamera>::update_active)
+                    .chain()
+                    .run_if(in_state(GameState::Playing)),
+            )
+            .add_observer(on_setup_local_player_camera);
     }
 }
 
-pub fn setup_camera(mut commands: Commands, q_player_transform: Single<&Transform, With<Player>>) {
+fn on_setup_local_player_camera(
+    _trigger: Trigger<SetupLocalPlayerCamera>,
+    mut commands: Commands,
+    q_player_tr: Query<&Transform, With<LocalPlayer>>,
+) -> Result {
     info!("Setup Camera");
-    let position = q_player_transform.translation;
+    let position = q_player_tr
+        .single()
+        .map_err(|e| format!("Failed to get single local player tr: {:?}", e))?;
     commands.spawn((
         MainCamera,
         Camera3d::default(),
         Rig::builder()
-            .with(Position::new(position))
+            .with(Position::new(position.translation))
             .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-65.0))
             .with(Smooth::new_position(0.3))
             .with(Smooth::new_rotation(0.3))
@@ -72,6 +84,7 @@ pub fn setup_camera(mut commands: Commands, q_player_transform: Single<&Transfor
         Bloom::NATURAL,
         StateScoped(GameState::Playing),
     ));
+    Ok(())
 }
 
 fn update_camera(

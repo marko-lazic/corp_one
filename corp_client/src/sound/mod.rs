@@ -57,7 +57,7 @@ fn pause_loops(run: Res<AudioChannel<RunChannel>>) {
 
 fn walk_sound(
     run: Res<AudioChannel<RunChannel>>,
-    player_movement: Single<&CharacterMovement, With<Player>>,
+    player_movement: Single<&CharacterMovement, With<LocalPlayer>>,
 ) {
     if player_movement.is_moving() {
         run.resume().fade_in(AudioTween::default());

@@ -14,6 +14,7 @@ use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 use std::time::Duration;
+
 pub struct ServerNetPlugin;
 
 impl Plugin for ServerNetPlugin {
@@ -62,7 +63,7 @@ fn open_server(mut commands: Commands, instance_config: Res<ColonyAppConfig>) {
         .spawn((Name::new("WebTransport Server"), AeronetRepliconServer))
         .queue(WebTransportServer::open(config))
         .id();
-    info!("Opening WebTransport server {server}");
+    info!("Opening WebTransport server \"{server}\"");
 }
 
 fn on_opened(trigger: Trigger<OnAdd, Server>, servers: Query<&LocalAddr>) {
@@ -70,7 +71,7 @@ fn on_opened(trigger: Trigger<OnAdd, Server>, servers: Query<&LocalAddr>) {
     let local_addr = servers
         .get(server)
         .expect("spawned session entity should have a name");
-    info!("{server} opened on {}", **local_addr);
+    info!("\"{server}\" opened on {}", **local_addr);
 }
 
 fn on_closed(trigger: Trigger<Closed>) {
@@ -81,7 +82,7 @@ fn on_session_request(mut request: Trigger<SessionRequest>, clients: Query<&Chil
     let client = request.target();
     let &ChildOf(server) = clients.get(client)?;
 
-    debug!("{client} connecting to {server} with headers:");
+    debug!("\"{client}\" connecting to \"{server}\" with headers:");
     for (header_key, header_value) in &request.headers {
         debug!("  {header_key}: {header_value}");
     }
@@ -90,37 +91,42 @@ fn on_session_request(mut request: Trigger<SessionRequest>, clients: Query<&Chil
     Ok(())
 }
 
-fn on_connected(trigger: Trigger<OnAdd, Session>, clients: Query<&ChildOf>) -> Result {
+fn on_connected(
+    trigger: Trigger<OnAdd, Session>,
+    clients: Query<&ChildOf>,
+    config: Res<ColonyAppConfig>,
+) -> Result {
     let client = trigger.target();
     let &ChildOf(server) = clients.get(client)?;
-    info!("Session {client} connected to server {server}");
+    let server_colony = config.colony;
+    info!("Session \"{client}\" connected to server {server_colony} \"{server}\"");
     // Add client metadata
-    // commands.entity(client_entity).insert((
-    //     ClientMetadata {
-    //         connected_at: std::time::Instant::now(), // Already exists in Session
-    //         ip_address: "127.0.0.1".to_string(), // From Session data
-    //     },
-    //     // Maybe some server-side rate limiting
-    //     RateLimiter::new(100), // 100 requests per second
-    // ));
-
     Ok(())
 }
 
-fn on_disconnected(trigger: Trigger<Disconnected>, clients: Query<&ChildOf>) -> Result {
+fn on_disconnected(
+    trigger: Trigger<Disconnected>,
+    clients: Query<&ChildOf>,
+    config: Res<ColonyAppConfig>,
+) {
     let client = trigger.target();
-    let &ChildOf(server) = clients.get(client)?;
+    let Ok(&ChildOf(server)) = clients.get(client) else {
+        error!("\"{client}\" disconnected from server but it's not a child of it");
+        return;
+    };
+    let server_colony = config.colony;
 
     match &*trigger {
         Disconnected::ByUser(reason) => {
-            info!("{client} disconnected from {server} by user: {reason}");
+            info!("\"{client}\" disconnected from {server_colony} \"{server}\" by user: {reason}");
         }
         Disconnected::ByPeer(reason) => {
-            info!("{client} disconnected from {server} by peer: {reason}");
+            info!("\"{client}\" disconnected from {server_colony} \"{server}\" by peer: {reason}");
         }
         Disconnected::ByError(err) => {
-            warn!("{client} disconnected from {server} due to error: {err:?}");
+            warn!(
+                "\"{client}\" disconnected from {server_colony} \"{server}\" due to error: {err:?}"
+            );
         }
     }
-    Ok(())
 }

@@ -127,7 +127,7 @@ fn update_interaction_text(
 }
 
 fn update_player_position_text(
-    q_player_tr: Single<&Transform, With<Player>>,
+    q_player_tr: Single<&Transform, With<LocalPlayer>>,
     player_position_text_entity: Single<Entity, With<PlayerPositionText>>,
     mut writer: TextUiWriter,
 ) -> Result {
@@ -170,7 +170,7 @@ fn update_camera_position_text(
 }
 
 fn update_player_health_text(
-    q_player_health: Single<&Health, With<Player>>,
+    q_player_health: Single<&Health, With<LocalPlayer>>,
     player_health_text_entity: Single<Entity, With<PlayerHealthText>>,
     mut writer: TextUiWriter,
 ) {
