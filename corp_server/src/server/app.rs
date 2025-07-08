@@ -1,4 +1,6 @@
-use crate::server::{cloning::CloningPlugin, death::DeathPlugin, health::HealthPlugin, *};
+use crate::server::{
+    cloning::CloningRemotePlugin, death::DeathPlugin, health::HealthRemotePlugin, *,
+};
 use bevy::{app::ScheduleRunnerPlugin, prelude::*, state::app::StatesPlugin};
 use bevy_rand::prelude::*;
 use corp_shared::prelude::*;
@@ -15,9 +17,9 @@ pub fn colony_app(instance_config: ColonyAppConfig) {
             DbPlugin,
             ServerNetPlugin,
             LootPlugin,
-            HealthPlugin,
+            HealthRemotePlugin,
             DeathPlugin,
-            CloningPlugin,
+            CloningRemotePlugin,
             PlayersPlugin,
             EntropyPlugin::<WyRand>::default(),
         ))

@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 
-pub struct HealthPlugin;
+pub struct HealthRemotePlugin;
 
-impl Plugin for HealthPlugin {
+impl Plugin for HealthRemotePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(FixedUpdate, update_player_health);
     }

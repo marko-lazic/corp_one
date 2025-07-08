@@ -2,9 +2,9 @@ use crate::server::ColonyAppConfig;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 
-pub struct CloningPlugin;
+pub struct CloningRemotePlugin;
 
-impl Plugin for CloningPlugin {
+impl Plugin for CloningRemotePlugin {
     fn build(&self, app: &mut App) {
         app.add_observer(heal_player);
     }
