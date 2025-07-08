@@ -24,7 +24,7 @@ pub struct VortexNode;
 pub struct VortexGate;
 
 fn vortex_gate_collider() -> Collider {
-    Collider::cuboid(1.0, 1.0, 1.0)
+    Collider::cuboid(2.0, 2.0, 2.0)
 }
 
 fn vortex_gate_collision_layers() -> CollisionLayers {
