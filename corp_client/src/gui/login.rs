@@ -1,5 +1,9 @@
 use crate::prelude::{RequestConnect, ASSET_PATH};
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    reflect::erased_serde::__private::serde::{Deserialize, Serialize},
+};
+use bevy_defer::{AsyncCommandsExtension, AsyncExecutor};
 use corp_shared::prelude::*;
 
 pub struct LoginPlugin;
@@ -42,7 +46,34 @@ fn login_button(asset_server: Res<AssetServer>) -> impl Bundle {
     )
 }
 
-fn apply_login(_trigger: Trigger<Pointer<Released>>, mut commands: Commands) {
+fn apply_login(
+    _trigger: Trigger<Pointer<Released>>,
+    mut commands: Commands,
+    credentials: Res<Credentials>,
+) {
     info!("Login button pressed!");
-    commands.trigger(RequestConnect(Colony::StarMap));
+    let credentials = credentials.clone();
+    commands.spawn_task(async {
+        match authenticate(credentials).await {
+            Ok(auth) => {
+                commands.insert_resource(AuthToken(auth.token));
+                commands.trigger(RequestConnect(Colony::StarMap));
+            }
+            Err(err) => {
+                error!("Login failed {:?}", err);
+            }
+        }
+    });
+}
+
+async fn authenticate(credentials: Credentials) -> surf::Result<AuthResponse> {
+    surf::post("https://localhost:25560/login")
+        .body_json(&credentials)?
+        .recv_json()
+        .await
+}
+
+#[derive(Serialize, Deserialize)]
+struct AuthResponse {
+    pub token: String,
 }

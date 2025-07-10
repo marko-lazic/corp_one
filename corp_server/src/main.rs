@@ -1,10 +1,11 @@
-use crate::{proxy::ProxyActor, server::*};
+use crate::{login::LoginActor, proxy::ProxyActor, server::*};
 use aeronet_webtransport::wtransport::Identity;
 use bevy::ecs::error::{warn, GLOBAL_ERROR_HANDLER};
 use corp_shared::prelude::*;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 mod dirs;
+mod login;
 mod proxy;
 mod server;
 mod table;
@@ -47,6 +48,8 @@ async fn main() -> Result<(), anyhow::Error> {
     let _liberte_ref = kameo::actor::spawn_in_thread(ColonyAppActor { config });
 
     let _proxy_ref = kameo::actor::spawn_in_thread(ProxyActor);
+
+    let _login_ref = kameo::actor::spawn_in_thread(LoginActor);
 
     println!("Actors running. Press CTRL+C to stop.");
     tokio::signal::ctrl_c().await?;

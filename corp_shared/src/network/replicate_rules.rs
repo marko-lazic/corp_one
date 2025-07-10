@@ -10,7 +10,8 @@ impl Plugin for ReplicateRulesPlugin {
             .replicate::<Transform>()
             .replicate::<Backpack>()
             .replicate::<HackingTool>()
-            .replicate::<Health>();
+            .replicate::<Health>()
+            .replicate::<CreatureName>();
 
         // Register client->server triggers
         app.add_client_trigger::<PlayerSpawnClientCommand>(Channel::Unordered);

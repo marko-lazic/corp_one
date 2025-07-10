@@ -12,19 +12,29 @@ impl Plugin for PlayersPlugin {
     }
 }
 
-fn init_clients(trigger: Trigger<FromClient<PlayerSpawnClientCommand>>, mut commands: Commands) {
+fn init_clients(
+    trigger: Trigger<FromClient<PlayerSpawnClientCommand>>,
+    mut commands: Commands,
+    tokens: Query<&AuthToken>,
+) -> Result {
     info!(
         "Received client player spawn command {:?}",
         trigger.client_entity
     );
-    // Skip authorization for now
+
+    let client_entity = trigger.client_entity;
+
+    let _token = tokens.get(client_entity)?;
+    // Ask world server about player health and character name
 
     // Create player
-    commands.entity(trigger.client_entity).insert((
+    commands.entity(client_entity).insert((
         Player,
         Replicated,
         Transform::default(),
         Health::default(),
+        // Health::from(response.hit_points),
+        // CreatureName(response.character_name),
         AuthorizedClient,
         ClientEntityMap::default(),
     ));
@@ -32,11 +42,12 @@ fn init_clients(trigger: Trigger<FromClient<PlayerSpawnClientCommand>>, mut comm
     // Inform the client that he is ready
     commands.server_trigger_targets(
         ToClients {
-            mode: SendMode::Direct(trigger.client_entity),
+            mode: SendMode::Direct(client_entity),
             event: SetupPlayerServerCommand,
         },
-        trigger.client_entity,
+        client_entity,
     );
+    Ok(())
 }
 
 fn connect_clients(trigger: Trigger<OnAdd, ConnectedClient>) {

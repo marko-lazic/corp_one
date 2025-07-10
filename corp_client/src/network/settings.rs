@@ -3,7 +3,7 @@ use aeronet_webtransport::{
     wtransport::{endpoint::ConnectOptions, tls::Sha256Digest},
 };
 use bevy::{log::warn, prelude::Resource};
-use corp_shared::prelude::Colony;
+use corp_shared::prelude::*;
 use std::time::Duration;
 
 #[derive(Resource)]
@@ -26,9 +26,10 @@ impl Default for ClientSettings {
 }
 
 impl ClientSettings {
-    pub fn target(&self, route: Colony) -> ConnectOptions {
+    pub fn target(&self, route: &Colony, token: &AuthToken) -> ConnectOptions {
         ConnectOptions::builder(&self.host)
-            .add_header("x-route", route.to_string())
+            .add_header("x-route", route)
+            .add_header("x-token", token)
             .build()
     }
     pub fn client_config(&self) -> wtransport::ClientConfig {

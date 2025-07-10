@@ -10,6 +10,12 @@ pub struct Health {
     hit_points: f32,
 }
 
+impl From<f32> for Health {
+    fn from(hit_points: f32) -> Self {
+        Health { hit_points }
+    }
+}
+
 impl Default for Health {
     fn default() -> Self {
         Health {

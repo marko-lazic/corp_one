@@ -6,7 +6,9 @@ edition = "2024"
 
 [dependencies]
 corp_shared = { path = "../corp_shared" }
+corp_types = { path = "../corp_types" }
 corp_proxy = { path = "../corp_proxy" }
+corp_login = { path = "../corp_login" }
 bevy = { workspace = true, features = [
     "bevy_state",
     "bevy_color",
@@ -36,6 +38,7 @@ pin-project = "1.1"
 tower = "0.5"
 async-channel = "2.3"
 anyhow = { workspace = true }
+surf = { workspace = true }
 tracing = "0.1"
 kameo = { version = "0.16" }
 tokio = { workspace = true, features = ["full"] }
@@ -44,6 +47,7 @@ aeronet = { workspace = true }
 aeronet_webtransport = { workspace = true, features = ["server"] }
 aeronet_replicon = { workspace = true, features = ["server"] }
 bevy_replicon = { workspace = true, features = ["default"] }
+bevy_defer = { workspace = true }
 
 
 [[example]]

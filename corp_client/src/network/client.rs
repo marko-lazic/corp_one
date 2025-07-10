@@ -52,7 +52,7 @@ impl Plugin for ClientNetPlugin {
 
 fn request_connect(trigger: Trigger<RequestConnect>, mut commands: Commands) {
     let colony = **trigger;
-    info!("RequestConnect {:?}", colony);
+    info!("request_connect to: {:?}", colony);
     commands.spawn_task(move || async move {
         // First trigger disconnect
         AsyncWorld.apply_command(|w: &mut World| {
@@ -62,7 +62,7 @@ fn request_connect(trigger: Trigger<RequestConnect>, mut commands: Commands) {
         // Then wait for disconnection and handle reconnection
         loop {
             let _event = AsyncWorld.next_event::<ConnectionDisconnectedEvent>().await;
-            info!("Disconnected, reconnecting");
+            info!("request_connect disconnected, reconnecting");
             AsyncWorld.set_state(GameState::Loading)?;
             AsyncWorld.apply_command(move |w: &mut World| {
                 w.trigger(ConnectClientTo(colony));
@@ -77,11 +77,14 @@ fn connect_client(
     trigger: Trigger<ConnectClientTo>,
     mut commands: Commands,
     client_settings: Res<ClientSettings>,
+    token: Option<Res<AuthToken>>,
 ) -> Result {
     let colony = trigger.event().0;
     let config = client_settings.client_config();
-    let connect_options = client_settings.target(colony);
-    info!("ConnectClientTo {connect_options:?}");
+
+    let token = token.ok_or("Auth token not found")?;
+    let connect_options = client_settings.target(&colony, &token);
+    info!("client_connect with options: {connect_options:?}");
     commands
         .spawn((
             Name::new(format!("Client Session {}", colony)),

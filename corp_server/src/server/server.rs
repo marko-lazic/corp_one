@@ -11,9 +11,12 @@ use aeronet_webtransport::{
     wtransport,
 };
 use bevy::prelude::*;
+use bevy_defer::{AsyncCommandsExtension, AsyncWorld};
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
+use corp_types::ValidateTokenResponse;
 use std::time::Duration;
+use surf::http::convert::json;
 
 pub struct ServerNetPlugin;
 
@@ -78,17 +81,50 @@ fn on_closed(trigger: Trigger<Closed>) {
     panic!("server closed: {:?}", trigger.event());
 }
 
-fn on_session_request(mut request: Trigger<SessionRequest>, clients: Query<&ChildOf>) -> Result {
+fn on_session_request(
+    mut request: Trigger<SessionRequest>,
+    clients: Query<&ChildOf>,
+    mut commands: Commands,
+) -> Result {
     let client = request.target();
     let &ChildOf(server) = clients.get(client)?;
 
     debug!("\"{client}\" connecting to \"{server}\" with headers:");
+
+    let mut token = String::new();
     for (header_key, header_value) in &request.headers {
         debug!("  {header_key}: {header_value}");
-    }
 
+        // Extract username and password from headers
+        match header_key.as_str() {
+            "x-token" => token = header_value.clone(),
+            _ => {}
+        }
+    }
     request.respond(SessionResponse::Accepted);
+    commands.spawn_task(move || async move {
+        match validate(&token).await {
+            Ok(response) => {
+                AsyncWorld
+                    .entity(client)
+                    .insert((AuthToken(token), Username(response.user.username)))?;
+            }
+            Err(err) => {
+                // Authentication failed - reject the connection
+                warn!("Authentication failed for token: {} {:?}", token, err);
+            }
+        }
+        Ok(())
+    });
+
     Ok(())
+}
+
+async fn validate(token: &str) -> surf::Result<ValidateTokenResponse> {
+    surf::post("http://localhost:25560/validate")
+        .body_json(&json!({ "token": token }))?
+        .recv_json::<ValidateTokenResponse>()
+        .await
 }
 
 fn on_connected(

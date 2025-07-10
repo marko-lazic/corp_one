@@ -43,6 +43,8 @@ aeronet_replicon = { workspace = true, features = ["client"] }
 bevy_replicon = { workspace = true, features = ["default"] }
 bevy_defer = { workspace = true, features = ["default"] }
 log = "0.4.27"
+clap = { version = "4.0", features = ["derive"] }
+surf = { workspace = true }
 
 [dev-dependencies]
 bevy_panorbit_camera = "0.26"
