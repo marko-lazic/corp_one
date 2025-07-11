@@ -1,15 +1,17 @@
-use crate::auth::{authenticate_user_and_generate_token, create_user, validate_token, invalidate_token};
-use corp_types::{ApiError, CreateUserRequest, LoginRequest, LoginResponse, User, ValidateTokenRequest, ValidateTokenResponse, LogoutRequest};
-use anyhow::Result;
-use axum::{
-    extract::State,
-    response::Json,
+use crate::{
+    app::AppState,
+    auth::{authenticate_user_and_generate_token, create_user, invalidate_token, validate_token},
 };
-use sqlx::SqlitePool;
+use anyhow::Result;
+use axum::{extract::State, response::Json};
+use corp_types::{
+    ApiError, AuthenticationEvent, CreateUserRequest, LoginRequest, LoginResponse, LogoutRequest,
+    User, ValidateTokenRequest, ValidateTokenResponse,
+};
 use tracing::{error, info};
 
 pub async fn register_user(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Json(request): Json<CreateUserRequest>,
 ) -> Result<Json<User>, ApiError> {
     info!("Registration attempt for user: {}", request.username);
@@ -22,7 +24,7 @@ pub async fn register_user(
         return Err(ApiError::weak_password());
     }
 
-    match create_user(&pool, request).await {
+    match create_user(&state.pool, request).await {
         Ok(user) => {
             info!("User registered successfully: {}", user.username);
             Ok(Json(user))
@@ -39,7 +41,7 @@ pub async fn register_user(
 }
 
 pub async fn login_user(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Json(request): Json<LoginRequest>,
 ) -> Result<Json<LoginResponse>, ApiError> {
     info!("Login attempt for user: {}", request.username);
@@ -48,9 +50,14 @@ pub async fn login_user(
         return Err(ApiError::missing_fields());
     }
 
-    match authenticate_user_and_generate_token(&pool, request).await {
+    match authenticate_user_and_generate_token(&state.pool, request).await {
         Ok(Some((user, token))) => {
             info!("User logged in successfully: {}", user.username);
+
+            state
+                .events
+                .send(AuthenticationEvent::login_event(&user, &token));
+
             let response = LoginResponse {
                 token: token.token,
                 expires_at: token.expires_at,
@@ -70,7 +77,7 @@ pub async fn login_user(
 }
 
 pub async fn validate_token_handler(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Json(request): Json<ValidateTokenRequest>,
 ) -> Result<Json<ValidateTokenResponse>, ApiError> {
     info!("Token validation request");
@@ -79,13 +86,10 @@ pub async fn validate_token_handler(
         return Err(ApiError::missing_token());
     }
 
-    match validate_token(&pool, &request.token).await {
+    match validate_token(&state.pool, &request.token).await {
         Ok(Some((user, token))) => {
             info!("Token validated successfully for user: {}", user.username);
-            let response = ValidateTokenResponse {
-                user,
-                token,
-            };
+            let response = ValidateTokenResponse { user, token };
             Ok(Json(response))
         }
         Ok(None) => {
@@ -100,7 +104,7 @@ pub async fn validate_token_handler(
 }
 
 pub async fn logout_user(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Json(request): Json<LogoutRequest>,
 ) -> Result<Json<String>, ApiError> {
     info!("Logout request");
@@ -109,9 +113,13 @@ pub async fn logout_user(
         return Err(ApiError::missing_token());
     }
 
-    match invalidate_token(&pool, &request.token).await {
+    match invalidate_token(&state.pool, &request.token).await {
         Ok(true) => {
             info!("Token invalidated successfully");
+
+            state
+                .events
+                .send(AuthenticationEvent::logout_event(&request.token));
             Ok(Json("Logged out".to_string()))
         }
         Ok(false) => {

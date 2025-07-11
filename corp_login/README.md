@@ -51,7 +51,7 @@ curl -X POST http://127.0.0.1:25560/validate \
 ```bash
 curl -X POST http://127.0.0.1:25560/logout \
   -H "Content-Type: application/json" \
-  -d '{"token": "fd42bde3-a69a-4672-835f-bbedaafd7433"}'
+  -d '{"token": "cd858d15-702d-48c3-861c-310aa9ea8ec3"}'
 ```
 
 ## Dependencies

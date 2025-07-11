@@ -40,7 +40,7 @@ async-channel = "2.3"
 anyhow = { workspace = true }
 surf = { workspace = true }
 tracing = "0.1"
-kameo = { version = "0.16" }
+kameo = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 
 aeronet = { workspace = true }

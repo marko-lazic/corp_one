@@ -6,6 +6,7 @@ members = [
     "corp_client",
     "corp_server",
     "corp_shared",
+    "corp_types",
     "corp_proxy",
     "tools/ci", "corp_login",
 ]
@@ -20,6 +21,7 @@ bevy_rand = { version = "0.11", features = ["wyrand"] }
 tokio = { version = "1.45", default-features = false }
 anyhow = "1.0.98"
 surf = { version = "2.3", default-features = false, features = ["h1-client-rustls", "encoding"] }
+kameo = { version = "0.17.2" }
 
 aeronet = { path = "../temp/aeronet/crates/aeronet", default-features = false }
 aeronet_webtransport = { path = "../temp/aeronet/crates/aeronet_webtransport", default-features = false }
