@@ -1,6 +1,7 @@
 mod app;
 pub mod auth;
 pub mod database;
+pub mod dirs;
 pub mod event;
 pub mod handlers;
 
@@ -20,8 +21,8 @@ pub async fn run_server(events: &Events) -> Result<()> {
 
     let app = create_app(&app_state).await?;
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:25560").await?;
-    tracing::info!("Corp Login server starting on http://127.0.0.1:25560");
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:25550").await?;
+    tracing::info!("Corp Login server starting on http://127.0.0.1:25550");
 
     axum::serve(listener, app).await?;
     Ok(())

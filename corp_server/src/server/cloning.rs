@@ -1,4 +1,4 @@
-use crate::server::ColonyAppConfig;
+use crate::server::GameServerConfig;
 use bevy::prelude::*;
 use corp_shared::prelude::*;
 
@@ -10,13 +10,13 @@ impl Plugin for CloningRemotePlugin {
     }
 }
 
-fn is_cloning(config: Res<ColonyAppConfig>) -> bool {
+fn is_cloning(config: Res<GameServerConfig>) -> bool {
     config.colony == Colony::Cloning
 }
 
 fn heal_player(
     trigger: Trigger<OnAdd, Player>,
-    config: Res<ColonyAppConfig>,
+    config: Res<GameServerConfig>,
     mut healths: Query<&mut Health>,
 ) {
     if !is_cloning(config) {

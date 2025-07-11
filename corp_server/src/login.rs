@@ -36,7 +36,7 @@ impl Message<GameServerRegistered> for LoginActor {
     type Reply = ();
 
     async fn handle(&mut self, msg: GameServerRegistered, _ctx: &mut Context<Self, Self::Reply>) {
-        info!("Game server '{}' registered", msg.name);
+        info!("LoginActor: Game server '{}' registered", msg.name);
         self.servers.insert(msg.name, msg.actor_ref);
     }
 }
@@ -46,7 +46,7 @@ impl Message<GameServerUnregistered> for LoginActor {
 
     async fn handle(&mut self, msg: GameServerUnregistered, _ctx: &mut Context<Self, Self::Reply>) {
         if let Some(_) = self.servers.remove(&msg.name) {
-            info!("Game server '{}' unregistered", msg.name);
+            info!("LoginActor: Game server '{}' unregistered", msg.name);
         }
     }
 }
@@ -56,7 +56,7 @@ impl Actor for LoginActor {
     type Error = Infallible;
 
     async fn on_start(args: Self::Args, actor_ref: ActorRef<Self>) -> Result<Self, Self::Error> {
-        info!("Login Actor started");
+        info!("LoginActor started");
         let events = corp_login::Events::new();
 
         let actor_ref_clone = actor_ref.clone();
@@ -105,13 +105,13 @@ impl Actor for LoginActor {
             match reason {
                 ActorStopReason::Normal => {
                     info!(
-                        "Game server '{}' stopped normally and removed from registry",
+                        "LoginActor: Game server '{}' stopped normally and removed from registry",
                         server_name
                     );
                 }
                 _ => {
                     tracing::warn!(
-                        "Game server '{}' died ({:?}) and removed from registry",
+                        "LoginActor: Game server '{}' died ({:?}) and removed from registry",
                         server_name,
                         reason
                     );

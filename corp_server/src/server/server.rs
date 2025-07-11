@@ -43,8 +43,8 @@ impl Plugin for ServerNetPlugin {
     }
 }
 
-fn open_server(mut commands: Commands, instance_config: Res<ColonyAppConfig>) {
-    let identity = instance_config.identity.clone_identity();
+fn open_server(mut commands: Commands, game_server_config: Res<GameServerConfig>) {
+    let identity = game_server_config.identity.clone_identity();
     let cert = &identity.certificate_chain().as_slice()[0];
     let spki_fingerprint = cert::spki_fingerprint_b64(cert).expect("should be a valid certificate");
     let cert_hash = cert::hash_to_b64(cert.hash());
@@ -56,7 +56,7 @@ fn open_server(mut commands: Commands, instance_config: Res<ColonyAppConfig>) {
     info!("************************");
 
     let config = wtransport::ServerConfig::builder()
-        .with_bind_default(instance_config.server_addr.port())
+        .with_bind_default(game_server_config.server_addr.port())
         .with_identity(identity)
         .keep_alive_interval(Some(Duration::from_secs(1)))
         .max_idle_timeout(Some(Duration::from_secs(5)))
@@ -121,7 +121,7 @@ fn on_session_request(
 }
 
 async fn validate(token: &str) -> surf::Result<ValidateTokenResponse> {
-    surf::post("http://localhost:25560/validate")
+    surf::post("http://localhost:25550/validate")
         .body_json(&json!({ "token": token }))?
         .recv_json::<ValidateTokenResponse>()
         .await
@@ -130,7 +130,7 @@ async fn validate(token: &str) -> surf::Result<ValidateTokenResponse> {
 fn on_connected(
     trigger: Trigger<OnAdd, Session>,
     clients: Query<&ChildOf>,
-    config: Res<ColonyAppConfig>,
+    config: Res<GameServerConfig>,
 ) -> Result {
     let client = trigger.target();
     let &ChildOf(server) = clients.get(client)?;
@@ -143,7 +143,7 @@ fn on_connected(
 fn on_disconnected(
     trigger: Trigger<Disconnected>,
     clients: Query<&ChildOf>,
-    config: Res<ColonyAppConfig>,
+    config: Res<GameServerConfig>,
 ) {
     let client = trigger.target();
     let Ok(&ChildOf(server)) = clients.get(client) else {

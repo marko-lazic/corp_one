@@ -16,7 +16,7 @@ cargo run --bin migrate
 cargo run --bin corp_login
 ```
 
-The server will start on `http://127.0.0.1:25560`
+The server will start on `http://127.0.0.1:25550`
 
 ## API Examples
 
@@ -25,7 +25,7 @@ All users use the password `password123` for testing.
 ### Register User
 
 ```bash
-curl -X POST http://127.0.0.1:25560/register \
+curl -X POST http://127.0.0.1:25550/register \
   -H "Content-Type: application/json" \
   -d '{"username": "newuser", "email": "user@example.com", "password": "password123"}'
 ```
@@ -33,7 +33,7 @@ curl -X POST http://127.0.0.1:25560/register \
 ### Login
 
 ```bash
-curl -X POST http://127.0.0.1:25560/login \
+curl -X POST http://127.0.0.1:25550/login \
   -H "Content-Type: application/json" \
   -d '{"username": "commander_shepard", "password": "password123"}'
 ```
@@ -41,7 +41,7 @@ curl -X POST http://127.0.0.1:25560/login \
 ### Validate User
 
 ```bash
-curl -X POST http://127.0.0.1:25560/validate \
+curl -X POST http://127.0.0.1:25550/validate \
   -H "Content-Type: application/json" \
   -d '{"token": "fd42bde3-a69a-4672-835f-bbedaafd7433"}'
 ```
@@ -49,7 +49,7 @@ curl -X POST http://127.0.0.1:25560/validate \
 ### Logout
 
 ```bash
-curl -X POST http://127.0.0.1:25560/logout \
+curl -X POST http://127.0.0.1:25550/logout \
   -H "Content-Type: application/json" \
   -d '{"token": "cd858d15-702d-48c3-861c-310aa9ea8ec3"}'
 ```

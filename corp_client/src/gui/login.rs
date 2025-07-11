@@ -67,7 +67,7 @@ fn apply_login(
 }
 
 async fn authenticate(credentials: Credentials) -> surf::Result<AuthResponse> {
-    surf::post("https://localhost:25560/login")
+    surf::post("https://localhost:25550/login")
         .body_json(&credentials)?
         .recv_json()
         .await

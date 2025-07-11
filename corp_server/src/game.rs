@@ -1,8 +1,15 @@
 use crate::{
     login::{GameServerRegistered, LoginActor},
-    server::{colony_app, star_map_app, ColonyAppConfig},
+    server::*,
 };
-use corp_shared::prelude::Colony;
+use bevy::{
+    app::{App, ScheduleRunnerPlugin},
+    prelude::PluginGroup,
+    state::app::StatesPlugin,
+    MinimalPlugins,
+};
+use bevy_rand::{plugin::EntropyPlugin, prelude::WyRand};
+use corp_shared::{network::TICK_RATE, prelude::Colony};
 use corp_types::AuthenticationEvent;
 use kameo::{
     actor::{ActorRef, WeakActorRef},
@@ -10,11 +17,19 @@ use kameo::{
     prelude::{ActorID, ActorStopReason, Context, Message},
     Actor,
 };
-use std::ops::ControlFlow;
+use std::{ops::ControlFlow, time::Duration};
 use tracing::info;
 
 pub struct GameServerActor {
-    pub config: ColonyAppConfig,
+    pub config: GameServerConfig,
+}
+
+impl GameServerActor {
+    pub fn new(config: &GameServerConfig) -> Self {
+        Self {
+            config: config.clone(),
+        }
+    }
 }
 
 impl Actor for GameServerActor {
@@ -22,7 +37,7 @@ impl Actor for GameServerActor {
     type Error = Infallible;
 
     async fn on_start(args: Self::Args, actor_ref: ActorRef<Self>) -> Result<Self, Self::Error> {
-        info!("Game Server Actor started with config: {:?}", args.config);
+        info!("GameServerActor started with config: {:?}", args.config);
 
         // Self-register with LoginActor
         let server_name = format!("{:?}", args.config.colony).to_lowercase();
@@ -33,28 +48,38 @@ impl Actor for GameServerActor {
                     actor_ref,
                 };
                 if let Err(e) = login_ref.tell(registration).await {
-                    tracing::warn!("Failed to register {} with LoginActor: {}", server_name, e);
+                    tracing::warn!(
+                        "GameServerActor: Failed to register {} with LoginActor: {}",
+                        server_name,
+                        e
+                    );
                 } else {
-                    info!("Successfully registered {} with LoginActor", server_name);
+                    info!(
+                        "GameServerActor: Successfully registered {} with LoginActor",
+                        server_name
+                    );
                 }
             }
             Ok(None) => {
                 tracing::warn!(
-                    "LoginActor not found in registry, {} cannot self-register",
+                    "GameServerActor: LoginActor not found in registry, {} cannot self-register",
                     server_name
                 );
             }
             Err(e) => {
-                tracing::warn!("Registry lookup error for LoginActor: {}", e);
+                tracing::warn!(
+                    "GameServerActor: Registry lookup error for LoginActor: {}",
+                    e
+                );
             }
         }
 
         let config = args.config.clone();
         tokio::spawn(async move {
             if config.colony == Colony::StarMap {
-                star_map_app(config);
+                create_star_map_game_server(config);
             } else {
-                colony_app(config);
+                create_colony_game_server(config);
             }
         });
 
@@ -66,7 +91,11 @@ impl Actor for GameServerActor {
         _actor_ref: WeakActorRef<Self>,
         err: PanicError,
     ) -> Result<ControlFlow<ActorStopReason>, Self::Error> {
-        tracing::error!("Game Server {:?} panicked: {}", self.config.colony, err);
+        tracing::error!(
+            "GameServerActor: Game Server {:?} panicked: {}",
+            self.config.colony,
+            err
+        );
         Ok(ControlFlow::Continue(()))
     }
 
@@ -79,14 +108,14 @@ impl Actor for GameServerActor {
         match reason {
             ActorStopReason::Normal => {
                 info!(
-                    "Game Server {:?} - linked actor {} stopped normally",
+                    "GameServerActor: Game Server {:?} - linked actor {} stopped normally",
                     self.config.colony, id
                 );
                 Ok(ControlFlow::Continue(()))
             }
             _ => {
                 tracing::warn!(
-                    "Game Server {:?} - linked actor {} died: {:?}",
+                    "GameServerActor: Game Server {:?} - linked actor {} died: {:?}",
                     self.config.colony,
                     id,
                     reason
@@ -102,7 +131,7 @@ impl Actor for GameServerActor {
         reason: ActorStopReason,
     ) -> Result<(), Self::Error> {
         info!(
-            "Game Server {:?} stopping: {:?}",
+            "GameServerActor: Game Server {:?} stopping: {:?}",
             self.config.colony, reason
         );
         Ok(())
@@ -115,9 +144,42 @@ impl Message<AuthenticationEvent> for GameServerActor {
     async fn handle(&mut self, msg: AuthenticationEvent, _ctx: &mut Context<Self, Self::Reply>) {
         let colony = self.config.colony;
         info!(
-            "Game Server {:?} received AuthenticationEvent: {:?}",
+            "GameServerActor: Game Server {:?} received AuthenticationEvent: {:?}",
             colony, msg.event_type
         );
         // Add actual authentication event processing here
     }
+}
+
+fn create_colony_game_server(game_server_config: GameServerConfig) {
+    let wait_duration = Duration::from_secs_f64(1.0 / f64::from(TICK_RATE));
+
+    App::new()
+        .insert_resource(game_server_config)
+        .add_plugins((
+            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(wait_duration)),
+            StatesPlugin,
+            ServerNetPlugin,
+            LootPlugin,
+            HealthRemotePlugin,
+            DeathPlugin,
+            CloningRemotePlugin,
+            PlayersPlugin,
+            EntropyPlugin::<WyRand>::default(),
+        ))
+        .run();
+}
+
+fn create_star_map_game_server(game_server_config: GameServerConfig) {
+    let wait_duration = Duration::from_secs_f64(1.0 / f64::from(TICK_RATE));
+
+    App::new()
+        .insert_resource(game_server_config)
+        .add_plugins((
+            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(wait_duration)),
+            StatesPlugin,
+            ServerNetPlugin,
+            EntropyPlugin::<WyRand>::default(),
+        ))
+        .run();
 }
