@@ -1,3 +1,5 @@
 mod auth;
 
-pub use auth::*;
+pub mod prelude {
+    pub use super::auth::*;
+}

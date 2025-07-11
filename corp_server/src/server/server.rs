@@ -14,7 +14,7 @@ use bevy::prelude::*;
 use bevy_defer::{AsyncCommandsExtension, AsyncWorld};
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
-use corp_types::ValidateTokenResponse;
+use corp_types::prelude::*;
 use std::time::Duration;
 use surf::http::convert::json;
 

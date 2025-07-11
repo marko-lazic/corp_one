@@ -10,12 +10,8 @@ pub use crate::{
     event::Events,
 };
 use anyhow::Result;
-use axum::{routing::post, Router};
-pub use event::*;
-use tower_http::cors::CorsLayer;
-use tracing::log;
 
-pub async fn run_server(events: &Events) -> Result<()> {
+pub async fn run_server(events: Events) -> Result<()> {
     let pool = database::setup_database().await?;
     let app_state = AppState::new(&pool, &events).await;
 

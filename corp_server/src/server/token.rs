@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use corp_types::User;
+use corp_types::prelude::*;
 use std::collections::HashSet;
 
 #[derive(Resource, Default, Debug)]

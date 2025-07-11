@@ -4,10 +4,7 @@ use crate::{
 };
 use anyhow::Result;
 use axum::{extract::State, response::Json};
-use corp_types::{
-    ApiError, AuthenticationEvent, CreateUserRequest, LoginRequest, LoginResponse, LogoutRequest,
-    User, ValidateTokenRequest, ValidateTokenResponse,
-};
+use corp_types::prelude::*;
 use tracing::{error, info};
 
 pub async fn register_user(
@@ -56,7 +53,8 @@ pub async fn login_user(
 
             state
                 .events
-                .send(AuthenticationEvent::login_event(&user, &token));
+                .send(AuthenticationEvent::login_event(&user, &token))
+                .await?;
 
             let response = LoginResponse {
                 token: token.token,
@@ -119,7 +117,8 @@ pub async fn logout_user(
 
             state
                 .events
-                .send(AuthenticationEvent::logout_event(&request.token));
+                .send(AuthenticationEvent::logout_event(&request.token))
+                .await?;
             Ok(Json("Logged out".to_string()))
         }
         Ok(false) => {

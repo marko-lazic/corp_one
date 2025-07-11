@@ -1,27 +1,28 @@
-use corp_types::AuthenticationEvent;
-use tokio::sync::broadcast;
-use tracing::warn;
+use corp_types::prelude::*;
+use kameo::prelude::ActorRef;
+use kameo_actors::pubsub::{PubSub, Publish};
+use tracing::error;
 
 #[derive(Clone)]
 pub struct Events {
-    auth_event_sender: broadcast::Sender<AuthenticationEvent>,
+    pub auth_event_subscribers: ActorRef<PubSub<AuthenticationEvent>>,
 }
 
 impl Events {
-    pub fn new() -> Self {
-        let (sender, _) = broadcast::channel(100);
+    pub fn new(auth_event_subscribers: ActorRef<PubSub<AuthenticationEvent>>) -> Self {
         Self {
-            auth_event_sender: sender,
+            auth_event_subscribers,
         }
     }
 
-    pub fn send(&self, event: AuthenticationEvent) {
-        if let Err(e) = self.auth_event_sender.send(event) {
-            warn!("Failed to send login event: {}", e);
+    pub async fn send(&self, event: AuthenticationEvent) -> anyhow::Result<(), ApiError> {
+        let result = self.auth_event_subscribers.ask(Publish(event)).await;
+        match result {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                error!("Error publishing authentication event: {:?}", err);
+                Err(ApiError::internal_error())
+            }
         }
-    }
-
-    pub fn subscribe(&self) -> broadcast::Receiver<AuthenticationEvent> {
-        self.auth_event_sender.subscribe()
     }
 }

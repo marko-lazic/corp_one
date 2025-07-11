@@ -28,3 +28,5 @@ anyhow = "1.0"
 tower = "0.4"
 tower-http = { version = "0.5", features = ["cors"] }
 directories = "6.0"
+kameo = { workspace = true }
+kameo_actors = { workspace = true }

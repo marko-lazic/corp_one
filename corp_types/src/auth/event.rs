@@ -1,4 +1,4 @@
-use crate::{Token, User};
+use crate::prelude::*;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 

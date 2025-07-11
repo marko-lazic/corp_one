@@ -40,6 +40,7 @@ anyhow = { workspace = true }
 surf = { workspace = true }
 tracing = "0.1"
 kameo = { workspace = true }
+kameo_actors = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 
 aeronet = { workspace = true }
