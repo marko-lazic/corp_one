@@ -12,7 +12,8 @@ use bevy::prelude::*;
 use bevy_defer::{AppReactorExtension, AsyncCommandsExtension, AsyncWorld};
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
-
+#[derive(Component)]
+pub struct CorpClient;
 #[derive(Event, Deref)]
 pub struct RequestConnect(pub Colony);
 #[derive(Event)]
@@ -40,7 +41,7 @@ impl Plugin for ClientNetPlugin {
         .add_event::<ConnectionDisconnectedEvent>()
         .react_to_event::<ConnectionDisconnectedEvent>()
         .init_resource::<ClientSettings>()
-        .add_observer(request_connect)
+        .add_systems(Startup, setup_client)
         .add_observer(connect_client)
         .add_observer(on_connecting)
         .add_observer(on_connected)
@@ -48,6 +49,10 @@ impl Plugin for ClientNetPlugin {
         .add_observer(disconnect_and_exit)
         .add_observer(on_disconnected);
     }
+}
+
+fn setup_client(mut commands: Commands) {
+    commands.spawn(CorpClient).observe(request_connect);
 }
 
 fn request_connect(trigger: Trigger<RequestConnect>, mut commands: Commands) {

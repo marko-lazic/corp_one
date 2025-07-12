@@ -9,11 +9,13 @@ use kameo_actors::pubsub::{PubSub, Subscribe};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use tracing::info;
 
+mod config;
 mod game;
 pub mod login;
 mod proxy;
 pub mod server;
 mod table;
+mod token;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -23,41 +25,48 @@ async fn main() -> Result<(), anyhow::Error> {
         .expect("The error handler can only be set once, globally.");
     let identity = Identity::load_pemfiles("./certs/server.pem", "./certs/server.key").await?;
 
-    let pub_sub = PubSub::spawn(PubSub::<AuthenticationEvent>::new());
-    pub_sub.register("auth_event_bus")?;
+    let auth_pub_sub_ref = PubSub::spawn(PubSub::<AuthenticationEvent>::new());
+    auth_pub_sub_ref.register("auth_pub_sub")?;
 
     let proxy_ref = ProxyActor::spawn(ProxyActor);
     proxy_ref.register("proxy")?;
-    let login_ref = LoginActor::spawn(LoginActor::new(pub_sub.clone()));
+    let login_ref = LoginActor::spawn(LoginActor::new(auth_pub_sub_ref.clone()));
     login_ref.register("login")?;
+
+    let tokens_ref = Tokens::spawn(Tokens::new());
+    tokens_ref.register("tokens")?;
+    auth_pub_sub_ref.ask(Subscribe(tokens_ref.clone())).await?;
 
     let game_server_configs = vec![
         GameServerConfig {
             colony: Colony::Iris,
             server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 25565),
             identity: identity.clone_identity(),
+            tokens_ref: tokens_ref.clone(),
         },
         GameServerConfig {
             colony: Colony::Cloning,
             server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 25566),
             identity: identity.clone_identity(),
+            tokens_ref: tokens_ref.clone(),
         },
         GameServerConfig {
             colony: Colony::StarMap,
             server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 25567),
             identity: identity.clone_identity(),
+            tokens_ref: tokens_ref.clone(),
         },
         GameServerConfig {
             colony: Colony::Liberte,
             server_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 25568),
             identity: identity.clone_identity(),
+            tokens_ref: tokens_ref.clone(),
         },
     ];
 
     for config in game_server_configs {
         let game_server_ref = GameServerActor::spawn_in_thread(GameServerActor::new(&config));
         game_server_ref.register(config.colony.to_string().to_lowercase())?;
-        pub_sub.ask(Subscribe(game_server_ref)).await?;
     }
 
     info!("All actors started successfully. Press CTRL+C to stop.");

@@ -3,12 +3,11 @@ pub mod init;
 use log::error;
 
 use std::{collections::HashMap, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{mpsc, RwLock};
 use tokio_util::sync::CancellationToken;
-use tracing::{info, trace, trace_span, Instrument, warn, debug};
+use tracing::{debug, info, trace, trace_span, warn, Instrument};
 use wtransport::{
-    endpoint::{IncomingSession, SessionRequest}, ClientConfig, Connection, Endpoint, Identity,
-    ServerConfig, VarInt,
+    endpoint::IncomingSession, ClientConfig, Connection, Endpoint, Identity, ServerConfig, VarInt,
 };
 
 /// Configuration for the Game Proxy
@@ -135,11 +134,11 @@ async fn handle_connection(incoming_session: IncomingSession, routes: Routes) {
             Ok(())
         }
     };
-    
+
     if let Err(e) = result {
         error!("Connection handler error: {:?}", e);
     }
-    
+
     connection_manager.mark_disconnected().await;
     debug!("Connection handler completed");
 }
@@ -154,15 +153,20 @@ struct Dispatch {
 
 impl Dispatch {
     pub fn new(routes: Routes, connection_manager: ConnectionManager) -> Self {
-        Self { routes, connection_manager }
+        Self {
+            routes,
+            connection_manager,
+        }
     }
 
     pub async fn run(&self, session: IncomingSession) -> anyhow::Result<()> {
         let req = session.await?;
 
-        let route = self.get_route(&req)?;
+        let route = req.headers().get("x-route").cloned().unwrap_or_default();
+        let colony = Colony::from_str(route.as_str())?;
+
         let backend_addr = self
-            .get_backend(route)
+            .get_backend(colony)
             .await
             .ok_or(anyhow::anyhow!("No backend found for route {}", route))?;
 
@@ -171,7 +175,14 @@ impl Dispatch {
             .with_bind_default()
             .with_no_cert_validation()
             .build();
-        let connect_options = ConnectOptions::builder(backend_addr).build();
+
+        // Build connect options with all headers from the original request
+        let token = req.headers().get("x-token").cloned().unwrap_or_default();
+        let connect_options = ConnectOptions::builder(backend_addr)
+            .add_header("x-token", token)
+            .add_header("x-route", route.clone())
+            .build();
+
         let backend_client = Endpoint::client(config)?.connect(connect_options).await?;
         let frontend_client = req.accept().await?;
 
@@ -235,7 +246,7 @@ impl Dispatch {
 
         // Ensure connection is marked as disconnecting
         self.connection_manager.mark_disconnecting().await;
-        
+
         info!("Proxy connection closed for route: {}", route);
         Ok(())
     }
@@ -246,7 +257,7 @@ impl Dispatch {
         cancellation_token: CancellationToken,
     ) -> anyhow::Result<()> {
         debug!("Starting bidirectional stream proxy");
-        
+
         loop {
             tokio::select! {
                 result = frontend.accept_bi() => {
@@ -262,7 +273,7 @@ impl Dispatch {
                                                 let _ = tokio::io::copy(&mut from_client, &mut to_backend).await;
                                                 let _ = to_backend.finish().await;
 
-                                                // backend → client  
+                                                // backend → client
                                                 let _ = tokio::io::copy(&mut from_backend, &mut to_client).await;
                                                 let _ = to_client.finish().await;
                                             } => {}
@@ -296,7 +307,7 @@ impl Dispatch {
                 }
             }
         }
-        
+
         debug!("Bidirectional stream proxy ended");
         Ok(())
     }
@@ -307,7 +318,7 @@ impl Dispatch {
         cancellation_token: CancellationToken,
     ) -> anyhow::Result<()> {
         debug!("Starting client-to-backend unidirectional stream proxy");
-        
+
         loop {
             tokio::select! {
                 result = frontend.accept_uni() => {
@@ -352,7 +363,7 @@ impl Dispatch {
                 }
             }
         }
-        
+
         debug!("Client-to-backend stream proxy ended");
         Ok(())
     }
@@ -364,7 +375,7 @@ impl Dispatch {
         cancellation_token: CancellationToken,
     ) -> anyhow::Result<()> {
         debug!("Starting backend-to-client unidirectional stream proxy");
-        
+
         loop {
             tokio::select! {
                 result = backend.accept_uni() => {
@@ -409,7 +420,7 @@ impl Dispatch {
                 }
             }
         }
-        
+
         debug!("Backend-to-client stream proxy ended");
         Ok(())
     }
@@ -420,7 +431,7 @@ impl Dispatch {
         cancellation_token: CancellationToken,
     ) -> anyhow::Result<()> {
         debug!("Starting datagram proxy");
-        
+
         // client → backend
         let frontend = frontend_connection.clone();
         let backend = backend_connection.clone();
@@ -493,7 +504,7 @@ impl Dispatch {
                 debug!("Datagram proxy cancelled");
             }
         }
-        
+
         debug!("Datagram proxy ended");
         Ok(())
     }
@@ -506,22 +517,22 @@ impl Dispatch {
         cancellation_token: CancellationToken,
     ) -> anyhow::Result<()> {
         debug!("Starting connection close monitoring");
-        
+
         // Create tasks to monitor each connection's close event
         let frontend_clone = frontend.clone();
         let backend_clone = backend.clone();
         let token_clone = cancellation_token.clone();
-        
+
         let frontend_monitor = tokio::spawn(async move {
             frontend_clone.closed().await;
             debug!("Frontend connection closed detected");
         });
-        
+
         let backend_monitor = tokio::spawn(async move {
             backend_clone.closed().await;
             debug!("Backend connection closed detected");
         });
-        
+
         tokio::select! {
             // Frontend connection closed
             _ = frontend_monitor => {
@@ -545,13 +556,13 @@ impl Dispatch {
                 // Close both connections gracefully
                 frontend.close(VarInt::from_u32(0), b"proxy shutdown");
                 backend.close(VarInt::from_u32(0), b"proxy shutdown");
-                
+
                 // Wait for both to close
                 tokio::join!(frontend.closed(), backend.closed());
                 debug!("Both connections closed due to cancellation");
             }
         }
-        
+
         debug!("Connection close monitoring ended");
         Ok(())
     }
@@ -560,40 +571,30 @@ impl Dispatch {
     /// This method properly distinguishes between graceful closes and connection errors
     fn is_connection_closed(error: &dyn std::error::Error) -> bool {
         let error_str = error.to_string().to_lowercase();
-        
+
         // Check for graceful application close first
         if error_str.contains("application closed") || error_str.contains("applicationclosed") {
             debug!("Connection closed gracefully by application");
             return true;
         }
-        
+
         // Check for various connection closure indicators
-        error_str.contains("closed") ||
-        error_str.contains("connection reset") ||
-        error_str.contains("connection aborted") ||
-        error_str.contains("broken pipe") ||
-        error_str.contains("not connected") ||
-        error_str.contains("connection lost") ||
-        error_str.contains("session closed") ||
-        error_str.contains("stream closed") ||
-        error_str.contains("no route to host") ||
-        error_str.contains("connection refused") ||
-        error_str.contains("timed out") ||
-        error_str.contains("connection terminated")
+        error_str.contains("closed")
+            || error_str.contains("connection reset")
+            || error_str.contains("connection aborted")
+            || error_str.contains("broken pipe")
+            || error_str.contains("not connected")
+            || error_str.contains("connection lost")
+            || error_str.contains("session closed")
+            || error_str.contains("stream closed")
+            || error_str.contains("no route to host")
+            || error_str.contains("connection refused")
+            || error_str.contains("timed out")
+            || error_str.contains("connection terminated")
     }
-    
 
     async fn get_backend(&self, world_id: Colony) -> Option<String> {
         let routes = self.routes.read().await;
         routes.get(&world_id).cloned()
-    }
-
-    // Extract the world identifier from various request parts
-    fn get_route(&self, req: &SessionRequest) -> anyhow::Result<Colony> {
-        let route = req
-            .headers()
-            .get("x-route")
-            .ok_or(anyhow::anyhow!("No route header"))?;
-        Ok(Colony::from_str(route.as_str())?)
     }
 }

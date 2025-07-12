@@ -15,7 +15,6 @@ impl Plugin for PlayersPlugin {
 fn init_clients(
     trigger: Trigger<FromClient<PlayerSpawnClientCommand>>,
     mut commands: Commands,
-    tokens: Query<&AuthToken>,
 ) -> Result {
     info!(
         "Received client player spawn command {:?}",
@@ -23,9 +22,6 @@ fn init_clients(
     );
 
     let client_entity = trigger.client_entity;
-
-    let _token = tokens.get(client_entity)?;
-    // Ask world server about player health and character name
 
     // Create player
     commands.entity(client_entity).insert((

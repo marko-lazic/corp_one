@@ -6,6 +6,7 @@ edition = "2024"
 
 [dependencies]
 corp_shared = { path = "../corp_shared", features = ["client"] }
+corp_types = { path = "../corp_types" }
 bevy = { workspace = true, default-features = false, features = [
     "bevy_asset",
     "bevy_ui",

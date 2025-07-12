@@ -11,7 +11,6 @@ use aeronet_webtransport::{
     wtransport,
 };
 use bevy::prelude::*;
-use bevy_defer::{AsyncCommandsExtension, AsyncWorld};
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 use corp_types::prelude::*;
@@ -84,6 +83,7 @@ fn on_closed(trigger: Trigger<Closed>) {
 fn on_session_request(
     mut request: Trigger<SessionRequest>,
     clients: Query<&ChildOf>,
+    game_server_config: Res<GameServerConfig>,
     mut commands: Commands,
 ) -> Result {
     let client = request.target();
@@ -101,30 +101,29 @@ fn on_session_request(
             _ => {}
         }
     }
-    request.respond(SessionResponse::Accepted);
-    commands.spawn_task(move || async move {
-        match validate(&token).await {
-            Ok(response) => {
-                AsyncWorld
-                    .entity(client)
-                    .insert((AuthToken(token), Username(response.user.username)))?;
-            }
-            Err(err) => {
-                // Authentication failed - reject the connection
-                warn!("Authentication failed for token: {} {:?}", token, err);
-            }
+    match game_server_config
+        .tokens_ref
+        .ask(IsTokenValid(token.clone()))
+        .blocking_send()
+    {
+        Ok(true) => {
+            info!("Accepted token {} from {:?}", token, client);
+            commands.entity(client).insert(AuthToken(token));
+            request.respond(SessionResponse::Accepted);
         }
-        Ok(())
-    });
-
+        Ok(false) => {
+            warn!("Rejected token \"{}\" from {:?}", token, client);
+            request.respond(SessionResponse::NotFound)
+        }
+        Err(e) => {
+            warn!(
+                "Error while validating token {} from {:?} reason: {:?}",
+                token, client, e
+            );
+            request.respond(SessionResponse::NotFound)
+        }
+    }
     Ok(())
-}
-
-async fn validate(token: &str) -> surf::Result<ValidateTokenResponse> {
-    surf::post("http://localhost:25550/validate")
-        .body_json(&json!({ "token": token }))?
-        .recv_json::<ValidateTokenResponse>()
-        .await
 }
 
 fn on_connected(

@@ -433,13 +433,26 @@ fn apply_window_cursor_visible(
     window.cursor_options.visible = !window.cursor_options.visible;
 }
 
-fn apply_starmap_iris(_trigger: Trigger<Started<ColonyIrisAction>>, mut commands: Commands) {
+fn apply_starmap_iris(
+    _trigger: Trigger<Started<ColonyIrisAction>>,
+    mut commands: Commands,
+    client_e: Single<Entity, With<CorpClient>>,
+) {
     info!("apply_starmap_iris");
-    commands.trigger(RequestConnect(Colony::Iris));
+    commands
+        .entity(*client_e)
+        .trigger(RequestConnect(Colony::Iris));
 }
 
-fn apply_starmap_liberte(_trigger: Trigger<Started<ColonyLiberteAction>>, mut commands: Commands) {
-    commands.trigger(RequestConnect(Colony::Liberte));
+fn apply_starmap_liberte(
+    _trigger: Trigger<Started<ColonyLiberteAction>>,
+    mut commands: Commands,
+    client_e: Single<Entity, With<CorpClient>>,
+) {
+    info!("apply_starmap_liberte");
+    commands
+        .entity(*client_e)
+        .trigger(RequestConnect(Colony::Liberte));
 }
 
 fn apply_rotate_camera_clockwise(

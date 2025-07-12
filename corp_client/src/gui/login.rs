@@ -1,22 +1,26 @@
-use crate::prelude::{RequestConnect, ASSET_PATH};
-use bevy::{
-    prelude::*,
-    reflect::erased_serde::__private::serde::{Deserialize, Serialize},
-};
-use bevy_defer::{AsyncCommandsExtension, AsyncExecutor};
+use crate::prelude::{CorpClient, RequestConnect, ASSET_PATH};
+use bevy::prelude::*;
+use bevy_defer::{AsyncCommandsExtension, AsyncWorld};
 use corp_shared::prelude::*;
+use corp_types::prelude::LoginResponse;
 
 pub struct LoginPlugin;
 
 impl Plugin for LoginPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Login), setup_login_screen)
-            .add_systems(OnExit(GameState::Init), connect_to_star_map);
+            .add_systems(OnExit(GameState::Init), auto_login);
     }
 }
 
-fn connect_to_star_map(mut commands: Commands) {
-    commands.trigger(RequestConnect(Colony::StarMap));
+fn auto_login(
+    mut commands: Commands,
+    credentials: Res<Credentials>,
+    client_e: Single<Entity, With<CorpClient>>,
+) -> Result {
+    info!("Auto login initiated!");
+    login(&mut commands, &credentials, *client_e);
+    Ok(())
 }
 
 fn setup_login_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -50,30 +54,35 @@ fn apply_login(
     _trigger: Trigger<Pointer<Released>>,
     mut commands: Commands,
     credentials: Res<Credentials>,
-) {
+    client_e: Single<Entity, With<CorpClient>>,
+) -> Result {
     info!("Login button pressed!");
+    login(&mut commands, &credentials, *client_e);
+    Ok(())
+}
+
+fn login(commands: &mut Commands, credentials: &Credentials, client_e: Entity) {
     let credentials = credentials.clone();
-    commands.spawn_task(async {
+    commands.spawn_task(move || async move {
         match authenticate(credentials).await {
-            Ok(auth) => {
-                commands.insert_resource(AuthToken(auth.token));
-                commands.trigger(RequestConnect(Colony::StarMap));
+            Ok(login_response) => {
+                let async_world = AsyncWorld;
+                async_world.insert_resource(AuthToken(login_response.token));
+                async_world
+                    .entity(client_e)
+                    .trigger(RequestConnect(Colony::StarMap))?;
             }
             Err(err) => {
-                error!("Login failed {:?}", err);
+                error!("Login failed: {:?}", err);
             }
         }
+        Ok(())
     });
 }
 
-async fn authenticate(credentials: Credentials) -> surf::Result<AuthResponse> {
-    surf::post("https://localhost:25550/login")
+async fn authenticate(credentials: Credentials) -> surf::Result<LoginResponse> {
+    surf::post("http://localhost:25550/login")
         .body_json(&credentials)?
         .recv_json()
         .await
-}
-
-#[derive(Serialize, Deserialize)]
-struct AuthResponse {
-    pub token: String,
 }

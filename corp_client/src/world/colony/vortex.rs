@@ -21,6 +21,7 @@ fn handle_vortex_collision(
     q_vortex_gate: Query<(), With<VortexGate>>,
     q_player: Query<(), With<Player>>,
     mut commands: Commands,
+    client_e: Single<Entity, With<CorpClient>>,
 ) {
     for CollisionStarted(entity1, entity2) in collision_events.read() {
         let (_vortex_entity, player_entity) =
@@ -33,7 +34,9 @@ fn handle_vortex_collision(
             };
 
         info!("Vort {player_entity} to Star Map.");
-        commands.trigger(RequestConnect(Colony::StarMap));
+        commands
+            .entity(*client_e)
+            .trigger(RequestConnect(Colony::StarMap));
     }
 }
 

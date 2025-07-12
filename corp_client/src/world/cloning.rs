@@ -13,7 +13,10 @@ impl Plugin for CloningLocalPlugin {
 fn on_send_dead_player_to_cloning(
     _trigger: Trigger<SendDeadPlayerToCloningCommand>,
     mut commands: Commands,
+    client_e: Single<Entity, With<CorpClient>>,
 ) {
-    info!("Received SendDeadPlayerToCloningCommand");
-    commands.trigger(RequestConnect(Colony::Cloning));
+    info!("Received SendDeadPlayerToCloningCommand. Server should control this!");
+    commands
+        .entity(*client_e)
+        .trigger(RequestConnect(Colony::Cloning));
 }

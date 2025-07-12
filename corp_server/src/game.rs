@@ -1,21 +1,20 @@
 use crate::server::*;
 use bevy::{
     app::{App, ScheduleRunnerPlugin},
-    prelude::PluginGroup,
+    prelude::*,
     state::app::StatesPlugin,
     MinimalPlugins,
 };
 use bevy_rand::{plugin::EntropyPlugin, prelude::WyRand};
 use corp_shared::{network::TICK_RATE, prelude::Colony};
-use corp_types::prelude::*;
 use kameo::{
     actor::{ActorRef, WeakActorRef},
     error::{Infallible, PanicError},
-    prelude::{ActorStopReason, Context, Message},
+    prelude::ActorStopReason,
     Actor,
 };
 use std::{ops::ControlFlow, time::Duration};
-use tracing::info;
+use tracing::{error, info};
 
 pub struct GameServerActor {
     pub config: GameServerConfig,
@@ -37,13 +36,23 @@ impl Actor for GameServerActor {
         info!("GameServerActor started with config: {:?}", args.config);
 
         let config = args.config.clone();
-        tokio::spawn(async move {
-            if config.colony == Colony::StarMap {
-                create_star_map_game_server(config);
-            } else {
-                create_colony_game_server(config);
-            }
-        });
+        let game_server_handle = std::thread::Builder::new()
+            .name(format!(
+                "game-server-{}",
+                config.colony.to_string().to_lowercase()
+            ))
+            .stack_size(8 * 1024 * 1024)
+            .spawn(move || {
+                if config.colony == Colony::StarMap {
+                    create_star_map_game_server(config);
+                } else {
+                    create_colony_game_server(config);
+                }
+            });
+
+        if let Err(e) = game_server_handle {
+            error!("Failed to start game server thread: {:?}", e);
+        }
 
         Ok(args)
     }
@@ -53,10 +62,9 @@ impl Actor for GameServerActor {
         _actor_ref: WeakActorRef<Self>,
         err: PanicError,
     ) -> Result<ControlFlow<ActorStopReason>, Self::Error> {
-        tracing::error!(
+        error!(
             "GameServerActor: Game Server {:?} panicked: {}",
-            self.config.colony,
-            err
+            self.config.colony, err
         );
         Ok(ControlFlow::Continue(()))
     }
@@ -71,19 +79,6 @@ impl Actor for GameServerActor {
             self.config.colony, reason
         );
         Ok(())
-    }
-}
-
-impl Message<AuthenticationEvent> for GameServerActor {
-    type Reply = ();
-
-    async fn handle(&mut self, msg: AuthenticationEvent, _ctx: &mut Context<Self, Self::Reply>) {
-        let colony = self.config.colony;
-        info!(
-            "GameServerActor: Game Server {:?} received AuthenticationEvent: {:?}",
-            colony, msg.event_type
-        );
-        // Add actual authentication event processing here
     }
 }
 
