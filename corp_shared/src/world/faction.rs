@@ -1,24 +1,5 @@
 use bevy::prelude::*;
-
-#[derive(Eq, PartialEq, Copy, Clone, Debug)]
-pub enum Faction {
-    EC,
-    CMG,
-    VI,
-}
-
-#[derive(Default, Eq, PartialEq, Ord, PartialOrd)]
-pub enum Rank {
-    #[default]
-    R0,
-    R1,
-    R2,
-    R3,
-    R4,
-    R5,
-    R6,
-    R7,
-}
+use corp_types::prelude::*;
 
 #[derive(Component, Eq, PartialEq)]
 pub struct PlayerFactionInfo {

@@ -1,5 +1,5 @@
-use crate::prelude::Rank;
 use bevy::prelude::Component;
+use corp_types::prelude::Rank;
 
 #[derive(Component, Eq, PartialEq, Hash)]
 pub enum SecurityLevel {

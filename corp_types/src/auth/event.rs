@@ -1,39 +1,30 @@
 use crate::prelude::*;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuthenticationEvent {
-    pub event_type: AuthEventType,
-    pub timestamp: DateTime<Utc>,
-}
-
-impl AuthenticationEvent {
-    pub fn login_event(user: &User, token: &Token) -> Self {
-        Self {
-            event_type: AuthEventType::Login(TokenUserData {
-                token: token.clone(),
-                user: user.clone(),
-            }),
-            timestamp: Utc::now(),
-        }
-    }
-
-    pub fn logout_event(token: impl Into<String>) -> Self {
-        Self {
-            event_type: AuthEventType::Logout(TokenData {
-                token: token.into(),
-            }),
-            timestamp: Utc::now(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum AuthEventType {
+pub enum UserEvent {
+    Register(User),
     Login(TokenUserData),
     Logout(TokenData),
     TokenExpired(TokenData),
+}
+
+impl UserEvent {
+    pub fn register(user: &User) -> Self {
+        Self::Register(user.clone())
+    }
+    pub fn login(user: &User, token: &Token) -> Self {
+        Self::Login(TokenUserData {
+            token: token.clone(),
+            user: user.clone(),
+        })
+    }
+
+    pub fn logout(token: impl Into<String>) -> Self {
+        Self::Logout(TokenData {
+            token: token.into(),
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

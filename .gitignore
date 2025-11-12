@@ -27,3 +27,5 @@ certs/server.key
 # Zed
 .zed
 
+# Archive is excluded from build and tooling
+/archive/*

@@ -1,11 +1,22 @@
 use crate::{
     app::AppState,
     auth::{authenticate_user_and_generate_token, create_user, invalidate_token, validate_token},
+    error::ApiError,
 };
 use anyhow::Result;
 use axum::{extract::State, response::Json};
+use chrono;
 use corp_types::prelude::*;
+use serde_json::json;
 use tracing::{error, info};
+
+pub async fn health_check() -> Json<serde_json::Value> {
+    Json(json!({
+        "status": "healthy",
+        "service": "corp_login",
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }))
+}
 
 pub async fn register_user(
     State(state): State<AppState>,
@@ -23,6 +34,14 @@ pub async fn register_user(
 
     match create_user(&state.pool, request).await {
         Ok(user) => {
+            if let Err(e) = state
+                .message()
+                .publish("user.registered", &UserEvent::register(&user))
+                .await
+            {
+                error!("Failed to publish user registration event: {e}");
+                return Err(ApiError::internal_error());
+            }
             info!("User registered successfully: {}", user.username);
             Ok(Json(user))
         }
@@ -51,10 +70,14 @@ pub async fn login_user(
         Ok(Some((user, token))) => {
             info!("User logged in successfully: {}", user.username);
 
-            state
-                .events
-                .send(AuthenticationEvent::login_event(&user, &token))
-                .await?;
+            if let Err(e) = state
+                .message()
+                .publish("user.logged.in", &UserEvent::login(&user, &token))
+                .await
+            {
+                error!("Failed to publish user login event: {e}");
+                return Err(ApiError::internal_error());
+            }
 
             let response = LoginResponse {
                 token: token.token,
@@ -115,10 +138,14 @@ pub async fn logout_user(
         Ok(true) => {
             info!("Token invalidated successfully");
 
-            state
-                .events
-                .send(AuthenticationEvent::logout_event(&request.token))
-                .await?;
+            if let Err(e) = state
+                .message()
+                .publish("user.logged.out", &UserEvent::logout(&request.token))
+                .await
+            {
+                error!("Failed to publish user logout event: {e}");
+                return Err(ApiError::internal_error());
+            }
             Ok(Json("Logged out".to_string()))
         }
         Ok(false) => {

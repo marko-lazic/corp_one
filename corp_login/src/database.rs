@@ -1,8 +1,8 @@
-use crate::dirs::Dirs;
-use anyhow::Result;
+use crate::LoginConfig;
+use anyhow::{anyhow, Result};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use std::path::Path;
-use tracing::{error, info};
+use std::{env, path::Path};
+use tracing::info;
 
 pub async fn create_pool(database_url: &str) -> Result<SqlitePool> {
     let pool = SqlitePoolOptions::new()
@@ -14,19 +14,19 @@ pub async fn create_pool(database_url: &str) -> Result<SqlitePool> {
     Ok(pool)
 }
 
-pub async fn run_migrations(pool: &SqlitePool) -> Result<()> {
+pub async fn run_migrations(pool: &SqlitePool, config: &LoginConfig) -> Result<()> {
     info!("Running database migrations...");
 
-    let migrations_dir = if Path::new("migrations").exists() {
-        Path::new("migrations")
-    } else if Path::new("corp_login/migrations").exists() {
-        Path::new("corp_login/migrations")
-    } else {
-        error!("Migrations directory not found");
-        return Err(anyhow::anyhow!("Migrations directory not found"));
-    };
+    let migrations_dir = env::current_dir()?.join(config.get_migrations_dir());
+    info!("Login migrations dir: {:?}", migrations_dir);
+    if !migrations_dir.exists() {
+        return Err(anyhow!(
+            "Login migrations dir not found: {:?}",
+            migrations_dir
+        ));
+    }
 
-    let mut entries = tokio::fs::read_dir(migrations_dir).await?;
+    let mut entries = tokio::fs::read_dir(&migrations_dir).await?;
     let mut migration_files = Vec::new();
 
     while let Some(entry) = entries.next_entry().await? {
@@ -77,23 +77,44 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<()> {
     Ok(())
 }
 
-pub async fn setup_database() -> Result<SqlitePool> {
-    let dirs = Dirs::new("corp_login");
-    let database_path_buf = dirs.data_dir.join("corp_login.sqlite");
-    let _ignored = dirs.config_dir;
-    let _ignored = dirs.cache_dir;
-    let database_path_str = database_path_buf
-        .to_str()
-        .expect("Path is not valid UTF-8, cannot form database URL");
-    let database_url = format!("sqlite:{}", database_path_str);
+pub async fn setup_database(config: LoginConfig) -> Result<SqlitePool> {
+    let database_url = config.get_database_url();
 
-    // Create database if it doesn't exist
-    if !Path::new(database_path_str).exists() {
-        info!("Creating database file: {}", database_path_str);
-        tokio::fs::File::create(database_path_str).await?;
+    info!("Creating database: {}", database_url);
+
+    // Skip file operations for in-memory databases
+    if !database_url.contains("::memory:") && !database_url.contains(":memory:") {
+        let file_path = if database_url.starts_with("sqlite:") {
+            database_url
+                .strip_prefix("sqlite:")
+                .unwrap_or(&database_url)
+                .trim_start_matches("//") // Remove potential // after sqlite:
+        } else {
+            &database_url
+        };
+
+        info!("Database file path: {}", file_path);
+
+        // Create parent directories if they don't exist
+        if let Some(parent) = Path::new(file_path).parent() {
+            if !parent.exists() {
+                info!("Creating directory structure: {:?}", parent);
+                tokio::fs::create_dir_all(parent).await.map_err(|e| {
+                    anyhow::anyhow!("Failed to create directory structure {:?}: {}", parent, e)
+                })?;
+            }
+        }
+
+        // Create the database file if it doesn't exist
+        if !Path::new(file_path).exists() {
+            info!("Creating database file: {}", file_path);
+            tokio::fs::File::create(file_path).await.map_err(|e| {
+                anyhow::anyhow!("Failed to create database file {}: {}", file_path, e)
+            })?;
+        }
     }
 
     let pool = create_pool(&database_url).await?;
-    run_migrations(&pool).await?;
+    run_migrations(&pool, &config).await?;
     Ok(pool)
 }

@@ -9,6 +9,7 @@ corp_shared = { path = "../corp_shared" }
 corp_types = { path = "../corp_types" }
 corp_proxy = { path = "../corp_proxy" }
 corp_login = { path = "../corp_login" }
+corp_world = { path = "../corp_world" }
 bevy = { workspace = true, features = [
     "bevy_state",
     "bevy_color",
@@ -29,26 +30,20 @@ avian3d = { workspace = true, features = [
 rand = { workspace = true }
 bevy_rand = { workspace = true }
 serde = { workspace = true }
-rmp-serde = "1.3"
-chrono = { version = "0.4", features = ["serde"] }
-sqlx = { version = "0.8", features = ["runtime-async-std", "sqlite", "chrono"] }
+rmp-serde = { workspace = true }
 async-io = "2.4"
 pin-project = "1.1"
 tower = "0.5"
 async-channel = "2.3"
 anyhow = { workspace = true }
-surf = { workspace = true }
 tracing = "0.1"
-kameo = { workspace = true }
-kameo_actors = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 
 aeronet = { workspace = true }
 aeronet_webtransport = { workspace = true, features = ["server"] }
 aeronet_replicon = { workspace = true, features = ["server"] }
 bevy_replicon = { workspace = true, features = ["default"] }
-bevy_defer = { workspace = true }
-
+async-nats = { workspace = true }
 
 [[example]]
 name = "message"

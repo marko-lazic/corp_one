@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::prelude::*;
-use corp_shared::{prelude::*, world::colony::Colony};
+use corp_shared::prelude::*;
 
 pub struct CloningLocalPlugin;
 

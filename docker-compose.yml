@@ -1,0 +1,8 @@
+services:
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+    volumes:
+      - ./scripts/init-nats.sh:/init-nats.sh
+    command: "--jetstream"

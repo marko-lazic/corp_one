@@ -1,0 +1,24 @@
+[package]
+name = "integration_tests"
+edition = "2024"
+
+[dependencies]
+corp_login = { path = "../corp_login" }
+corp_types = { path = "../corp_types" }
+corp_world = { path = "../corp_world" }
+tokio = { version = "1.45", default-features = false }
+tokio-test = "0.4.4"
+kameo = "0.17.2"
+kameo_actors = "0.2.0"
+anyhow = "1.0.98"
+reqwest = { version = "0.12.22", features = ["json"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+test-trace = "0.3.0"
+async-nats = { version = "0.42.0" }
+lazy_static = "1.5.0"
+rand = "0.9.1"
+regex = "1.11.1"
+serde_json = "1.0.140"
+url = "2.5.4"
+nuid = "0.5.0"

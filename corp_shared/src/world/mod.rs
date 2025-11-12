@@ -1,4 +1,3 @@
-pub mod colony;
 pub mod creature;
 pub mod faction;
 pub mod gameplay;
@@ -9,7 +8,6 @@ pub mod security;
 pub mod structure;
 pub mod r#use;
 
-pub use colony::*;
 pub use creature::*;
 pub use faction::*;
 pub use gameplay::*;

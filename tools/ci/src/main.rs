@@ -87,26 +87,29 @@ fn main() {
     }
 
     if what_to_run.contains(Check::COMPILE_FAIL) {
-        // Run UI tests (they do not get executed with the workspace tests)
+        // Run UI integration_tests (they do not get executed with the workspace integration_tests)
         // - See crates/bevy_ecs_compile_fail_tests/README.md
         let _subdir = sh.push_dir("crates/bevy_ecs_compile_fail_tests");
         cmd!(sh, "cargo test --target-dir ../../target")
             .run()
-            .expect("Compiler errors of the ECS compile fail tests seem to be different than expected! Check locally and compare rust versions.");
+            .expect("Compiler errors of the ECS compile fail integration_tests seem to be different than expected! Check locally and compare rust versions.");
     }
 
     if what_to_run.contains(Check::TEST) {
-        // Run tests (except doc tests and without building examples)
-        cmd!(sh, "cargo test --workspace --lib --bins --tests --benches")
-            .run()
-            .expect("Please fix failing tests in output above.");
+        // Run integration_tests (except doc integration_tests and without building examples)
+        cmd!(
+            sh,
+            "cargo test --workspace --lib --bins --integration_tests --benches"
+        )
+        .run()
+        .expect("Please fix failing integration_tests in output above.");
     }
 
     if what_to_run.contains(Check::DOC_TEST) {
-        // Run doc tests
+        // Run doc integration_tests
         cmd!(sh, "cargo test --workspace --doc")
             .run()
-            .expect("Please fix failing doc-tests in output above.");
+            .expect("Please fix failing doc-integration_tests in output above.");
     }
 
     if what_to_run.contains(Check::DOC_CHECK) {
@@ -134,13 +137,13 @@ fn main() {
         // Build examples and check they compile
         cmd!(sh, "cargo check --workspace --examples")
             .run()
-            .expect("Please fix failing doc-tests in output above.");
+            .expect("Please fix failing doc-integration_tests in output above.");
     }
 
     if what_to_run.contains(Check::COMPILE_CHECK) {
         // Build examples and check they compile
         cmd!(sh, "cargo check --workspace")
             .run()
-            .expect("Please fix failing doc-tests in output above.");
+            .expect("Please fix failing doc-integration_tests in output above.");
     }
 }

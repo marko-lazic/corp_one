@@ -13,9 +13,7 @@ use aeronet_webtransport::{
 use bevy::prelude::*;
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
-use corp_types::prelude::*;
 use std::time::Duration;
-use surf::http::convert::json;
 
 pub struct ServerNetPlugin;
 
@@ -83,7 +81,7 @@ fn on_closed(trigger: Trigger<Closed>) {
 fn on_session_request(
     mut request: Trigger<SessionRequest>,
     clients: Query<&ChildOf>,
-    game_server_config: Res<GameServerConfig>,
+    tokens: Res<Tokens>,
     mut commands: Commands,
 ) -> Result {
     let client = request.target();
@@ -101,25 +99,14 @@ fn on_session_request(
             _ => {}
         }
     }
-    match game_server_config
-        .tokens_ref
-        .ask(IsTokenValid(token.clone()))
-        .blocking_send()
-    {
-        Ok(true) => {
+    match tokens.is_valid(&token) {
+        true => {
             info!("Accepted token {} from {:?}", token, client);
             commands.entity(client).insert(AuthToken(token));
             request.respond(SessionResponse::Accepted);
         }
-        Ok(false) => {
+        false => {
             warn!("Rejected token \"{}\" from {:?}", token, client);
-            request.respond(SessionResponse::NotFound)
-        }
-        Err(e) => {
-            warn!(
-                "Error while validating token {} from {:?} reason: {:?}",
-                token, client, e
-            );
             request.respond(SessionResponse::NotFound)
         }
     }

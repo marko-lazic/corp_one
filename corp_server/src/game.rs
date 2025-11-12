@@ -1,4 +1,8 @@
-use crate::server::*;
+use crate::{
+    channel::ChannelTriggerApp,
+    integration::{TokenService, RETRY_DELAY},
+    server::*,
+};
 use bevy::{
     app::{App, ScheduleRunnerPlugin},
     prelude::*,
@@ -6,111 +10,91 @@ use bevy::{
     MinimalPlugins,
 };
 use bevy_rand::{plugin::EntropyPlugin, prelude::WyRand};
-use corp_shared::{network::TICK_RATE, prelude::Colony};
-use kameo::{
-    actor::{ActorRef, WeakActorRef},
-    error::{Infallible, PanicError},
-    prelude::ActorStopReason,
-    Actor,
-};
-use std::{ops::ControlFlow, time::Duration};
-use tracing::{error, info};
+use corp_shared::network::TICK_RATE;
+use corp_types::{messenger::Messenger, prelude::Colony};
+use std::time::Duration;
+use tokio::runtime::Runtime;
 
-pub struct GameServerActor {
-    pub config: GameServerConfig,
+pub struct GameServer {
+    game_server_config: GameServerConfig,
+    runtime: Runtime,
 }
 
-impl GameServerActor {
-    pub fn new(config: &GameServerConfig) -> Self {
+impl GameServer {
+    pub fn new(game_server_config: GameServerConfig) -> Self {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("Failed to create Tokio runtime");
         Self {
-            config: config.clone(),
+            game_server_config,
+            runtime,
         }
     }
-}
+    pub fn create_app(&self) -> App {
+        let wait_duration = Duration::from_secs_f64(1.0 / f64::from(TICK_RATE));
+        let mut app = App::new();
+        app.insert_resource(self.game_server_config.clone())
+            .add_plugins((
+                MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(wait_duration)),
+                TokensPlugin,
+                StatesPlugin,
+                ServerNetPlugin,
+                EntropyPlugin::<WyRand>::default(),
+            ));
+        if self.is_colony_server() {
+            app.add_plugins((
+                LootPlugin,
+                HealthRemotePlugin,
+                DeathPlugin,
+                CloningRemotePlugin,
+                PlayersPlugin,
+            ));
+        }
+        app
+    }
 
-impl Actor for GameServerActor {
-    type Args = Self;
-    type Error = Infallible;
+    pub fn run(&self) {
+        let mut app = self.create_app();
+        self.run_async_server(&mut app);
+        app.run();
+    }
 
-    async fn on_start(args: Self::Args, _actor_ref: ActorRef<Self>) -> Result<Self, Self::Error> {
-        info!("GameServerActor started with config: {:?}", args.config);
+    fn run_async_server(&self, app: &mut App) {
+        let bevy_sender = app.add_channel_trigger::<BevyUserEvent>();
+        let handle = self.runtime.handle().clone();
+        let game_server_config = self.game_server_config.clone();
 
-        let config = args.config.clone();
-        let game_server_handle = std::thread::Builder::new()
-            .name(format!(
-                "game-server-{}",
-                config.colony.to_string().to_lowercase()
-            ))
-            .stack_size(8 * 1024 * 1024)
-            .spawn(move || {
-                if config.colony == Colony::StarMap {
-                    create_star_map_game_server(config);
-                } else {
-                    create_colony_game_server(config);
+        handle.spawn(async move {
+            let nats_url = "nats://localhost:4222";
+            info!("Starting NATS connection: {}", nats_url);
+            let nc = GameServer::create_nats_client(nats_url).await;
+            let messenger = Messenger::new(nc);
+
+            let channel_name = format!("game_server_{}", game_server_config.colony.to_snake_case());
+
+            let mut token_service = TokenService::new(bevy_sender, messenger, channel_name);
+            token_service.run().await;
+        });
+    }
+
+    async fn create_nats_client(nats_url: &str) -> async_nats::Client {
+        loop {
+            match async_nats::connect(nats_url).await {
+                Ok(connection) => {
+                    info!("NATS connection established");
+                    return connection;
                 }
-            });
-
-        if let Err(e) = game_server_handle {
-            error!("Failed to start game server thread: {:?}", e);
+                Err(e) => {
+                    error!("Failed to connect to NATS: {}", e);
+                    info!("Attempting to reconnect to NATS...");
+                    tokio::time::sleep(RETRY_DELAY).await;
+                }
+            }
         }
-
-        Ok(args)
     }
 
-    async fn on_panic(
-        &mut self,
-        _actor_ref: WeakActorRef<Self>,
-        err: PanicError,
-    ) -> Result<ControlFlow<ActorStopReason>, Self::Error> {
-        error!(
-            "GameServerActor: Game Server {:?} panicked: {}",
-            self.config.colony, err
-        );
-        Ok(ControlFlow::Continue(()))
+    fn is_colony_server(&self) -> bool {
+        self.game_server_config.colony != Colony::StarMap
     }
-
-    async fn on_stop(
-        &mut self,
-        _actor_ref: WeakActorRef<Self>,
-        reason: ActorStopReason,
-    ) -> Result<(), Self::Error> {
-        info!(
-            "GameServerActor: Game Server {:?} stopping: {:?}",
-            self.config.colony, reason
-        );
-        Ok(())
-    }
-}
-
-fn create_colony_game_server(game_server_config: GameServerConfig) {
-    let wait_duration = Duration::from_secs_f64(1.0 / f64::from(TICK_RATE));
-
-    App::new()
-        .insert_resource(game_server_config)
-        .add_plugins((
-            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(wait_duration)),
-            StatesPlugin,
-            ServerNetPlugin,
-            LootPlugin,
-            HealthRemotePlugin,
-            DeathPlugin,
-            CloningRemotePlugin,
-            PlayersPlugin,
-            EntropyPlugin::<WyRand>::default(),
-        ))
-        .run();
-}
-
-fn create_star_map_game_server(game_server_config: GameServerConfig) {
-    let wait_duration = Duration::from_secs_f64(1.0 / f64::from(TICK_RATE));
-
-    App::new()
-        .insert_resource(game_server_config)
-        .add_plugins((
-            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(wait_duration)),
-            StatesPlugin,
-            ServerNetPlugin,
-            EntropyPlugin::<WyRand>::default(),
-        ))
-        .run();
 }

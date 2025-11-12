@@ -39,11 +39,11 @@ fn on_load_colony_command(
     mut r_materials: ResMut<Assets<StandardMaterial>>,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
     r_scene_assets: Res<SceneAssets>,
-    client_colony: Single<&Colony, With<AeronetRepliconClient>>,
+    client_colony: Single<&PendingColony, With<AeronetRepliconClient>>,
 ) -> Result {
-    let colony = *client_colony;
+    let colony = client_colony.into_inner().0;
 
-    if *colony == Colony::StarMap {
+    if colony == Colony::StarMap {
         error!("Inconsistent state, StarMap is not a colony");
         return Ok(());
     }

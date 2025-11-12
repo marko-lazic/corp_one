@@ -18,4 +18,5 @@ pub const CLONING_SPAWN_POSITION: Vec3 = Vec3::from_array([0.; 3]);
 
 pub mod prelude {
     pub use crate::{asset::*, log::*, network::*, state::*, util::*, world::*};
+    pub use corp_types::world::{colony::*, faction::*};
 }

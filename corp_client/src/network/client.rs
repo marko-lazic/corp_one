@@ -14,6 +14,8 @@ use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 #[derive(Component)]
 pub struct CorpClient;
+#[derive(Component, Debug, Clone, Copy)]
+pub struct PendingColony(pub Colony);
 #[derive(Event, Deref)]
 pub struct RequestConnect(pub Colony);
 #[derive(Event)]
@@ -93,7 +95,7 @@ fn connect_client(
     commands
         .spawn((
             Name::new(format!("Client Session {}", colony)),
-            colony,
+            PendingColony(colony),
             AeronetRepliconClient,
         ))
         .queue(WebTransportClient::connect(config, connect_options));
@@ -110,7 +112,7 @@ fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) 
 fn on_connected(
     trigger: Trigger<OnAdd, Session>,
     mut commands: Commands,
-    client_colony: Single<&Colony, With<AeronetRepliconClient>>,
+    client_colony: Single<&PendingColony, With<AeronetRepliconClient>>,
 ) -> Result {
     let e_session = trigger.target();
     info!("Session {e_session} Connected!");
@@ -121,7 +123,7 @@ fn on_connected(
         ..default()
     },));
 
-    if **client_colony == Colony::StarMap {
+    if client_colony.into_inner().0 == Colony::StarMap {
         commands.trigger(LoadStarMapCommand);
     } else {
         commands.trigger(LoadColonyCommand);

@@ -1,0 +1,21 @@
+[package]
+name = "corp_world"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+corp_shared = { path = "../corp_shared" }
+corp_types = { path = "../corp_types" }
+
+kameo = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+sqlx = { workspace = true, features = ["runtime-tokio-rustls", "sqlite", "chrono", "derive"] }
+anyhow = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+envy = { workspace = true }
+dotenvy = { workspace = true }
+async-nats = { workspace = true }
+rmp-serde = { workspace = true }
+futures-lite = "2.6"

@@ -1,8 +1,11 @@
+Year is 2117
+
 ## Run the project
 
-### Run server
+### Run server components
 
 ```shell
+cargo run --bin corp_login
 cargo run --bin corp_server
 ```
 
