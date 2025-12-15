@@ -15,15 +15,14 @@ fn is_cloning(config: Res<GameServerConfig>) -> bool {
 }
 
 fn heal_player(
-    trigger: Trigger<OnAdd, Player>,
+    add: On<Add, Player>,
     config: Res<GameServerConfig>,
     mut healths: Query<&mut Health>,
 ) {
     if !is_cloning(config) {
         return;
     }
-    let player_e = trigger.target();
-    if let Ok(mut health) = healths.get_mut(player_e) {
+    if let Ok(mut health) = healths.get_mut(add.entity) {
         if health.is_dead() {
             health.heal(80.0);
         }

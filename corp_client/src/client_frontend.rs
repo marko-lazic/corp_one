@@ -1,15 +1,13 @@
 use bevy::{
-    input::common_conditions::input_toggle_active,
     prelude::*,
-    window::{PresentMode, WindowMode},
+    window::{PresentMode, WindowMode, WindowResolution},
 };
-use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use corp_client::prelude::*;
 use corp_shared::prelude::*;
 
 const CORP_ONE_GAME_TITLE: &str = "Corp One";
-const WIDTH: f32 = 1200.0;
-const HEIGHT: f32 = 720.0;
+const WIDTH: u32 = 1200;
+const HEIGHT: u32 = 720;
 
 pub struct ClientFrontendPlugin;
 
@@ -23,10 +21,6 @@ impl Plugin for ClientFrontendPlugin {
             GameStatePlugin,
             ShaderPlugin,
             GuiPlugin,
-            EguiPlugin {
-                enable_multipass_for_primary_context: true,
-            },
-            WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Backquote)),
             bevy_framepace::FramepacePlugin,
         ));
     }
@@ -35,7 +29,7 @@ impl Plugin for ClientFrontendPlugin {
 fn new_window() -> Window {
     Window {
         title: CORP_ONE_GAME_TITLE.to_string(),
-        resolution: (WIDTH, HEIGHT).into(),
+        resolution: WindowResolution::new(WIDTH, HEIGHT),
         mode: WindowMode::Windowed,
         present_mode: PresentMode::AutoNoVsync, // Reduces input latency
         ..default()

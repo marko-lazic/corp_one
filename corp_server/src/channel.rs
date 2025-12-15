@@ -23,11 +23,16 @@ pub trait ChannelTriggerApp {
     /// Spawns a channel registers the receiver as a resource and returns the `ChannelSender<T>`
     /// This sender can be used from anywhere to send events into the Bevy world.
     /// These triggers can be subscribed to via `app.observe`.
-    fn add_channel_trigger<'a, T: Event>(&mut self) -> ChannelSender<T>;
+    fn add_channel_trigger<'a, T: Event>(&mut self) -> ChannelSender<T>
+    where
+        <T as bevy::ecs::event::Event>::Trigger<'a>: Default;
 }
 
 impl ChannelTriggerApp for App {
-    fn add_channel_trigger<'a, T: Event>(&mut self) -> ChannelSender<T> {
+    fn add_channel_trigger<'a, T: Event>(&mut self) -> ChannelSender<T>
+    where
+        <T as bevy::ecs::event::Event>::Trigger<'a>: Default,
+    {
         let (sender, receiver) = mpsc::unbounded_channel();
         self.insert_resource(EventReceiver::<T>(receiver));
         self.add_systems(PreUpdate, process_events::<T>);
@@ -35,10 +40,10 @@ impl ChannelTriggerApp for App {
     }
 }
 
-fn process_events<'a, T: Event>(
-    receiver: Option<ResMut<EventReceiver<T>>>,
-    mut commands: Commands,
-) {
+fn process_events<'a, T: Event>(receiver: Option<ResMut<EventReceiver<T>>>, mut commands: Commands)
+where
+    <T as bevy::ecs::event::Event>::Trigger<'a>: Default,
+{
     if let Some(mut receiver) = receiver {
         loop {
             match receiver.0.try_recv() {

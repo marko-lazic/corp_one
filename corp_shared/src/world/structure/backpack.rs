@@ -10,13 +10,13 @@ use serde::{Deserialize, Serialize};
     Use,
     Inventory,
     Transform,
-    RigidBody::Dynamic,
+    RigidBody::Static,
     Collider = init_backpack_collider(),
     Sensor,
     CollisionLayers = init_backpack_collision_layers(),
 )]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState> = StateScoped(GameState::Playing))
+    DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing))
 )]
 pub struct Backpack;
 
@@ -35,20 +35,20 @@ pub enum LootAction {
     TakeItem(Entity),
 }
 
-#[derive(Deserialize, Event, Serialize, Clone, Debug)]
+#[derive(Deserialize, EntityEvent, Serialize, Clone, Debug)]
 pub struct LootCommand {
+    #[event_target]
+    pub loot_target: Entity,
     pub user: Entity,
     pub action: LootAction,
 }
 
-pub fn on_use_backpack_event(trigger: Trigger<UseCommand>, mut commands: Commands) {
-    commands.client_trigger_targets(
-        LootCommand {
-            user: trigger.event().user,
-            action: LootAction::TakeAll,
-        },
-        trigger.target(),
-    );
+pub fn on_use_backpack_event(use_command: On<UseCommand>, mut commands: Commands) {
+    commands.client_trigger(LootCommand {
+        loot_target: use_command.usable,
+        user: use_command.user,
+        action: LootAction::TakeAll,
+    });
 }
 
 #[cfg(test)]
@@ -78,13 +78,11 @@ mod tests {
         let e_backpack = setup_backpack(&mut app, vec![e_item_1, e_item_2]);
 
         // when
-        app.world_mut().trigger_targets(
-            LootCommand {
-                user: e_player,
-                action: LootAction::List,
-            },
-            e_backpack,
-        );
+        app.world_mut().trigger(LootCommand {
+            loot_target: e_backpack,
+            user: e_player,
+            action: LootAction::List,
+        });
 
         app.update();
 
@@ -104,13 +102,11 @@ mod tests {
 
         // when
         app.update();
-        app.world_mut().trigger_targets(
-            LootCommand {
-                user: e_player,
-                action: LootAction::TakeAll,
-            },
-            e_backpack,
-        );
+        app.world_mut().trigger(LootCommand {
+            loot_target: e_backpack,
+            user: e_player,
+            action: LootAction::TakeAll,
+        });
         app.update();
 
         // then
@@ -128,13 +124,11 @@ mod tests {
 
         // when
         app.update();
-        app.world_mut().trigger_targets(
-            LootCommand {
-                user: e_player,
-                action: LootAction::TakeItem(e_item_2),
-            },
-            e_backpack,
-        );
+        app.world_mut().trigger(LootCommand {
+            loot_target: e_backpack,
+            user: e_player,
+            action: LootAction::TakeItem(e_item_2),
+        });
         app.update();
 
         // then

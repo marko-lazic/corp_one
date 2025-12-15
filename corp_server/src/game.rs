@@ -5,6 +5,7 @@ use crate::{
 };
 use bevy::{
     app::{App, ScheduleRunnerPlugin},
+    ecs::error::warn,
     prelude::*,
     state::app::StatesPlugin,
     MinimalPlugins,
@@ -32,15 +33,17 @@ impl GameServer {
         }
     }
     pub fn create_app(&self) -> App {
-        let wait_duration = Duration::from_secs_f64(1.0 / f64::from(TICK_RATE));
         let mut app = App::new();
         app.insert_resource(self.game_server_config.clone())
+            .set_error_handler(warn)
             .add_plugins((
-                MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(wait_duration)),
-                TokensPlugin,
+                MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(
+                    1.0 / f64::from(TICK_RATE),
+                ))),
                 StatesPlugin,
-                ServerNetPlugin,
+                TokensPlugin,
                 EntropyPlugin::<WyRand>::default(),
+                ServerNetPlugin,
             ));
         if self.is_colony_server() {
             app.add_plugins((

@@ -1,11 +1,8 @@
 use crate::prelude::LocalPlayer;
 use bevy::{
-    core_pipeline::{
-        bloom::Bloom,
-        prepass::{DepthPrepass, MotionVectorPrepass, NormalPrepass},
-    },
+    camera::{Exposure, PhysicalCameraParameters},
+    core_pipeline::prepass::{DepthPrepass, MotionVectorPrepass, NormalPrepass},
     prelude::*,
-    render::camera::{Exposure, PhysicalCameraParameters},
 };
 use bevy_dolly::prelude::*;
 use corp_shared::prelude::*;
@@ -28,10 +25,6 @@ pub struct MainCamera;
 
 #[derive(Component)]
 pub struct MainCameraFollow;
-
-#[derive(Event)]
-pub struct SetupLocalPlayerCamera;
-
 pub struct MainCameraPlugin;
 
 impl Plugin for MainCameraPlugin {
@@ -48,28 +41,22 @@ impl Plugin for MainCameraPlugin {
 }
 
 fn on_setup_local_player_camera(
-    _trigger: Trigger<SetupLocalPlayerCamera>,
+    add_local_player: On<Add, LocalPlayer>,
     mut commands: Commands,
-    q_player_tr: Query<&Transform, With<LocalPlayer>>,
 ) -> Result {
-    info!("Setup Camera");
-    let position = q_player_tr
-        .single()
-        .map_err(|e| format!("Failed to get single local player tr: {:?}", e))?;
+    info!("Setup Camera for LocalPlayer {:?}", add_local_player.entity);
     commands.spawn((
         MainCamera,
         Camera3d::default(),
         Rig::builder()
-            .with(Position::new(position.translation))
+            .with(Position::new(Vec3::new(0.0, 1.0, 0.0)))
             .with(YawPitch::new().yaw_degrees(45.0).pitch_degrees(-65.0))
             .with(Smooth::new_position(0.3))
             .with(Smooth::new_rotation(0.3))
             .with(Arm::new(Vec3::Z * 18.0))
             .build(),
-        Camera {
-            hdr: true,
-            ..default()
-        },
+        // Hdr,
+        // Bloom::NATURAL,
         Exposure::from_physical_camera(PhysicalCameraParameters {
             aperture_f_stops: 1.0,
             shutter_speed_s: 1.0 / 125.0,
@@ -81,9 +68,9 @@ fn on_setup_local_player_camera(
         NormalPrepass,
         // This will generate a texture containing screen space pixel motion vectors
         MotionVectorPrepass,
-        Bloom::NATURAL,
-        StateScoped(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
     ));
+
     Ok(())
 }
 

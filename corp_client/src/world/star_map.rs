@@ -11,10 +11,9 @@ impl Plugin for StarMapPlugin {
 }
 
 fn setup_star_map(mut commands: Commands, texture_assets: Res<TextureAssets>) {
-    commands.spawn((Camera2d, StateScoped(GameState::StarMap)));
     commands.spawn((
         Name::new("Star Map Background"),
         Sprite::from_image(texture_assets.nebula.clone()),
-        StateScoped(GameState::StarMap),
+        DespawnOnExit(GameState::StarMap),
     ));
 }

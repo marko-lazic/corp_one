@@ -1,6 +1,6 @@
 use crate::server::*;
 use aeronet::io::{
-    connection::{Disconnected, LocalAddr},
+    connection::{DisconnectReason, Disconnected, LocalAddr},
     server::{Closed, Server},
     Session,
 };
@@ -10,7 +10,7 @@ use aeronet_webtransport::{
     server::{SessionRequest, SessionResponse, WebTransportServer, WebTransportServerPlugin},
     wtransport,
 };
-use bevy::prelude::*;
+use bevy::{ecs::schedule::ScheduleLabel, prelude::*};
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 use std::time::Duration;
@@ -25,7 +25,7 @@ impl Plugin for ServerNetPlugin {
             // replication
             RepliconPlugins.set(ServerPlugin {
                 // 1 frame lasts `1.0 / TICK_RATE` anyway
-                tick_policy: TickPolicy::EveryFrame,
+                tick_schedule: PostUpdate.intern(),
                 ..Default::default()
             }),
             AeronetRepliconServerPlugin,
@@ -66,25 +66,25 @@ fn open_server(mut commands: Commands, game_server_config: Res<GameServerConfig>
     info!("Opening WebTransport server \"{server}\"");
 }
 
-fn on_opened(trigger: Trigger<OnAdd, Server>, servers: Query<&LocalAddr>) {
-    let server = trigger.target();
+fn on_opened(add: On<Add, Server>, servers: Query<&LocalAddr>) {
+    let server = add.entity;
     let local_addr = servers
         .get(server)
         .expect("spawned session entity should have a name");
     info!("\"{server}\" opened on {}", **local_addr);
 }
 
-fn on_closed(trigger: Trigger<Closed>) {
-    panic!("server closed: {:?}", trigger.event());
+fn on_closed(closed: On<Closed>) {
+    panic!("server closed: {:?}", closed.event());
 }
 
 fn on_session_request(
-    mut request: Trigger<SessionRequest>,
+    mut request: On<SessionRequest>,
     clients: Query<&ChildOf>,
     tokens: Res<Tokens>,
     mut commands: Commands,
 ) -> Result {
-    let client = request.target();
+    let client = request.entity;
     let &ChildOf(server) = clients.get(client)?;
 
     debug!("\"{client}\" connecting to \"{server}\" with headers:");
@@ -114,11 +114,11 @@ fn on_session_request(
 }
 
 fn on_connected(
-    trigger: Trigger<OnAdd, Session>,
+    add: On<Add, Session>,
     clients: Query<&ChildOf>,
     config: Res<GameServerConfig>,
 ) -> Result {
-    let client = trigger.target();
+    let client = add.entity;
     let &ChildOf(server) = clients.get(client)?;
     let server_colony = config.colony;
     info!("Session \"{client}\" connected to server {server_colony} \"{server}\"");
@@ -127,25 +127,25 @@ fn on_connected(
 }
 
 fn on_disconnected(
-    trigger: Trigger<Disconnected>,
+    disconnected: On<Disconnected>,
     clients: Query<&ChildOf>,
     config: Res<GameServerConfig>,
 ) {
-    let client = trigger.target();
+    let client = disconnected.entity;
     let Ok(&ChildOf(server)) = clients.get(client) else {
         error!("\"{client}\" disconnected from server but it's not a child of it");
         return;
     };
     let server_colony = config.colony;
 
-    match &*trigger {
-        Disconnected::ByUser(reason) => {
+    match &disconnected.reason {
+        DisconnectReason::ByUser(reason) => {
             info!("\"{client}\" disconnected from {server_colony} \"{server}\" by user: {reason}");
         }
-        Disconnected::ByPeer(reason) => {
+        DisconnectReason::ByPeer(reason) => {
             info!("\"{client}\" disconnected from {server_colony} \"{server}\" by peer: {reason}");
         }
-        Disconnected::ByError(err) => {
+        DisconnectReason::ByError(err) => {
             warn!(
                 "\"{client}\" disconnected from {server_colony} \"{server}\" due to error: {err:?}"
             );

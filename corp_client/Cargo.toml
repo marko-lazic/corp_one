@@ -8,34 +8,29 @@ edition = "2024"
 corp_shared = { path = "../corp_shared", features = ["client"] }
 corp_types = { path = "../corp_types" }
 bevy = { workspace = true, default-features = false, features = [
-    "bevy_asset",
-    "bevy_ui",
-    "bevy_text",
-    "animation",
-    "tonemapping_luts",
+    "default",
+    "bevy_post_process",
+    "bevy_remote",
     "bevy_animation",
-    "bevy_winit",
+    "serialize",
     "dynamic_linking",
-    "png",
-    "bevy_gltf",
-    "track_location",
-    "configurable_error_handler"
+    "track_location"
 ] }
 avian3d = { workspace = true, features = ["default", "enhanced-determinism", "serialize"] }
-bevy_enhanced_input = "0.11"
-bevy-inspector-egui = "0.31"
-bevy_asset_loader = { version = "0.23.0", default-features = false, features = ["3d"] }
-bevy_kira_audio = { version = "0.23", default-features = false, features = [
+bevy_enhanced_input = "0.20"
+bevy-inspector-egui = "0.35"
+bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader.git", branch = "bevy_main", default-features = false, features = ["3d"] }
+bevy_kira_audio = { version = "0.24", default-features = false, features = [
     "wav",
     "ogg",
 ] }
-bevy-tnua = "0.24.0"
-bevy-tnua-avian3d = "0.5.0"
-bevy_dolly = { git = "https://github.com/BlackPhlox/bevy_dolly.git", branch = "bevy_0.16", default-features = false, features = [
+bevy-tnua = "0.26.0"
+bevy-tnua-avian3d = "0.8.0"
+bevy_dolly = { git = "https://github.com/Gaeric/bevy_dolly.git", branch = "main", default-features = false, features = [
     "drivers",
 ] }
-bevy_skein = { version = "0.2" }
-bevy_framepace = "0.19"
+bevy_skein = { version = "0.4" }
+bevy_framepace = "0.20"
 rand = { workspace = true }
 bevy_rand = { workspace = true }
 aeronet = { workspace = true }
@@ -70,7 +65,3 @@ path = "examples/shader/force_field.rs"
 [[example]]
 name = "state"
 path = "examples/state/state.rs"
-
-[[example]]
-name = "observer"
-path = "examples/observer.rs"

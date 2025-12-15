@@ -4,7 +4,7 @@ use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_tnua::prelude::TnuaController;
 use bevy_tnua_avian3d::TnuaAvian3dSensorShape;
 use corp_shared::prelude::*;
-use rand::seq::SliceRandom;
+use rand::seq::IndexedRandom;
 
 /// Marks [`Player`] as locally controlled.
 #[derive(Component)]
@@ -14,19 +14,27 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(on_setup_local_player);
+        app.add_observer(on_setup_local_player)
+            .add_observer(on_add_local_player);
     }
 }
 
+fn on_add_local_player(_: On<Add, LocalPlayer>, mut commands: Commands) {
+    commands.set_state(GameState::Playing);
+}
+
 fn on_setup_local_player(
-    trigger: Trigger<SetupPlayerServerCommand>,
+    setup_player: On<SetupPlayerCommand>,
     r_player_assets: Res<PlayerAssets>,
     mut q_vortex_node_pos: Query<&mut Transform, With<VortexNode>>,
     mut commands: Commands,
     q_local_player: Query<&LocalPlayer>,
 ) {
-    info!("MakeLocal received {:?}", trigger.target());
-    let player_e = trigger.target();
+    info!(
+        "On SetupPlayerCommand received {:?}",
+        setup_player.player_target
+    );
+    let player_e = setup_player.player_target;
 
     // Validate no LocalPlayer exists
     if q_local_player.iter().count() > 0 {
@@ -37,7 +45,7 @@ fn on_setup_local_player(
         .iter_mut()
         .map(|t| t.translation)
         .collect::<Vec<Vec3>>()
-        .choose(&mut rand::thread_rng())
+        .choose(&mut rand::rng())
         .map(|p| p.to_owned())
         .unwrap_or_else(|| Vec3::new(1.0, 10.0, 1.0));
 
@@ -48,14 +56,15 @@ fn on_setup_local_player(
             LocalPlayer,
             Transform::from_translation(rnd_node_position + Vec3::Y),
             Visibility::default(),
-            MovementBundle::default(),
+            CharacterMovement::default(),
+            OrientationMode::default(),
             MainCameraFollow,
             Inventory,
             PlayerFactionInfo {
                 faction: Faction::EC,
                 rank: Rank::R6,
             },
-            StateScoped(GameState::Playing),
+            DespawnOnExit(GameState::Playing),
             // Physics
             (
                 RigidBody::Dynamic,
@@ -77,14 +86,8 @@ fn on_setup_local_player(
                     // Offset the mesh y position by capsule total height
                     Transform::from_xyz(0.0, -1.5, 0.0),
                 ))
-                .observe(
-                    |_trigger: Trigger<SceneInstanceReady>, mut commands: Commands| {
-                        info!("Player Scene Instance Ready");
-                        commands.trigger(SetupLocalPlayerCamera);
-                        commands.set_state(GameState::Playing);
-                    },
-                );
+                .observe(|_scene_instance_ready: On<SceneInstanceReady>| {
+                    info!("Player Scene Instance Ready");
+                });
         });
-
-    info!("Spawned player entity: {:?}", player_e);
 }

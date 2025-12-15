@@ -1,6 +1,6 @@
 use crate::{prelude::Health, world::gameplay::roll::Range};
 use bevy::prelude::*;
-use bevy_rand::prelude::{GlobalEntropy, WyRand};
+use bevy_rand::prelude::{GlobalRng, WyRand};
 use rand::Rng;
 
 #[derive(Event)]
@@ -24,23 +24,23 @@ impl Plugin for ActionPlugin {
 }
 
 fn heal(
-    trigger: Trigger<HealActionEvent>,
+    heal_action: On<HealActionEvent>,
     mut q_health: Query<&mut Health>,
-    mut rng: GlobalEntropy<WyRand>,
+    mut rng: Single<&mut WyRand, With<GlobalRng>>,
 ) {
-    if let Ok(mut health) = q_health.get_mut(trigger.receiver) {
-        let amount = rng.gen_range((*trigger.range).clone()) as f32;
+    if let Ok(mut health) = q_health.get_mut(heal_action.receiver) {
+        let amount = rng.random_range((*heal_action.range).clone()) as f32;
         health.heal(amount);
     }
 }
 
 fn take_damage(
-    trigger: Trigger<DamageActionEvent>,
+    damage_action: On<DamageActionEvent>,
     mut q_health: Query<&mut Health>,
-    mut rng: GlobalEntropy<WyRand>,
+    mut rng: Single<&mut WyRand, With<GlobalRng>>,
 ) {
-    if let Ok(mut health) = q_health.get_mut(trigger.receiver) {
-        let amount = rng.gen_range((*trigger.range).clone()) as f32;
+    if let Ok(mut health) = q_health.get_mut(damage_action.receiver) {
+        let amount = rng.random_range((*damage_action.range).clone()) as f32;
         health.take_damage(amount);
     }
 }

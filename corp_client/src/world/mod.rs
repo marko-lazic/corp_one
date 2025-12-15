@@ -2,6 +2,7 @@ mod animator;
 mod ccc;
 mod cloning;
 mod colony;
+pub mod load_colony;
 mod physics;
 mod player;
 mod shader;

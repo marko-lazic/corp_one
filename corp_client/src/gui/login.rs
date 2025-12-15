@@ -1,4 +1,4 @@
-use crate::prelude::{CorpClient, RequestConnect, ASSET_PATH};
+use crate::prelude::{RequestConnect, ASSET_PATH};
 use bevy::prelude::*;
 use bevy_defer::{AsyncCommandsExtension, AsyncWorld};
 use corp_shared::prelude::*;
@@ -13,18 +13,13 @@ impl Plugin for LoginPlugin {
     }
 }
 
-fn auto_login(
-    mut commands: Commands,
-    credentials: Res<Credentials>,
-    client_e: Single<Entity, With<CorpClient>>,
-) -> Result {
+fn auto_login(mut commands: Commands, credentials: Res<Credentials>) -> Result {
     info!("Auto login initiated!");
-    login(&mut commands, &credentials, *client_e);
+    login(&mut commands, &credentials);
     Ok(())
 }
 
 fn setup_login_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((Camera2d, StateScoped(GameState::Login)));
     commands.spawn(login_button(asset_server));
 }
 
@@ -41,36 +36,33 @@ fn login_button(asset_server: Res<AssetServer>) -> impl Bundle {
             row_gap: Val::Px(10.0),
             ..default()
         },
-        StateScoped(GameState::Login),
+        DespawnOnExit(GameState::Login),
         children![(
             Text::new("Login"),
-            TextFont::from_font(asset_server.load(ASSET_PATH.default_font)).with_font_size(40.0),
+            TextFont::from(asset_server.load(ASSET_PATH.default_font)).with_font_size(40.0),
             TextColor::from(Color::srgb(0.9, 0.9, 0.9)),
         )],
     )
 }
 
 fn apply_login(
-    _trigger: Trigger<Pointer<Released>>,
+    _released: On<Pointer<bevy_enhanced_input::prelude::Release>>,
     mut commands: Commands,
     credentials: Res<Credentials>,
-    client_e: Single<Entity, With<CorpClient>>,
 ) -> Result {
     info!("Login button pressed!");
-    login(&mut commands, &credentials, *client_e);
+    login(&mut commands, &credentials);
     Ok(())
 }
 
-fn login(commands: &mut Commands, credentials: &Credentials, client_e: Entity) {
+fn login(commands: &mut Commands, credentials: &Credentials) {
     let credentials = credentials.clone();
     commands.spawn_task(move || async move {
         match authenticate(credentials).await {
             Ok(login_response) => {
                 let async_world = AsyncWorld;
                 async_world.insert_resource(AuthToken(login_response.token));
-                async_world
-                    .entity(client_e)
-                    .trigger(RequestConnect(Colony::StarMap))?;
+                async_world.trigger_event(RequestConnect(Colony::StarMap));
             }
             Err(err) => {
                 error!("Login failed: {:?}", err);

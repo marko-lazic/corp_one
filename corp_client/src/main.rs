@@ -1,9 +1,6 @@
 mod client_frontend;
 use crate::client_frontend::ClientFrontendPlugin;
-use bevy::{
-    ecs::error::{warn, GLOBAL_ERROR_HANDLER},
-    prelude::*,
-};
+use bevy::{ecs::error::warn, prelude::*};
 use clap::Parser;
 use corp_client::prelude::*;
 use corp_shared::prelude::Credentials;
@@ -23,11 +20,9 @@ fn main() {
     let args = Args::parse();
     let credentials = Credentials::new(args.username, args.password);
 
-    GLOBAL_ERROR_HANDLER
-        .set(warn)
-        .expect("The error handler can only be set once, globally.");
     App::new()
         .insert_resource(credentials)
+        .set_error_handler(warn)
         .add_plugins((ClientFrontendPlugin, ClientBackendPlugin))
         .run();
 }

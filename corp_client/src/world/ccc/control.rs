@@ -1,6 +1,10 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
-use bevy::{platform::collections::HashSet, prelude::*};
+use bevy::{
+    platform::collections::HashSet,
+    prelude::*,
+    window::{CursorOptions, PrimaryWindow},
+};
 use bevy_dolly::{
     dolly_type::Rig,
     prelude::{Arm, *},
@@ -45,9 +49,9 @@ impl Plugin for ControlPlugin {
         app.add_plugins(EnhancedInputPlugin)
             .init_resource::<CursorWorld>()
             .init_resource::<HoverEntities>()
-            .add_input_context::<OnFoot>()
-            .add_input_context::<OnStarMap>()
-            .add_input_context::<OnUi>()
+            .add_input_context::<PlayingInput>()
+            .add_input_context::<StarMapInput>()
+            .add_input_context::<UiInput>()
             .add_systems(OnEnter(GameState::StarMap), setup_star_map_input_controls)
             .add_systems(OnEnter(GameState::Playing), setup_playing_input_controls)
             .add_systems(OnExit(GameState::Playing), reset_cursor_visible)
@@ -61,9 +65,6 @@ impl Plugin for ControlPlugin {
                 )
                     .run_if(in_state(GameState::Playing)),
             )
-            .add_observer(foot_binding)
-            .add_observer(star_map_binding)
-            .add_observer(ui_binding)
             .add_observer(apply_movement)
             .add_observer(apply_stop_movement)
             .add_observer(apply_orientation_mode)
@@ -86,23 +87,108 @@ impl Plugin for ControlPlugin {
 fn setup_star_map_input_controls(mut commands: Commands) {
     commands.spawn((
         Name::new("Star Map Input Controls"),
-        Actions::<OnStarMap>::default(),
-        Actions::<OnUi>::default(),
-        StateScoped(GameState::StarMap),
+        star_map_bindings(),
+        ui_bindings(),
+        DespawnOnExit(GameState::StarMap),
     ));
 }
 
 fn setup_playing_input_controls(mut commands: Commands) {
     commands.spawn((
         Name::new("Playing Input Controls"),
-        Actions::<OnFoot>::default(),
-        Actions::<OnUi>::default(),
-        StateScoped(GameState::Playing),
+        playing_bindings(),
+        ui_bindings(),
+        DespawnOnExit(GameState::Playing),
     ));
 }
 
-fn reset_cursor_visible(mut window: Single<&mut Window>) {
-    window.cursor_options.visible = true;
+fn playing_bindings() -> impl Bundle {
+    (
+        PlayingInput,
+        actions!(
+        PlayingInput[
+            (
+            Action::<Movement>::new(),
+            DeadZone::default(),
+            Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
+            ),
+            (
+                Action::<AimWeapon>::new(),
+                bindings![MouseButton::Right, GamepadButton::LeftTrigger], // LT to aim (hold)
+            ),
+            (
+                Action::<UseObject>::new(),
+                bindings![KeyCode::KeyE, GamepadButton::South], // A to interact
+            ),
+            (
+                Action::<KillMe>::new(),
+                bindings![KeyCode::KeyK]
+            ),
+            (
+                Action::<Shoot>::new(),
+                bindings![MouseButton::Left, GamepadButton::RightTrigger], // RT to shoot
+            ),
+            (
+                Action::<Inventory>::new(),
+                bindings![KeyCode::KeyI, GamepadButton::North], // Y to open inventory
+            ),
+            (
+                Action::<OrientationModeSwitch>::new(),
+                bindings![KeyCode::Space, GamepadButton::RightThumb], // R3 toggles orientation mode
+            ),
+            (
+                Action::<ZoomIn>::new(),
+                bindings![KeyCode::Equal, GamepadButton::DPadUp], // D-Pad Up zoom in
+            ),
+            (
+                Action::<ZoomOut>::new(),
+                bindings![KeyCode::Minus, GamepadButton::DPadDown], // D-Pad Down zoom out
+            ),
+            (
+                Action::<RotateClockwise>::new(),
+                bindings![KeyCode::KeyZ, GamepadButton::DPadRight], // D-Pad Right rotate camera CW
+            ),
+            (
+                Action::<RotateCounterClockwise>::new(),
+                bindings![KeyCode::KeyC, GamepadButton::DPadLeft], // D-Pad Left rotate camera CCW
+            )
+        ]),
+    )
+}
+
+fn star_map_bindings() -> impl Bundle {
+    (
+        StarMapInput,
+        actions!(StarMapInput[
+            (
+                Action::<ColonyIris>::new(),
+                bindings![ KeyCode::KeyI ]
+            ),
+            (
+                Action::<ColonyLiberte>::new(),
+                bindings![ KeyCode::KeyL ]
+            )
+        ]),
+    )
+}
+
+fn ui_bindings() -> impl Bundle {
+    (
+        UiInput,
+        actions!(
+            UiInput[(
+                Action::<ExitHold>::new(),
+                Hold::new(0.5),
+                bindings![KeyCode::Escape, GamepadButton::Start] // Start held to exit/confirm
+            )]
+        ),
+    )
+}
+
+fn reset_cursor_visible(
+    mut primary_cursor_options: Single<&mut CursorOptions, With<PrimaryWindow>>,
+) {
+    primary_cursor_options.visible = true;
 }
 
 fn can_move(mut query: Query<(&mut CharacterMovement, &Health), Changed<Health>>) {
@@ -288,45 +374,8 @@ fn rotate_character(
     }
 }
 
-fn foot_binding(trigger: Trigger<Binding<OnFoot>>, mut players: Query<&mut Actions<OnFoot>>) {
-    let mut actions = players.get_mut(trigger.target()).unwrap();
-    actions
-        .bind::<Move>()
-        .to(Cardinal::wasd_keys())
-        .with_modifiers(DeadZone::default());
-    actions.bind::<AimAction>().to(MouseButton::Right);
-    actions.bind::<UseAction>().to(KeyCode::KeyE);
-    actions.bind::<KillAction>().to(KeyCode::KeyK);
-    actions.bind::<ShootAction>().to(MouseButton::Left);
-    actions.bind::<InventoryAction>().to(KeyCode::KeyI);
-    actions.bind::<OrientationModeAction>().to(KeyCode::Space);
-    actions.bind::<ZoomInAction>().to(KeyCode::Equal);
-    actions.bind::<ZoomOutAction>().to(KeyCode::Minus);
-    actions.bind::<RotateClockwiseAction>().to(KeyCode::KeyZ);
-    actions
-        .bind::<RotateCounterClockwiseAction>()
-        .to(KeyCode::KeyC);
-}
-
-fn star_map_binding(
-    trigger: Trigger<Binding<OnStarMap>>,
-    mut players: Query<&mut Actions<OnStarMap>>,
-) {
-    let mut actions = players.get_mut(trigger.target()).unwrap();
-    actions.bind::<ColonyIrisAction>().to(KeyCode::KeyI);
-    actions.bind::<ColonyLiberteAction>().to(KeyCode::KeyL);
-}
-
-fn ui_binding(trigger: Trigger<Binding<OnUi>>, mut players: Query<&mut Actions<OnUi>>) {
-    let mut actions = players.get_mut(trigger.target()).unwrap();
-    actions
-        .bind::<EscapeAction>()
-        .to(KeyCode::Escape)
-        .with_conditions(Hold::new(0.5));
-}
-
 fn apply_movement(
-    trigger: Trigger<Fired<Move>>,
+    fire_movement: On<Fire<Movement>>,
     cam_transform: Single<&Transform, With<MainCamera>>,
     mut movement: Single<&mut CharacterMovement, With<LocalPlayer>>,
     mut tnua: Single<&mut TnuaController>,
@@ -341,7 +390,7 @@ fn apply_movement(
         Vec3::new(r.x, 0.0, r.z).normalize_or_zero()
     };
 
-    let input_axis = trigger.value;
+    let input_axis = fire_movement.value;
     let input_forward = cam_forward * input_axis.y;
     let input_strafe = cam_right * input_axis.x;
 
@@ -354,13 +403,13 @@ fn apply_movement(
             // The `float_height` must be greater (even if by little) from the distance between the
             // character's center and the lowest point of its collider.
             float_height: 1.5,
-            ..Default::default()
+            ..default()
         });
     }
 }
 
 fn apply_stop_movement(
-    _trigger: Trigger<Completed<Move>>,
+    _completed_move: On<Complete<Movement>>,
     mut tnua: Single<&mut TnuaController>,
     mut player_movement: Single<&mut CharacterMovement, With<LocalPlayer>>,
 ) {
@@ -368,12 +417,12 @@ fn apply_stop_movement(
     tnua.basis(TnuaBuiltinWalk {
         desired_velocity: Vec3::ZERO,
         float_height: 1.5,
-        ..Default::default()
+        ..default()
     });
 }
 
 fn apply_orientation_mode(
-    _trigger: Trigger<Started<OrientationModeAction>>,
+    _orientation_mode: On<Start<OrientationModeSwitch>>,
     r_cursor_world: Res<CursorWorld>,
     mut player_orientation_mode: Single<&mut OrientationMode, With<LocalPlayer>>,
 ) {
@@ -386,7 +435,7 @@ fn apply_orientation_mode(
 }
 
 fn apply_use(
-    _trigger: Trigger<Started<UseAction>>,
+    _use_action: On<Start<UseObject>>,
     mut commands: Commands,
     r_use_entity: Res<HoverEntities>,
     player_entity: Single<Entity, With<LocalPlayer>>,
@@ -394,19 +443,19 @@ fn apply_use(
 ) -> Result {
     for entity_target in r_use_entity.iter() {
         if q_use.contains(entity_target.entity) {
-            commands.trigger_targets(UseCommand::new(*player_entity), entity_target.entity);
+            commands.trigger(UseCommand::new(entity_target.entity, *player_entity));
         }
     }
     Ok(())
 }
 
-fn apply_kill(_trigger: Trigger<Started<KillAction>>, mut commands: Commands) -> Result {
+fn apply_kill(_kill_action: On<Start<KillMe>>, mut commands: Commands) -> Result {
     commands.client_trigger(KillMeCommand);
     Ok(())
 }
 
 fn apply_inventory(
-    _trigger: Trigger<Started<InventoryAction>>,
+    _inventory_action: On<Start<Inventory>>,
     container_query: Query<(&Name, &Contains), With<LocalPlayer>>,
     q_item_name: Query<&Name, With<Item>>,
 ) {
@@ -420,43 +469,31 @@ fn apply_inventory(
     }
 }
 
-fn apply_exit(trigger: Trigger<Ongoing<EscapeAction>>, mut commands: Commands) {
-    if trigger.elapsed_secs > 0.4 {
+fn apply_exit(excape_action: On<Ongoing<ExitHold>>, mut commands: Commands) {
+    if excape_action.elapsed_secs > 0.4 {
         commands.trigger(RequestExit);
     }
 }
 
 fn apply_window_cursor_visible(
-    _trigger: Trigger<Started<EscapeAction>>,
-    mut window: Single<&mut Window>,
+    _escape_action: On<Start<ExitHold>>,
+    mut primary_cursor_options: Single<&mut CursorOptions, With<PrimaryWindow>>,
 ) {
-    window.cursor_options.visible = !window.cursor_options.visible;
+    primary_cursor_options.visible = !primary_cursor_options.visible;
 }
 
-fn apply_starmap_iris(
-    _trigger: Trigger<Started<ColonyIrisAction>>,
-    mut commands: Commands,
-    client_e: Single<Entity, With<CorpClient>>,
-) {
+fn apply_starmap_iris(_colony_iris: On<Start<ColonyIris>>, mut commands: Commands) {
     info!("apply_starmap_iris");
-    commands
-        .entity(*client_e)
-        .trigger(RequestConnect(Colony::Iris));
+    commands.trigger(RequestConnect(Colony::Iris));
 }
 
-fn apply_starmap_liberte(
-    _trigger: Trigger<Started<ColonyLiberteAction>>,
-    mut commands: Commands,
-    client_e: Single<Entity, With<CorpClient>>,
-) {
+fn apply_starmap_liberte(_colony_liberte: On<Start<ColonyLiberte>>, mut commands: Commands) {
     info!("apply_starmap_liberte");
-    commands
-        .entity(*client_e)
-        .trigger(RequestConnect(Colony::Liberte));
+    commands.trigger(RequestConnect(Colony::Liberte));
 }
 
 fn apply_rotate_camera_clockwise(
-    _trigger: Trigger<Started<RotateClockwiseAction>>,
+    _rotate_clockwise: On<Start<RotateClockwise>>,
     mut rig: Single<&mut Rig>,
 ) {
     let camera_yp = rig.driver_mut::<YawPitch>();
@@ -464,7 +501,7 @@ fn apply_rotate_camera_clockwise(
 }
 
 fn apply_rotate_camera_counter_clockwise(
-    _trigger: Trigger<Started<RotateCounterClockwiseAction>>,
+    _rotate_counter_clockwise: On<Start<RotateCounterClockwise>>,
     mut rig: Single<&mut Rig>,
 ) {
     let camera_yp = rig.driver_mut::<YawPitch>();
@@ -472,7 +509,7 @@ fn apply_rotate_camera_counter_clockwise(
 }
 
 fn apply_camera_zoom_in(
-    _trigger: Trigger<Fired<ZoomInAction>>,
+    _zoom_in: On<Fire<ZoomIn>>,
     mut rig: Single<&mut Rig>,
     time: Res<Time<Fixed>>,
 ) {
@@ -484,7 +521,7 @@ fn apply_camera_zoom_in(
 }
 
 fn apply_camera_zoom_out(
-    _trigger: Trigger<Fired<ZoomOutAction>>,
+    _zoom_out: On<Fire<ZoomOut>>,
     mut rig: Single<&mut Rig>,
     time: Res<Time<Fixed>>,
 ) {
@@ -495,78 +532,78 @@ fn apply_camera_zoom_out(
     }
 }
 
-fn apply_aim(_trigger: Trigger<Started<AimAction>>, mut r_camera_modifier: ResMut<CameraModifier>) {
+fn apply_aim(_aim_action: On<Start<AimWeapon>>, mut r_camera_modifier: ResMut<CameraModifier>) {
     r_camera_modifier.aim_zoom_factor = 1.8;
 }
 
 fn apply_aim_completed(
-    _trigger: Trigger<Completed<AimAction>>,
+    _aim_action: On<Complete<AimWeapon>>,
     mut r_camera_modifier: ResMut<CameraModifier>,
 ) {
     r_camera_modifier.aim_zoom_factor = 1.0;
 }
 
-#[derive(InputContext)]
-struct OnFoot;
+#[derive(Component)]
+struct PlayingInput;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = Vec2)]
-struct Move;
+#[action_output(Vec2)]
+struct Movement;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct AimAction;
+#[action_output(bool)]
+struct AimWeapon;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct OrientationModeAction;
+#[action_output(bool)]
+struct OrientationModeSwitch;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct UseAction;
+#[action_output(bool)]
+struct UseObject;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct InventoryAction;
+#[action_output(bool)]
+struct Inventory;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct ShootAction;
+#[action_output(bool)]
+struct Shoot;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct KillAction;
+#[action_output(bool)]
+struct KillMe;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct ZoomInAction;
+#[action_output(bool)]
+struct ZoomIn;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct ZoomOutAction;
+#[action_output(bool)]
+struct ZoomOut;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct RotateClockwiseAction;
+#[action_output(bool)]
+struct RotateClockwise;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct RotateCounterClockwiseAction;
+#[action_output(bool)]
+struct RotateCounterClockwise;
 
-#[derive(InputContext)]
-struct OnStarMap;
-
-#[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct ColonyIrisAction;
+#[derive(Component)]
+struct StarMapInput;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct ColonyLiberteAction;
-
-#[derive(InputContext)]
-struct OnUi;
+#[action_output(bool)]
+struct ColonyIris;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct EscapeAction;
+#[action_output(bool)]
+struct ColonyLiberte;
+
+#[derive(Component)]
+struct UiInput;
+
+#[derive(Debug, InputAction)]
+#[action_output(bool)]
+struct ExitHold;

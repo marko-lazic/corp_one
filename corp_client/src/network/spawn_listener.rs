@@ -11,11 +11,11 @@ impl Plugin for SpawnListenerPlugin {
 }
 
 fn on_spawn_backpack(
-    trigger: Trigger<OnAdd, Backpack>,
+    add: On<Add, Backpack>,
     r_mesh_assets: Res<MeshAssets>,
     mut commands: Commands,
 ) -> Result {
-    let mut entity_commands = commands.get_entity(trigger.target())?;
+    let mut entity_commands = commands.get_entity(add.entity)?;
     entity_commands
         .insert((SceneRoot(r_mesh_assets.low_poly_backpack.clone()),))
         .observe(on_use_backpack_event);

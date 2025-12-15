@@ -7,6 +7,6 @@ pub struct Item;
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[require(Item, Name::new("Hacking Tool"))]
 #[cfg_attr(feature = "client", require(
-    StateScoped<crate::prelude::GameState> = StateScoped(crate::prelude::GameState::Playing))
+    DespawnOnExit<crate::prelude::GameState> = DespawnOnExit(crate::prelude::GameState::Playing))
 )]
 pub struct HackingTool;

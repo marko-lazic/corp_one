@@ -9,7 +9,8 @@ members = [
     "corp_proxy",
     "tools/ci",
     "corp_login",
-    "corp_world", "archive",
+    "corp_world",
+    "archive",
 ]
 default-members = ["corp_client", "corp_login", "corp_server", "corp_shared", "corp_proxy"]
 exclude = [
@@ -18,28 +19,27 @@ exclude = [
 ]
 
 [workspace.dependencies]
-bevy = { version = "0.16.1", default-features = false }
+bevy = { version = "0.17", default-features = false }
 serde = { version = "1", default-features = false }
 rmp-serde = "1.3.0"
-avian3d = { version = "0.3", default-features = false }
-rand = "0.8"
-bevy_rand = { version = "0.11", features = ["wyrand"] }
+avian3d = { version = "0.4", default-features = false }
+rand = "0.9"
+bevy_rand = { version = "0.12", features = ["wyrand"] }
 tokio = { version = "1.45", default-features = false }
 anyhow = "1.0.98"
 chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 surf = { version = "2.3", default-features = false, features = ["h1-client-rustls", "encoding"] }
-kameo = { version = "0.17.2" }
-kameo_actors = { version = "0.2.0" }
+kameo = { version = "0.19" }
+kameo_actors = { version = "0.4.0" }
 sqlx = { version = "0.8.6", default-features = false }
-async-trait = "0.1.88"
 envy = "0.4.2"
 dotenvy = "0.15.7"
-async-nats = "0.42.0"
+async-nats = "0.45.0"
 
-aeronet = { path = "../temp/aeronet/crates/aeronet", default-features = false }
-aeronet_webtransport = { path = "../temp/aeronet/crates/aeronet_webtransport", default-features = false }
-aeronet_replicon = { path = "../temp/aeronet/crates/aeronet_replicon", default-features = false }
-bevy_replicon = { version = "0.34.3", default-features = false }
-bevy_defer = { version = "0.14.0", default-features = false }
+aeronet = { version = "0.18.0", default-features = false }
+aeronet_webtransport = { version = "0.18.0", default-features = false }
+aeronet_replicon = { version = "0.18.0", default-features = false }
+bevy_replicon = { version = "0.37.1", default-features = false }
+bevy_defer = { version = "0.15", default-features = false }

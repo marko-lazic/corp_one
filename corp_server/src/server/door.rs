@@ -12,16 +12,18 @@ impl Plugin for DoorPlugin {
 }
 
 fn on_hack_door_command(
-    trigger: Trigger<FromClient<DoorHackCommand>>,
+    door_hack_command: On<FromClient<DoorHackCommand>>,
     mut commands: Commands,
     contains_query: Query<&Contains, With<Inventory>>,
     hacking_tools: Query<&HackingTool>,
     mut doors: Query<(&mut DoorState, &mut OwnershipRegistry)>,
     faction_info_query: Query<&PlayerFactionInfo, With<Player>>,
 ) {
-    let door_e = trigger.target();
-    let from_client = trigger.event();
-    let client_e = from_client.client_entity;
+    let door_e = door_hack_command.door_target;
+    let client_e = door_hack_command
+        .client_id
+        .entity()
+        .expect("Client ID is not an entity ID");
     if let Ok(inventory_content) = contains_query.get(client_e) {
         if let Some(hacking_tool_e) = inventory_content
             .into_iter()
@@ -38,11 +40,12 @@ fn on_hack_door_command(
                         ),
                     ));
                     door_state.toggle();
-                    let to_clients = ToClients {
-                        mode: SendMode::Broadcast,
-                        event: DoorHackedEvent::Successful,
-                    };
-                    commands.server_trigger_targets(to_clients, door_e);
+                    // TODO this may not be needed as door_state.toggle() will replicate state?
+                    // let to_clients = ToClients {
+                    //     mode: SendMode::Broadcast,
+                    //     message: DoorHackedEvent::Successful,
+                    // };
+                    // commands.server_trigger_targets(to_clients, door_e);
                 }
             }
         }
@@ -51,10 +54,11 @@ fn on_hack_door_command(
             "Client {} tried to hack a door without a inventory",
             client_e
         );
-        let to_clients = ToClients {
-            mode: SendMode::Broadcast,
-            event: DoorHackedEvent::Failure,
-        };
-        commands.server_trigger_targets(to_clients, door_e);
+        // TODO this may not be needed as door_state.toggle() will replicate state?
+        // let to_clients = ToClients {
+        //     mode: SendMode::Broadcast,
+        //     event: DoorHackedEvent::Failure,
+        // };
+        // commands.server_trigger_targets(to_clients, door_e);
     }
 }

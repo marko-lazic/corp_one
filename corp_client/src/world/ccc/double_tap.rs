@@ -22,7 +22,7 @@ impl DoubleTap {
     where
         F: FnOnce(),
     {
-        if self.timer.finished() {
+        if self.timer.is_finished() {
             if self.fulfilled() {
                 f();
             }

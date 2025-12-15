@@ -5,7 +5,7 @@ use bevy::prelude::*;
 #[reflect(Component)]
 #[require(Name::new("Tree"), Structure)]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState> = StateScoped(GameState::Playing))
+    DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing))
 )]
 pub struct Tree;
 
@@ -13,7 +13,7 @@ pub struct Tree;
 #[reflect(Component)]
 #[require(Name::new("Wall"), Structure)]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState> = StateScoped(GameState::Playing))
+    DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing))
 )]
 pub struct Wall;
 
@@ -21,7 +21,7 @@ pub struct Wall;
 #[reflect(Component)]
 #[require(Name::new("Ground"), Structure)]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState> = StateScoped(GameState::Playing))
+    DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing))
 )]
 pub struct Ground;
 
@@ -29,6 +29,6 @@ pub struct Ground;
 #[reflect(Component)]
 #[require(Name::new("Floor"), Structure)]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState> = StateScoped(GameState::Playing))
+    DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing))
 )]
 pub struct Floor;

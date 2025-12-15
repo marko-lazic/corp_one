@@ -35,9 +35,3 @@ impl Default for CharacterMovement {
         }
     }
 }
-
-#[derive(Bundle, Default)]
-pub struct MovementBundle {
-    pub character_movement: CharacterMovement,
-    pub control_orientation: OrientationMode,
-}

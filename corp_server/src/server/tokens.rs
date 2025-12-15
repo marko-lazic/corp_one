@@ -43,8 +43,8 @@ impl Plugin for TokensPlugin {
     }
 }
 
-fn on_bevy_user_event(trigger: Trigger<BevyUserEvent>, mut tokens: ResMut<Tokens>) {
-    let user_event = trigger.event().0.clone();
+fn on_bevy_user_event(bevy_user_event: On<BevyUserEvent>, mut tokens: ResMut<Tokens>) {
+    let user_event = bevy_user_event.event().0.clone();
     info!("on_bevy_user_event {:?}", user_event);
     match user_event {
         UserEvent::Login(data) => tokens.add_token(data.token.token, data.user),

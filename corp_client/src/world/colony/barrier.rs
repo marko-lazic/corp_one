@@ -1,7 +1,7 @@
 use crate::prelude::ForceFieldMaterial;
 use avian3d::prelude::*;
 use bevy::{
-    pbr::{NotShadowCaster, NotShadowReceiver},
+    light::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
 };
 use corp_shared::prelude::*;
@@ -28,11 +28,11 @@ impl Plugin for BarrierPlugin {
 }
 
 fn on_add_door(
-    trigger: Trigger<OnAdd, Door>,
+    add: On<Add, Door>,
     mut commands: Commands,
     mut r_force_field_materials: ResMut<Assets<ForceFieldMaterial>>,
 ) {
-    commands.entity(trigger.target()).insert((
+    commands.entity(add.entity).insert((
         MeshMaterial3d(r_force_field_materials.add(ForceFieldMaterial {})),
         NotShadowReceiver,
         NotShadowCaster,

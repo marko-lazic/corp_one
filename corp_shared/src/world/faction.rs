@@ -55,7 +55,7 @@ impl OwnershipRegistry {
         // Remove finished temporary factions
         self.factions.retain(|faction| {
             if let Ownership::Hacked(_, timer) = faction {
-                !timer.finished()
+                !timer.is_finished()
             } else {
                 true
             }

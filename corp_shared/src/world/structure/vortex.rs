@@ -6,7 +6,7 @@ use bevy::prelude::*;
 #[reflect(Component)]
 #[require(Name::new("Vortex Node"))]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState> = StateScoped(GameState::Playing))
+    DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing))
 )]
 pub struct VortexNode;
 
@@ -19,7 +19,7 @@ pub struct VortexNode;
     CollisionLayers = vortex_gate_collision_layers()
 )]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState> = StateScoped(GameState::Playing))
+    DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing))
 )]
 pub struct VortexGate;
 

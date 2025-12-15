@@ -7,51 +7,54 @@ pub struct PlayersPlugin;
 impl Plugin for PlayersPlugin {
     fn build(&self, app: &mut App) {
         app.add_observer(init_clients)
-            .add_observer(connect_clients)
-            .add_observer(despawn_clients);
+            .add_observer(on_add_connected_client)
+            .add_observer(on_remove_connected_client);
     }
 }
 
 fn init_clients(
-    trigger: Trigger<FromClient<PlayerSpawnClientCommand>>,
+    player_spawn: On<FromClient<PlayerSpawnCommand>>,
     mut commands: Commands,
 ) -> Result {
     info!(
-        "Received client player spawn command {:?}",
-        trigger.client_entity
+        "Received PlayerSpawnCommand from {:?}",
+        player_spawn.client_id
     );
 
-    let client_entity = trigger.client_entity;
+    let client_entity = player_spawn
+        .client_id
+        .entity()
+        .expect("Client ID is not an entity ID");
 
     // Create player
     commands.entity(client_entity).insert((
         Player,
         Replicated,
-        Transform::default(),
+        Signature::of::<Player>(),
         Health::default(),
         // Health::from(response.hit_points),
         // CreatureName(response.character_name),
-        AuthorizedClient,
-        ClientEntityMap::default(),
+        // AuthorizedClient,
     ));
 
     // Inform the client that he is ready
-    commands.server_trigger_targets(
-        ToClients {
-            mode: SendMode::Direct(client_entity),
-            event: SetupPlayerServerCommand,
+    commands.server_trigger(ToClients {
+        mode: SendMode::Direct(player_spawn.client_id),
+        message: SetupPlayerCommand {
+            player_target: player_spawn
+                .client_id
+                .entity()
+                .expect("Client ID is not an entity ID"),
         },
-        client_entity,
-    );
+    });
     Ok(())
 }
 
-fn connect_clients(trigger: Trigger<OnAdd, ConnectedClient>) {
-    info!("OnAdd ClientConnected {:?}", trigger.target());
+fn on_add_connected_client(add: On<Add, ConnectedClient>) {
+    info!("OnAdd ClientConnected {:?}", add.entity);
     // We don't do here anything at the moment because the client asks to get spawned
 }
 
-fn despawn_clients(trigger: Trigger<OnRemove, ConnectedClient>, mut commands: Commands) {
-    info!("OnRemove ClientConnected {:?}", trigger.target());
-    commands.entity(trigger.target()).try_despawn();
+fn on_remove_connected_client(remove: On<Remove, ConnectedClient>) {
+    info!("OnRemove ClientConnected {:?}", remove.entity);
 }

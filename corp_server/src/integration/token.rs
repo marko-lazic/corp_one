@@ -69,7 +69,7 @@ impl TokenService {
                     }
                 }
                 Err(e) => {
-                    error!("Failed to get stream: {}", e);
+                    error!("Failed to get stream USER_EVENTS: {}", e);
                     info!("Retrying in {}ms...", RETRY_DELAY.as_millis());
                     tokio::time::sleep(RETRY_DELAY).await;
                 }

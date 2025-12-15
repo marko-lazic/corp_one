@@ -6,7 +6,7 @@ pub use crate::config::WorldConfig;
 pub use application::*;
 use corp_types::messenger::Messenger;
 pub use infrastructure::*;
-use kameo::{prelude::ActorRef, Actor};
+use kameo::prelude::*;
 use tracing::info;
 
 pub struct WorldContext {

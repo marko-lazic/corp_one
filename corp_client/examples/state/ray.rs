@@ -6,11 +6,11 @@ pub fn cast_ray_system(
     q_spatial: SpatialQuery,
     mut r_target_entity: ResMut<TargetEntity>,
     window: Single<&Window, With<PrimaryWindow>>,
-    s_camera: Single<(&Camera, &GlobalTransform)>,
+    camera_and_gtr: Single<(&Camera, &GlobalTransform), With<Camera3d>>,
 ) {
     if let Some(cursor_position) = window.cursor_position() {
         // We will color in read the colliders hovered by the mouse.
-        let (camera, camera_transform) = *s_camera;
+        let (camera, camera_transform) = *camera_and_gtr;
         // First, compute a ray from the mouse position.
         if let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_position) {
             // Then cast the ray.

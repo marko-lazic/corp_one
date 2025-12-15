@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use aeronet::{
     io::{
-        connection::{Disconnect, Disconnected}, Session,
+        connection::{Disconnect, DisconnectReason, Disconnected}, Session,
         SessionEndpoint,
     },
     transport::TransportConfig,
@@ -25,7 +25,7 @@ pub struct ClientNetPlugin;
 struct RequestDisconnect;
 #[derive(Event)]
 struct ConnectClientTo(pub Colony);
-#[derive(Event, Clone, Eq, PartialEq)]
+#[derive(Message, Clone, Eq, PartialEq)]
 struct ConnectionDisconnectedEvent;
 
 impl Plugin for ClientNetPlugin {
@@ -40,10 +40,11 @@ impl Plugin for ClientNetPlugin {
             // game
             SpawnListenerPlugin,
         ))
-        .add_event::<ConnectionDisconnectedEvent>()
-        .react_to_event::<ConnectionDisconnectedEvent>()
+        .add_message::<ConnectionDisconnectedEvent>()
+        .react_to_message::<ConnectionDisconnectedEvent>()
         .init_resource::<ClientSettings>()
         .add_systems(Startup, setup_client)
+        .add_observer(request_connect)
         .add_observer(connect_client)
         .add_observer(on_connecting)
         .add_observer(on_connected)
@@ -54,11 +55,11 @@ impl Plugin for ClientNetPlugin {
 }
 
 fn setup_client(mut commands: Commands) {
-    commands.spawn(CorpClient).observe(request_connect);
+    commands.spawn(CorpClient);
 }
 
-fn request_connect(trigger: Trigger<RequestConnect>, mut commands: Commands) {
-    let colony = **trigger;
+fn request_connect(request_connect: On<RequestConnect>, mut commands: Commands) {
+    let colony = **request_connect;
     info!("request_connect to: {:?}", colony);
     commands.spawn_task(move || async move {
         // First trigger disconnect
@@ -81,12 +82,12 @@ fn request_connect(trigger: Trigger<RequestConnect>, mut commands: Commands) {
 }
 
 fn connect_client(
-    trigger: Trigger<ConnectClientTo>,
+    connect_client_to: On<ConnectClientTo>,
     mut commands: Commands,
     client_settings: Res<ClientSettings>,
     token: Option<Res<AuthToken>>,
 ) -> Result {
-    let colony = trigger.event().0;
+    let colony = connect_client_to.event().0;
     let config = client_settings.client_config();
 
     let token = token.ok_or("Auth token not found")?;
@@ -102,28 +103,28 @@ fn connect_client(
     Ok(())
 }
 
-fn on_connecting(trigger: Trigger<OnAdd, SessionEndpoint>, names: Query<&Name>) -> Result {
-    let target = trigger.target();
-    let name = names.get(target)?;
+fn on_connecting(add: On<Add, SessionEndpoint>, names: Query<&Name>) -> Result {
+    let name = names.get(add.entity)?;
     info!("SessionEndpoint \"{name}\" connecting...");
     Ok(())
 }
 
 fn on_connected(
-    trigger: Trigger<OnAdd, Session>,
+    add: On<Add, Session>,
     mut commands: Commands,
     client_colony: Single<&PendingColony, With<AeronetRepliconClient>>,
 ) -> Result {
-    let e_session = trigger.target();
-    info!("Session {e_session} Connected!");
+    let e_session = add.entity;
+    let colony = client_colony.0;
+    info!("Session {colony} Connected!");
 
     commands.entity(e_session).insert((TransportConfig {
         max_memory_usage: 64 * 1024,
-        send_bytes_per_sec: 4 * 1024,
+        tx_bytes_per_sec: 4 * 1024,
         ..default()
     },));
 
-    if client_colony.into_inner().0 == Colony::StarMap {
+    if colony == Colony::StarMap {
         commands.trigger(LoadStarMapCommand);
     } else {
         commands.trigger(LoadColonyCommand);
@@ -132,7 +133,7 @@ fn on_connected(
 }
 
 fn request_disconnect(
-    _trigger: Trigger<RequestDisconnect>,
+    _request_disconnect: On<RequestDisconnect>,
     mut commands: Commands,
     session_endpoint: Query<(Entity, &Name, Option<&Session>), With<SessionEndpoint>>,
 ) {
@@ -140,52 +141,52 @@ fn request_disconnect(
         // Handle disconnect logic
         if session_opt.is_some() {
             info!("Session \"{name}\" is Connected, sending disconnect request");
-            commands.trigger_targets(Disconnect::new(code::REQUEST_DISCONNECT), session);
+            commands.trigger(Disconnect::new(session, code::REQUEST_DISCONNECT));
         } else {
             info!("Session \"{name}\" is not Connected!");
-            commands.send_event(ConnectionDisconnectedEvent);
+            commands.write_message(ConnectionDisconnectedEvent);
         }
     } else {
         info!("No session endpoint found, sending disconnected event");
-        commands.send_event(ConnectionDisconnectedEvent);
+        commands.write_message(ConnectionDisconnectedEvent);
     }
 }
 
 fn disconnect_and_exit(
-    _trigger: Trigger<RequestExit>,
+    _request_exit: On<RequestExit>,
     s_session_entity: Single<(Entity, Option<&Session>), With<SessionEndpoint>>,
     mut commands: Commands,
-    mut exit_ev: EventWriter<AppExit>,
+    mut exit_ev: MessageWriter<AppExit>,
 ) {
     let (entity, session_opt) = *s_session_entity;
     if session_opt.is_some() {
-        commands.trigger_targets(Disconnect::new(code::APP_EXIT), entity);
+        commands.trigger(Disconnect::new(entity, code::APP_EXIT));
     } else {
         exit_ev.write(AppExit::Success);
     }
 }
 
 fn on_disconnected(
-    trigger: Trigger<Disconnected>,
+    disconnected: On<Disconnected>,
     names: Query<&Name>,
     mut commands: Commands,
-    mut exit_ev: EventWriter<AppExit>,
+    mut exit_ev: MessageWriter<AppExit>,
 ) -> Result {
-    let target = trigger.target();
+    let target = disconnected.entity;
     let name = names.get(target)?;
-    match trigger.event() {
-        Disconnected::ByUser(reason) => {
+    match &disconnected.event().reason {
+        DisconnectReason::ByUser(reason) => {
             info!("{name} disconnected by user: {reason}");
             if reason == code::APP_EXIT {
                 exit_ev.write(AppExit::Success);
             } else if reason == code::REQUEST_DISCONNECT {
-                commands.send_event(ConnectionDisconnectedEvent);
+                commands.write_message(ConnectionDisconnectedEvent);
             }
         }
-        Disconnected::ByPeer(reason) => {
+        DisconnectReason::ByPeer(reason) => {
             info!("{name} disconnected by peer: {reason}")
         }
-        Disconnected::ByError(err) => {
+        DisconnectReason::ByError(err) => {
             info!("{name} disconnected due to error: {err:?}");
             commands.set_state(GameState::Login);
         }

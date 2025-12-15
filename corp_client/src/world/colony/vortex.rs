@@ -17,26 +17,24 @@ impl Plugin for VortexPlugin {
 }
 
 fn handle_vortex_collision(
-    mut collision_events: EventReader<CollisionStarted>,
+    mut collision_events: MessageReader<CollisionStart>,
     q_vortex_gate: Query<(), With<VortexGate>>,
     q_player: Query<(), With<Player>>,
     mut commands: Commands,
-    client_e: Single<Entity, With<CorpClient>>,
 ) {
-    for CollisionStarted(entity1, entity2) in collision_events.read() {
-        let (_vortex_entity, player_entity) =
-            if q_vortex_gate.contains(*entity1) && q_player.contains(*entity2) {
-                (*entity1, *entity2)
-            } else if q_vortex_gate.contains(*entity2) && q_player.contains(*entity1) {
-                (*entity2, *entity1)
-            } else {
-                continue;
-            };
+    for event in collision_events.read() {
+        let (_vortex_entity, player_entity) = if q_vortex_gate.contains(event.collider1)
+            && q_player.contains(event.collider2)
+        {
+            (event.collider1, event.collider2)
+        } else if q_vortex_gate.contains(event.collider2) && q_player.contains(event.collider1) {
+            (event.collider2, event.collider1)
+        } else {
+            continue;
+        };
 
         info!("Vort {player_entity} to Star Map.");
-        commands
-            .entity(*client_e)
-            .trigger(RequestConnect(Colony::StarMap));
+        commands.trigger(RequestConnect(Colony::StarMap));
     }
 }
 

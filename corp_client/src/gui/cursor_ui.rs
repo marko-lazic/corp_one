@@ -6,7 +6,7 @@ use corp_shared::prelude::*;
 pub struct CursorUi(Vec2);
 
 #[derive(Component)]
-struct UseLabelComponent;
+struct UseLabel;
 
 pub struct CursorPlugin;
 
@@ -25,11 +25,11 @@ impl Plugin for CursorPlugin {
 fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
     commands.spawn((
         Text::new("[E] Use"),
-        UseLabelComponent,
-        TextFont::from_font(font_assets.default_font.clone()).with_font_size(20.0),
+        UseLabel,
+        TextFont::from(font_assets.default_font.clone()).with_font_size(20.0),
         TextColor::WHITE,
-        TextLayout::new_with_justify(JustifyText::Center),
-        StateScoped(GameState::Playing),
+        TextLayout::new_with_justify(Justify::Center),
+        DespawnOnExit(GameState::Playing),
     ));
 }
 
@@ -42,8 +42,8 @@ fn update_cursor_ui_position(q_primary_window: Single<&Window>, mut cursor: ResM
 
 fn update_use_text(
     r_hover_entities: Res<HoverEntities>,
-    camera: Single<(&Camera, &GlobalTransform)>,
-    q_use_text: Single<(&mut Node, &mut Visibility), With<UseLabelComponent>>,
+    camera: Single<(&Camera, &GlobalTransform), With<Camera3d>>,
+    q_use_text: Single<(&mut Node, &mut Visibility), With<UseLabel>>,
 ) {
     let (camera, gt_camera) = *camera;
     let (mut node, mut visibility) = q_use_text.into_inner();

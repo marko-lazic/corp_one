@@ -13,7 +13,7 @@ use crate::prelude::{Faction, OwnershipRegistry, SecurityLevel, UseCommand};
     OwnershipRegistry = lookup_ownership()
 )]
 #[cfg_attr(feature = "client", require(
-    StateScoped<GameState> = StateScoped(GameState::Playing))
+    DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing))
 )]
 pub struct EnergyNode;
 
@@ -21,8 +21,8 @@ fn lookup_ownership() -> OwnershipRegistry {
     OwnershipRegistry::new_permanent(Faction::EC)
 }
 
-pub fn on_use_territory_node_event(trigger: Trigger<UseCommand>) {
-    info!("Interaction with territory node: {:?}", trigger.target());
+pub fn on_use_territory_node_event(use_command: On<UseCommand>) {
+    info!("Interaction with territory node: {:?}", use_command.usable);
 }
 
 #[cfg(test)]
@@ -45,7 +45,7 @@ mod tests {
 
         // when
         app.world_mut()
-            .trigger_targets(UseCommand::new(e_player), e_energy_node);
+            .trigger(UseCommand::new(e_energy_node, e_player));
         app.update();
 
         // then

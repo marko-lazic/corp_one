@@ -2,12 +2,11 @@ use crate::prelude::*;
 use aeronet_replicon::client::AeronetRepliconClient;
 use avian3d::prelude::*;
 use bevy::{
-    pbr::{NotShadowCaster, NotShadowReceiver},
+    light::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     scene::SceneInstanceReady,
 };
 use bevy_replicon::prelude::ClientTriggerExt;
-use bevy_skein::SkeinPlugin;
 use corp_shared::prelude::*;
 use log::error;
 
@@ -20,20 +19,23 @@ pub struct LoadStarMapCommand;
 #[derive(Event)]
 struct UpdateLightsCommand;
 
-pub fn colony_loader_plugin(app: &mut App) {
-    app.add_plugins(SkeinPlugin::default())
-        .add_observer(on_load_star_map_command)
-        .add_observer(on_load_colony_command)
-        .add_observer(on_update_lights_command);
+pub struct LoadColonyPlugin;
+
+impl Plugin for LoadColonyPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_observer(on_load_star_map_command)
+            .add_observer(on_load_colony_command)
+            .add_observer(on_update_lights_command);
+    }
 }
 
-fn on_load_star_map_command(_trigger: Trigger<LoadStarMapCommand>, mut commands: Commands) {
+fn on_load_star_map_command(_load_star_map_cmd: On<LoadStarMapCommand>, mut commands: Commands) {
     info!("Star Map trigger");
     commands.set_state(GameState::StarMap);
 }
 
 fn on_load_colony_command(
-    _trigger: Trigger<LoadColonyCommand>,
+    _load_colony_command: On<LoadColonyCommand>,
     mut commands: Commands,
     mut r_meshes: ResMut<Assets<Mesh>>,
     mut r_materials: ResMut<Assets<StandardMaterial>>,
@@ -62,7 +64,7 @@ fn on_load_colony_command(
         .spawn((
             Name::new("Colony"),
             SceneRoot(colony_scene),
-            StateScoped(GameState::Playing),
+            DespawnOnExit(GameState::Playing),
         ))
         .observe(on_colony_loaded);
 
@@ -76,10 +78,10 @@ fn on_load_colony_command(
             NotShadowCaster,
             RigidBody::Static,
             Collider::cuboid(5.0, 5.0, 5.0),
-            StateScoped(GameState::Playing),
+            DespawnOnExit(GameState::Playing),
         ))
-        .observe(|click: Trigger<Pointer<Click>>| {
-            info!("Clicked on debug cube {:?}", click.target);
+        .observe(|click: On<Pointer<Click>>| {
+            info!("Clicked on debug cube {:?}", click.entity);
         });
 
     commands.spawn((
@@ -96,20 +98,20 @@ fn on_load_colony_command(
         RigidBody::Static,
         CollisionLayers::new([GameLayer::Structure], [GameLayer::Player]),
         Collider::cuboid(50.0, 0.01, 50.0),
-        StateScoped(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
     ));
     Ok(())
 }
 
-fn on_colony_loaded(_trigger: Trigger<SceneInstanceReady>, mut commands: Commands) {
+fn on_colony_loaded(_scene_instance_ready: On<SceneInstanceReady>, mut commands: Commands) {
     info!("Colony Scene Instance Ready");
-    commands.client_trigger(PlayerSpawnClientCommand);
+    commands.client_trigger(PlayerSpawnCommand);
     commands.trigger(UpdateLightsCommand);
 }
 
 // Temporarily fixes the problem with shadows not working
 fn on_update_lights_command(
-    _trigger: Trigger<UpdateLightsCommand>,
+    _update_lights_command: On<UpdateLightsCommand>,
     mut query: Query<&mut PointLight>,
 ) {
     for mut point_light in query.iter_mut() {

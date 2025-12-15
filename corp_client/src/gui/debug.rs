@@ -54,32 +54,32 @@ fn setup(
     commands.spawn((
         DebugTextBundle::new(font_assets.default_font.clone(), 5.0, 10.0),
         InteractionText,
-        StateScoped(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
     ));
     commands.spawn((
         DebugTextBundle::new(font_assets.default_font.clone(), 25.0, 10.0),
         PlayerPositionText,
-        StateScoped(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
     ));
     commands.spawn((
         DebugTextBundle::new(font_assets.default_font.clone(), 45.0, 10.0),
         MouseScreenPositionText,
-        StateScoped(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
     ));
     commands.spawn((
         DebugTextBundle::new(font_assets.default_font.clone(), 65.0, 10.0),
         MouseWorldPositionText,
-        StateScoped(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
     ));
     commands.spawn((
         DebugTextBundle::new(font_assets.default_font.clone(), 85.0, 10.0),
         CameraDebugText,
-        StateScoped(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
     ));
     commands.spawn((
         DebugTextBundle::new(font_assets.default_font.clone(), 105.0, 10.0),
         PlayerHealthText,
-        StateScoped(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
     ));
 
     let (debug_gizmo_config, _) = config_store.config_mut::<DebugGizmos>();
@@ -105,19 +105,19 @@ impl DebugTextBundle {
                 ..default()
             },
             text_color: TextColor::WHITE,
-            text_font: TextFont::from_font(font),
-            text_layout: TextLayout::new_with_justify(JustifyText::Left),
+            text_font: TextFont::from(font),
+            text_layout: TextLayout::new_with_justify(Justify::Left),
         }
     }
 }
 
 fn update_interaction_text(
-    trigger: Trigger<UsableTarget>,
+    usable_target: On<UsableTarget>,
     interaction_text_entity: Single<Entity, With<InteractionText>>,
     q_name: Query<&Name>,
     mut writer: TextUiWriter,
 ) {
-    let usable_entity = trigger.entity;
+    let usable_entity = usable_target.entity;
     let name = q_name
         .get(usable_entity)
         .map(|n| n.as_str())
@@ -160,13 +160,15 @@ fn update_mouse_world_position_text(
 }
 
 fn update_camera_position_text(
-    q_camera_pos: Single<&Transform, With<Camera>>,
+    camera_tr: Single<&Transform, With<Camera3d>>,
     camera_debug_text_entity: Single<Entity, With<CameraDebugText>>,
     mut writer: TextUiWriter,
 ) {
-    let cam_pos = q_camera_pos.translation;
-    *writer.text(*camera_debug_text_entity, 0) =
-        format!("Camera {:.0} {:.0} {:.0}", cam_pos.x, cam_pos.y, cam_pos.z);
+    let cam_pos = camera_tr.translation;
+    *writer.text(*camera_debug_text_entity, 0) = format!(
+        "Camera3d {:.0} {:.0} {:.0}",
+        cam_pos.x, cam_pos.y, cam_pos.z
+    );
 }
 
 fn update_player_health_text(

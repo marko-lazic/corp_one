@@ -1,5 +1,6 @@
 use crate::world::prelude::*;
 use bevy::prelude::*;
+use corp_shared::prelude::{ActionPlugin, StructurePlugin};
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 enum WorldSystemSet {
@@ -21,13 +22,17 @@ impl Plugin for WorldPlugin {
         })
         .add_plugins((
             WorldPhysicsPlugin,
-            ColonyPlugin,
             AnimatorPlugin,
             StarMapPlugin,
             ControlPlugin,
             MainCameraPlugin,
             PlayerPlugin,
             CloningLocalPlugin,
+            VortexPlugin,
+            BarrierPlugin,
+            StructurePlugin,
+            AreaPlugin,
+            ActionPlugin,
         ));
     }
 }

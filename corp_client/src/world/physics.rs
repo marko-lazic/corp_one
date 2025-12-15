@@ -10,7 +10,7 @@ impl Plugin for WorldPhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             PhysicsPlugins::new(FixedUpdate),
-            PhysicsDebugPlugin::new(FixedUpdate),
+            PhysicsDebugPlugin,
             TnuaControllerPlugin::new(FixedUpdate),
             TnuaAvian3dPlugin::new(FixedUpdate),
         ))

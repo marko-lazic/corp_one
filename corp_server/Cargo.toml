@@ -11,12 +11,12 @@ corp_proxy = { path = "../corp_proxy" }
 corp_login = { path = "../corp_login" }
 corp_world = { path = "../corp_world" }
 bevy = { workspace = true, features = [
+    "debug",
     "bevy_state",
     "bevy_color",
     "async-io",
     "multi_threaded",
-    "serialize",
-    "configurable_error_handler",
+    "serialize"
 ] }
 avian3d = { workspace = true, features = [
     "3d",

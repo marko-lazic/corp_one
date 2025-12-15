@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::{FromClient, SendMode, ServerTriggerExt, ToClients};
+use bevy_replicon::prelude::{ClientId, FromClient, SendMode, ServerTriggerExt, ToClients};
 use corp_shared::prelude::*;
 
 #[derive(Component, Deref, DerefMut)]
@@ -23,22 +23,22 @@ fn despawn_dead_player(
 ) {
     for (dead_player_e, mut death_timer) in &mut q_death_timer {
         death_timer.tick(r_time.delta());
-        if death_timer.finished() {
+        if death_timer.is_finished() {
             info!(
                 "Sending SendDeadPlayerToCloningCommand entity {:?}",
                 dead_player_e
             );
             commands.server_trigger(ToClients {
-                mode: SendMode::Direct(dead_player_e),
-                event: SendDeadPlayerToCloningCommand,
+                mode: SendMode::Direct(ClientId::from(dead_player_e)),
+                message: SendDeadPlayerToCloningCommand,
             });
             commands.entity(dead_player_e).remove::<DeathTimer>();
         }
     }
 }
 
-fn on_add_dead(trigger: Trigger<OnAdd, Dead>, mut commands: Commands) {
-    let player_e = trigger.target();
+fn on_add_dead(add: On<Add, Dead>, mut commands: Commands) {
+    let player_e = add.entity;
     info!("On add Dead for entity {:?} triggered", player_e);
     commands
         .entity(player_e)
@@ -47,11 +47,15 @@ fn on_add_dead(trigger: Trigger<OnAdd, Dead>, mut commands: Commands) {
 }
 
 fn on_kill_me_command(
-    trigger: Trigger<FromClient<KillMeCommand>>,
+    kill_me_command: On<FromClient<KillMeCommand>>,
     mut player_health: Query<&mut Health, With<Player>>,
 ) -> Result {
-    let player_e = trigger.client_entity;
-    let mut health = player_health.get_mut(player_e)?;
-    health.kill_mut();
+    if let ClientId::Client(player_e) = kill_me_command.client_id {
+        let mut health = player_health.get_mut(player_e)?;
+        health.kill_mut();
+    } else {
+        warn!("Received KillMeCommand from server, but it's not from a client");
+    }
+
     Ok(())
 }

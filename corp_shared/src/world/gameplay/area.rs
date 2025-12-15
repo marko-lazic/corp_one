@@ -6,7 +6,7 @@ use std::time::Duration;
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
 #[require(PassStructure, Transform, CollisionLayers =init_area_collision_layers())]
-#[cfg_attr(feature = "client", require(StateScoped<GameState> = StateScoped(GameState::Playing)))]
+#[cfg_attr(feature = "client", require(DespawnOnExit<GameState> = DespawnOnExit(GameState::Playing)))]
 pub struct Area;
 
 pub fn init_area_collision_layers() -> CollisionLayers {
