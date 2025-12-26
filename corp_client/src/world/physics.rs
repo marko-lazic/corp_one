@@ -1,20 +1,13 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy_tnua::prelude::*;
-use bevy_tnua_avian3d::TnuaAvian3dPlugin;
 use corp_shared::prelude::*;
 
 pub struct WorldPhysicsPlugin;
 
 impl Plugin for WorldPhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            PhysicsPlugins::new(FixedUpdate),
-            PhysicsDebugPlugin,
-            TnuaControllerPlugin::new(FixedUpdate),
-            TnuaAvian3dPlugin::new(FixedUpdate),
-        ))
-        .add_systems(Update, add_trimesh_collider);
+        app.add_plugins((PhysicsPlugins::new(FixedUpdate), PhysicsDebugPlugin))
+            .add_systems(Update, add_trimesh_collider);
     }
 }
 

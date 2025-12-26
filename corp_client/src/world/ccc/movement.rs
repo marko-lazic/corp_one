@@ -7,7 +7,7 @@ pub enum OrientationMode {
     Location(Vec2),
 }
 
-#[derive(Component)]
+#[derive(Component, Clone, Debug)]
 pub struct CharacterMovement {
     pub can_move: bool,
     pub direction: Vec3,

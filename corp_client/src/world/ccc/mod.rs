@@ -6,4 +6,7 @@ pub use movement::*;
 mod camera;
 mod control;
 mod double_tap;
+mod input;
 mod movement;
+
+pub use input::*;

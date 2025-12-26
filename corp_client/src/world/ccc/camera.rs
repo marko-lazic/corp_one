@@ -1,4 +1,4 @@
-use crate::prelude::LocalPlayer;
+use crate::prelude::{CharacterControllerState, LocalPlayer};
 use bevy::{
     camera::{Exposure, PhysicalCameraParameters},
     core_pipeline::prepass::{DepthPrepass, MotionVectorPrepass, NormalPrepass},
@@ -32,7 +32,7 @@ impl Plugin for MainCameraPlugin {
         app.init_resource::<CameraModifier>()
             .add_systems(
                 FixedUpdate,
-                (update_camera, Dolly::<MainCamera>::update_active)
+                (update_camera, Dolly::<MainCamera>::update_active, update_cam_transform)
                     .chain()
                     .run_if(in_state(GameState::Playing)),
             )
@@ -121,4 +121,11 @@ fn update_camera(
         camera_pos.position.x = player_and_camera_pos_diff.x;
         camera_pos.position.z = player_and_camera_pos_diff.z;
     }
+}
+
+fn update_cam_transform(
+    s_cam_transform: Single<&Transform, With<Camera3d>>,
+    mut s_character_state: Single<&mut CharacterControllerState, With<LocalPlayer>>,
+) {
+    s_character_state.cam_transform = s_cam_transform.clone();
 }

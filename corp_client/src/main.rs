@@ -16,7 +16,7 @@ struct Args {
     password: String,
 }
 
-fn main() {
+fn main() -> AppExit {
     let args = Args::parse();
     let credentials = Credentials::new(args.username, args.password);
 
@@ -24,5 +24,5 @@ fn main() {
         .insert_resource(credentials)
         .set_error_handler(warn)
         .add_plugins((ClientFrontendPlugin, ClientBackendPlugin))
-        .run();
+        .run()
 }

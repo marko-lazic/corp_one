@@ -1,17 +1,18 @@
-use crate::prelude::*;
+use crate::{prelude::*, world::ccc::input};
 use avian3d::prelude::*;
 use bevy::{
+    ecs::{
+        lifecycle::HookContext,
+        query::QueryData,
+        relationship::RelationshipSourceCollection,
+        system::lifetimeless::{Read, Write},
+        world::DeferredWorld,
+    },
     platform::collections::HashSet,
     prelude::*,
     window::{CursorOptions, PrimaryWindow},
 };
-use bevy_dolly::{
-    dolly_type::Rig,
-    prelude::{Arm, *},
-};
 use bevy_enhanced_input::prelude::*;
-use bevy_replicon::prelude::ClientTriggerExt;
-use bevy_tnua::{builtins::TnuaBuiltinWalk, controller::TnuaController};
 use corp_shared::prelude::*;
 use std::{f32::consts::PI, hash::Hash};
 
@@ -46,14 +47,11 @@ pub struct ControlPlugin;
 
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(EnhancedInputPlugin)
+        app.add_plugins((EnhancedInputPlugin, input::plugin))
             .init_resource::<CursorWorld>()
             .init_resource::<HoverEntities>()
-            .add_input_context::<PlayingInput>()
-            .add_input_context::<StarMapInput>()
-            .add_input_context::<UiInput>()
             .add_systems(OnEnter(GameState::StarMap), setup_star_map_input_controls)
-            .add_systems(OnEnter(GameState::Playing), setup_playing_input_controls)
+            .add_systems(OnEnter(GameState::Playing), setup_ui_input_controls)
             .add_systems(OnExit(GameState::Playing), reset_cursor_visible)
             .add_systems(
                 FixedUpdate,
@@ -62,127 +60,156 @@ impl Plugin for ControlPlugin {
                     detect_usable_targets,
                     update_cursor_world,
                     rotate_character,
+                    run_move_and_slide,
                 )
                     .run_if(in_state(GameState::Playing)),
-            )
-            .add_observer(apply_movement)
-            .add_observer(apply_stop_movement)
-            .add_observer(apply_orientation_mode)
-            .add_observer(apply_use)
-            .add_observer(apply_kill)
-            .add_observer(apply_inventory)
-            .add_observer(apply_exit)
-            .add_observer(apply_window_cursor_visible)
-            .add_observer(apply_starmap_iris)
-            .add_observer(apply_starmap_liberte)
-            .add_observer(apply_rotate_camera_clockwise)
-            .add_observer(apply_rotate_camera_counter_clockwise)
-            .add_observer(apply_camera_zoom_in)
-            .add_observer(apply_camera_zoom_out)
-            .add_observer(apply_aim)
-            .add_observer(apply_aim_completed);
+            );
     }
+}
+
+#[derive(Component, Clone, Reflect, Debug)]
+#[reflect(Component)]
+#[require(
+    AccumulatedInput,
+    CharacterControllerState,
+    TranslationInterpolation,
+    CustomPositionIntegration,
+    RigidBody = RigidBody::Kinematic,
+    SpeculativeMargin::ZERO,
+    CollidingEntities
+)]
+#[component(on_add=CharacterController::on_add)]
+pub struct CharacterController {
+    pub gravity: f32,
+    pub filter: SpatialQueryFilter,
+}
+
+impl Default for CharacterController {
+    fn default() -> Self {
+        CharacterController {
+            gravity: 9.81,
+            filter: SpatialQueryFilter::default(),
+        }
+    }
+}
+
+impl CharacterController {
+    pub fn on_add(mut world: DeferredWorld, ctx: HookContext) {
+        let entity = ctx.entity;
+        world
+            .commands()
+            .queue(move |world: &mut World| world.run_system_cached_with(setup_collider, entity));
+    }
+}
+
+fn setup_collider(
+    In(entity): In<Entity>,
+    mut kcc: Query<(
+        &mut CharacterController,
+        &mut CharacterControllerState,
+        &Collider,
+    )>,
+) {
+    let Ok((mut cfg, mut state, collider)) = kcc.get_mut(entity) else {
+        return;
+    };
+    cfg.filter.excluded_entities.add(entity);
+    state.collider = collider.clone();
+}
+
+#[derive(Component, Clone, Reflect, Debug)]
+#[require(CharacterMovement)]
+#[reflect(Component)]
+pub struct CharacterControllerState {
+    pub cam_transform: Transform,
+    #[reflect(ignore)]
+    pub collider: Collider,
+    pub touching_entities: Vec<TouchingEntity>,
+}
+
+impl Default for CharacterControllerState {
+    fn default() -> Self {
+        CharacterControllerState {
+            cam_transform: Transform::IDENTITY,
+            collider: Collider::default(),
+            touching_entities: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Reflect, PartialEq, Debug)]
+pub struct TouchingEntity {
+    /// The entity of the collider that was hit by the shape.
+    pub entity: Entity,
+
+    /// The maximum distance that is safe to move in the given direction so that the collider
+    /// still keeps a distance of `skin_width` to the other colliders.
+    ///
+    /// This is `0.0` when any of the following is true:
+    ///
+    /// - The collider started off intersecting another collider.
+    /// - The collider is moving toward another collider that is already closer than `skin_width`.
+    ///
+    /// If you want to know the real distance to the next collision, use [`Self::collision_distance`].
+    pub distance: f32,
+
+    /// The hit point on the shape that was hit, expressed in world space.
+    pub point: Vec3,
+
+    /// The outward surface normal on the hit shape at `point`, expressed in world space.
+    pub normal: Dir3,
+
+    /// The position of the collider at the time of the move and slide iteration.
+    pub character_position: Vec3,
+
+    /// The velocity of the collider at the time of the move and slide iteration.
+    pub character_velocity: Vec3,
+
+    /// The raw distance to the next collision, not respecting skin width.
+    /// To move the shape, use [`Self::distance`] instead.
+    #[doc(alias = "time_of_impact")]
+    pub collision_distance: f32,
+}
+impl From<MoveAndSlideHitData<'_>> for TouchingEntity {
+    fn from(value: MoveAndSlideHitData<'_>) -> Self {
+        Self {
+            entity: value.entity,
+            distance: value.distance,
+            point: value.point,
+            normal: *value.normal,
+            character_position: *value.position,
+            character_velocity: *value.velocity,
+            collision_distance: value.collision_distance,
+        }
+    }
+}
+
+#[derive(QueryData)]
+#[query_data(mutable, derive(Debug))]
+struct Ctx {
+    velocity: Write<LinearVelocity>,
+    movement: Write<CharacterMovement>,
+    state: Write<CharacterControllerState>,
+    transform: Write<Transform>,
+    input: Write<AccumulatedInput>,
+    cfg: Read<CharacterController>,
 }
 
 fn setup_star_map_input_controls(mut commands: Commands) {
     commands.spawn((
         Name::new("Star Map Input Controls"),
-        star_map_bindings(),
-        ui_bindings(),
+        StarMapInput,
+        UiInput,
         DespawnOnExit(GameState::StarMap),
     ));
 }
 
-fn setup_playing_input_controls(mut commands: Commands) {
+fn setup_ui_input_controls(mut commands: Commands) {
     commands.spawn((
-        Name::new("Playing Input Controls"),
-        playing_bindings(),
-        ui_bindings(),
+        Name::new("UI Input Controls"),
+        UiInput,
         DespawnOnExit(GameState::Playing),
     ));
-}
-
-fn playing_bindings() -> impl Bundle {
-    (
-        PlayingInput,
-        actions!(
-        PlayingInput[
-            (
-            Action::<Movement>::new(),
-            DeadZone::default(),
-            Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
-            ),
-            (
-                Action::<AimWeapon>::new(),
-                bindings![MouseButton::Right, GamepadButton::LeftTrigger], // LT to aim (hold)
-            ),
-            (
-                Action::<UseObject>::new(),
-                bindings![KeyCode::KeyE, GamepadButton::South], // A to interact
-            ),
-            (
-                Action::<KillMe>::new(),
-                bindings![KeyCode::KeyK]
-            ),
-            (
-                Action::<Shoot>::new(),
-                bindings![MouseButton::Left, GamepadButton::RightTrigger], // RT to shoot
-            ),
-            (
-                Action::<Inventory>::new(),
-                bindings![KeyCode::KeyI, GamepadButton::North], // Y to open inventory
-            ),
-            (
-                Action::<OrientationModeSwitch>::new(),
-                bindings![KeyCode::Space, GamepadButton::RightThumb], // R3 toggles orientation mode
-            ),
-            (
-                Action::<ZoomIn>::new(),
-                bindings![KeyCode::Equal, GamepadButton::DPadUp], // D-Pad Up zoom in
-            ),
-            (
-                Action::<ZoomOut>::new(),
-                bindings![KeyCode::Minus, GamepadButton::DPadDown], // D-Pad Down zoom out
-            ),
-            (
-                Action::<RotateClockwise>::new(),
-                bindings![KeyCode::KeyZ, GamepadButton::DPadRight], // D-Pad Right rotate camera CW
-            ),
-            (
-                Action::<RotateCounterClockwise>::new(),
-                bindings![KeyCode::KeyC, GamepadButton::DPadLeft], // D-Pad Left rotate camera CCW
-            )
-        ]),
-    )
-}
-
-fn star_map_bindings() -> impl Bundle {
-    (
-        StarMapInput,
-        actions!(StarMapInput[
-            (
-                Action::<ColonyIris>::new(),
-                bindings![ KeyCode::KeyI ]
-            ),
-            (
-                Action::<ColonyLiberte>::new(),
-                bindings![ KeyCode::KeyL ]
-            )
-        ]),
-    )
-}
-
-fn ui_bindings() -> impl Bundle {
-    (
-        UiInput,
-        actions!(
-            UiInput[(
-                Action::<ExitHold>::new(),
-                Hold::new(0.5),
-                bindings![KeyCode::Escape, GamepadButton::Start] // Start held to exit/confirm
-            )]
-        ),
-    )
 }
 
 fn reset_cursor_visible(
@@ -374,236 +401,52 @@ fn rotate_character(
     }
 }
 
-fn apply_movement(
-    fire_movement: On<Fire<Movement>>,
-    cam_transform: Single<&Transform, With<MainCamera>>,
-    mut movement: Single<&mut CharacterMovement, With<LocalPlayer>>,
-    mut tnua: Single<&mut TnuaController>,
-) {
-    let cam_forward = {
-        let f = cam_transform.rotation.mul_vec3(Vec3::Z);
-        // Invert it to account for camera looking down -Z
-        -Vec3::new(f.x, 0.0, f.z).normalize_or_zero()
-    };
-    let cam_right = {
-        let r = cam_transform.rotation.mul_vec3(Vec3::X);
-        Vec3::new(r.x, 0.0, r.z).normalize_or_zero()
-    };
+fn run_move_and_slide(mut kccs: Query<Ctx>, move_and_slide: MoveAndSlide, time: Res<Time>) {
+    for mut ctx in &mut kccs {
+        let cam_forward = {
+            let f = ctx.state.cam_transform.rotation.mul_vec3(Vec3::Z);
+            // Invert it to account for camera looking down -Z
+            -Vec3::new(f.x, 0.0, f.z).normalize_or_zero()
+        };
+        let cam_right = {
+            let r = ctx.state.cam_transform.rotation.mul_vec3(Vec3::X);
+            Vec3::new(r.x, 0.0, r.z).normalize_or_zero()
+        };
 
-    let input_axis = fire_movement.value;
-    let input_forward = cam_forward * input_axis.y;
-    let input_strafe = cam_right * input_axis.x;
+        let input_axis = ctx.input.last_movement.unwrap_or_default();
+        let input_forward = cam_forward * input_axis.y;
+        let input_strafe = cam_right * input_axis.x;
 
-    movement.direction = (input_forward + input_strafe).normalize_or_zero();
-    if movement.can_move {
-        movement.velocity = movement.direction * movement.speed;
-        tnua.basis(TnuaBuiltinWalk {
-            // The `desired_velocity` determines how the character will move.
-            desired_velocity: movement.velocity,
-            // The `float_height` must be greater (even if by little) from the distance between the
-            // character's center and the lowest point of its collider.
-            float_height: 1.5,
-            ..default()
-        });
-    }
-}
+        ctx.movement.direction = (input_forward + input_strafe).normalize_or_zero();
 
-fn apply_stop_movement(
-    _completed_move: On<Complete<Movement>>,
-    mut tnua: Single<&mut TnuaController>,
-    mut player_movement: Single<&mut CharacterMovement, With<LocalPlayer>>,
-) {
-    player_movement.velocity = Vec3::ZERO;
-    tnua.basis(TnuaBuiltinWalk {
-        desired_velocity: Vec3::ZERO,
-        float_height: 1.5,
-        ..default()
-    });
-}
-
-fn apply_orientation_mode(
-    _orientation_mode: On<Start<OrientationModeSwitch>>,
-    r_cursor_world: Res<CursorWorld>,
-    mut player_orientation_mode: Single<&mut OrientationMode, With<LocalPlayer>>,
-) {
-    **player_orientation_mode = match **player_orientation_mode {
-        OrientationMode::Direction => {
-            OrientationMode::Location(Vec2::new(r_cursor_world.0.x, r_cursor_world.0.z))
+        if !ctx.movement.can_move {
+            return;
         }
-        OrientationMode::Location(_) => OrientationMode::Direction,
+
+        ctx.movement.velocity = ctx.movement.direction * ctx.movement.speed;
+
+        // Apply velocity to position
+        ctx.transform.translation += ctx.movement.velocity * time.delta_secs();
+
+        let mut touching_entities = std::mem::take(&mut ctx.state.touching_entities);
+        // Perform move and slide
+        let MoveAndSlideOutput {
+            position,
+            projected_velocity,
+        } = move_and_slide.move_and_slide(
+            &ctx.state.collider,
+            ctx.transform.translation,
+            ctx.transform.rotation,
+            ctx.movement.velocity,
+            time.delta(),
+            &MoveAndSlideConfig::default(),
+            &ctx.cfg.filter,
+            |hit| {
+                touching_entities.push(hit.into());
+                true
+            },
+        );
+        ctx.transform.translation = position;
+        ctx.velocity.0 = projected_velocity;
     }
 }
-
-fn apply_use(
-    _use_action: On<Start<UseObject>>,
-    mut commands: Commands,
-    r_use_entity: Res<HoverEntities>,
-    player_entity: Single<Entity, With<LocalPlayer>>,
-    q_use: Query<&Use>,
-) -> Result {
-    for entity_target in r_use_entity.iter() {
-        if q_use.contains(entity_target.entity) {
-            commands.trigger(UseCommand::new(entity_target.entity, *player_entity));
-        }
-    }
-    Ok(())
-}
-
-fn apply_kill(_kill_action: On<Start<KillMe>>, mut commands: Commands) -> Result {
-    commands.client_trigger(KillMeCommand);
-    Ok(())
-}
-
-fn apply_inventory(
-    _inventory_action: On<Start<Inventory>>,
-    container_query: Query<(&Name, &Contains), With<LocalPlayer>>,
-    q_item_name: Query<&Name, With<Item>>,
-) {
-    for (container_name, contains) in &container_query {
-        println!("{:?} contains:", container_name);
-        for item_entity in contains.iter() {
-            if let Ok(name) = q_item_name.get(item_entity) {
-                println!("  - {}", name);
-            }
-        }
-    }
-}
-
-fn apply_exit(excape_action: On<Ongoing<ExitHold>>, mut commands: Commands) {
-    if excape_action.elapsed_secs > 0.4 {
-        commands.trigger(RequestExit);
-    }
-}
-
-fn apply_window_cursor_visible(
-    _escape_action: On<Start<ExitHold>>,
-    mut primary_cursor_options: Single<&mut CursorOptions, With<PrimaryWindow>>,
-) {
-    primary_cursor_options.visible = !primary_cursor_options.visible;
-}
-
-fn apply_starmap_iris(_colony_iris: On<Start<ColonyIris>>, mut commands: Commands) {
-    info!("apply_starmap_iris");
-    commands.trigger(RequestConnect(Colony::Iris));
-}
-
-fn apply_starmap_liberte(_colony_liberte: On<Start<ColonyLiberte>>, mut commands: Commands) {
-    info!("apply_starmap_liberte");
-    commands.trigger(RequestConnect(Colony::Liberte));
-}
-
-fn apply_rotate_camera_clockwise(
-    _rotate_clockwise: On<Start<RotateClockwise>>,
-    mut rig: Single<&mut Rig>,
-) {
-    let camera_yp = rig.driver_mut::<YawPitch>();
-    camera_yp.rotate_yaw_pitch(-45.0, 0.0);
-}
-
-fn apply_rotate_camera_counter_clockwise(
-    _rotate_counter_clockwise: On<Start<RotateCounterClockwise>>,
-    mut rig: Single<&mut Rig>,
-) {
-    let camera_yp = rig.driver_mut::<YawPitch>();
-    camera_yp.rotate_yaw_pitch(45.0, 0.0);
-}
-
-fn apply_camera_zoom_in(
-    _zoom_in: On<Fire<ZoomIn>>,
-    mut rig: Single<&mut Rig>,
-    time: Res<Time<Fixed>>,
-) {
-    if let Some(arm) = rig.try_driver_mut::<Arm>() {
-        let mut xz = arm.offset;
-        xz.z = (xz.z - 4.0 * time.delta_secs()).abs();
-        arm.offset = xz.clamp_length_min(6.0);
-    }
-}
-
-fn apply_camera_zoom_out(
-    _zoom_out: On<Fire<ZoomOut>>,
-    mut rig: Single<&mut Rig>,
-    time: Res<Time<Fixed>>,
-) {
-    if let Some(arm) = rig.try_driver_mut::<Arm>() {
-        let mut xz = arm.offset;
-        xz.z = (xz.z + 4.0 * time.delta_secs()).abs();
-        arm.offset = xz.clamp_length_max(18.0);
-    }
-}
-
-fn apply_aim(_aim_action: On<Start<AimWeapon>>, mut r_camera_modifier: ResMut<CameraModifier>) {
-    r_camera_modifier.aim_zoom_factor = 1.8;
-}
-
-fn apply_aim_completed(
-    _aim_action: On<Complete<AimWeapon>>,
-    mut r_camera_modifier: ResMut<CameraModifier>,
-) {
-    r_camera_modifier.aim_zoom_factor = 1.0;
-}
-
-#[derive(Component)]
-struct PlayingInput;
-
-#[derive(Debug, InputAction)]
-#[action_output(Vec2)]
-struct Movement;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct AimWeapon;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct OrientationModeSwitch;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct UseObject;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct Inventory;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct Shoot;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct KillMe;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct ZoomIn;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct ZoomOut;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct RotateClockwise;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct RotateCounterClockwise;
-
-#[derive(Component)]
-struct StarMapInput;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct ColonyIris;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct ColonyLiberte;
-
-#[derive(Component)]
-struct UiInput;
-
-#[derive(Debug, InputAction)]
-#[action_output(bool)]
-struct ExitHold;

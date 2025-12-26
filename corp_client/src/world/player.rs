@@ -1,8 +1,6 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
 use bevy::{prelude::*, scene::SceneInstanceReady};
-use bevy_tnua::prelude::TnuaController;
-use bevy_tnua_avian3d::TnuaAvian3dSensorShape;
 use corp_shared::prelude::*;
 use rand::seq::IndexedRandom;
 
@@ -56,7 +54,6 @@ fn on_setup_local_player(
             LocalPlayer,
             Transform::from_translation(rnd_node_position + Vec3::Y),
             Visibility::default(),
-            CharacterMovement::default(),
             OrientationMode::default(),
             MainCameraFollow,
             Inventory,
@@ -65,18 +62,15 @@ fn on_setup_local_player(
                 rank: Rank::R6,
             },
             DespawnOnExit(GameState::Playing),
+            // Input
+            CharacterController::default(),
+            PlayerInput,
             // Physics
-            (
-                RigidBody::Dynamic,
-                CollisionEventsEnabled,
-                Collider::capsule(0.3, 0.75),
-                TnuaController::default(),
-                TnuaAvian3dSensorShape(Collider::cylinder(0.29, 0.0)),
-                LockedAxes::ROTATION_LOCKED,
-                CollisionLayers::new(
-                    [GameLayer::Player],
-                    [GameLayer::Area, GameLayer::Sensor, GameLayer::Structure],
-                ),
+            Collider::capsule(0.3, 0.75),
+            CollisionEventsEnabled,
+            CollisionLayers::new(
+                [GameLayer::Player],
+                [GameLayer::Area, GameLayer::Sensor, GameLayer::Structure],
             ),
         ))
         .with_children(|child_builder| {
