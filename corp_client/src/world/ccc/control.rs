@@ -1,5 +1,5 @@
 use crate::{prelude::*, world::ccc::input};
-use avian3d::prelude::*;
+use avian3d::{math::*, prelude::*};
 use bevy::{
     ecs::{
         lifecycle::HookContext,
@@ -72,7 +72,6 @@ impl Plugin for ControlPlugin {
 #[require(
     AccumulatedInput,
     CharacterControllerState,
-    TranslationInterpolation,
     CustomPositionIntegration,
     RigidBody = RigidBody::Kinematic,
     SpeculativeMargin::ZERO,
@@ -376,11 +375,7 @@ fn rotate_character(
                 );
                 let rotation_angle = std::f32::consts::PI + direction_2d.angle_to(Vec2::Y);
 
-                let current_rotation = transform.rotation;
-                let target_rotation = Quat::from_rotation_y(rotation_angle);
-                let interpolated_rotation = current_rotation.lerp(target_rotation, 0.1);
-
-                transform.rotation = interpolated_rotation;
+                transform.rotation = Quat::from_rotation_y(rotation_angle);
             }
             OrientationMode::Location(location_2d) => {
                 let target_position =
@@ -390,11 +385,7 @@ fn rotate_character(
                 if look_direction.length_squared() > 0.0 {
                     let rotation_angle = look_direction.x.atan2(look_direction.z);
 
-                    let current_rotation = transform.rotation;
-                    let target_rotation = Quat::from_rotation_y(rotation_angle);
-                    let interpolated_rotation = current_rotation.lerp(target_rotation, 0.1);
-
-                    transform.rotation = interpolated_rotation;
+                    transform.rotation = Quat::from_rotation_y(rotation_angle);
                 }
             }
         }
@@ -425,8 +416,8 @@ fn run_move_and_slide(mut kccs: Query<Ctx>, move_and_slide: MoveAndSlide, time: 
 
         ctx.movement.velocity = ctx.movement.direction * ctx.movement.speed;
 
-        // Apply velocity to position
-        ctx.transform.translation += ctx.movement.velocity * time.delta_secs();
+        // Add to current velocity
+        ctx.velocity.0 += ctx.movement.velocity;
 
         let mut touching_entities = std::mem::take(&mut ctx.state.touching_entities);
         // Perform move and slide
@@ -435,8 +426,8 @@ fn run_move_and_slide(mut kccs: Query<Ctx>, move_and_slide: MoveAndSlide, time: 
             projected_velocity,
         } = move_and_slide.move_and_slide(
             &ctx.state.collider,
-            ctx.transform.translation,
-            ctx.transform.rotation,
+            ctx.transform.translation.adjust_precision(),
+            ctx.transform.rotation.adjust_precision(),
             ctx.movement.velocity,
             time.delta(),
             &MoveAndSlideConfig::default(),
