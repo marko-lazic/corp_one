@@ -16,7 +16,7 @@ impl Plugin for WorldPlugin {
             FixedUpdate,
             WorldSystemSet::CameraSetup.after(WorldSystemSet::PlayerSetup),
         )
-        .insert_resource(AmbientLight {
+        .insert_resource(GlobalAmbientLight {
             color: bevy::color::palettes::tailwind::ORANGE_600.into(),
             ..default()
         })

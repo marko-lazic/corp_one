@@ -22,10 +22,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             MaterialPlugin::<ForceFieldMaterial>::default(),
-            MaterialPlugin::<PrepassOutputMaterial> {
-                prepass_enabled: false,
-                ..default()
-            },
+            MaterialPlugin::<PrepassOutputMaterial>::default(),
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, toggle_prepass_view)
@@ -136,6 +133,10 @@ impl Material for PrepassOutputMaterial {
     // This needs to be transparent in order to show the scene behind the mesh
     fn alpha_mode(&self) -> AlphaMode {
         AlphaMode::Blend
+    }
+
+    fn enable_prepass() -> bool {
+        false
     }
 }
 

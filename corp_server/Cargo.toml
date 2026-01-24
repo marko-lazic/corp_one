@@ -31,10 +31,10 @@ rand = { workspace = true }
 bevy_rand = { workspace = true }
 serde = { workspace = true }
 rmp-serde = { workspace = true }
-async-io = "2.4"
+async-io = "2.6"
 pin-project = "1.1"
 tower = "0.5"
-async-channel = "2.3"
+async-channel = "2.5"
 anyhow = { workspace = true }
 tracing = "0.1"
 tokio = { workspace = true, features = ["full"] }

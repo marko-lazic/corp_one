@@ -16,10 +16,7 @@ impl Plugin for ShaderPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             MaterialPlugin::<ForceFieldMaterial>::default(),
-            MaterialPlugin::<PrepassOutputMaterial> {
-                prepass_enabled: false,
-                ..default()
-            },
+            MaterialPlugin::<PrepassOutputMaterial>::default(),
         ));
     }
 }
@@ -71,5 +68,9 @@ impl Material for PrepassOutputMaterial {
     // This needs to be transparent in order to show the scene behind the mesh
     fn alpha_mode(&self) -> AlphaMode {
         AlphaMode::Blend
+    }
+
+    fn enable_prepass() -> bool {
+        false
     }
 }

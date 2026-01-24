@@ -17,18 +17,18 @@ bevy = { workspace = true, default-features = false, features = [
     "track_location"
 ] }
 avian3d = { workspace = true, features = ["default", "enhanced-determinism", "serialize"] }
-bevy_enhanced_input = "0.20"
-bevy-inspector-egui = "0.35"
-bevy_asset_loader = { version = "0.24.0", default-features = false, features = ["3d"] }
-bevy_kira_audio = { version = "0.24", default-features = false, features = [
+bevy_enhanced_input = "0.22"
+bevy-inspector-egui = "0.36"
+bevy_asset_loader = { version = "0.25.0", default-features = false, features = ["3d"] }
+bevy_kira_audio = { version = "0.25", default-features = false, features = [
     "wav",
     "ogg",
 ] }
 bevy_dolly = { git = "https://github.com/Gaeric/bevy_dolly.git", branch = "main", default-features = false, features = [
     "drivers",
 ] }
-bevy_skein = { version = "0.4" }
-bevy_framepace = "0.20"
+bevy_skein = { version = "0.5" }
+bevy_framepace = { git = "https://github.com/aevyrie/bevy_framepace.git", branch = "main" }
 rand = { workspace = true }
 bevy_rand = { workspace = true }
 aeronet = { workspace = true }
@@ -36,12 +36,12 @@ aeronet_webtransport = { workspace = true, features = ["client", "dangerous-conf
 aeronet_replicon = { workspace = true, features = ["client"] }
 bevy_replicon = { workspace = true, features = ["default"] }
 bevy_defer = { workspace = true, features = ["default"] }
-log = "0.4.27"
-clap = { version = "4.0", features = ["derive"] }
+log = "0.4.29"
+clap = { version = "4.5", features = ["derive"] }
 surf = { workspace = true }
 
 [dev-dependencies]
-bevy_panorbit_camera = "0.26"
+bevy_panorbit_camera = "0.34.0"
 
 
 [[example]]
