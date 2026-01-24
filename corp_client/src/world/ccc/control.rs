@@ -60,8 +60,10 @@ impl Plugin for ControlPlugin {
                     detect_usable_targets,
                     update_cursor_world,
                     rotate_character,
+                    float_above_ground,
                     run_move_and_slide,
                 )
+                    .chain()
                     .run_if(in_state(GameState::Playing)),
             );
     }
@@ -81,6 +83,10 @@ impl Plugin for ControlPlugin {
 pub struct CharacterController {
     pub gravity: f32,
     pub filter: SpatialQueryFilter,
+    /// Height from ground to collider center when floating.
+    pub float_height: f32,
+    /// Maximum distance to cast the ground ray.
+    pub ground_ray_length: f32,
 }
 
 impl Default for CharacterController {
@@ -88,6 +94,8 @@ impl Default for CharacterController {
         CharacterController {
             gravity: 9.81,
             filter: SpatialQueryFilter::default(),
+            float_height: 1.0,
+            ground_ray_length: 3.0,
         }
     }
 }
@@ -124,6 +132,10 @@ pub struct CharacterControllerState {
     #[reflect(ignore)]
     pub collider: Collider,
     pub touching_entities: Vec<TouchingEntity>,
+    /// Whether ground is detected within ray length.
+    pub grounded: bool,
+    /// Distance from collider center to ground.
+    pub ground_distance: f32,
 }
 
 impl Default for CharacterControllerState {
@@ -132,6 +144,8 @@ impl Default for CharacterControllerState {
             cam_transform: Transform::IDENTITY,
             collider: Collider::default(),
             touching_entities: Vec::new(),
+            grounded: false,
+            ground_distance: 0.0,
         }
     }
 }
@@ -242,8 +256,8 @@ fn detect_usable_targets(
 
     let mut rays = Vec::new();
     // Cast FOV rays
-    let offset_height = Vec3::Y / 2.0; // Adjustable height of rays origin
-    let origin = t_player.translation - offset_height;
+    let offset_height = Vec3::new(0.0, 0.0, 0.0); // Adjustable height of rays origin
+    let origin = t_player.translation + offset_height;
     for i in 0..NUM_RAYS {
         // Calculate the horizontal angle for the current ray
         let ray_angle = (i as f32 * RAY_SPACING) - (HORIZONTAL_FOV / 2.0);
@@ -388,6 +402,61 @@ fn rotate_character(
                     transform.rotation = Quat::from_rotation_y(rotation_angle);
                 }
             }
+        }
+    }
+}
+
+fn float_above_ground(
+    mut query: Query<(
+        &mut CharacterControllerState,
+        &mut Transform,
+        &CharacterController,
+    )>,
+    spatial: SpatialQuery,
+    time: Res<Time>,
+    mut gizmos: Gizmos<DebugGizmos>,
+) {
+    let dt = time.delta_secs();
+    // Only detect Structure layer for ground (exclude Sensor, Area, etc.)
+    let ground_filter = SpatialQueryFilter::from_mask([GameLayer::Structure]);
+
+    for (mut state, mut transform, cfg) in &mut query {
+        let ray_origin = transform.translation;
+
+        // Draw debug ray
+        gizmos.ray(
+            ray_origin,
+            Vec3::NEG_Y * cfg.ground_ray_length,
+            bevy::color::palettes::tailwind::CYAN_500,
+        );
+
+        // Cast ray downward to detect ground (structures only)
+        if let Some(hit) = spatial.cast_ray(
+            ray_origin,
+            Dir3::NEG_Y,
+            cfg.ground_ray_length,
+            true,
+            &ground_filter,
+        ) {
+            state.grounded = true;
+            state.ground_distance = hit.distance;
+
+            // Draw hit point
+            let ground_point = ray_origin + Vec3::NEG_Y * hit.distance;
+            gizmos.sphere(
+                Isometry3d::from_translation(ground_point),
+                0.05,
+                bevy::color::palettes::tailwind::GREEN_500,
+            );
+
+            // Snap Y position to maintain float height above ground
+            transform.translation.y = ground_point.y + cfg.float_height;
+        } else {
+            state.grounded = false;
+            state.ground_distance = cfg.ground_ray_length;
+
+            // Apply gravity when no ground detected
+            transform.translation.y -= cfg.gravity * dt;
         }
     }
 }

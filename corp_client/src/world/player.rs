@@ -66,7 +66,7 @@ fn on_setup_local_player(
             CharacterController::default(),
             PlayerInput,
             // Physics
-            Collider::capsule(0.3, 0.75),
+            Collider::capsule(0.25, 1.2),
             CollisionEventsEnabled,
             CollisionLayers::new(
                 [GameLayer::Player],
@@ -77,8 +77,8 @@ fn on_setup_local_player(
             child_builder
                 .spawn((
                     SceneRoot(r_player_assets.mannequiny.clone()),
-                    // Offset the mesh y position by capsule total height
-                    Transform::from_xyz(0.0, -1.5, 0.0),
+                    // Offset the mesh y position to align with floating collider
+                    Transform::from_xyz(0.0, -1.0, 0.0),
                 ))
                 .observe(|_scene_instance_ready: On<SceneInstanceReady>| {
                     info!("Player Scene Instance Ready");

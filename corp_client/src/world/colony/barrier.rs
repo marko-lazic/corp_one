@@ -48,14 +48,10 @@ fn change_barrier_field_visibility_and_collision(
         if let Ok(mut visible) = q_barrier_field_visibility.get_mut(e_door) {
             if door_state.is_open() {
                 *visible = Visibility::Hidden;
-                commands
-                    .entity(e_door)
-                    .insert(CollisionLayers::new([GameLayer::Sensor], [LayerMask::NONE]));
+                commands.entity(e_door).insert(Sensor);
             } else if *door_state == DoorState::Closed {
                 *visible = Visibility::Visible;
-                commands
-                    .entity(e_door)
-                    .insert(CollisionLayers::new([LayerMask::ALL], [LayerMask::ALL]));
+                commands.entity(e_door).remove::<Sensor>();
             }
         }
     }
