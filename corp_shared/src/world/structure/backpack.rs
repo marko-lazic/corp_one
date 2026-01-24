@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
-use bevy::prelude::*;
+use bevy::{ecs::entity::MapEntities, prelude::*};
 use bevy_replicon::prelude::ClientTriggerExt;
 use serde::{Deserialize, Serialize};
 
@@ -35,9 +35,9 @@ pub enum LootAction {
     TakeItem(Entity),
 }
 
-#[derive(Deserialize, EntityEvent, Serialize, Clone, Debug)]
+#[derive(Deserialize, Event, Serialize, Clone, Debug, MapEntities)]
 pub struct LootCommand {
-    #[event_target]
+    #[entities]
     pub loot_target: Entity,
     pub user: Entity,
     pub action: LootAction,

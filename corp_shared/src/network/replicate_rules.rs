@@ -16,7 +16,7 @@ impl Plugin for ReplicateRulesPlugin {
         // Register client->server triggers
         app.add_client_event::<PlayerSpawnCommand>(Channel::Unordered);
         app.add_client_event::<DoorHackCommand>(Channel::Unordered);
-        app.add_client_event::<LootCommand>(Channel::Unordered);
+        app.add_mapped_client_event::<LootCommand>(Channel::Unordered);
         app.add_client_event::<KillMeCommand>(Channel::Unordered);
 
         // Register server->client triggers

@@ -24,11 +24,13 @@ impl Plugin for LootPlugin {
 
 pub fn despawn_empty_backpack(
     mut commands: Commands,
-    q_entity_backpack: Query<Entity, (Without<Contains>, With<Backpack>)>,
+    q_entity_backpack: Query<(Entity, Option<&Contains>), With<Backpack>>,
 ) {
-    for e_bag in &q_entity_backpack {
-        info!("Despawning empty backpack {:?}", e_bag);
-        commands.entity(e_bag).try_despawn();
+    for (e_bag, contains) in &q_entity_backpack {
+        let is_empty = contains.is_none_or(|c| c.is_empty());
+        if is_empty {
+            commands.entity(e_bag).try_despawn();
+        }
     }
 }
 
