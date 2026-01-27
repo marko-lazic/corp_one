@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(clippy::excessive_precision)]
 
 use bevy::prelude::Color;
 

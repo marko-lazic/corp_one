@@ -1,8 +1,11 @@
+use std::time::Duration;
+
 use crate::prelude::ForceFieldMaterial;
 use avian3d::prelude::*;
 use bevy::{
     light::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
+    time::common_conditions::on_timer,
 };
 use corp_shared::prelude::*;
 
@@ -12,7 +15,9 @@ impl Plugin for BarrierPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (change_barrier_field_visibility_and_collision,).run_if(in_state(GameState::Playing)),
+            change_barrier_field_visibility_and_collision
+                .run_if(in_state(GameState::Playing))
+                .run_if(on_timer(Duration::from_millis(300))),
         )
         .add_systems(
             FixedUpdate,
@@ -42,7 +47,7 @@ fn on_add_door(
 fn change_barrier_field_visibility_and_collision(
     mut commands: Commands,
     mut q_barrier_field_visibility: Query<&mut Visibility, With<DoorId>>,
-    q_door: Query<(Entity, &DoorState), (Changed<DoorState>, With<Door>)>,
+    q_door: Query<(Entity, &DoorState), With<Door>>,
 ) {
     for (e_door, door_state) in &q_door {
         if let Ok(mut visible) = q_barrier_field_visibility.get_mut(e_door) {

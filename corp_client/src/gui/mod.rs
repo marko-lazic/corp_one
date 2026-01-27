@@ -1,8 +1,8 @@
+mod gui_components;
 mod cursor_ui;
 mod debug;
-mod gui;
 mod login;
 
 pub mod prelude {
-    pub use super::{cursor_ui::*, debug::*, gui::*, login::*};
+    pub use super::{gui_components::*, cursor_ui::*, debug::*, login::*};
 }

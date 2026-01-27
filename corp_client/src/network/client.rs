@@ -1,8 +1,8 @@
 use crate::prelude::*;
 use aeronet::{
     io::{
-        connection::{Disconnect, DisconnectReason, Disconnected}, Session,
-        SessionEndpoint,
+        Session, SessionEndpoint,
+        connection::{Disconnect, DisconnectReason, Disconnected},
     },
     transport::TransportConfig,
 };
@@ -68,15 +68,12 @@ fn request_connect(request_connect: On<RequestConnect>, mut commands: Commands) 
         });
 
         // Then wait for disconnection and handle reconnection
-        loop {
-            let _event = AsyncWorld.next_event::<ConnectionDisconnectedEvent>().await;
-            info!("request_connect disconnected, reconnecting");
-            AsyncWorld.set_state(GameState::Loading)?;
-            AsyncWorld.apply_command(move |w: &mut World| {
-                w.trigger(ConnectClientTo(colony));
-            });
-            break;
-        }
+        let _event = AsyncWorld.next_event::<ConnectionDisconnectedEvent>().await;
+        info!("request_connect disconnected, reconnecting");
+        AsyncWorld.set_state(GameState::Loading)?;
+        AsyncWorld.apply_command(move |w: &mut World| {
+            w.trigger(ConnectClientTo(colony));
+        });
         Ok(())
     });
 }

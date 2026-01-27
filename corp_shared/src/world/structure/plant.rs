@@ -30,8 +30,7 @@ mod tests {
     use bevy::prelude::*;
 
     use crate::prelude::{
-        Faction, Inventory, OwnershipRegistry, Player, PlayerFactionInfo, Rank, TestUtils,
-        UseCommand,
+        Faction, OwnershipRegistry, Player, PlayerFactionInfo, Rank, TestUtils, UseCommand,
     };
 
     use super::*;
@@ -41,7 +40,7 @@ mod tests {
         // given
         let mut app = setup();
         let e_energy_node = setup_territory_node(&mut app, Faction::EC, SecurityLevel::Low);
-        let e_player = setup_player(&mut app, Vec::new(), Faction::EC, Rank::R7);
+        let e_player = setup_player(&mut app, Faction::EC, Rank::R7);
 
         // when
         app.world_mut()
@@ -60,15 +59,12 @@ mod tests {
 
     fn setup_territory_node(app: &mut App, faction: Faction, level: SecurityLevel) -> Entity {
         let ownership = OwnershipRegistry::new_permanent(faction);
-        let door_entity = app.world_mut().spawn((EnergyNode, ownership, level)).id();
-        door_entity
+        app.world_mut().spawn((EnergyNode, ownership, level)).id()
     }
 
-    fn setup_player(app: &mut App, items: Vec<Entity>, faction: Faction, rank: Rank) -> Entity {
-        let player_entity = app
-            .world_mut()
-            .spawn((Player, Inventory, PlayerFactionInfo { faction, rank }))
-            .id();
-        player_entity
+    fn setup_player(app: &mut App, faction: Faction, rank: Rank) -> Entity {
+        app.world_mut()
+            .spawn((Player, PlayerFactionInfo { faction, rank }))
+            .id()
     }
 }

@@ -1,7 +1,7 @@
 use crate::LoginConfig;
-use anyhow::{anyhow, Result};
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use std::{env, path::Path};
+use anyhow::{Result, anyhow};
+use sqlx::{SqlitePool, sqlite::SqlitePoolOptions};
+use std::{env, ffi::OsStr, path::Path};
 use tracing::info;
 
 pub async fn create_pool(database_url: &str) -> Result<SqlitePool> {
@@ -31,7 +31,7 @@ pub async fn run_migrations(pool: &SqlitePool, config: &LoginConfig) -> Result<(
 
     while let Some(entry) = entries.next_entry().await? {
         let path = entry.path();
-        if path.extension().map_or(false, |ext| ext == "sql") {
+        if path.extension() == Some(OsStr::new("sql")) {
             migration_files.push(path);
         }
     }
@@ -96,13 +96,13 @@ pub async fn setup_database(config: LoginConfig) -> Result<SqlitePool> {
         info!("Database file path: {}", file_path);
 
         // Create parent directories if they don't exist
-        if let Some(parent) = Path::new(file_path).parent() {
-            if !parent.exists() {
-                info!("Creating directory structure: {:?}", parent);
-                tokio::fs::create_dir_all(parent).await.map_err(|e| {
-                    anyhow::anyhow!("Failed to create directory structure {:?}: {}", parent, e)
-                })?;
-            }
+        if let Some(parent) = Path::new(file_path).parent()
+            && !parent.exists()
+        {
+            info!("Creating directory structure: {:?}", parent);
+            tokio::fs::create_dir_all(parent).await.map_err(|e| {
+                anyhow::anyhow!("Failed to create directory structure {:?}: {}", parent, e)
+            })?;
         }
 
         // Create the database file if it doesn't exist

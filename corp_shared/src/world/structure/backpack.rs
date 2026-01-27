@@ -161,7 +161,7 @@ mod tests {
     fn setup() -> (App, Entity) {
         let mut app = App::new();
         app.init_time();
-        let player_entity = app.world_mut().spawn((Player, Inventory::default())).id();
+        let player_entity = app.world_mut().spawn((Player, Inventory)).id();
         (app, player_entity)
     }
 }

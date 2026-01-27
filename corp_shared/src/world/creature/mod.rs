@@ -1,9 +1,9 @@
-mod creature;
+mod name;
 mod death;
 pub mod health;
 mod movement;
 
-pub use creature::*;
+pub use name::*;
 pub use death::*;
 pub use health::*;
 pub use movement::*;

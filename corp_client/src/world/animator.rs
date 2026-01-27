@@ -82,11 +82,9 @@ fn animation_control(
                 .play(&mut player, animations.node.run, Duration::ZERO)
                 .repeat();
         }
-    } else {
-        if !player.is_playing_animation(animations.node.idle) {
-            transitions
-                .play(&mut player, animations.node.idle, Duration::ZERO)
-                .repeat();
-        }
+    } else if !player.is_playing_animation(animations.node.idle) {
+        transitions
+            .play(&mut player, animations.node.idle, Duration::ZERO)
+            .repeat();
     }
 }

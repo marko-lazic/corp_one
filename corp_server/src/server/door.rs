@@ -28,26 +28,24 @@ fn on_hack_door_command(
         if let Some(hacking_tool_e) = inventory_content
             .into_iter()
             .find(|item| hacking_tools.get(**item).is_ok())
+            && let Ok((mut door_state, mut door_owners)) = doors.get_mut(door_e)
+            && let Ok(faction_info) = faction_info_query.get(client_e)
         {
-            if let Ok((mut door_state, mut door_owners)) = doors.get_mut(door_e) {
-                if let Ok(faction_info) = faction_info_query.get(client_e) {
-                    commands.entity(*hacking_tool_e).despawn();
-                    door_owners.add(Ownership::Hacked(
-                        faction_info.faction,
-                        Timer::new(
-                            Duration::from_secs_f32(DoorState::HACK_DURATION_SECS),
-                            TimerMode::Once,
-                        ),
-                    ));
-                    door_state.toggle();
-                    // TODO this may not be needed as door_state.toggle() will replicate state?
-                    // let to_clients = ToClients {
-                    //     mode: SendMode::Broadcast,
-                    //     message: DoorHackedEvent::Successful,
-                    // };
-                    // commands.server_trigger_targets(to_clients, door_e);
-                }
-            }
+            commands.entity(*hacking_tool_e).despawn();
+            door_owners.add(Ownership::Hacked(
+                faction_info.faction,
+                Timer::new(
+                    Duration::from_secs_f32(DoorState::HACK_DURATION_SECS),
+                    TimerMode::Once,
+                ),
+            ));
+            door_state.toggle();
+            // TODO this may not be needed as door_state.toggle() will replicate state?
+            // let to_clients = ToClients {
+            //     mode: SendMode::Broadcast,
+            //     message: DoorHackedEvent::Successful,
+            // };
+            // commands.server_trigger_targets(to_clients, door_e);
         }
     } else {
         warn!(

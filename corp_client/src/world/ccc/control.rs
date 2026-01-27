@@ -242,6 +242,7 @@ const NUM_RAYS: usize = 10; // Number of rays to evenly distribute within the FO
 const RAY_SPACING: f32 = HORIZONTAL_FOV / (NUM_RAYS - 1) as f32; // Angle between each ray
 const LOOKUP_RANGE: f32 = 2.0; // Range of rays
 
+#[allow(clippy::too_many_arguments)]
 fn detect_usable_targets(
     player_entity: Single<Entity, With<LocalPlayer>>,
     mut r_hover_entities: ResMut<HoverEntities>,
@@ -300,12 +301,12 @@ fn detect_usable_targets(
     for ray in rays {
         if let Some(ray_hit_data) = q_spatial.cast_ray(
             ray.origin,
-            ray.direction.into(),
+            ray.direction,
             LOOKUP_RANGE,
             true,
             &SpatialQueryFilter::from_mask([GameLayer::Structure, GameLayer::Sensor]),
         ) {
-            if let Ok(_) = q_use.get(ray_hit_data.entity) {
+            if q_use.get(ray_hit_data.entity).is_ok() {
                 gizmos.ray(
                     ray.origin,
                     (ray.origin + ray.direction * ray_hit_data.distance) - ray.origin,
@@ -371,6 +372,7 @@ fn update_cursor_world(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn rotate_character(
     mut query: Query<
         (&mut Transform, &CharacterMovement, &OrientationMode),

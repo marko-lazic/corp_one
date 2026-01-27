@@ -1,6 +1,6 @@
 use crate::prelude::{
     CameraModifier, CursorWorld, HoverEntities, LocalPlayer, OrientationMode, RequestConnect,
-    RequestExit,
+    RequestExit, did_fixed_timestep_run_this_frame,
 };
 use bevy::{
     ecs::{lifecycle::HookContext, world::DeferredWorld},
@@ -14,9 +14,7 @@ use bevy_dolly::{
 };
 use bevy_enhanced_input::prelude::*;
 use bevy_replicon::prelude::ClientTriggerExt;
-use corp_shared::prelude::{
-    Contains, Item, KillMeCommand, Use, UseCommand, did_fixed_timestep_run_this_frame,
-};
+use corp_shared::prelude::{Contains, Item, KillMeCommand, Use, UseCommand};
 use corp_types::prelude::Colony;
 
 pub fn plugin(app: &mut App) {

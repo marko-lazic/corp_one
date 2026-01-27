@@ -7,11 +7,11 @@ mod physics;
 mod player;
 mod shader;
 mod star_map;
-mod world;
+mod world_plugin;
 
 pub mod prelude {
     pub use super::{
         animator::*, ccc::*, cloning::*, colony::prelude::*, physics::*, player::*, shader::*,
-        star_map::*, world::*,
+        star_map::*, world_plugin::*,
     };
 }

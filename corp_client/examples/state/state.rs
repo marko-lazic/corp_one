@@ -20,9 +20,9 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             PhysicsPlugins::default(),
-            PhysicsDebugPlugin::default(),
+            PhysicsDebugPlugin,
         ))
-        .insert_resource(AmbientLight::default())
+        .insert_resource(GlobalAmbientLight::default())
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -109,7 +109,7 @@ fn setup(
             ..default()
         },
         TextColor::from(endesga::AQUA),
-        TextFont::from_font(r_asset_server.load("fonts/FiraMono-Medium.ttf")).with_font_size(30.0),
+        TextFont::from(r_asset_server.load("fonts/FiraMono-Medium.ttf")).with_font_size(30.0),
     ));
 }
 
@@ -123,7 +123,8 @@ fn setup_door(
 ) -> Entity {
     let door_size = 1.0;
     let door_hs = door_size / 2.0;
-    let ec_door = commands
+
+    commands
         .spawn((
             Mesh3d(meshes.add(Cuboid::new(door_size, door_size, door_size))),
             MeshMaterial3d(materials.add(endesga::SKY)),
@@ -135,8 +136,7 @@ fn setup_door(
             Collider::cuboid(door_hs, door_hs, door_hs),
         ))
         .observe(on_use_command)
-        .id();
-    ec_door
+        .id()
 }
 
 fn interaction_system(
@@ -145,15 +145,13 @@ fn interaction_system(
     r_target_entity: Res<TargetEntity>,
     mut commands: Commands,
 ) {
-    if r_keyboard_input.just_pressed(KeyCode::KeyE) {
-        if let Some(target) = r_target_entity.0 {
-            commands.trigger_targets(
-                UseCommand {
-                    user: **r_player_entity,
-                },
-                target,
-            );
-        }
+    if r_keyboard_input.just_pressed(KeyCode::KeyE)
+        && let Some(target) = r_target_entity.0
+    {
+        commands.trigger(UseCommand {
+            usable: target,
+            user: **r_player_entity,
+        });
     }
 }
 

@@ -1,8 +1,8 @@
 use crate::server::*;
 use aeronet::io::{
+    Session,
     connection::{DisconnectReason, Disconnected, LocalAddr},
     server::{Closed, Server},
-    Session,
 };
 use aeronet_replicon::server::{AeronetRepliconServer, AeronetRepliconServerPlugin};
 use aeronet_webtransport::{
@@ -15,9 +15,9 @@ use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
 use std::time::Duration;
 
-pub struct ServerNetPlugin;
+pub struct NetcodePlugin;
 
-impl Plugin for ServerNetPlugin {
+impl Plugin for NetcodePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             // transport
@@ -94,9 +94,8 @@ fn on_session_request(
         debug!("  {header_key}: {header_value}");
 
         // Extract username and password from headers
-        match header_key.as_str() {
-            "x-token" => token = header_value.clone(),
-            _ => {}
+        if header_key.as_str() == "x-token" {
+            token = header_value.clone()
         }
     }
     match tokens.is_valid(&token) {

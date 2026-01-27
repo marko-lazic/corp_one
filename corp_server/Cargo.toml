@@ -45,6 +45,3 @@ aeronet_replicon = { workspace = true, features = ["server"] }
 bevy_replicon = { workspace = true, features = ["default"] }
 async-nats = { workspace = true }
 
-[[example]]
-name = "message"
-path = "tests/network/message.rs"

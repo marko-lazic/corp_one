@@ -10,12 +10,12 @@ impl Plugin for HealthRemotePlugin {
 }
 
 fn update_player_health(
-    changed_player_health: Query<(Entity, &Health), (With<Player>, Changed<Health>)>,
+    changed_player_health: Query<(Entity, &Health), Changed<Health>>,
     mut commands: Commands,
 ) {
     for (player_e, health) in &changed_player_health {
         if health.is_dead() {
-            info!("Player {} is dead", player_e);
+            info!("Entity {} is dead", player_e);
             commands.entity(player_e).insert(Dead);
         }
     }

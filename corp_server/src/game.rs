@@ -43,7 +43,7 @@ impl GameServer {
                 StatesPlugin,
                 TokensPlugin,
                 EntropyPlugin::<WyRand>::default(),
-                ServerNetPlugin,
+                NetcodePlugin,
             ));
         if self.is_colony_server() {
             app.add_plugins((

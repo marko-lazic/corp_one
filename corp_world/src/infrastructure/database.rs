@@ -1,7 +1,7 @@
 use crate::WorldConfig;
 use anyhow::Result;
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use std::path::Path;
+use sqlx::{SqlitePool, sqlite::SqlitePoolOptions};
+use std::{ffi::OsStr, path::Path};
 use tracing::{error, info};
 
 pub async fn create_pool(database_url: &str) -> Result<SqlitePool> {
@@ -35,7 +35,7 @@ pub async fn run_migrations(pool: &SqlitePool, config: &WorldConfig) -> Result<(
 
     while let Some(entry) = entries.next_entry().await? {
         let path = entry.path();
-        if path.extension().map_or(false, |ext| ext == "sql") {
+        if path.extension() == Some(OsStr::new("sql")) {
             migration_files.push(path);
         }
     }

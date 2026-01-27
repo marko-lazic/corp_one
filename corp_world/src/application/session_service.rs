@@ -1,6 +1,6 @@
 use crate::{PlayerRepository, SessionRepository};
 use anyhow::Result;
-use corp_types::{auth::event::UserEvent, prelude::*};
+use corp_types::prelude::*;
 use futures_lite::StreamExt;
 use kameo::{actor::ActorRef, error::Infallible, prelude::*};
 use tracing::{error, info, warn};
@@ -49,7 +49,7 @@ impl SessionServiceActor {
             match message {
                 Ok(msg) => {
                     // Handle the message first, then acknowledge
-                    match self.handle_nats_message(msg.message.clone().into()).await {
+                    match self.handle_nats_message(msg.message.clone()).await {
                         Ok(_) => {
                             // Acknowledge only after successful processing
                             if let Err(e) = msg.ack().await {

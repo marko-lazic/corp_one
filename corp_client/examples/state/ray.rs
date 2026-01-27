@@ -16,7 +16,7 @@ pub fn cast_ray_system(
             // Then cast the ray.
             if let Some(hit_data) = q_spatial.cast_ray(
                 ray.origin,
-                ray.direction.into(),
+                ray.direction,
                 f32::MAX,
                 true,
                 &SpatialQueryFilter::default(),
@@ -34,8 +34,8 @@ mod tests {
     use avian3d::PhysicsPlugins;
     use bevy::{
         render::{
-            settings::{RenderCreation, WgpuSettings},
             RenderPlugin,
+            settings::{RenderCreation, WgpuSettings},
         },
         scene::ScenePlugin,
         time::TimePlugin,

@@ -88,19 +88,17 @@ pub enum DoorHackedEvent {
 
 pub fn door_cooldown_system(mut q_door: Query<&mut DoorState, With<Door>>, r_time: Res<Time>) {
     for mut door_state in &mut q_door {
-        match *door_state {
-            DoorState::Open {
-                ref mut autoclose,
-                ref mut toggle_block,
-            } => {
-                autoclose.tick(r_time.delta());
-                toggle_block.tick(r_time.delta());
+        if let DoorState::Open {
+            ref mut autoclose,
+            ref mut toggle_block,
+        } = *door_state
+        {
+            autoclose.tick(r_time.delta());
+            toggle_block.tick(r_time.delta());
 
-                if autoclose.is_finished() {
-                    *door_state = DoorState::Closed;
-                }
+            if autoclose.is_finished() {
+                *door_state = DoorState::Closed;
             }
-            _ => {}
         }
     }
 }
@@ -111,26 +109,25 @@ pub fn on_use_command(
     q_member: Query<&PlayerFactionInfo>,
     mut q_door: Query<(&mut DoorState, &OwnershipRegistry, &SecurityLevel), With<Door>>,
 ) {
-    if let Ok(member_of) = q_member.get(use_command.event().user) {
-        if let Ok((mut door_state, control_registry, security_level)) =
+    if let Ok(member_of) = q_member.get(use_command.event().user)
+        && let Ok((mut door_state, control_registry, security_level)) =
             q_door.get_mut(use_command.usable)
-        {
-            if let Some(control_type) = control_registry.get_control_type(&member_of.faction) {
-                match control_type {
-                    Ownership::Permanent(_) => {
-                        if security_level.has_required_rank(&member_of.rank) {
-                            door_state.toggle();
-                        }
-                    }
-                    Ownership::Hacked(_, _) => {
+    {
+        if let Some(control_type) = control_registry.get_control_type(&member_of.faction) {
+            match control_type {
+                Ownership::Permanent(_) => {
+                    if security_level.has_required_rank(&member_of.rank) {
                         door_state.toggle();
                     }
                 }
-            } else {
-                commands.client_trigger(DoorHackCommand {
-                    door_target: use_command.usable,
-                });
+                Ownership::Hacked(_, _) => {
+                    door_state.toggle();
+                }
             }
+        } else {
+            commands.client_trigger(DoorHackCommand {
+                door_target: use_command.usable,
+            });
         }
     }
 }
@@ -286,8 +283,8 @@ mod tests {
             toggle_block,
         } = app.get::<DoorState>(door_entity)
         {
-            assert_eq!(autoclose.is_finished(), false);
-            assert_eq!(toggle_block.is_finished(), false);
+            assert!(!autoclose.is_finished());
+            assert!(!toggle_block.is_finished());
         } else {
             panic!("Expected DoorState::Open");
         }
@@ -514,26 +511,26 @@ mod tests {
     }
 
     fn setup_player(app: &mut App, items: Vec<Entity>, faction: Faction, rank: Rank) -> Entity {
-        let player_entity = app
-            .world_mut()
-            .spawn((Player, Inventory, PlayerFactionInfo { faction, rank }))
-            .id();
-        player_entity
+        let mut player =
+            app.world_mut()
+                .spawn((Player, Inventory, PlayerFactionInfo { faction, rank }));
+
+        for item in items {
+            player.insert(StoredIn(item));
+        }
+        player.id()
     }
 
     fn setup_hacking_tool(app: &mut App) -> Entity {
-        let item_entity = app.world_mut().spawn(HackingTool).id();
-        item_entity
+        app.world_mut().spawn(HackingTool).id()
     }
 
     fn setup_door(app: &mut App, faction: Faction, security: SecurityLevel) -> Entity {
         let mut ownership_registry = OwnershipRegistry::default();
         ownership_registry.add_permanent(faction);
-        let door_entity = app
-            .world_mut()
+        app.world_mut()
             .spawn((Door, security, ownership_registry))
             .observe(on_use_command)
-            .id();
-        door_entity
+            .id()
     }
 }

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use bcrypt::{hash, verify, DEFAULT_COST};
+use bcrypt::{DEFAULT_COST, hash, verify};
 use chrono::{Duration, Utc};
 use corp_types::prelude::*;
 use sqlx::SqlitePool;
@@ -51,18 +51,18 @@ pub async fn authenticate_user_and_generate_token(
     .fetch_optional(pool)
     .await?;
 
-    if let Some(user) = user {
-        if verify_password(&request.password, &user.password)? {
-            info!("User authenticated successfully: {}", user.username);
+    if let Some(user) = user
+        && verify_password(&request.password, &user.password)?
+    {
+        info!("User authenticated successfully: {}", user.username);
 
-            // Invalidate all existing tokens for this user
-            invalidate_user_tokens(pool, user.id).await?;
+        // Invalidate all existing tokens for this user
+        invalidate_user_tokens(pool, user.id).await?;
 
-            // Generate new token
-            let token = create_token_for_user(pool, user.id).await?;
+        // Generate new token
+        let token = create_token_for_user(pool, user.id).await?;
 
-            return Ok(Some((user, token)));
-        }
+        return Ok(Some((user, token)));
     }
 
     error!("Authentication failed for user: {}", request.username);

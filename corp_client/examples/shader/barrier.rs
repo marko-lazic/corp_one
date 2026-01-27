@@ -1,7 +1,5 @@
 use bevy::{
-    prelude::*,
-    reflect::TypePath,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    prelude::*, reflect::TypePath, render::render_resource::AsBindGroup, shader::ShaderRef, window::WindowResolution
 };
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 
@@ -10,7 +8,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
-                    resolution: (640.0, 480.0).into(),
+                    resolution: WindowResolution::new(640, 480),
                     ..default()
                 }),
                 ..default()

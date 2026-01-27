@@ -3,7 +3,6 @@ use bevy::{
     window::{PresentMode, WindowMode, WindowResolution},
 };
 use corp_client::prelude::*;
-use corp_shared::prelude::*;
 
 const CORP_ONE_GAME_TITLE: &str = "Corp One";
 const WIDTH: u32 = 1200;
@@ -20,7 +19,7 @@ impl Plugin for ClientFrontendPlugin {
             }),
             GameStatePlugin,
             ShaderPlugin,
-            GuiPlugin,
+            GuiComponentsPlugin,
             bevy_framepace::FramepacePlugin,
         ));
     }

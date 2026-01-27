@@ -1,11 +1,8 @@
 use crate::PlayerRepository;
 use anyhow::Result;
-use corp_types::{
-    auth::{event::UserEvent, User},
-    prelude::*,
-};
+use corp_types::prelude::*;
 use futures_lite::StreamExt;
-use kameo::{actor::ActorRef, error::Infallible, Actor};
+use kameo::{Actor, actor::ActorRef, error::Infallible};
 use tracing::{error, info, warn};
 
 #[derive(Clone)]
@@ -46,7 +43,7 @@ impl PlayerServiceActor {
 
         while let Some(message) = messages.next().await {
             match message {
-                Ok(msg) => match self.handle_nats_message(msg.message.clone().into()).await {
+                Ok(msg) => match self.handle_nats_message(msg.message.clone()).await {
                     Ok(_) => {
                         if let Err(e) = msg.ack().await {
                             error!("Failed to acknowledge message: {}", e);

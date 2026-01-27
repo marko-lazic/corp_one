@@ -10,7 +10,7 @@ impl Plugin for CloningRemotePlugin {
     }
 }
 
-fn is_cloning(config: Res<GameServerConfig>) -> bool {
+fn is_cloning_server(config: Res<GameServerConfig>) -> bool {
     config.colony == Colony::Cloning
 }
 
@@ -19,12 +19,13 @@ fn heal_player(
     config: Res<GameServerConfig>,
     mut healths: Query<&mut Health>,
 ) {
-    if !is_cloning(config) {
-        return;
-    }
-    if let Ok(mut health) = healths.get_mut(add.entity) {
-        if health.is_dead() {
+    if is_cloning_server(config) {
+        if let Ok(mut health) = healths.get_mut(add.entity)
+            && health.is_dead()
+        {
             health.heal(80.0);
         }
+    } else {
+        warn!("This is not cloning server.");
     }
 }

@@ -5,13 +5,17 @@ use std::f32::consts::FRAC_PI_2;
 
 use bevy::{
     color::palettes::css::MEDIUM_SEA_GREEN,
-    core_pipeline::{
-        bloom::Bloom,
-        prepass::{DepthPrepass, MotionVectorPrepass, NormalPrepass},
-    },
-    pbr::{NotShadowCaster, NotShadowReceiver},
+    core_pipeline::prepass::{DepthPrepass, MotionVectorPrepass, NormalPrepass},
+    light::{NotShadowCaster, NotShadowReceiver},
+    mesh::MeshVertexBufferLayoutRef,
+    pbr::{MaterialPipeline, MaterialPipelineKey},
+    post_process::bloom::Bloom,
     prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef, ShaderType},
+    render::{
+        render_resource::{AsBindGroup, RenderPipelineDescriptor, ShaderType},
+        view::Hdr,
+    },
+    shader::ShaderRef,
 };
 
 const PREPASS_SHADER_ASSET_PATH: &str = "shaders/show_prepass.wgsl";
@@ -72,10 +76,8 @@ fn setup(
     // camera
     commands.spawn((
         Camera3d::default(),
-        Camera {
-            hdr: true,
-            ..default()
-        },
+        Camera::default(),
+        Hdr,
         Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         DepthPrepass,
         // This will generate a texture containing world normals (with normal maps applied)
@@ -100,10 +102,10 @@ impl Material for ForceFieldMaterial {
     }
 
     fn specialize(
-        _pipeline: &bevy::pbr::MaterialPipeline<Self>,
-        descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
-        _layout: &bevy::render::mesh::MeshVertexBufferLayoutRef,
-        _key: bevy::pbr::MaterialPipelineKey<Self>,
+        _pipeline: &MaterialPipeline,
+        descriptor: &mut RenderPipelineDescriptor,
+        _layout: &MeshVertexBufferLayoutRef,
+        _key: MaterialPipelineKey<Self>,
     ) -> Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
         descriptor.primitive.cull_mode = None;
         Ok(())

@@ -6,7 +6,7 @@ pub struct WorldPhysicsPlugin;
 
 impl Plugin for WorldPhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((PhysicsPlugins::default(), PhysicsDebugPlugin))
+        app.add_plugins(PhysicsPlugins::default())
             .add_systems(Update, add_trimesh_collider);
     }
 }

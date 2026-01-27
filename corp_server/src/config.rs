@@ -13,8 +13,8 @@ pub struct GameServerConfig {
 impl Clone for GameServerConfig {
     fn clone(&self) -> Self {
         Self {
-            colony: self.colony.clone(),
-            server_addr: self.server_addr.clone(),
+            colony: self.colony,
+            server_addr: self.server_addr,
             identity: self.identity.clone_identity(),
         }
     }

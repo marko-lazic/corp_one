@@ -3,9 +3,9 @@ use bevy::{input::common_conditions::input_toggle_active, prelude::*};
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use corp_shared::prelude::*;
 
-pub struct GuiPlugin;
+pub struct GuiComponentsPlugin;
 
-impl Plugin for GuiPlugin {
+impl Plugin for GuiComponentsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             EguiPlugin::default(),
