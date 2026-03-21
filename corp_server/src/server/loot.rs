@@ -2,7 +2,7 @@ use bevy::{prelude::*, time::common_conditions::on_timer};
 use bevy_rand::prelude::{GlobalRng, WyRand};
 use bevy_replicon::prelude::*;
 use corp_shared::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 use std::time::Duration;
 
 pub struct LootPlugin;

@@ -505,7 +505,7 @@ fn run_move_and_slide(mut kccs: Query<Ctx>, move_and_slide: MoveAndSlide, time: 
             &ctx.cfg.filter,
             |hit| {
                 touching_entities.push(hit.into());
-                true
+                MoveAndSlideHitResponse::Accept
             },
         );
         ctx.transform.translation = position;

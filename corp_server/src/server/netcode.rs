@@ -25,7 +25,7 @@ impl Plugin for NetcodePlugin {
             // replication
             RepliconPlugins.set(ServerPlugin {
                 // 1 frame lasts `1.0 / TICK_RATE` anyway
-                tick_schedule: PostUpdate.intern(),
+                tick_schedule: Some(PostUpdate.intern()),
                 ..Default::default()
             }),
             AeronetRepliconServerPlugin,

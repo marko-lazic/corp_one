@@ -1,7 +1,7 @@
 use crate::{prelude::Health, world::gameplay::roll::Range};
 use bevy::prelude::*;
 use bevy_rand::prelude::{GlobalRng, WyRand};
-use rand::Rng;
+use rand::RngExt;
 
 #[derive(Event)]
 pub struct HealActionEvent {
