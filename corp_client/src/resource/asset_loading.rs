@@ -12,13 +12,13 @@ use corp_shared::prelude::*;
 pub struct SceneAssets {
     /// Iris Relaxed Alien Adventure
     #[asset(path = "scenes/iris/iris.glb#Scene0")]
-    pub iris: Handle<Scene>,
+    pub iris: Handle<WorldAsset>,
     /// Cloning Facility
     #[asset(path = "scenes/cloning/cloning.glb#Scene0")]
-    pub cloning: Handle<Scene>,
+    pub cloning: Handle<WorldAsset>,
     /// Liberte stronghold of The Democratic
     #[asset(path = "scenes/liberte/liberte.glb#Scene0")]
-    pub liberte: Handle<Scene>,
+    pub liberte: Handle<WorldAsset>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -42,13 +42,13 @@ pub struct AudioAssets {
 #[derive(Resource, AssetCollection)]
 pub struct MeshAssets {
     #[asset(path = "mesh/backpack.glb#Scene0")]
-    pub low_poly_backpack: Handle<Scene>,
+    pub low_poly_backpack: Handle<WorldAsset>,
 }
 
 #[derive(Resource, AssetCollection)]
 pub struct PlayerAssets {
     #[asset(path = "mesh/mannequiny.gltf#Scene0")]
-    pub mannequiny: Handle<Scene>,
+    pub mannequiny: Handle<WorldAsset>,
     #[asset(path = "mesh/mannequiny.gltf#Animation9")]
     pub run: Handle<AnimationClip>,
     #[asset(path = "mesh/mannequiny.gltf#Animation7")]

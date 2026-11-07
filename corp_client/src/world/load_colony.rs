@@ -4,7 +4,7 @@ use avian3d::prelude::*;
 use bevy::{
     light::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
-    scene::SceneInstanceReady,
+    world_serialization::WorldInstanceReady,
 };
 use bevy_replicon::prelude::ClientTriggerExt;
 use corp_shared::prelude::*;
@@ -63,7 +63,7 @@ fn on_load_colony_command(
     commands
         .spawn((
             Name::new("Colony"),
-            SceneRoot(colony_scene),
+            WorldAssetRoot(colony_scene),
             DespawnOnExit(GameState::Playing),
         ))
         .observe(on_colony_loaded);
@@ -80,7 +80,7 @@ fn on_load_colony_command(
             Collider::cuboid(5.0, 5.0, 5.0),
             DespawnOnExit(GameState::Playing),
         ))
-        .observe(|click: On<Pointer<Click>>| {
+        .observe(|click: On<PointerClick>| {
             info!("Clicked on debug cube {:?}", click.entity);
         });
 
@@ -103,7 +103,7 @@ fn on_load_colony_command(
     Ok(())
 }
 
-fn on_colony_loaded(_scene_instance_ready: On<SceneInstanceReady>, mut commands: Commands) {
+fn on_colony_loaded(_scene_instance_ready: On<WorldInstanceReady>, mut commands: Commands) {
     info!("Colony Scene Instance Ready");
     commands.client_trigger(PlayerSpawnCommand);
     commands.trigger(UpdateLightsCommand);
@@ -115,7 +115,7 @@ fn on_update_lights_command(
     mut query: Query<&mut PointLight>,
 ) {
     for mut point_light in query.iter_mut() {
-        point_light.shadows_enabled = true;
+        point_light.shadow_maps_enabled = true;
         point_light.intensity = 100_000.0;
     }
 }

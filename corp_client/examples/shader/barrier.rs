@@ -73,7 +73,7 @@ pub struct CustomMaterial {
 
 impl Material for CustomMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders_ex/barrier_ex.wgsl".into()
+        "shaders_ex/barrier_ex.wesl".into()
     }
 
     fn alpha_mode(&self) -> AlphaMode {

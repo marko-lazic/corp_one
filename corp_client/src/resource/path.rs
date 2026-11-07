@@ -6,6 +6,6 @@ pub struct AssetPath {
 
 pub const ASSET_PATH: AssetPath = AssetPath {
     default_font: "fonts/Anonymous Pro.ttf",
-    prepass_shader: "shaders/show_prepass.wgsl",
-    force_field_shader: "shaders/force_field.wgsl",
+    prepass_shader: "shaders/show_prepass.wesl",
+    force_field_shader: "shaders/force_field.wesl",
 };

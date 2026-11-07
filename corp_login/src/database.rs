@@ -1,6 +1,6 @@
 use crate::LoginConfig;
 use anyhow::{Result, anyhow};
-use sqlx::{SqlitePool, sqlite::SqlitePoolOptions};
+use sqlx::{AssertSqlSafe, SqlitePool, sqlite::SqlitePoolOptions};
 use std::{env, ffi::OsStr, path::Path};
 use tracing::info;
 
@@ -56,9 +56,9 @@ pub async fn run_migrations(pool: &SqlitePool, config: &LoginConfig) -> Result<(
             current_statement.push(' ');
 
             if line.ends_with(';') {
-                let statement = current_statement.trim_end_matches(';').trim();
+                let statement = current_statement.trim_end_matches(';').trim().to_owned();
                 if !statement.is_empty() {
-                    sqlx::query(statement).execute(pool).await?;
+                    sqlx::query(AssertSqlSafe(statement)).execute(pool).await?;
                 }
                 current_statement.clear();
             }
@@ -66,8 +66,8 @@ pub async fn run_migrations(pool: &SqlitePool, config: &LoginConfig) -> Result<(
 
         // Handle any remaining statement without semicolon
         if !current_statement.trim().is_empty() {
-            let statement = current_statement.trim();
-            sqlx::query(statement).execute(pool).await?;
+            let statement = current_statement.trim().to_owned();
+            sqlx::query(AssertSqlSafe(statement)).execute(pool).await?;
         }
 
         info!("Migration completed: {:?}", migration_file);

@@ -1,20 +1,19 @@
-#import bevy_pbr::{
-    mesh_view_bindings::{globals, view},
-    prepass_utils,
-    forward_io::VertexOutput,
-}
+import bevy_pbr::render::mesh_view_bindings::{globals, view};
+import bevy_pbr::prepass::utils::prepass_depth;
 
 @fragment
 fn fragment(
-    #ifdef MULTISAMPLED
+    @if(MULTISAMPLED)
     @builtin(sample_index) sample_index: u32,
-    #endif
     @builtin(position) frag_coord: vec4<f32>,
     @builtin(front_facing) is_front: bool,
     @location(0) world_position: vec4<f32>,
     @location(1) world_normal: vec3<f32>,
     @location(2) uv: vec2<f32>,
 ) -> @location(0) vec4<f32> {
+    @if(!MULTISAMPLED)
+    let sample_index = 0u;
+
     let emissive_intensity = 20.0;
     let fresnel_color = vec3(0.5, 1.0, 1.0);
     var intersection_color = fresnel_color;
@@ -26,7 +25,7 @@ fn fragment(
     let time = globals.time * time_scale;
 
 
-    let depth = bevy_pbr::prepass_utils::prepass_depth(frag_coord, sample_index);
+    let depth = prepass_depth(frag_coord, sample_index);
     var intersection = 1.0 - ((frag_coord.z - depth) * 100.0) - offset;
     intersection = smoothstep(0.0, 1.0, intersection);
     if is_front{

@@ -1,8 +1,8 @@
-use bevy::prelude::{Component, Resource};
+use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Component, Resource, Serialize, Deserialize, Clone, Debug)]
+#[derive(Resource, Serialize, Deserialize, Clone, Debug)]
 pub struct Credentials {
     pub username: String,
     pub password: String,
@@ -14,7 +14,7 @@ impl Credentials {
     }
 }
 
-#[derive(Component, Resource, Serialize, Deserialize, Clone, Debug)]
+#[derive(Resource, Serialize, Deserialize, Clone, Debug)]
 pub struct AuthToken(pub String);
 
 impl Display for AuthToken {

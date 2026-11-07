@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use avian3d::prelude::*;
-use bevy::{prelude::*, scene::SceneInstanceReady};
+use bevy::{prelude::*, world_serialization::WorldInstanceReady};
 use corp_shared::prelude::*;
 use rand::seq::IndexedRandom;
 
@@ -17,7 +17,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn on_add_local_player(_: On<Add, LocalPlayer>, mut commands: Commands) {
+fn on_add_local_player(_: On<Add<LocalPlayer>>, mut commands: Commands) {
     commands.set_state(GameState::Playing);
 }
 
@@ -76,11 +76,11 @@ fn on_setup_local_player(
         .with_children(|child_builder| {
             child_builder
                 .spawn((
-                    SceneRoot(r_player_assets.mannequiny.clone()),
+                    WorldAssetRoot(r_player_assets.mannequiny.clone()),
                     // Offset the mesh y position to align with floating collider
                     Transform::from_xyz(0.0, -1.0, 0.0),
                 ))
-                .observe(|_scene_instance_ready: On<SceneInstanceReady>| {
+                .observe(|_scene_instance_ready: On<WorldInstanceReady>| {
                     info!("Player Scene Instance Ready");
                 });
         });

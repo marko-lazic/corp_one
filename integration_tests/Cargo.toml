@@ -6,19 +6,19 @@ edition = "2024"
 corp_login = { path = "../corp_login" }
 corp_types = { path = "../corp_types" }
 corp_world = { path = "../corp_world" }
-tokio = { version = "1.45", default-features = false }
-tokio-test = "0.4.4"
-kameo = "0.17.2"
-kameo_actors = "0.2.0"
-anyhow = "1.0.98"
-reqwest = { version = "0.12.22", features = ["json"] }
+tokio = { version = "1.53.1", default-features = false }
+tokio-test = "0.4.5"
+kameo = "0.22.2"
+kameo_actors = "0.8.1"
+anyhow = "1.0.104"
+reqwest = { version = "0.13.4", features = ["json"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 test-trace = "0.3.0"
-async-nats = { version = "0.42.0" }
+async-nats = { version = "0.50.0" }
 lazy_static = "1.5.0"
-rand = "0.9.1"
-regex = "1.11.1"
-serde_json = "1.0.140"
-url = "2.5.4"
-nuid = "0.5.0"
+rand = "0.10.2"
+regex = "1.13.1"
+serde_json = "1.0.151"
+url = "2.5.8"
+nuid = "0.6.0"

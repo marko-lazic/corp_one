@@ -7,7 +7,7 @@ edition = "2024"
 [dependencies]
 corp_types = { path = "../corp_types" }
 bevy = { workspace = true, features = ["dynamic_linking", "bevy_color", "bevy_state", "serialize"] }
-avian3d = { workspace = true, features = ["3d", "f32", "parry-f32", "default-collider"] }
+avian3d = { workspace = true, features = ["3d", "parry-f32", "default-collider"] }
 serde = { workspace = true }
 rand = { workspace = true }
 bevy_rand = { workspace = true }

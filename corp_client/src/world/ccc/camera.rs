@@ -45,7 +45,7 @@ impl Plugin for MainCameraPlugin {
 }
 
 fn on_setup_local_player_camera(
-    add_local_player: On<Add, LocalPlayer>,
+    add_local_player: On<Add<LocalPlayer>>,
     mut commands: Commands,
 ) -> Result {
     info!("Setup Camera for LocalPlayer {:?}", add_local_player.entity);

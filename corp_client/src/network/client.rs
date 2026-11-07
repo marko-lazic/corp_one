@@ -100,14 +100,14 @@ fn connect_client(
     Ok(())
 }
 
-fn on_connecting(add: On<Add, SessionEndpoint>, names: Query<&Name>) -> Result {
+fn on_connecting(add: On<Add<SessionEndpoint>>, names: Query<&Name>) -> Result {
     let name = names.get(add.entity)?;
     info!("SessionEndpoint \"{name}\" connecting...");
     Ok(())
 }
 
 fn on_connected(
-    add: On<Add, Session>,
+    add: On<Add<Session>>,
     mut commands: Commands,
     client_colony: Single<&PendingColony, With<AeronetRepliconClient>>,
 ) -> Result {

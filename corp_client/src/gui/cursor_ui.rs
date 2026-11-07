@@ -28,7 +28,7 @@ fn setup(mut commands: Commands, font_assets: Res<FontAssets>) {
         UseLabel,
         TextFont::from(font_assets.default_font.clone()).with_font_size(20.0),
         TextColor::WHITE,
-        TextLayout::new_with_justify(Justify::Center),
+        TextLayout::justify(Justify::Center),
         DespawnOnExit(GameState::Playing),
     ));
 }

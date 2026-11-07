@@ -34,7 +34,6 @@ impl Plugin for NetcodePlugin {
         .add_systems(Startup, open_server)
         .add_observer(on_opened)
         .add_observer(on_closed)
-        .add_observer(on_session_request)
         .add_observer(on_connected)
         .add_observer(on_disconnected);
     }
@@ -42,15 +41,14 @@ impl Plugin for NetcodePlugin {
 
 fn open_server(mut commands: Commands, game_server_config: Res<GameServerConfig>) {
     let identity = game_server_config.identity.clone_identity();
-    let cert = &identity.certificate_chain().as_slice()[0];
+    let cert = identity
+        .certificate_chain()
+        .as_slice()
+        .first()
+        .expect("server identity should contain a certificate");
     let spki_fingerprint = cert::spki_fingerprint_b64(cert).expect("should be a valid certificate");
     let cert_hash = cert::hash_to_b64(cert.hash());
-    info!("************************");
-    info!("SPKI FINGERPRINT");
-    info!("  {spki_fingerprint}");
-    info!("CERTIFICATE HASH");
-    info!("  {cert_hash}");
-    info!("************************");
+    debug!(colony = ?game_server_config.colony, %spki_fingerprint, %cert_hash, "WebTransport certificate");
 
     let config = wtransport::ServerConfig::builder()
         .with_bind_default(game_server_config.server_addr.port())
@@ -63,15 +61,25 @@ fn open_server(mut commands: Commands, game_server_config: Res<GameServerConfig>
         .spawn((Name::new("WebTransport Server"), AeronetRepliconServer))
         .queue(WebTransportServer::open(config))
         .id();
-    info!("Opening WebTransport server \"{server}\"");
+    debug!("Opening WebTransport server \"{server}\"");
 }
 
-fn on_opened(add: On<Add, Server>, servers: Query<&LocalAddr>) {
-    let server = add.entity;
+fn on_opened(
+    trigger: On<Add<Server>>,
+    servers: Query<&LocalAddr>,
+    config: Res<GameServerConfig>,
+    mut commands: Commands,
+) {
+    let server = trigger.event_target();
     let local_addr = servers
         .get(server)
-        .expect("spawned session entity should have a name");
-    info!("\"{server}\" opened on {}", **local_addr);
+        .expect("opened server should have a LocalAddr");
+
+    info!(
+        "{:?} server \"{server}\" opened on {}",
+        config.colony, **local_addr
+    );
+    commands.entity(server).observe(on_session_request);
 }
 
 fn on_closed(closed: On<Closed>) {
@@ -80,48 +88,47 @@ fn on_closed(closed: On<Closed>) {
 
 fn on_session_request(
     mut request: On<SessionRequest>,
-    clients: Query<&ChildOf>,
     tokens: Res<Tokens>,
     mut commands: Commands,
-) -> Result {
-    let client = request.entity;
-    let &ChildOf(server) = clients.get(client)?;
+) {
+    let server = request.event_target();
+    let client = request.session_entity;
 
-    debug!("\"{client}\" connecting to \"{server}\" with headers:");
+    debug!(
+        "{client} connecting to {server} from {} with headers:",
+        request.remote_addr
+    );
 
-    let mut token = String::new();
     for (header_key, header_value) in &request.headers {
-        debug!("  {header_key}: {header_value}");
+        if header_key == "x-token" {
+            debug!("  {header_key}: [redacted]");
+        } else {
+            debug!("  {header_key}: {header_value}");
+        }
+    }
 
-        // Extract username and password from headers
-        if header_key.as_str() == "x-token" {
-            token = header_value.clone()
-        }
+    let token = request.headers.get("x-token").cloned().unwrap_or_default();
+
+    if tokens.is_valid(&token) {
+        debug!("Accepted connection from {client}");
+        commands.entity(client).insert(SessionAuthToken(token));
+        request.respond(SessionResponse::Accepted);
+    } else {
+        warn!("Rejected connection from {client}: invalid token");
+        request.respond(SessionResponse::NotFound);
     }
-    match tokens.is_valid(&token) {
-        true => {
-            info!("Accepted token {} from {:?}", token, client);
-            commands.entity(client).insert(AuthToken(token));
-            request.respond(SessionResponse::Accepted);
-        }
-        false => {
-            warn!("Rejected token \"{}\" from {:?}", token, client);
-            request.respond(SessionResponse::NotFound)
-        }
-    }
-    Ok(())
 }
 
 fn on_connected(
-    add: On<Add, Session>,
+    trigger: On<Add<Session>>,
     clients: Query<&ChildOf>,
     config: Res<GameServerConfig>,
 ) -> Result {
-    let client = add.entity;
+    let client = trigger.event_target();
     let &ChildOf(server) = clients.get(client)?;
     let server_colony = config.colony;
+
     info!("Session \"{client}\" connected to server {server_colony} \"{server}\"");
-    // Add client metadata
     Ok(())
 }
 

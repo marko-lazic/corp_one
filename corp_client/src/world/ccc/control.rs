@@ -1,5 +1,5 @@
 use crate::{prelude::*, world::ccc::input};
-use avian3d::{math::*, prelude::*};
+use avian3d::prelude::*;
 use bevy::{
     ecs::{
         lifecycle::HookContext,
@@ -76,7 +76,7 @@ impl Plugin for ControlPlugin {
     CharacterControllerState,
     CustomPositionIntegration,
     RigidBody = RigidBody::Kinematic,
-    SpeculativeMargin::ZERO,
+    SpeculativeCcd::ZERO,
     CollidingEntities
 )]
 #[component(on_add=CharacterController::on_add)]
@@ -497,8 +497,8 @@ fn run_move_and_slide(mut kccs: Query<Ctx>, move_and_slide: MoveAndSlide, time: 
             projected_velocity,
         } = move_and_slide.move_and_slide(
             &ctx.state.collider,
-            ctx.transform.translation.adjust_precision(),
-            ctx.transform.rotation.adjust_precision(),
+            ctx.transform.translation,
+            ctx.transform.rotation,
             ctx.movement.velocity,
             time.delta(),
             &MoveAndSlideConfig::default(),

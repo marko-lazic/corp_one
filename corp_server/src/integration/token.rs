@@ -1,8 +1,8 @@
 use crate::{channel::ChannelSender, integration::RETRY_DELAY, server::BevyUserEvent};
-use async_nats::jetstream::{consumer::pull, Message};
+use async_nats::jetstream::{Message, consumer::pull};
 use bevy::tasks::futures_lite::StreamExt;
 use corp_types::{auth::UserEvent, messenger::Messenger};
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 pub struct TokenService {
     sender: ChannelSender<BevyUserEvent>,
@@ -33,9 +33,9 @@ impl TokenService {
         loop {
             match self.messenger.js.get_stream("USER_EVENTS").await {
                 Ok(stream) => {
-                    info!("Successfully connected to USER_EVENTS stream");
+                    debug!("Successfully connected to USER_EVENTS stream");
 
-                    info!("Subscribing to consumer {}", self.channel_name);
+                    debug!("Subscribing to consumer {}", self.channel_name);
                     if let Ok(consumer) = stream
                         .get_consumer::<pull::Config>(&self.channel_name)
                         .await
@@ -79,7 +79,7 @@ impl TokenService {
 
     async fn handle_user_event_message(&self, message: &Message) -> anyhow::Result<()> {
         let user_event: UserEvent = rmp_serde::from_slice(&message.payload)?;
-        info!("Token: Received UserEvent: {:?}", user_event);
+        debug!(consumer = %self.channel_name, "Received user authentication event");
         self.sender.send(BevyUserEvent(user_event));
         Ok(())
     }

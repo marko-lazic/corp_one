@@ -6,7 +6,7 @@ description = "Benchmarks for Corp One"
 publish = false
 
 [dev-dependencies]
-criterion = { version = "0.3", features = ["html_reports"] }
+criterion = { version = "0.8.2", features = ["html_reports"] }
 corp_shared = { path = "../corp_shared" }
 
 [profile.release]

@@ -1,5 +1,6 @@
 use crate::prelude::{RequestConnect, ASSET_PATH};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy_defer::{AsyncCommandsExtension, AsyncWorld};
 use corp_shared::prelude::*;
 use corp_types::prelude::LoginResponse;
@@ -20,13 +21,14 @@ fn auto_login(mut commands: Commands, credentials: Res<Credentials>) -> Result {
 }
 
 fn setup_login_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(login_button(asset_server));
+    commands
+        .spawn(login_button(asset_server))
+        .observe(apply_login);
 }
 
 fn login_button(asset_server: Res<AssetServer>) -> impl Bundle {
     (
         Button,
-        Observer::new(apply_login),
         Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
@@ -46,13 +48,12 @@ fn login_button(asset_server: Res<AssetServer>) -> impl Bundle {
 }
 
 fn apply_login(
-    _released: On<Pointer<bevy_enhanced_input::prelude::Release>>,
+    _released: On<PointerRelease>,
     mut commands: Commands,
     credentials: Res<Credentials>,
-) -> Result {
+) {
     info!("Login button pressed!");
     login(&mut commands, &credentials);
-    Ok(())
 }
 
 fn login(commands: &mut Commands, credentials: &Credentials) {

@@ -39,7 +39,7 @@ fn init_clients(
 
     // Inform the client that he is ready
     commands.server_trigger(ToClients {
-        mode: SendMode::Direct(player_spawn.client_id),
+        targets: SendTargets::Single(player_spawn.client_id),
         message: SetupPlayerCommand {
             player_target: player_spawn
                 .client_id
@@ -50,11 +50,11 @@ fn init_clients(
     Ok(())
 }
 
-fn on_add_connected_client(add: On<Add, ConnectedClient>) {
+fn on_add_connected_client(add: On<Add<ConnectedClient>>) {
     info!("OnAdd ClientConnected {:?}", add.entity);
     // We don't do here anything at the moment because the client asks to get spawned
 }
 
-fn on_remove_connected_client(remove: On<Remove, ConnectedClient>) {
+fn on_remove_connected_client(remove: On<Remove<ConnectedClient>>) {
     info!("OnRemove ClientConnected {:?}", remove.entity);
 }

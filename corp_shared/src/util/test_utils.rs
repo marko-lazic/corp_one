@@ -10,7 +10,7 @@ pub trait TestUtils {
     fn has_component<C: Component>(&self, entity: Entity) -> bool;
 
     fn get_resource<R: Resource>(&self) -> &R;
-    fn get_resource_mut<R: Resource>(&mut self) -> Mut<'_, R>;
+    fn get_resource_mut<R: Resource<Mutability = Mutable>>(&mut self) -> Mut<'_, R>;
 }
 
 impl TestUtils for App {
@@ -57,7 +57,7 @@ impl TestUtils for App {
         self.world().get_resource::<R>().unwrap()
     }
 
-    fn get_resource_mut<R: Resource>(&mut self) -> Mut<'_, R> {
+    fn get_resource_mut<R: Resource<Mutability = Mutable>>(&mut self) -> Mut<'_, R> {
         self.world_mut().get_resource_mut::<R>().unwrap()
     }
 }

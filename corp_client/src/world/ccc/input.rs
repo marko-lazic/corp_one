@@ -50,54 +50,85 @@ pub struct PlayerInput;
 
 impl PlayerInput {
     fn on_add(mut world: DeferredWorld, ctx: HookContext) {
-        world.commands().entity(ctx.entity).insert(actions!(
-        PlayerInput[
-            (
-            Action::<Movement>::new(),
-            DeadZone::default(),
-            Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
-            ),
-            (
-                Action::<AimWeapon>::new(),
-                bindings![MouseButton::Right, GamepadButton::LeftTrigger],
-            ),
-            (
-                Action::<UseObject>::new(),
-                bindings![KeyCode::KeyE, GamepadButton::South],
-            ),
-            (
-                Action::<KillMe>::new(),
-                bindings![KeyCode::KeyK]
-            ),
-            (
-                Action::<Shoot>::new(),
-                bindings![MouseButton::Left, GamepadButton::RightTrigger],
-            ),
-            (
-                Action::<Inventory>::new(),
-                bindings![KeyCode::KeyI, GamepadButton::North],
-            ),
-            (
-                Action::<OrientationModeSwitch>::new(),
-                bindings![KeyCode::Space, GamepadButton::RightThumb],
-            ),
-            (
-                Action::<ZoomIn>::new(),
-                bindings![KeyCode::Equal, GamepadButton::DPadUp],
-            ),
-            (
-                Action::<ZoomOut>::new(),
-                bindings![KeyCode::Minus, GamepadButton::DPadDown],
-            ),
-            (
-                Action::<RotateClockwise>::new(),
-                bindings![KeyCode::KeyZ, GamepadButton::DPadRight],
-            ),
-            (
-                Action::<RotateCounterClockwise>::new(),
-                bindings![KeyCode::KeyC, GamepadButton::DPadLeft],
-            )
-        ]));
+        world.commands().entity(ctx.entity).apply_scene(bsn! {
+            Actions<PlayerInput> [
+                Action::<Movement>::new()
+                DeadZone
+                Bindings [
+                    {preset::cardinal::wasd_keys()}
+                    --
+                    {preset::axial::left_stick()}
+                ]
+                --
+                Action::<AimWeapon>::new()
+                Bindings [
+                    Binding(MouseButton::Right)
+                    --
+                    Binding(GamepadButton::LeftTrigger)
+                ]
+                --
+                Action::<UseObject>::new()
+                Bindings [
+                    Binding(KeyCode::KeyE)
+                    --
+                    Binding(GamepadButton::South)
+                ]
+                --
+                Action::<KillMe>::new()
+                Bindings [
+                    Binding(KeyCode::KeyK)
+                ]
+                --
+                Action::<Shoot>::new()
+                Bindings [
+                    Binding(MouseButton::Left)
+                    --
+                    Binding(GamepadButton::RightTrigger)
+                ]
+                --
+                Action::<Inventory>::new()
+                Bindings [
+                    Binding(KeyCode::KeyI)
+                    --
+                    Binding(GamepadButton::North)
+                ]
+                --
+                Action::<OrientationModeSwitch>::new()
+                Bindings [
+                    Binding(KeyCode::Space)
+                    --
+                    Binding(GamepadButton::RightThumb)
+                ]
+                --
+                Action::<ZoomIn>::new()
+                Bindings [
+                    Binding(KeyCode::Equal)
+                    --
+                    Binding(GamepadButton::DPadUp)
+                ]
+                --
+                Action::<ZoomOut>::new()
+                Bindings [
+                    Binding(KeyCode::Minus)
+                    --
+                    Binding(GamepadButton::DPadDown)
+                ]
+                --
+                Action::<RotateClockwise>::new()
+                Bindings [
+                    Binding(KeyCode::KeyZ)
+                    --
+                    Binding(GamepadButton::DPadRight)
+                ]
+                --
+                Action::<RotateCounterClockwise>::new()
+                Bindings [
+                    Binding(KeyCode::KeyC)
+                    --
+                    Binding(GamepadButton::DPadLeft)
+                ]
+            ]
+        });
     }
 }
 
@@ -107,19 +138,15 @@ pub struct StarMapInput;
 
 impl StarMapInput {
     fn on_add(mut world: DeferredWorld, ctx: HookContext) {
-        world
-            .commands()
-            .entity(ctx.entity)
-            .insert(actions!(StarMapInput[
-                (
-                    Action::<ColonyIris>::new(),
-                    bindings![ KeyCode::KeyI ]
-                ),
-                (
-                    Action::<ColonyLiberte>::new(),
-                    bindings![ KeyCode::KeyL ]
-                )
-            ]));
+        world.commands().entity(ctx.entity).apply_scene(bsn! {
+            Actions<StarMapInput> [
+                Action::<ColonyIris>::new()
+                Bindings [Binding(KeyCode::KeyI)]
+                --
+                Action::<ColonyLiberte>::new()
+                Bindings [Binding(KeyCode::KeyL)]
+            ]
+        });
     }
 }
 
@@ -129,13 +156,17 @@ pub struct UiInput;
 
 impl UiInput {
     fn on_add(mut world: DeferredWorld, ctx: HookContext) {
-        world.commands().entity(ctx.entity).insert(actions!(
-            UiInput[(
-                Action::<ExitHold>::new(),
-                Hold::new(0.5),
-                bindings![KeyCode::Escape, GamepadButton::Start]
-            )]
-        ));
+        world.commands().entity(ctx.entity).apply_scene(bsn! {
+            Actions<UiInput> [
+                Action::<ExitHold>::new()
+                ~Hold::new(0.5)
+                Bindings [
+                    Binding(KeyCode::Escape)
+                    --
+                    Binding(GamepadButton::Start)
+                ]
+            ]
+        });
     }
 }
 

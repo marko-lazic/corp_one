@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_replicon::prelude::{ClientId, FromClient, SendMode, ServerTriggerExt, ToClients};
+use bevy_replicon::prelude::{ClientId, FromClient, SendTargets, ServerTriggerExt, ToClients};
 use corp_shared::prelude::*;
 
 #[derive(Component, Deref, DerefMut)]
@@ -29,7 +29,7 @@ fn despawn_dead_player(
                 dead_player_e
             );
             commands.server_trigger(ToClients {
-                mode: SendMode::Direct(ClientId::from(dead_player_e)),
+                targets: SendTargets::Single(ClientId::from(dead_player_e)),
                 message: SendDeadPlayerToCloningCommand,
             });
             commands.entity(dead_player_e).remove::<DeathTimer>();
@@ -37,13 +37,14 @@ fn despawn_dead_player(
     }
 }
 
-fn on_add_dead(add: On<Add, Dead>, mut commands: Commands) {
-    let player_e = add.entity;
+fn on_add_dead(trigger: On<Add<Dead>>, mut commands: Commands) {
+    let player_e = trigger.event_target();
     info!("On add Dead for entity {:?} triggered", player_e);
-    commands
-        .entity(player_e)
-        .insert(Immobilized)
-        .insert(DeathTimer(Timer::from_seconds(DEATH_SECS, TimerMode::Once)));
+
+    commands.entity(player_e).insert((
+        Immobilized,
+        DeathTimer(Timer::from_seconds(DEATH_SECS, TimerMode::Once)),
+    ));
 }
 
 fn on_kill_me_command(

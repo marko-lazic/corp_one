@@ -106,7 +106,7 @@ impl DebugTextBundle {
             },
             text_color: TextColor::WHITE,
             text_font: TextFont::from(font),
-            text_layout: TextLayout::new_with_justify(Justify::Left),
+            text_layout: TextLayout::justify(Justify::Left),
         }
     }
 }

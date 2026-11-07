@@ -74,7 +74,7 @@ fn on_loot_command(
         LootAction::TakeAll => {
             for item_entity in backpack_content.into_iter() {
                 commands.entity(*item_entity).insert(StoredIn(player_e));
-                info!(
+                debug!(
                     "Transferring item {} to inventory {}",
                     item_entity, player_e
                 );
@@ -88,24 +88,30 @@ fn on_loot_command(
 }
 
 fn on_add_dead_drop_loot(
-    add: On<Add, Dead>,
+    trigger: On<Add<Dead>>,
     mut commands: Commands,
     q_player: Query<&Transform, With<Player>>,
     contains_query: Query<&Contains, With<Inventory>>,
-) -> Result {
-    let dead_player_entity = add.entity;
-    let dead_player_transform = q_player.get(dead_player_entity)?;
-
-    if let Ok(dead_player_loot) = contains_query.get(dead_player_entity) {
-        let drop_loot_bag = commands
-            .spawn((Backpack, Replicated, *dead_player_transform))
-            .id();
-        for item_entity in dead_player_loot.into_iter() {
-            commands
-                .entity(*item_entity)
-                .insert(StoredIn(drop_loot_bag));
-        }
+) {
+    let dead_player_entity = trigger.event_target();
+    let Ok(dead_player_loot) = contains_query.get(dead_player_entity) else {
+        return;
+    };
+    if dead_player_loot.is_empty() {
+        return;
     }
+    let Ok(dead_player_transform) = q_player.get(dead_player_entity) else {
+        warn!("Cannot drop loot for {dead_player_entity}: player Transform is missing");
+        return;
+    };
 
-    Ok(())
+    let drop_loot_bag = commands
+        .spawn((Backpack, Replicated, *dead_player_transform))
+        .id();
+
+    for item_entity in dead_player_loot.into_iter() {
+        commands
+            .entity(*item_entity)
+            .insert(StoredIn(drop_loot_bag));
+    }
 }
